@@ -1,0 +1,418 @@
+---
+title: "CRI Subjective Model Voting"
+output:
+  html_document:
+    df_print: paged
+---
+
+## THE CROWDSOURCED REPLICATION INITIATIVE (CRI)
+   <a href=https://osf.io/preprints/socarxiv/6j9qb/>"Executive Report"</a> contains details of the project.
+
+Principal Investigators:
+   Nate Breznau
+   
+   Eike Mark Rinke
+   
+   Alexander Wuttke
+
+
+Code Compiled by 
+   Nate Breznau, breznau.nate@gmail.com
+   
+   Hung Nguyen, hunghvnguyen@gmail.com
+
+The participants voted on model specifications fo the other teams. Due to some errors in the preliminary codes we cannot assign the subjective voting directly to the teams; however, this provided an alternate utility. Based on the variations in model descriptions given to the participants we can still estimate what features of models are seen as the most useful or correct as the data-generating model. We can then look for those features in the actual models. Thus, the models we had participants vote on are theoretical data-generating models that mostly reflect the range of models used in the CRI. 
+
+
+```{r setup, include=FALSE}
+rm(list = ls())
+library(pacman)
+
+# Create a working directory string and a function to call the wd for every code chunk
+wd <- "C:/data" #set your wd here
+wdir <- function(x){
+  paste(wd,x, sep = "/")
+}
+
+pacman::p_load("readstata13","xlsx","dplyr","tidyr","ggplot2","kableExtra","GLMMadaptive","jtools","sjPlot","sjmisc","sjlabelled","margins","fastDummies","xlsx")
+
+#Column no missing function
+completeFun <- function(data, desiredCols) {
+  completeVec <- complete.cases(data[, desiredCols])
+  return(data[completeVec, ])
+}
+```
+
+## Load Data
+
+### Unipark Survey
+
+The first file "Research Design Votes.xlsx" is the file we used to generate the model descriptions in the Unipark survey. 
+
+The second file "votes.dta" was generated in the CRI work-up. See CRI_Spec_Analysis.Rmd.
+
+```{r merge}
+model_desc <- read.xlsx(wdir("Research Design Votes.xlsx"), sheetName = "RD Paragraph Output", header = T, stringsAsFactors = F)
+
+
+# Concatenate all strings from each variable
+# This takes care of variables that are not discrete
+
+# Remove all "NA" at first
+# model_desc[is.na(model_desc)] <- "_"
+
+# Coerce columns
+# Note that model_x4 is rnd_slopes or hypbrid MLM
+
+model_desc <- model_desc %>%
+  unite(model_form, c("model_form1","model_form2","model_form3"), na.rm=T, remove=F) %>%
+  unite(model_x, c("model_x1", "model_x2", "model_x3", "model_x4"), na.rm=T, remove=F) %>%
+  unite(level, c("level1","level2","level3"), na.rm=T, remove=F) %>%
+  unite(mator, c("estimate1","estimate2","estimate3","estimate4"), na.rm=T, remove=F) %>%
+  unite(model_spec, c("model_spec1","model_spec3"), na.rm=T, remove=F) %>%
+  unite(year, c("y1985","y1990","y1996","y2006","y2016"), na.rm=T, remove=F)
+
+# "model_spec4" not included due to too few instances 
+# "model_spec2" not very informative (bootstrapping # of countries)
+
+model_desc <- model_desc %>%         
+  mutate(model_form = gsub("_", "", model_form),
+         model_form = as.factor(gsub("\\.", "", model_form)),
+         model_x = as.factor(gsub("_", "", model_x)),
+         level = as.factor(gsub("_", "", level)),
+         mator = gsub("_", "", mator),
+         mator = as.factor(gsub("\\.", "", mator)),
+         year = gsub("_", " ", year),
+         year = as.factor(gsub(",", "", year)),
+         model_spec = gsub("_", "", model_spec),
+         model_spec = as.factor(gsub("\\.", "", model_spec)),
+         i = vote_id)
+
+votes <- read.dta13(wdir("votes.dta"))
+model_desc <- left_join(model_desc,votes, by = "i")
+
+model_desc <- select(model_desc, i, vote_id, d, everything())
+
+# clean up
+
+model_desc <- model_desc %>%   
+  mutate(vote_subj = d)
+
+model_desc <- subset(model_desc, select = -c(d,i))
+rm(votes)
+
+# Missing model descriptions
+model_desc <- model_desc %>% 
+  mutate(model_x = ifelse(vote_id == 2 | vote_id == 20 | vote_id == 35, "Basic", as.character(model_x)),
+  level = ifelse(vote_id == 2 | vote_id == 20 | vote_id == 35, "None", as.character(level)),
+  level = ifelse(vote_id == 39 | vote_id == 40, "country-yearyear", as.character(level)),
+  level = ifelse(level == "", "countryyear", as.character(level)))
+  
+```
+
+## Predicting Higher Scores
+
+Seven CRI participants voted on each design (participants voted on 3 each), but due to non-response we had around 4-5 votes per design. We created a scale of support for each model description. Now we turn that scale into a dependent variable.
+
+
+```{r datareduction}
+
+cor <- select(model_desc, model_x, level, mator, model_spec, year, dv_dichot, dv_linear, dv_extra, dv_cat, rich13, rich17, eeurope)
+
+# make dummies
+cord <- fastDummies::dummy_cols(cor, remove_selected_columns=T)
+colnames(cord) <- c("model_BF","model_BFc","model_basic","MLM_fe","MLM_re", "MLM_hyb","level_c","level_cy","level_cy_c","level_cy_c_y","level_cy_y","level_c_y","level_none","level_y","mator_B","mator_M:cat","mator_MLlin","mator_MLcat_B","mator_MLlin","mator_MLlin_B","mator_ols","spec_none","spec_weights","spec_clust","spec_wgt_clus","y2016","y2006_2016","y1996_2006","y96_06_16","y90_96_06_16","yALL","dv_dichot","dv_dichotSEP","dv_lin","dv_linSEP","dv_linSCALE","dv_lin_NA","dv_extra","dv_DEreg","dv_cumlink","dv_catSEP","dv_dichLAT","dv_extraNA","dv_cat","dv_catSEP","dv_catCC","dv_catSEM","rich13NO","rich13YES","rich17NO","rich17YES","eeurope")
+
+cord1 <- cord[,1:25]
+cord2 <- cord[,26:51]
+# write.xlsx(cord, wdir("cord.xlsx"))
+cor1 <- cor(cord1, use = "pairwise.complete.obs")
+corrplot::corrplot(cor1)
+```
+
+```{r cor2, echo=T}
+cor2 <- cor(cord2, use = "pairwise.complete.obs")
+corrplot::corrplot(cor2)
+```
+
+```{r popularity}
+# Create a table with average votes by model components
+
+popdf <- as.data.frame(matrix(nrow= 31, ncol = 2, dimnames = list(seq(1:31), c("Feature","Avg_Score"))))
+
+popdf$Feature <- c("All 5-Waves", "2006 & 2016", "1996, 2006 & 2016", "1996 & 2006", "Includes Eastern Europe", "All Possible Countries", "Rich 17 Countries", "Rich 13 Countries", "Country-Year & Year", "Country-Year & Country", "Country", "Country & Year", "Country-Year", "Country-Year, Country & Year", "No Levels", "Year",  "Multilevel Rnd_slopes", "Two-Way FE, Clustered SE","Multilevel Rnd_ints Fix_slope", "Two-Way FE", "No Hierarchical Model", "ML","Bayes", "OLS", "Linear", "Categorical/Ordered", "Logistic",  "Employment Rate", "Social Spending", "Unemployment Rate", "Sampling Weights")
+
+# fix one column
+model_desc$ml <- ifelse(model_desc$estimate2!="" | model_desc$estimate3!="", 1, 0)
+
+
+# Populate
+popdf <- popdf %>%
+  mutate(Avg_Score = ifelse(Feature == "Linear", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_form=="Linear regression"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Logistic", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_form=="Logistic regression"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Categorical/Ordered", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_form=="Ordered logistic regression"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Two-Way FE", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_x1!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Two-Way FE, Clustered SE", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_x2!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Multilevel Rnd_ints Fix_slope", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_x3!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Multilevel Rnd_slopes", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_x4!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+                  Avg_Score = ifelse(Feature == "No Hierarchical Model", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_x=="Basic"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Country", round(aggregate(model_desc$vote_subj, by = list(model_desc$level=="country"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Year", round(aggregate(model_desc$vote_subj, by = list(model_desc$level=="year"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Country-Year", round(aggregate(model_desc$vote_subj, by = list(model_desc$level=="country-year"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Country-Year & Year", round(aggregate(model_desc$vote_subj, by = list(model_desc$level=="country-yearyear"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Country & Year", round(aggregate(model_desc$vote_subj, by = list(model_desc$level=="countryyear"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Country-Year & Country", round(aggregate(model_desc$vote_subj, by = list(model_desc$level=="country-yearcountry"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Country-Year, Country & Year", round(aggregate(model_desc$vote_subj, by = list(model_desc$level=="country-yearcountryyear"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+                  Avg_Score = ifelse(Feature == "No Levels", round(aggregate(model_desc$vote_subj, by = list(model_desc$level=="None"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "OLS", round(aggregate(model_desc$vote_subj, by = list(model_desc$estimate1=="Ordinary least squares."), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "ML", round(aggregate(model_desc$vote_subj, by = list(model_desc$ml==1), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Bayes", round(aggregate(model_desc$vote_subj, by = list(model_desc$estimate4=="Bayesian."), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Sampling Weights", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_spec3!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "1996 & 2006", round(aggregate(model_desc$vote_subj, by = list(model_desc$year=="  1996 2006 "), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "2006 & 2016", round(aggregate(model_desc$vote_subj, by = list(model_desc$year=="   2006  2016"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "1996, 2006 & 2016", round(aggregate(model_desc$vote_subj, by = list(model_desc$year=="  1996 2006  2016"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "All 5-Waves", round(aggregate(model_desc$vote_subj, by = list(model_desc$year=="1985 1990 1996 2006  2016"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Rich 13 Countries", round(aggregate(model_desc$vote_subj, by = list(model_desc$rich13!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Rich 17 Countries", round(aggregate(model_desc$vote_subj, by = list(model_desc$rich17!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Includes Eastern Europe", round(aggregate(model_desc$vote_subj, by = list(model_desc$eeurope!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "All Possible Countries", round(aggregate(model_desc$vote_subj, by = list(model_desc$allcountries!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Employment Rate", round(aggregate(model_desc$vote_subj, by = list(model_desc$emplrate_ivC!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Unemployment Rate", round(aggregate(model_desc$vote_subj, by = list(model_desc$unemprate_ivC!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Social Spending", round(aggregate(model_desc$vote_subj, by = list(model_desc$socx_ivC!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score))
+
+# create standardized score
+popdf$Avg_ScoreZ <- (popdf$Avg_Score - mean(popdf$Avg_Score))/sd(popdf$Avg_Score)
+
+# better to simply anchor the score at zero, use OLS score for "zero" and then let the three extremely low scores be -0.08, -0.04
+popdf$Avg_ScoreA <- popdf$Avg_Score - 3.897
+popdf$Avg_ScoreA <- ifelse(popdf$Avg_ScoreA < - 1.2, -0.08, ifelse(popdf$Avg_ScoreA < -0.1, -0.04, popdf$Avg_ScoreA))
+
+# year is a super outlier, trim for visualization purposes
+popdf$Avg_ScoreZ <- ifelse(popdf$Avg_ScoreZ < -3, -0.8, ifelse(popdf$Avg_ScoreZ < -2, -0.6, ifelse(popdf$Avg_ScoreZ < -0.6, -0.4, popdf$Avg_ScoreZ)))
+
+
+
+# create a grouping indicator
+popdf$group <- c("Survey Waves","Survey Waves","Survey Waves","Survey Waves","Countries Included","Countries Included","Countries Included","Countries Included","Levels Included","Levels Included","Levels Included","Levels Included","Levels Included","Levels Included","Levels Included","Levels Included","Variance Structure","Variance Structure","Variance Structure","Variance Structure","Variance Structure","Estimator","Estimator","Estimator","Functional Form","Functional Form","Functional Form","Country-Level Control Vars","Country-Level Control Vars","Country-Level Control Vars","Other")
+
+popdf$group <- factor(popdf$group, levels = c("Survey Waves","Countries Included","Levels Included","Variance Structure","Estimator","Functional Form","Country-Level Control Vars","Other"))
+popdf$Feature <- as.factor(popdf$Feature)
+
+# make a counter to keep x-axes in order
+popdf$xaxis <- seq(from = 31, to = 1)
+
+# for horizontal charts
+popdf$hjust <- 1
+popdf$label_y = ifelse(popdf$Avg_ScoreA>0,-0.03, popdf$Avg_ScoreA - 0.02)
+popdf$label_x = popdf$xaxis+0.14
+```
+
+```{r fig1, warning=F, message=F, echo=T}
+png(file = "Fig1_meta.png", width = 750)
+ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
+
+  geom_bar(stat = "identity", aes(fill = group)) +
+  geom_text(aes(y = label_y, x = label_x, fill = group, hjust = hjust), size = 4) +
+  labs(fill = "MODEL FEATURES", title = "") +
+    geom_hline(yintercept=0) +
+  coord_flip() + labs(y = "Average Relative Support, (OLS = 0, negative values trimmed)", x = "") +
+     scale_x_discrete(breaks = NULL) +
+  ylim(-0.4, 0.85)   +
+      theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 14),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.title.x = element_text(size = 14),
+        legend.key.size = unit(1,"line"))
+dev.off()
+        # plot.margin = margin(0, 0, 0, 2, "cm"))
+```
+
+
+```{r predictingvotes}
+
+# Variables to use:
+model_desca <- model_desc
+# only two cases of country-year, year, combine with country-year, country
+model_desca$level = ifelse(model_desca$level=="country-yearyear", "country-yearcountry", model_desca$level)
+# same with level = None, combine with year
+model_desca$level = ifelse(model_desca$level=="None", "year", model_desca$level)
+
+m1 <- lm(vote_subj ~ model_form , data= model_desca) # alone this explains nothing, also adds nothing to later models
+m2 <- lm(vote_subj ~ model_x, data=model_desca) 
+m3 <- lm(vote_subj ~ model_x + level, data=model_desca)
+m4 <- lm(vote_subj ~ model_x + level + mator, data=model_desca)
+m5 <- lm(vote_subj ~ model_x + level + mator + model_spec, data=model_desca)
+m6 <- lm(vote_subj ~ model_x + level + mator + model_spec + year, data=model_desca)
+m7 <- lm(vote_subj ~ model_x + level + mator + model_spec + year + dv_dichot, data=model_desca)
+
+m2 <- lm(vote_subj ~ model_x + level + mator + model_spec + year + dv_dichot + dv_linear + dv_extra + dv_cat + rich13 + rich17 + eeurope, data=model_desca)
+m2 <- lm(vote_subj ~ model_x + level + mator + model_spec + year + dv_dichot + dv_linear + dv_extra + dv_cat + rich13 + rich17 + eeurope, data=model_desca)
+m2 <- lm(vote_subj ~ model_x + level + mator + model_spec + year + dv_dichot + dv_linear + dv_extra + dv_cat + rich13 + rich17 + eeurope, data=model_desca)
+m2 <- lm(vote_subj ~ model_x + level + mator + model_spec + year + dv_dichot + dv_linear + dv_extra + dv_cat + rich13 + rich17 + eeurope, data=model_desca)
+
+
+tab_model(m2, m3,m4,m5,m6,m7,p.style = "stars", show.ci = F)
+
+```
+
+
+### Kialo Deliberation
+
+Based on critical differences in research designs we provided the following main theses to start the deliberation:
+
+*CASE SELECTION*
+Brady and Finnigan (2014) argue that rich democracies are appropriate for testing their hypothesis. They identify seventeen in particular (AUS, CAN, DEN, FIN, FRA, DEU, IRE, JPN, NET, NZL, NOR, PRT, ESP, SWE, CHE, UK and US). They analyzed a sub-sample of thirteen due to data availability. Research designs testing our hypothesis should only include some or all of these seventeen countries. Any additional countries are inappropriate for testing the hypothesis. 
+
+*CLUSTERED STANDARD ERRORS*
+Brady & Finnigan did not use clustered standard errors in the two-way FE models at the country-level. Therefore, coefficient significance tests use thousands of cases when there are only 13 countries. Therefore, to truly test the CRI hypothesis every study must cluster the standardd errors for all country-level independent variable coefficients. Otherwise the estimates are untrustworthy.
+
+*POWER*
+One team did a power analysis of a 2x13 case bivariate regression, to thest the greatest possible power Brady & Finnigan had in their two-way FE models. If the true effect of immigration on social policy preferences is <0.16 standardized units (i.e., Cohen's d=0.16 assuming standardized scales), they concluded <80% power (at .05 alpha). If similar power analyses were conducted for each research design, those with <80% power must be excluded from the CRI results.
+
+*TWO-WAY FE*
+One participant suggested that the interpretation of two-way FE is not ideal to test the hypothesis as results are not straightforward, and thus difficult to interpret. This is a Thesis against the use of two-way FE. [link to working-paper at the time provided] 'Abstract': "The two-way fixed effects (FE) model, an increasingly popular method for modeling time-series cross-section (TSCS) data, is substantively difficult to interpret because the model's estimates are a complex amalgamation of variation in the over-time and cross-sectional effects. We demonstrate this complexity in the two-way FE estimate through mathematical exposition. As an illustration, we develop a novel simulation that enables us to generate TSCS data with varying over-time and cross-sectional effects and examine the behavior of the two-way FE model as these effects change. We demonstrate that the two-way FE model makes specific assumptions about TSCS datasets, and if these assumptions are not met, the model may be unidentified even if substantial variation exists along both dimensions. Because of the difficulty in interpretation, we do not recommend that applied researchers rely on the two-way FE model except for situations in which the assumptions are well-understood, such as the canonical difference-in-difference design." (paper later published as Kropko and Kubinec 2020).
+
+Vote response options about the "veracity" of the arguments:
+
+0 - False
+1 - Improbable
+2 - Plausible
+3 - Probable
+4 - True
+
+In this data frame the majority arguments against or for the thesis are only listed if thye got at least 10 votes and had an average above 3 (so the 4th bar is at least partially filled)
+
+The participants were split into two groups, both groups participated in post design deliberation and voting.
+
+*Deliberation Group* (participated in a deliberation before designing their research)
+
+https://www.kialo.com/crowdsourced-replication-initiative---research-design-critical-arguments-24397
+
+*Control Group* (did not participate in pre-design deliberation)
+
+https://www.kialo.com/crowdsourced-replication-initiative---research-design---critical-arguments-24289
+
+### The major results are that participants were in favor of clustering standard errors, and opposed to the usage of only rich democracies. We add two columns to give a bonus for studies that have these attributes. Based on the nature of the discussion we must give a positive score to **all** studies using clustered standard errors, not just Two-Way FE, therefore all nultilevle models also get this positive scoring. 
+
+```{r kialo, message=F, warning=F}
+
+kialo <- as.data.frame(matrix(nrow = 7, ncol = 10))
+colnames(kialo) <- c("Group","Thesis","False","Improbable","Plausible","Probable","True","Average","Majority_Args_Against","Majority_Args_Support")
+
+kialo[1,1:10] <- c("Control","Case Selection",44,20,7,1,1,NA,"1 Add all possible countries, 2 Add more rich democracies, 3 run both with and without all possible countries","None")
+kialo[2,1:10] <- c("Control","Clustered SE",2,4,12,29,20,NA,"None","None")
+kialo[3,1:10] <- c("Control","Power", 13, 33, 20, 6, 0, NA, "1 Include all studies and report power for each, 2 Focus on uncertainty and bias instead, 3 Focus on effect sized instead","None")
+kialo[4,1:10] <- c("Control","Two-Way FE",3,13,11,8,1,NA,"1 Within between multilevel random effect model proposed","None")
+
+kialo[5,1:10] <- c("Deliberation","Case Selection",28,19,7,7,6,NA,"1 If data are available we should use them, 2 Either there is a cross-country effect or not if it only applies in ceratin countries then it is not one","None")
+kialo[6,1:10] <- c("Deliberation","Clustered SE",9,9,12,26,9,NA,"1 Should be at the country-year level not the country level","1 Differences in country or wave sampling suggests we should do this")
+kialo[7,1:10] <- c("Deliberation","Power", 12,18,27,3,4, NA, "None","1 We need to distinguish between an effect with not enough power and not enough power to find an effect")
+
+kialo <- kialo %>%
+  mutate(False = as.numeric(False),
+         Improbable = as.numeric(Improbable),
+         Plausible = as.numeric(Plausible),
+         Probable = as.numeric(Probable),
+         True = as.numeric(True),
+         Average = (Improbable + Plausible*2 + Probable*3 + True*4)/(Improbable + Plausible + Probable + True + False))
+
+```
+## Output File
+
+We import the master data, make a column for each model specification, and then create a total score for model. 
+
+
+```{r output1, message = F, warning = F}
+# transpose scoring data to columns
+
+# first create a variable coded 0 (worst score) to 1 (highest)
+popdf$score <- popdf$Avg_ScoreA-min(popdf$Avg_ScoreA)
+popdf$score <- popdf$score/max(popdf$score)
+
+# add two columns for the kialo votes
+popdf[nrow(popdf)+1,] <- NA
+popdf[nrow(popdf)+1,] <- NA
+
+popdf <- select(popdf, Feature, score)
+popdf$Feature <- as.character(popdf$Feature)
+#careful, any changes above deprecate these lines
+popdf[32,1] <- "Beyond Rich Democracies"
+popdf[33,1] <- "Higher Level Clustering"
+popdf[32,2] <- 1
+popdf[33,2] <- 1
+
+popdf_out <- as.data.frame(t(popdf))
+popdf_outL <- as.list(popdf$Feature)
+colnames(popdf_out) <- popdf_outL
+popdf_out <- popdf_out[2,]
+
+d2 <- data.frame(matrix(nrow = 1312, ncol = 33))
+colnames(d2) <- popdf_outL
+popdf_out <- rbind(popdf_out, d2)
+
+popdf_out <- popdf_out %>%
+  mutate(`All 5-Waves` = max(as.numeric(`All 5-Waves`), na.rm=T),
+         `2006 & 2016` = max(as.numeric(`2006 & 2016`), na.rm=T),
+         `1996, 2006 & 2016` = max(as.numeric(`1996, 2006 & 2016`), na.rm=T),
+         `1996 & 2006`= max(as.numeric(`1996 & 2006`), na.rm=T),
+         `Includes Eastern Europe` = max(as.numeric(`Includes Eastern Europe`), na.rm = T),
+         `All Possible Countries` = max(as.numeric(`All Possible Countries`), na.rm=T),
+         `Rich 17 Countries` = max(as.numeric(`Rich 17 Countries`), na.rm=T), 
+         `Rich 13 Countries`= max(as.numeric(`Rich 13 Countries`), na.rm=T), 
+         `Country-Year & Year` = max(as.numeric(`Country-Year & Year`), na.rm=T),
+         `Country-Year & Country` = max(as.numeric(`Country-Year & Country`), na.rm=T),
+         `Country-Year` = max(as.numeric(`Country-Year`), na.rm=T),
+         `Country & Year` = max(as.numeric(`Country & Year`), na.rm=T), 
+         Country = max(as.numeric(Country), na.rm=T), 
+         Year = max(as.numeric(Year), na.rm=T), 
+         `No Levels` = max(as.numeric(`No Levels`), na.rm=T), 
+         `Multilevel Rnd_slopes` = max(as.numeric(`Multilevel Rnd_slopes`), na.rm=T),
+         `Multilevel Rnd_ints Fix_slope` = max(as.numeric(`Multilevel Rnd_ints Fix_slope`), na.rm=T),
+         `Two-Way FE, Clustered SE`= max(as.numeric(`Two-Way FE, Clustered SE`), na.rm=T),
+         `Two-Way FE`= max(as.numeric(`Two-Way FE`), na.rm=T),
+         `No Hierarchical Model`= max(as.numeric(`No Hierarchical Model`), na.rm=T),
+         `ML`= max(as.numeric(`ML`), na.rm=T),
+         `Bayes`= max(as.numeric(`Bayes`), na.rm=T),
+         `OLS`= max(as.numeric(`OLS`), na.rm=T),
+         `Linear`= max(as.numeric(`Linear`), na.rm=T),
+         `Categorical/Ordered`= max(as.numeric(`Categorical/Ordered`), na.rm=T),
+         Logistic = max(as.numeric(Logistic), na.rm=T),
+         `Sampling Weights`= max(as.numeric(`Sampling Weights`), na.rm=T),
+         `Country-Year, Country & Year` = max(as.numeric(`Country-Year, Country & Year`), na.rm=T))
+
+```
+
+```{r output2, message = F, warning = F}
+
+crispec <- read.xlsx(wdir("CRI Model Specifications and Margins.xlsx"), sheetName = "Data")
+crispec <- subset(crispec, !is.na(id))
+popdf_out <- cbind(crispec, popdf_out)
+
+# get scoring
+rm(crispec, d2, kialo, model_desc)
+
+popdf_out <- popdf_out %>%
+  mutate(score_waves = ifelse((w1985+w1990+w1996+w2006+w2016)>3,`All 5-Waves`,  ifelse(w2016==1 & w2006==1 & w1996==0 & w1990==0 & w1985==0, `2006 & 2016`, ifelse(w2016==1 & w2006==1 & w1996==1 & w1990==0 & w1985==0, `1996, 2006 & 2016`, ifelse(w2016==0 & w2006==1 & w1996==1 & w1990==0 & w1985==0, `1996 & 2006`, NA)))), # we credit teams that used all but 1985 as '5-wave' teams
+         score_cases = ifelse(eeurope==1, (as.numeric(`Includes Eastern Europe`)+1)/2, ifelse(allavailable==1, (as.numeric(`All Possible Countries`)+1)/2, ifelse(orig17==1,`Rich 17 Countries`, ifelse(orig13==1,`Rich 13 Countries`, NA)))), # NA here are cases with less than 13 rich countries, or an odd sample of rich countries, thus NA ok here
+         score_levels = ifelse(level_cyear == 1 & level_country == 0 & level_year == 1,`Country-Year & Year`, ifelse(level_cyear == 1 & level_country == 1 & level_year == 0, `Country-Year & Country`, ifelse(level_cyear == 0 & level_country == 1 & level_year == 0, Country, ifelse(level_cyear == 0 & level_country == 1 & level_year == 1,`Country & Year`, ifelse(level_cyear == 1 & level_country == 0 & level_year == 0,`Country-Year`, ifelse(level_cyear == 1 & level_country == 1 & level_year == 1,`Country-Year, Country & Year`, ifelse(level_cyear == 0 & level_country == 0 & level_year == 0, `No Levels`, ifelse(level_cyear == 0 & level_country == 0 & level_year == 1,`Year`, NA)))))))),
+         score_mlm = ifelse((mlm_re == 0 &	mlm_fe == 1) | (mlm_re==0	& hybrid_mlm == 1),`Multilevel Rnd_slopes`, ifelse(mlm_re ==1, `Multilevel Rnd_ints Fix_slope`, ifelse(twowayfe==1 & cluster_any==1, `Two-Way FE, Clustered SE`, ifelse(twowayfe==1 & cluster_any==0,`Two-Way FE`, NA)))),
+         score_mator = ifelse(bayes==1, `Bayes`, ifelse(ols==1 | lpm==1, `OLS`, ifelse(ologit==1, `Categorical/Ordered`, ifelse(logit==1, `Logistic`, `ML`)))),
+         score_weight = ifelse(weights==1, `Sampling Weights`, 0.3))
+
+popdf_out <- select(popdf_out, id, score_waves, score_cases, score_levels, score_mlm, score_mator, score_weight)
+
+
+# Make average total score
+
+popdf_out <- popdf_out %>%
+  rowwise() %>%
+  mutate(total_score = mean(c(score_waves, score_cases, score_levels, score_mlm, score_mator, score_weight), na.rm = T))
+
+save(popdf_out, file = wdir("popdf_out.Rdata"))
+
+
+```

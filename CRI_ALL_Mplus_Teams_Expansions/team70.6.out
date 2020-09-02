@@ -1,0 +1,566 @@
+Mplus VERSION 8.2
+MUTHEN & MUTHEN
+02/25/2020   1:51 PM
+
+INPUT INSTRUCTIONS
+
+      TITLE: 06
+
+    DATA: FILE IS "C:\data\06_70.dat";
+
+        VARIABLE:
+
+
+            NAMES ARE OAgeC Uempl RedInDi Jobs
+                      Female age age_sq educ emplcat
+                      cntry emprate foreignp socx netmigp;
+
+              MISSING ARE ALL (-999);
+
+
+            USEVARIABLE IS
+            Uempl
+            Female age educ emplcat
+            foreignp socx emprate netmigp age_sq2;
+
+            CLUSTER IS cntry;
+
+            within = Female age age_sq2 educ emplcat;
+            between = foreignp socx emprate netmigp;
+
+            !PI had to add this, Mplus does not allow such high variance
+            DEFINE: age_sq2 = age_sq/100;
+
+      ANALYSIS:     TYPE = TWOLEVEL;
+      model:
+         %within%
+
+                   Uempl on Female age age_sq2 educ emplcat;
+
+
+         %between%
+
+                   Uempl ON foreignp socx emprate netmigp;
+
+      output: sampstat stdyx CINTERVAL;
+
+
+
+*** WARNING
+  Data set contains cases with missing on x-variables.
+  These cases were not included in the analysis.
+  Number of cases with missing on x-variables:  27467
+*** WARNING
+  Data set contains cases with missing on all variables except
+  x-variables.  These cases were not included in the analysis.
+  Number of cases with missing on all variables except x-variables:  1203
+   2 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+06
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                       19971
+
+Number of dependent variables                                    1
+Number of independent variables                                  9
+Number of continuous latent variables                            0
+
+Observed dependent variables
+
+  Continuous
+   UEMPL
+
+Observed independent variables
+   FEMALE      AGE         EDUC        EMPLCAT     FOREIGNP    SOCX
+   EMPRATE     NETMIGP     AGE_SQ2
+
+Variables with special functions
+
+  Cluster variable      CNTRY
+
+  Within variables
+   FEMALE      AGE         EDUC        EMPLCAT     AGE_SQ2
+
+  Between variables
+   FOREIGNP    SOCX        EMPRATE     NETMIGP
+
+
+Estimator                                                      MLR
+Information matrix                                        OBSERVED
+Maximum number of iterations                                   100
+Convergence criterion                                    0.100D-05
+Maximum number of EM iterations                                500
+Convergence criteria for the EM algorithm
+  Loglikelihood change                                   0.100D-02
+  Relative loglikelihood change                          0.100D-05
+  Derivative                                             0.100D-03
+Minimum variance                                         0.100D-03
+Maximum number of steepest descent iterations                   20
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-03
+Optimization algorithm                                         EMA
+
+Input data file(s)
+  C:\data\06_70.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+     Number of clusters                         15
+
+     Average cluster size     1331.400
+
+     Estimated Intraclass Correlations for the Y Variables
+
+                Intraclass
+     Variable  Correlation
+
+     UEMPL        0.133
+
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+     PROPORTION OF DATA PRESENT
+
+
+           Covariance Coverage
+              UEMPL         FEMALE        AGE           EDUC          EMPLCAT
+              ________      ________      ________      ________      ________
+ UEMPL          1.000
+ FEMALE         1.000         1.000
+ AGE            1.000         1.000         1.000
+ EDUC           1.000         1.000         1.000         1.000
+ EMPLCAT        1.000         1.000         1.000         1.000         1.000
+ AGE_SQ2        1.000         1.000         1.000         1.000         1.000
+ FOREIGNP       1.000         1.000         1.000         1.000         1.000
+ SOCX           1.000         1.000         1.000         1.000         1.000
+ EMPRATE        1.000         1.000         1.000         1.000         1.000
+ NETMIGP        1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              AGE_SQ2       FOREIGNP      SOCX          EMPRATE       NETMIGP
+              ________      ________      ________      ________      ________
+ AGE_SQ2        1.000
+ FOREIGNP       1.000         1.000
+ SOCX           1.000         1.000         1.000
+ EMPRATE        1.000         1.000         1.000         1.000
+ NETMIGP        1.000         1.000         1.000         1.000         1.000
+
+
+SAMPLE STATISTICS
+
+NOTE:  The sample statistics for within and between refer to the
+       maximum-likelihood estimated within and between covariance
+       matrices, respectively.
+
+
+     ESTIMATED SAMPLE STATISTICS FOR WITHIN
+
+
+           Means
+              UEMPL         FEMALE        AGE           EDUC          EMPLCAT
+              ________      ________      ________      ________      ________
+                0.000         0.520        48.781         0.601         0.496
+
+
+           Means
+              AGE_SQ2       FOREIGNP      SOCX          EMPRATE       NETMIGP
+              ________      ________      ________      ________      ________
+               26.642         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              UEMPL         FEMALE        AGE           EDUC          EMPLCAT
+              ________      ________      ________      ________      ________
+ UEMPL          0.607
+ FEMALE         0.018         0.250
+ AGE            0.801        -0.423       284.615
+ EDUC          -0.024        -0.004        -1.804         0.240
+ EMPLCAT       -0.040        -0.050        -2.853         0.045         0.250
+ AGE_SQ2        0.852        -0.416       284.308        -1.947        -3.333
+ FOREIGNP       0.000         0.000         0.000         0.000         0.000
+ SOCX           0.000         0.000         0.000         0.000         0.000
+ EMPRATE        0.000         0.000         0.000         0.000         0.000
+ NETMIGP        0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              AGE_SQ2       FOREIGNP      SOCX          EMPRATE       NETMIGP
+              ________      ________      ________      ________      ________
+ AGE_SQ2      293.741
+ FOREIGNP       0.000         0.000
+ SOCX           0.000         0.000         0.000
+ EMPRATE        0.000         0.000         0.000         0.000
+ NETMIGP        0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              UEMPL         FEMALE        AGE           EDUC          EMPLCAT
+              ________      ________      ________      ________      ________
+ UEMPL          1.000
+ FEMALE         0.046         1.000
+ AGE            0.061        -0.050         1.000
+ EDUC          -0.064        -0.016        -0.218         1.000
+ EMPLCAT       -0.104        -0.199        -0.338         0.183         1.000
+ AGE_SQ2        0.064        -0.049         0.983        -0.232        -0.389
+ FOREIGNP       0.000         0.000         0.000         0.000         0.000
+ SOCX           0.000         0.000         0.000         0.000         0.000
+ EMPRATE        0.000         0.000         0.000         0.000         0.000
+ NETMIGP        0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              AGE_SQ2       FOREIGNP      SOCX          EMPRATE       NETMIGP
+              ________      ________      ________      ________      ________
+ AGE_SQ2        1.000
+ FOREIGNP       0.000         0.000
+ SOCX           0.000         0.000         0.000
+ EMPRATE        0.000         0.000         0.000         0.000
+ NETMIGP        0.000         0.000         0.000         0.000         0.000
+
+
+     ESTIMATED SAMPLE STATISTICS FOR BETWEEN
+
+
+           Means
+              UEMPL         FEMALE        AGE           EDUC          EMPLCAT
+              ________      ________      ________      ________      ________
+                2.903         0.000         0.000         0.000         0.000
+
+
+           Means
+              AGE_SQ2       FOREIGNP      SOCX          EMPRATE       NETMIGP
+              ________      ________      ________      ________      ________
+                0.000        12.258        21.440        72.864         2.331
+
+
+           Covariances
+              UEMPL         FEMALE        AGE           EDUC          EMPLCAT
+              ________      ________      ________      ________      ________
+ UEMPL          0.093
+ FEMALE         0.000         0.000
+ AGE            0.000         0.000         0.000
+ EDUC           0.000         0.000         0.000         0.000
+ EMPLCAT        0.000         0.000         0.000         0.000         0.000
+ AGE_SQ2        0.000         0.000         0.000         0.000         0.000
+ FOREIGNP      -1.016         0.000         0.000         0.000         0.000
+ SOCX           0.625         0.000         0.000         0.000         0.000
+ EMPRATE       -0.544         0.000         0.000         0.000         0.000
+ NETMIGP        0.135         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              AGE_SQ2       FOREIGNP      SOCX          EMPRATE       NETMIGP
+              ________      ________      ________      ________      ________
+ AGE_SQ2        0.000
+ FOREIGNP       0.000        38.687
+ SOCX           0.000       -12.394        19.609
+ EMPRATE        0.000         8.552        -5.967        26.756
+ NETMIGP        0.000         4.807        -2.760        -2.340         2.577
+
+
+           Correlations
+              UEMPL         FEMALE        AGE           EDUC          EMPLCAT
+              ________      ________      ________      ________      ________
+ UEMPL          1.000
+ FEMALE         0.000         0.000
+ AGE            0.000         0.000         0.000
+ EDUC           0.000         0.000         0.000         0.000
+ EMPLCAT        0.000         0.000         0.000         0.000         0.000
+ AGE_SQ2        0.000         0.000         0.000         0.000         0.000
+ FOREIGNP      -0.536         0.000         0.000         0.000         0.000
+ SOCX           0.463         0.000         0.000         0.000         0.000
+ EMPRATE       -0.345         0.000         0.000         0.000         0.000
+ NETMIGP        0.276         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              AGE_SQ2       FOREIGNP      SOCX          EMPRATE       NETMIGP
+              ________      ________      ________      ________      ________
+ AGE_SQ2        0.000
+ FOREIGNP       0.000         1.000
+ SOCX           0.000        -0.450         1.000
+ EMPRATE        0.000         0.266        -0.260         1.000
+ NETMIGP        0.000         0.481        -0.388        -0.282         1.000
+
+
+     MAXIMUM LOG-LIKELIHOOD VALUE FOR THE UNRESTRICTED (H1) MODEL IS -23240.164
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     UEMPL                 2.928      -0.511       1.000    6.59%       2.000      3.000      3.000
+           19971.000       0.719      -0.286       4.000   26.00%       3.000      4.000
+     FEMALE                0.520      -0.078       0.000   48.04%       0.000      0.000      1.000
+           19971.000       0.250      -1.994       1.000   51.96%       1.000      1.000
+     AGE                  48.781       0.138      15.000    0.06%      33.000     43.000     48.000
+           19971.000     284.615      -0.779      97.000    0.02%      53.000     64.000
+     EDUC                  0.601      -0.411       0.000   39.93%       0.000      1.000      1.000
+           19971.000       0.240      -1.831       1.000   60.07%       1.000      1.000
+     EMPLCAT               0.496       0.015       0.000   50.38%       0.000      0.000      0.000
+           19971.000       0.250      -2.000       1.000   49.62%       1.000      1.000
+     AGE_SQ2              26.642       0.746       2.250    0.06%      10.890     18.490     23.040
+           19971.000     293.741      -0.072      94.090    0.02%      28.090     40.960
+     FOREIGNP             12.258       0.139       1.564    6.67%       7.200     10.600     10.600
+              15.000      38.687      -0.967      22.300    6.67%      12.300     19.500
+     SOCX                 21.440       0.531      15.900    6.67%      16.700     18.500     20.800
+              15.000      19.609      -1.008      29.400    6.67%      21.200     26.100
+     EMPRATE              72.864      -0.079      61.847    6.67%      69.339     72.091     72.933
+              15.000      26.756       0.576      84.541    6.67%      72.973     76.220
+     NETMIGP               2.331       0.789       0.064    6.67%       0.671      1.825      2.064
+              15.000       2.577      -0.052       5.769    6.67%       2.480      3.144
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                       12
+
+Loglikelihood
+
+          H0 Value                      -23240.164
+          H0 Scaling Correction Factor      5.3611
+            for MLR
+          H1 Value                      -23240.164
+          H1 Scaling Correction Factor      5.3611
+            for MLR
+
+Information Criteria
+
+          Akaike (AIC)                   46504.328
+          Bayesian (BIC)                 46599.152
+          Sample-Size Adjusted BIC       46561.017
+            (n* = (n + 2) / 24)
+
+Chi-Square Test of Model Fit
+
+          Value                              0.000*
+          Degrees of Freedom                     0
+          P-Value                           1.0000
+          Scaling Correction Factor         1.0000
+            for MLR
+
+*   The chi-square value for MLM, MLMV, MLR, ULSMV, WLSM and WLSMV cannot be used
+    for chi-square difference testing in the regular way.  MLM, MLR and WLSM
+    chi-square difference testing is described on the Mplus website.  MLMV, WLSMV,
+    and ULSMV difference testing is done using the DIFFTEST option.
+
+RMSEA (Root Mean Square Error Of Approximation)
+
+          Estimate                           0.000
+
+CFI/TLI
+
+          CFI                                1.000
+          TLI                                1.000
+
+Chi-Square Test of Model Fit for the Baseline Model
+
+          Value                            120.772
+          Degrees of Freedom                     9
+          P-Value                           0.0000
+
+SRMR (Standardized Root Mean Square Residual)
+
+          Value for Within                   0.000
+          Value for Between                  0.000
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+Within Level
+
+ UEMPL      ON
+    FEMALE             0.047      0.016      2.910      0.004
+    AGE                0.003      0.003      1.317      0.188
+    AGE_SQ2           -0.002      0.003     -0.818      0.413
+    EDUC              -0.069      0.028     -2.459      0.014
+    EMPLCAT           -0.131      0.019     -6.787      0.000
+
+ Residual Variances
+    UEMPL              0.599      0.037     16.211      0.000
+
+Between Level
+
+ UEMPL      ON
+    FOREIGNP          -0.041      0.008     -5.200      0.000
+    SOCX               0.037      0.009      4.302      0.000
+    EMPRATE            0.017      0.005      3.235      0.001
+    NETMIGP            0.184      0.020      9.121      0.000
+
+ Intercepts
+    UEMPL              0.910      0.451      2.020      0.043
+
+ Residual Variances
+    UEMPL              0.012      0.004      2.937      0.003
+
+
+STANDARDIZED MODEL RESULTS
+
+
+STDYX Standardization
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+Within Level
+
+ UEMPL      ON
+    FEMALE             0.030      0.010      3.026      0.002
+    AGE                0.073      0.056      1.297      0.195
+    AGE_SQ2           -0.049      0.061     -0.809      0.419
+    EDUC              -0.043      0.018     -2.445      0.014
+    EMPLCAT           -0.084      0.011     -7.816      0.000
+
+ Residual Variances
+    UEMPL              0.986      0.005    219.032      0.000
+
+Between Level
+
+ UEMPL      ON
+    FOREIGNP          -0.838      0.228     -3.679      0.000
+    SOCX               0.539      0.157      3.433      0.001
+    EMPRATE            0.291      0.107      2.720      0.007
+    NETMIGP            0.971      0.232      4.178      0.000
+
+ Intercepts
+    UEMPL              2.989      1.685      1.773      0.076
+
+ Residual Variances
+    UEMPL              0.134      0.058      2.324      0.020
+
+
+R-SQUARE
+
+Within Level
+
+    Observed                                        Two-Tailed
+    Variable        Estimate       S.E.  Est./S.E.    P-Value
+
+    UEMPL              0.014      0.005      3.140      0.002
+
+Between Level
+
+    Observed                                        Two-Tailed
+    Variable        Estimate       S.E.  Est./S.E.    P-Value
+
+    UEMPL              0.866      0.058     15.049      0.000
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.169E-07
+       (ratio of smallest to largest eigenvalue)
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+Within Level
+
+ UEMPL    ON
+    FEMALE           0.005       0.015       0.020       0.047       0.073       0.078       0.088
+    AGE             -0.003      -0.002      -0.001       0.003       0.008       0.008       0.010
+    AGE_SQ2         -0.009      -0.008      -0.007      -0.002       0.002       0.003       0.005
+    EDUC            -0.141      -0.124      -0.115      -0.069      -0.023      -0.014       0.003
+    EMPLCAT         -0.181      -0.169      -0.163      -0.131      -0.099      -0.093      -0.081
+
+ Residual Variances
+    UEMPL            0.504       0.526       0.538       0.599       0.659       0.671       0.694
+
+Between Level
+
+ UEMPL    ON
+    FOREIGNP        -0.061      -0.057      -0.054      -0.041      -0.028      -0.026      -0.021
+    SOCX             0.015       0.020       0.023       0.037       0.051       0.054       0.059
+    EMPRATE          0.003       0.007       0.008       0.017       0.026       0.028       0.031
+    NETMIGP          0.132       0.145       0.151       0.184       0.217       0.224       0.236
+
+ Intercepts
+    UEMPL           -0.250       0.027       0.169       0.910       1.652       1.793       2.071
+
+ Residual Variances
+    UEMPL            0.002       0.004       0.005       0.012       0.019       0.021       0.023
+
+
+CONFIDENCE INTERVALS OF STANDARDIZED MODEL RESULTS
+
+
+STDYX Standardization
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+Within Level
+
+ UEMPL    ON
+    FEMALE           0.004       0.011       0.014       0.030       0.046       0.049       0.055
+    AGE             -0.072      -0.037      -0.020       0.073       0.165       0.183       0.217
+    AGE_SQ2         -0.205      -0.168      -0.149      -0.049       0.051       0.070       0.107
+    EDUC            -0.089      -0.078      -0.072      -0.043      -0.014      -0.009       0.002
+    EMPLCAT         -0.112      -0.105      -0.102      -0.084      -0.066      -0.063      -0.056
+
+ Residual Variances
+    UEMPL            0.974       0.977       0.978       0.986       0.993       0.995       0.997
+
+Between Level
+
+ UEMPL    ON
+    FOREIGNP        -1.425      -1.285      -1.213      -0.838      -0.463      -0.392      -0.251
+    SOCX             0.135       0.231       0.281       0.539       0.797       0.846       0.943
+    EMPRATE          0.015       0.081       0.115       0.291       0.467       0.501       0.567
+    NETMIGP          0.372       0.515       0.588       0.971       1.353       1.426       1.569
+
+ Intercepts
+    UEMPL           -1.352      -0.314       0.216       2.989       5.761       6.292       7.330
+
+ Residual Variances
+    UEMPL           -0.014       0.021       0.039       0.134       0.228       0.247       0.282
+
+
+DIAGRAM INFORMATION
+
+  Mplus diagrams are currently not available for multilevel analysis.
+  No diagram output was produced.
+
+
+     Beginning Time:  13:51:43
+        Ending Time:  13:51:46
+       Elapsed Time:  00:00:03
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2018 Muthen & Muthen

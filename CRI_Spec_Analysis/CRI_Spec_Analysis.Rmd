@@ -1,0 +1,1717 @@
+---
+title: "CRI Analysis"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+## THE CROWDSOURCED REPLICATION INITIATIVE (CRI)
+   <a href=https://osf.io/preprints/socarxiv/6j9qb/>"Executive Report"</a> contains details of the project.
+
+Principal Investigators:
+   Nate Breznau
+   
+   Eike Mark Rinke
+   
+   Alexander Wuttke
+
+
+Code Compiled by 
+   Nate Breznau, breznau.nate@gmail.com
+   
+   Hung Nguyen, hunghvnguyen@gmail.com
+
+### Contents
+   1. Data Prep - Merge results, qualitative model specs and research characteristics
+   2. Explain variance of AMEs
+   3. Generate specification curves
+
+### Special Package
+   We load the rdfanalysis package designed by <a href=https://joachim-gassen.github.io/rdfanalysis/>Joachim Gassen</a> to generate specification curves.
+   
+   
+
+```{r setup, include=FALSE}
+rm(list = ls())
+library(pacman)
+
+# Create a working directory string and a function to call the wd for every code chunk
+wd <- "C:/data" #set your wd here
+wdir <- function(x){
+  paste(wd,x, sep = "/")
+}
+
+pacman::p_load("readstata13","devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","readxl","mlogit","metaviz","jtools","sjPlot","sjmisc","sjlabelled","knitr","boot")
+
+# Load Researcher Degrees of Freedom Analysis package
+#  
+# devtools::install_github("joachim-gassen/rdfanalysis")
+library(rdfanalysis)
+
+#Column no missing function
+completeFun <- function(data, desiredCols) {
+  completeVec <- complete.cases(data[, desiredCols])
+  return(data[completeVec, ])
+}
+```
+
+
+## Data Prep
+
+
+### CRI Margins & Model Specs
+
+CRI Model Specifications and Margins in the file "CRI Model Specifications and Margins.xlsx"
+
+The Stata code is available at https://github.com/nbreznau/CRI_All_Stata_Teams_Expansion
+
+The R Code is available at https://github.com/nbreznau/CRI_All_R_Teams_Expansions
+
+Details about the qualitative coding can be found in the Executive Report.
+
+```{r merge, include=FALSE}
+# Data generated from qualitative model specification coding
+crispec <- read_excel(wdir("CRI Model Specifications and Margins.xlsx"), sheet = "Data")
+
+crispec <- crispec %>%
+  dplyr::rename(
+    AU = australia  ,
+    AT = austria  ,
+    BE = belgium	 ,
+    BG = bulgaria	 ,
+    CA = canada	 ,
+    CL = chile	 ,
+    HR = croatia	 ,
+    CY = cyprus	 ,
+    CZ = czechia	 ,
+    DK = denmark	 ,
+    FI = finland	 ,
+    FR = france	 ,
+    DE = germany	 ,
+    HU = hungary	 ,
+    IS = iceland	 ,
+    IN = india	 ,
+    IE = ireland	 ,
+    IL = israel	 ,
+    IT = italy	 ,
+    JP = japan	 ,
+    KR = korea	 ,
+    LV = latvia  ,
+    LT = lithuania	 ,
+    NT = netherlands  ,
+    NZ = new_zealand	 ,
+    NO = norway  ,
+    PH = philippines  ,
+    PL = poland	 ,
+    PT = portugal	 ,
+    RU = russia	 ,
+    SK = slovakia	 ,
+    SI = slovenia	 ,
+    ES = spain	 ,
+    SE = sweden  ,
+    CH = switzerland  ,
+    UK = great_britain  ,
+    US = usa	 ,
+    ZA = south_africa  ,
+    TW = taiwan  ,
+    TR = turkey  ,
+    UY = uruguay	 ,
+    VE = venezuela  ,
+    Scale = scale,
+  )
+
+crispec <- crispec[order(crispec$count),]
+
+
+#replace all 1's with the column name for all countries
+w <- select(crispec, AU:VE, id)
+
+for (i in 1:length(w)) {
+    w[[i]] <- ifelse(w[[i]]=="1", colnames(w)[i], w[[i]])
+}
+
+w <- select(w, -c(germany_west, germany_east, n_ireland))
+
+crispeca <- select(crispec, -c(AU:VE))
+crispec <- merge(crispeca, w , by = "id")
+                     
+crispec <- dplyr::select(crispec, stata, r, mlwin, mplus, spss, socx_ivC, unemprate_ivC, emplrate_ivC, gdp_ivC, w1985, w1990, w1996, w2006, w2016, logit, ols, ologit, mlogit, ml_glm, bayes, everything())
+
+crispec$u_teamid <- crispec$team
+
+
+#output file for merging with Unipark
+save.dta13(crispec, file = "C:/data/results_spec.dta")
+
+
+#create single categorical variables, watch out, these column numbers change if transformations added above
+crispec$software <- names(crispec[1:5])[apply(crispec[1:5], 1, match, x = 1)] 
+crispec$indepv <- names(crispec[6:9])[apply(crispec[6:9], 1, match, x = 1)]
+#this wave command doesn't do what we want, remove at some point
+crispec$wave <- names(crispec[10:14])[apply(crispec[10:14], 1, match, x = 1)]
+crispec$mator <- names(crispec[15:20])[apply(crispec[15:20], 1, match, x = 1)]
+crispec$countries <- as.character(crispec$num_countries)
+
+#create variable with string values for all countries that are present in model
+crispec <- crispec %>%
+  unite("incl_countries", AU:VE, sep = " ", remove = F)
+
+#replace 1's with DV name
+z <- select(crispec, Jobs:Scale, id)
+z2 <- which(z=="1",arr.ind=TRUE)
+z[z2] <- names(z)[z2[,"col"]]
+crispecc <- select(crispec, -c(Jobs:Scale))
+crispec <- merge(crispecc, z , by = "id")
+
+crispec <- crispec %>%
+  unite("wave_str", w1985:w2016, sep = " ", remove = F)
+
+crispec <- crispec %>%
+  unite("DV_str", Jobs:Scale, sep = " ", remove = F)
+
+#create output to recombine with master excel sheet
+write.csv(crispec, file = wdir("xout.csv"))
+
+# replace 1's with wave name
+y <- select(crispec, w1985:w2016, id)
+y2 <- which(y=="1",arr.ind=TRUE)
+y[y2] <- names(y)[y2[,"col"]]
+crispecb <- select(crispec, -c(w1985:w2016))
+crispec <- merge(crispecb, y , by = "id")
+
+rm(crispeca,crispecb,crispecc,w,y,y2,z,z2)
+
+
+#replace p values of 0.000000 with 0.00001
+crispec <- crispec %>%
+  mutate(p = ifelse(p==0.00000,0.00001,p))
+
+```
+
+
+
+```{r curvesetup, include=F}
+crispectest <- dplyr::select(crispec, id, Hsupport, Hreject, Hnotest, DV, main_IV_type, software, dichotomize, twowayfe, cluster_any, mlm_re, mlm_fe, mator, logit, indepv, wave, w1985:w2016, countries, AU:VE, Jobs:Scale, p, AME, lower, upper, eeurope, allavailable, hybrid_mlm, Hmixed, Hsupport_stock, Hreject_stock, Hnotest_stock, Hsupport_net, Hreject_net, Hnotest_net)
+
+crispectest <- rename(crispectest, est = AME, lb = lower, ub = upper, dv_m = dichotomize, dv_type = DV, iv_type = main_IV_type)
+
+crispectest <- crispectest %>%
+      mutate(twowayfe = ifelse(twowayfe == 1,"Yes","No"),
+      cluster_any = ifelse(cluster_any == 1,"Yes","No"),
+      mlm_re = ifelse(mlm_re == 1,"Yes","No"),
+      mlm_fe = ifelse(mlm_fe == 1,"Yes","No"),
+      hybrid_mlm = ifelse(hybrid_mlm==1, "Yes","No"),
+      mlm = ifelse(mlm_re == "Yes" | mlm_fe == "Yes" | hybrid_mlm == "Yes", "Yes", "No"),
+      logit = ifelse(logit == 1,"Yes","No"),
+      dv_m = ifelse(dv_m == 1,"dichotomous","continuous"),
+      Hresult = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse(Hmixed==1 & iv_type == "Stock" & Hnotest_stock==1, "No test", ifelse(Hmixed==1 & iv_type == "Stock" & Hsupport_stock==1, "Support", ifelse(Hmixed==1 & iv_type == "Stock" & Hreject_stock==1, "Reject", ifelse(Hmixed==1 & iv_type == "Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & iv_type == "Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & iv_type == "Flow" & Hreject_net==1, "Reject", ifelse(Hmixed==1 & iv_type == "Change in Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & iv_type == "Change in Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & iv_type == "Change in Flow" & Hreject_net==1, "Reject", NA)))))))))))))
+
+
+# combine all different scale types, plus rmv extra space in Jobs
+crispectest$dv_type <- recode(crispectest$dv_type, 
+                              "Scale_6" = "Scale",
+                              "Scale_4" = "Scale",
+                              "Scale_5" = "Scale",
+                              "Scale_Desrv" = "Scale",
+                              "Scale_Univ" = "Scale",
+                              "Jobs " = "Jobs")
+
+crispectest$indepv <- recode(crispectest$indepv,
+                             "socx_ivC" = "Soc_Spending",
+                             "unemprate_ivC" = "Unemp_Rate",
+                             "emplrate_ivC" = "Emp_Rate",
+                             "gdp_ivC" = "GDP_Per_Capita")
+
+crispectest$indepv[is.na(crispectest$indepv)] <- "None"
+
+crispectest$software <- recode(crispectest$software,
+                             "stata" = "Stata",
+                             "r" = "R",
+                             "spss" = "SPSS",
+                             "mplus" = "Mplus",
+                             "mlwin" = "MLwiN")
+
+
+crispectest <- crispectest[order(crispectest$est),]
+
+cat <- select(crispectest, c(AU:VE), id)
+crispectest <- select(crispectest, -c(AU:VE))
+crispectest <- merge(crispectest,cat, by="id")
+
+crispectest1 <- dplyr::select(crispectest, dv_type, iv_type, software, indepv, mator, dv_m, twowayfe, cluster_any, AU:VE, Jobs:Scale,  w1985:w2016, p, est, lb, ub, id, eeurope, allavailable, mlm, Hresult)
+
+#Remove NAs
+crispectest <- as.data.frame(na.omit(crispectest))
+crispectest1 <- as.data.frame(na.omit(crispectest1))
+
+  # remove/adjust attributes
+  crispectest1 <- crispectest1[names(crispectest1)]
+  choices <- 1:6
+  attr(crispectest1, "choices") <- choices
+  rownames(crispectest1) <- NULL
+  
+  # some upper and lower bounds are exactly zero, jitter to fix this
+  crispectest1$lb[crispectest1$lb==0] <- -0.0001
+  crispectest1$ub[crispectest1$ub==0] <- 0.0001
+
+  #trim to have better plot range
+  crispectest1$lb <- ifelse(crispectest1$lb < -0.999, -0.999, crispectest1$lb)
+  crispectest1$ub <- ifelse(crispectest1$ub > 0.999, 0.999, crispectest1$ub)
+  crispectest1$ub <- ifelse(crispectest1$ub < -0.999, -0.995, crispectest1$ub)
+  crispectest1$est <- ifelse(crispectest1$est < -0.999, -0.997, crispectest1$est)
+  crispectest1$est <- ifelse(crispectest1$est > 0.999, 0.997, crispectest1$est)
+
+#data prep
+# for a few outliers
+crispectest <- crispectest1
+crispectest1 <- subset(crispectest1, select = -c(id, eeurope, allavailable))
+#select data for shiny app at GitHub/CRI_shiny/
+df <- crispectest1
+save(df, file = "C:/data/dfcri.Rda")
+```
+
+ 
+#### Quick Preview
+
+
+```{r f1net, echo = T}
+
+
+df1 <- as.data.frame(select(df, dv_type, iv_type, software, indepv, est, lb, ub))
+  # remove/adjust attributes
+  choic <- 1:4
+  attr(df1, "choices") <- choic
+  rownames(df1) <- NULL
+plot_rdf_spec_curve(df1, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
+
+
+
+
+```
+```{r pvalcrv, echo=T}
+df1 <- as.data.frame(select(df, dv_type, iv_type, p, lb, ub))
+
+# make negative p-values for negative effects, and make 1-p
+
+df1$p <- 1-df1$p
+df1$p <- ifelse((df1$ub+df1$lb)<0, df1$p*-1, df1$p)
+df1$lb <- df1$p-0.949999
+df1$ub <- df1$p+0.949999
+df1$ub <- ifelse(df1$ub > 1, 1.000001 , df1$ub)
+df1$lb <- ifelse(df1$lb < -1, -1.000001 , df1$lb)
+
+  # remove/adjust attributes
+  choic <- 1:2
+  attr(df1, "choices") <- choic
+  rownames(df1) <- NULL
+png(file = wdir("Fig1_pcurve.png"), width = 620)
+  plot_rdf_spec_curve(df1, est = "p", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, ribbon_color = "white", lower_to_upper = 1, est_label = "Confidence Level, p<0.05", ribbon = F)
+dev.off()
+
+```
+
+We face a problem that a one percent change in net migration (within-country) is huge relative to a 1% difference in percent foreign-born across countries.
+
+```{r standardizeDV}
+
+# Standardization will produce some extreme outliers, so a 'better' strategy is to adjust the sd of Flow to be equal to that of Stock. However, there are some wide outliers in stock that bunches up the dispersion of flow, therefore we need the sd without these extreme outliers
+
+# Team 104 is massive outlier, we have to rescale the estimates into a realistic range
+crispec <- crispec %>%
+  mutate(AME = ifelse(id == "t104m2" | id == "t104m4", AME/10, AME),
+         lower = ifelse(id == "t104m2" | id == "t104m4", lower/10, lower),
+         upper = ifelse(id == "t104m2" | id == "t104m4", upper/10, upper))
+
+crispec <- crispec %>%
+  mutate(AMEssd = ifelse(main_IV_type == "Stock", AME, NA),
+         AMEfsd = ifelse(main_IV_type == "Flow", AME, NA),
+         AMEssd = sd(AMEssd, na.rm = T),
+         AMEfsd = sd(AMEfsd, na.rm = T),
+         AME_Z = AME*(AMEssd/AMEfsd),
+         lower_Z = lower*(AMEssd/AMEfsd),
+         upper_Z = upper*(AMEssd/AMEfsd),
+         AME_Z = ifelse(main_IV_type == "Flow", AME_Z, AME),
+         lower_Z = ifelse(main_IV_type == "Flow", lower_Z, lower),
+         upper_Z = ifelse(main_IV_type == "Flow", upper_Z, upper))
+
+df2 <- df %>%
+  mutate(AMEssd = ifelse(iv_type == "Stock", est, NA),
+         AMEfsd = ifelse(iv_type == "Flow", est, NA),
+         AMEssd = sd(AMEssd, na.rm = T),
+         AMEfsd = sd(AMEfsd, na.rm = T),
+         estz = est*(AMEssd/AMEfsd),
+         lower = lb*(AMEssd/AMEfsd),
+         upper = ub*(AMEssd/AMEfsd),
+         est = ifelse(iv_type == "Flow", estz, est),
+         lb = ifelse(iv_type == "Flow", lower, lb),
+         ub = ifelse(iv_type == "Flow", upper, ub),
+         # Trim to the range -0.5 to 0.5
+         est = ifelse(est < -0.5, -0.5, est),
+         est = ifelse(est > 0.5, 0.5, est),
+         lb = ifelse(lb < -0.5, -0.5, lb),
+         lb = ifelse(lb > 0.5, 0.5, lb),
+         ub = ifelse(ub < -0.5, -0.5, ub),
+         ub = ifelse(ub > 0.5, 0.5, ub))
+
+
+
+
+df2 <- as.data.frame(select(df2, dv_type, iv_type, software, Hresult, est, lb, ub))
+  # remove/adjust attributes
+  choic <- 1:4
+  attr(df2, "choices") <- choic
+  rownames(df2) <- NULL
+plot_rdf_spec_curve(df2, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
+
+```
+
+### Merge in UniPark Survey
+
+Original work up of individual/team researcher qualities done in Stata
+
+NOTE: These Stata files include identifying information breaking the anonymity of the teams, so we have to clean them before making them public.
+
+Required code files:
+  master.do
+      convert spss.do
+      merge_waves.do
+      recode.do
+  Cri_spec.do
+
+Required data files:
+  W1_export.sps
+  W2_export.sps
+  W3_export.sps
+  W4_export.sps
+  
+Note that teams are now in wide format, so that each variable has up to three values, one for each team member. Also, each result is attached to each team member, thus there are N-results repeated observations of team members.
+
+```{r combine }
+cri2 <- readstata13::read.dta13(file = "C:/data/cri_combined_recoded_long_nolab.dta")
+
+cri <- full_join(crispec, cri2, by = "u_teamid")
+
+# remove teams that dropped out
+#Column no missing function
+cri <- completeFun(cri, "id")
+#output for Alex
+save.dta13(cri, file = "C:/data/cri_master.dta")
+
+cri <- select(cri, u_teamid, id, everything())
+
+
+```
+
+
+```{r codebook, include=F, warning=F, message=F}
+# Note that at the end of each variable we add a 1, 2 and 3 for up to three team member's responses
+
+# These are the labels for the unipark variables
+
+#Statistical knowledge and experience
+
+# v_100 #Not enough methods skills, 1-did not constrain me
+# v_101 #Not enough software programming skills, 1-did not constrain me
+# v_34 #Difficulty of replication, 1-most difficult
+# backgr_exp_teach_stat #"1 How many stats/quant methods courses taught?"
+# backgr_exp_famil_mlm #"1 Familiarity with multilevel modeling (5=very familiar)"
+# v_18 #"1 Published on statistics/methods?"
+# v_21 #"1 Published using multilevel regression?"
+# 
+# #Topical knowledge and experience
+# 
+# v_17 #"1 Published on immigration?"
+# v_19 #"1 Published on public policy/welf state?"
+# v_20 #"1 Published on policy prefs/public opinion?"
+# v_88  #I was very interested in the substantive topic.
+# v_35 #"1 Not at all familiar with the lilterature on immigration/policy"
+# v_36 #"1 Read some of the literature on imm/policy" (vague in-between category, drop)
+# v_37 #"1 Read much of the literature on imm/policy"
+# v_38 #"1 Published articles or books on imm/policy"
+# v_39 #"1 Taught courses on imm/policy"
+# v_40 #"1 Often discuss imm/policy with colleagues"
+# 
+# belief_H1_1 #Belief in hypothesis
+# belief_agecare_1
+# belief_unempl_1
+# belief_income_1
+# belief_housing_1
+# belief_labour_1
+# belief_health_1
+# 
+# 
+# label var v_171 "1 Published on immigration?"
+# label var v_181 "1 Published on statistics/methods?"
+# label var v_191 "1 Published on public policy/welf state?"
+# label var v_201 "1 Published on policy prefs/public opinion?"
+# label var v_211 "1 Published using multilevel regression?"
+# label var v_172 "2 Published on immigration?"
+# label var v_182 "2 Published on statistics/methods?"
+# label var v_192 "2 Published on public policy/welf state?"
+# label var v_202 "2 Published on policy prefs/public opinion?"
+# label var v_212 "2 Published using multilevel regression?"
+# label var v_173 "3 Published on immigration?"
+# label var v_183 "3 Published on statistics/methods?"
+# label var v_193 "3 Published on public policy/welf state?"
+# label var v_203 "3 Published on policy prefs/public opinion?"
+# label var v_213 "3 Published using multilevel regression?"
+# 
+# label var backgr_exp_teach_stat1 "1 How many stats/quant methods courses taught?"
+# label var backgr_exp_famil_mlm1 "1 Familiarity with multilevel modeling (5=very familiar)"
+# label var belief_H1_11 "1 Immigration reduces/increase support for social policy (1=strongly reduces)"
+# label var backgr_exp_teach_stat2 "2 How many stats/quant methods courses taught?"
+# label var backgr_exp_famil_mlm2 "2 Familiarity with multilevel modeling (5=very familiar)"
+# label var belief_H1_12 "2 Immigration reduces/increase support for social policy (1=strongly reduces)"
+# label var backgr_exp_teach_stat3 "3 How many stats/quant methods courses taught?"
+# label var backgr_exp_famil_mlm3 "3 Familiarity with multilevel modeling (5=very familiar)"
+# label var belief_H1_13 "3 Immigration reduces/increase support for social policy (1=strongly reduces)"
+# 
+# label var v_331 "1 Individual time spent on replication"
+# label var v_341 "1 Difficulty of replication (1=most difficult)"
+# label var v_351 "1 Not at all familiar with the lilterature on immigration/policy"
+# label var v_361 "1 Read some of the literature on imm/policy"
+# label var v_371 "1 Read much of the literature on imm/policy"
+# label var v_381 "1 Published articles or books on imm/policy"
+# label var v_391 "1 Taught courses on imm/policy"
+# label var v_401 "1 Often discuss imm/policy with colleagues"
+# label var v_411 "1 Enjoyment of replication (1=extremely fun)"
+# label var v_431 "1 Convincingness of Brady & Finnigan tests(1=most convincing)"
+# label var v_332 "2 Individual time spent on replication"
+# label var v_342 "2 Difficulty of replication (1=most difficult)"
+# label var v_352 "2 Not at all familiar with the lilterature on immigration/policy"
+# label var v_362 "2 Read some of the literature on imm/policy"
+# label var v_372 "2 Read much of the literature on imm/policy"
+# label var v_382 "2 Published articles or books on imm/policy"
+# label var v_392 "2 Taught courses on imm/policy"
+# label var v_402 "2 Often discuss imm/policy with colleagues"
+# label var v_412 "2 Enjoyment of replication (1=extremely fun)"
+# label var v_432 "2 Convincingness of Brady & Finnigan tests(1=most convincing)"
+# label var v_333 "3 Individual time spent on replication"
+# label var v_343 "3 Difficulty of replication (1=most difficult)"
+# label var v_353 "3 Not at all familiar with the lilterature on immigration/policy"
+# label var v_363 "3 Read some of the literature on imm/policy"
+# label var v_373 "3 Read much of the literature on imm/policy"
+# label var v_383 "3 Published articles or books on imm/policy"
+# label var v_393 "3 Taught courses on imm/policy"
+# label var v_403 "3 Often discuss imm/policy with colleagues"
+# label var v_413 "3 Enjoyment of replication (1=extremely fun)"
+# label var v_433 "3 Convincingness of Brady & Finnigan tests(1=most convincing)"
+# 
+# -> tabulation of v_88  
+# 
+#            I was very interested in the |
+#                      substantive topic. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+# Reason does not apply to me apply at al |         10        6.33        6.33
+#           Reason applies to me a little |         30       18.99       25.32
+#                             Neither nor |         22       13.92       39.24
+#           Reason somewhat applies to me |         51       32.28       71.52
+#              Reason applies to me a lot |         45       28.48      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        158      100.00
+# 
+# -> tabulation of v_89  
+# 
+# Colleagues asked me to join their team. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+#                                       0 |          2        1.27        1.27
+# Reason does not apply to me apply at al |         63       39.87       41.14
+#           Reason applies to me a little |         15        9.49       50.63
+#                             Neither nor |          4        2.53       53.16
+#           Reason somewhat applies to me |         33       20.89       74.05
+#              Reason applies to me a lot |         41       25.95      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        158      100.00
+# 
+# -> tabulation of v_90  
+# 
+#            The prospect of a scientific |
+#              publication was appealing. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+#                                       0 |          1        0.63        0.63
+# Reason does not apply to me apply at al |         10        6.33        6.96
+#           Reason applies to me a little |         19       12.03       18.99
+#                             Neither nor |         24       15.19       34.18
+#           Reason somewhat applies to me |         66       41.77       75.95
+#              Reason applies to me a lot |         38       24.05      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        158      100.00
+# 
+# -> tabulation of v_91  
+# 
+#         I expected the project to be an |
+#                   enjoyable experience. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+#                                       0 |          1        0.63        0.63
+# Reason does not apply to me apply at al |          2        1.27        1.90
+#           Reason applies to me a little |          4        2.53        4.43
+#                             Neither nor |         15        9.49       13.92
+#           Reason somewhat applies to me |         76       48.10       62.03
+#              Reason applies to me a lot |         60       37.97      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        158      100.00
+# 
+# -> tabulation of v_93  
+# 
+#            I was very interested in the |
+#      replication aspect of the project. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+#                                       0 |          1        0.64        0.64
+# Reason does not apply to me apply at al |          2        1.27        1.91
+#           Reason applies to me a little |          3        1.91        3.82
+#                             Neither nor |          4        2.55        6.37
+#           Reason somewhat applies to me |         61       38.85       45.22
+#              Reason applies to me a lot |         86       54.78      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        157      100.00
+# 
+# -> tabulation of v_94  
+# 
+# I expected to learn and to develop as a |
+#                             researcher. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+#                                       0 |          2        1.27        1.27
+# Reason does not apply to me apply at al |          2        1.27        2.55
+#           Reason applies to me a little |         14        8.92       11.46
+#                             Neither nor |         19       12.10       23.57
+#           Reason somewhat applies to me |         74       47.13       70.70
+#              Reason applies to me a lot |         46       29.30      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        157      100.00
+# 
+# -> tabulation of v_95  
+# 
+# The CRI seemed like a valuable addition |
+#                               to my CV. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+# Reason does not apply to me apply at al |         31       19.75       19.75
+#           Reason applies to me a little |         43       27.39       47.13
+#                             Neither nor |         43       27.39       74.52
+#           Reason somewhat applies to me |         32       20.38       94.90
+#              Reason applies to me a lot |          8        5.10      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        157      100.00
+# 
+# -> tabulation of v_96  
+# 
+#  I joined because I know one or more of |
+#                         the organizers. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+# Reason does not apply to me apply at al |        108       68.79       68.79
+#           Reason applies to me a little |          9        5.73       74.52
+#                             Neither nor |         13        8.28       82.80
+#           Reason somewhat applies to me |         19       12.10       94.90
+#              Reason applies to me a lot |          8        5.10      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        157      100.00
+# 
+# -> tabulation of v_98  
+# 
+#              Not enough time |      Freq.     Percent        Cum.
+# -----------------------------+-----------------------------------
+#                            0 |          1        0.64        0.64
+#         Did not constrain me |          8        5.10        5.73
+# Constrained me only a little |         26       16.56       22.29
+#      Constrained me somewhat |         51       32.48       54.78
+#  Constrained me considerably |         71       45.22      100.00
+# -----------------------------+-----------------------------------
+#                        Total |        157      100.00
+# 
+# -> tabulation of v_99  
+# 
+#  Inadequate materials (e.g., |
+# software or computing power) |      Freq.     Percent        Cum.
+# -----------------------------+-----------------------------------
+#         Did not constrain me |        110       70.06       70.06
+# Constrained me only a little |         27       17.20       87.26
+#      Constrained me somewhat |         13        8.28       95.54
+#  Constrained me considerably |          7        4.46      100.00
+# -----------------------------+-----------------------------------
+#                        Total |        157      100.00
+# 
+# -> tabulation of v_100  
+# 
+#    Not enough methods skills |      Freq.     Percent        Cum.
+# -----------------------------+-----------------------------------
+#         Did not constrain me |         65       41.40       41.40
+# Constrained me only a little |         53       33.76       75.16
+#      Constrained me somewhat |         30       19.11       94.27
+#  Constrained me considerably |          9        5.73      100.00
+# -----------------------------+-----------------------------------
+#                        Total |        157      100.00
+# 
+# -> tabulation of v_101  
+# 
+#          Not enough software |
+#           programming skills |      Freq.     Percent        Cum.
+# -----------------------------+-----------------------------------
+#         Did not constrain me |        110       70.06       70.06
+# Constrained me only a little |         35       22.29       92.36
+#      Constrained me somewhat |         12        7.64      100.00
+# -----------------------------+-----------------------------------
+#                        Total |        157      100.00
+# 
+# -> tabulation of v_102  
+# 
+#  Having strict deadlines was |
+#             a problem for me |      Freq.     Percent        Cum.
+# -----------------------------+-----------------------------------
+#         Did not constrain me |         40       25.48       25.48
+# Constrained me only a little |         49       31.21       56.69
+#      Constrained me somewhat |         48       30.57       87.26
+#  Constrained me considerably |         20       12.74      100.00
+# -----------------------------+-----------------------------------
+#                        Total |        157      100.00
+```
+
+
+
+```{r recodes, warning=F, message=F}
+
+#Generate team-specific qualities
+
+# Because the CRI required teams to define the data-generating model (or at least a test of it) and use statistical competencies to carry it out, we suspect that the highest statistical and topical knowledge and experience per team will have the greatest influence on the results. Therefore, for the concepts 'Stats Level' and 'Topic Level' we take the row min or max for each team (depending on coding. 
+
+cri <- cri %>%
+  rowwise() %>%
+      mutate(stat1 = 4+(-1*min(v_1001, v_1002, v_1003, na.rm = T)), #lower is less constrained
+             stat2 = 4+(-1*min(v_1011, v_1012, v_1013, na.rm = T)), #lower is less constrained
+             stat3 = max(v_341, v_342, v_343, na.rm = T), #higher is less dificult
+             stat4 = max(backgr_exp_teach_stat1, backgr_exp_teach_stat2, backgr_exp_teach_stat3, na.rm = T), #higher more courses taught
+             stat5 = max(backgr_exp_famil_mlm1, backgr_exp_famil_mlm2, backgr_exp_famil_mlm3, na.rm = T), #higher more MLM familiarity
+             stat6 = max(v_181, v_182, v_183, na.rm = T), #higher is more stat publications
+             stat7 = max(v_211, v_212, v_213, na.rm = T), #higher is more MLM publications
+             topic1 = max(v_171, v_172, v_173, na.rm = T), #higher is more Imm pubs
+             topic2 = max(v_191, v_192, v_193, na.rm = T), #higher is more Policy pubs
+             topic3 = max(v_201, v_202, v_203, na.rm = T), #higher is more Policy/Opinion pubs
+             topic4 = max(v_881, v_882, v_883, na.rm = T), #higher is more interest in topic
+             topic5 = 1+(-1*min(v_351, v_352, v_353, na.rm = T)), #lower not relevant
+             topic6 = max(v_371, v_372, v_373, na.rm = T), #Higher relevant
+             topic7 = max(v_381, v_382, v_383, na.rm = T), #Higher relevant
+             topic8 = max(v_391, v_392, v_393, na.rm = T), #Higher relevant
+             topic9 = max(v_401, v_402, v_403, na.rm = T), #Higher relevant
+             belief1 = max(belief_H1_11,belief_H1_12,belief_H1_13, na.rm = T), # higher more belief
+             belief2 = max(belief_agecare_11,belief_agecare_12,belief_agecare_13, na.rm = T), # higher more belief
+             belief3 = max(belief_unempl_11,belief_unempl_12,belief_unempl_13, na.rm = T), # higher more belief
+             belief4 = max(belief_income_11,belief_income_12,belief_income_13, na.rm = T), # higher more belief
+             belief5 = max(belief_housing_11,belief_housing_12,belief_housing_13, na.rm = T), # higher more belief
+             belief6 = max(belief_labour_11,belief_labour_12,belief_labour_13, na.rm = T), # higher more belief
+             belief7 = max(belief_health_11,belief_health_12,belief_health_13, na.rm = T), # higher more belief
+             belief_strength = max(belief_certainty_11,belief_certainty_12,belief_certainty_13, na.rm = T),
+             pro_immigrant = min(attitude_immigration_11,attitude_immigration_12,attitude_immigration_13, na.rm = T),
+             changemind_delib = max(delib_changemind1,delib_changemind2,delib_changemind3, na.rm = T),
+             topic_interest = max(v_881,v_882,v_883, na.rm=T),
+             pub_interest = max(v_901,v_902,v_903, na.rm=T))
+
+
+cri <- cri %>%
+         mutate(belief_strength = ifelse(belief_strength == "Inf", NA, belief_strength),
+                belief_strength = ifelse(belief_strength == "-Inf", NA, belief_strength),
+                pro_immigrant = ifelse(pro_immigrant == "-Inf", NA, pro_immigrant),
+                pro_immigrant = ifelse(pro_immigrant == "-Inf", NA, pro_immigrant),
+                topic_interest = ifelse(topic_interest == "-Inf", NA, topic_interest),
+                topic_interest = ifelse(topic_interest == "-Inf", NA, topic_interest),
+                pub_interest = ifelse(pub_interest == "-Inf", NA, pub_interest),
+                pub_interest = ifelse(pub_interest == "-Inf", NA, pub_interest),
+                changemind_delib = ifelse(changemind_delib == "-Inf", NA, changemind_delib),
+                changemind_delib = ifelse(changemind_delib == "-Inf", NA, changemind_delib))
+
+```
+
+### Merge in Subjective Voting
+
+The file popdf_out.Rdata is needed for this, see CRI_Subj_Votes.R add link
+
+```{r votes, message = F, warning=F}
+
+load(file = wdir("popdf_out.Rdata"))
+
+cri <- left_join(cri, popdf_out, by = "id")
+
+```
+
+
+
+## Analysis
+
+### Mesaurement of Participant Team Qualities
+
+#### Correlations
+
+```{r f3}
+# make a dataset for correlation
+
+cor <- select(cri, stat1,stat2,stat3,stat4,stat5,stat6,stat7,topic1,topic2,topic3,topic4,topic5,topic6,topic7,topic8,topic9,belief1,belief2,belief3,belief4,belief5,belief6,belief7,belief_strength,pro_immigrant,total_score,u_teamid)
+
+cor <- aggregate(cor, by=list(cor$u_teamid), FUN=mean, na.rm=T)
+cor <- replace(cor, cor=="-Inf",NA)
+
+# team 27 missing 3 values, fill them in for consistency, fill represents a teaching of 12 stats courses score
+cor <- cor %>%
+  mutate(stat1 = ifelse(u_teamid == 27,3,stat1),
+         stat2 = ifelse(u_teamid == 27,3,stat2),
+         topic4 = ifelse(u_teamid == 27,4,topic4))
+
+# drop Brady and Finnigan's original analysis
+cor <- completeFun(cor, "stat1")
+
+cor1 <- cor(cor, use = "pairwise.complete.obs")
+corrplot::corrplot(cor1)
+
+```
+
+#### Measurement Model
+
+```{r SEM}
+
+pacman::p_load("lavaan")
+
+cfa <- ' stat =~ stat1 + + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
+         topic =~ topic1 + topic2 + topic3 + topic4 + topic5 + topic6 + topic7 + topic8 + topic9
+         belief =~ belief1 + belief2 + belief3 + belief4 + belief5 + belief6 + belief7 '
+fit <- cfa(cfa, data = cor)
+summary(fit, fit.measures=TRUE)
+
+# predicted factor scores
+cor1 <- as.data.frame(lavPredict(fit))
+cor <- cbind(cor,cor1)
+
+# put them back into the main data
+cor1 <- select(cor, u_teamid, stat, topic, belief)
+
+cri <- left_join(cri,cor1,by = "u_teamid")
+```
+
+### Explaining Results Variance (or Not)
+
+
+```{r varexp, include = TRUE}
+pacman::p_load("jtools","sjPlot","sjmisc","sjlabelled")
+
+#DVs only
+m1a <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
+m1b <- lm(p ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
+m1c <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri)
+
+m2a <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief, data = cri)
+m3a <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief + total_score, data = cri)
+
+tab_model(m1a,m1b,m1c, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+
+
+```
+
+Varaince Explained using Team-Weighting
+```{r varexpw, include = TRUE}
+pacman::p_load("jtools","sjPlot","sjmisc","sjlabelled")
+
+#DVs only
+m1aw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri, weight = inv_weight)
+m1bw <- lm(p ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri, weight = inv_weight)
+m1cw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri, weight = inv_weight)
+
+m2aw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief, data = cri, weight = inv_weight)
+m3aw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief + total_score, data = cri, weight = inv_weight)
+
+tab_model(m1aw,m1bw,m1cw, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+
+
+```
+Total score explains nothing of variance
+
+```{r regs, echo=T}
+tab_model(m2a, m3a,  p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+```
+
+With weights
+```{r regsw, echo=T}
+tab_model(m2aw, m3aw,  p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+```
+
+```{r coefplot, echo=T}
+plot_model(m2a, axis.labels = c("Belief: Hyp is True", "Topical Knowledge","Statistical Skills","Multi-Question Scale","Health Care","Housing","Old Age","Income Diff","Unemp","Jobs")) +
+  labs(title = "Figure X. Marginal Effects of Immigration on Policy Preferences", subtitle = "By Question Types and Researcher Qualities") +
+  geom_hline(yintercept=0) +
+  ylim(-0.3,0.3) +
+
+  theme(
+  panel.background = element_blank(),
+  panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                colour = "grey80"), 
+  panel.grid.minor = element_blank(),
+  plot.margin = margin(t = 0.5, r = 0.5, b = 0.5, l = 1, unit = "cm"),
+  plot.title = element_text(hjust = -6.8),
+  plot.subtitle = element_text(hjust = -0.64))
+  
+```
+######################################################################################3
+
+Save Point
+
+### Explaining Variance in Conclusions
+
+
+```{r concreg, warning=F,message=F}
+save.image()
+```
+
+
+```{r concreg_loadpoint, warning=F,message=F}
+load(".Rdata")
+
+cri <- cri %>%
+  mutate(Hresult = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hnotest_stock==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hsupport_stock==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hreject_stock==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hreject_net==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hreject_net==1, "Reject", NA)))))))))))),
+         Hsup = ifelse(Hresult=="Support",1,0),
+         Hrej = ifelse(Hresult=="Reject",1,0),
+         HresultF = as.factor(Hresult),
+         AME_sup = ifelse(AME < 0 & p < 0.05, 1, 0),
+         AME_sup_p10 = ifelse(AME < 0 & p < 0.1, 1, 0))
+
+```
+
+```{r concreg2, warning=F,message=F}
+
+#DVs only
+m3 <- lm(Hsup ~ AME + Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
+m4 <- lm(Hrej ~ AME + Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
+# m5 <- mlogit(HresultF ~ AME + Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri)
+
+m3a <- lm(Hsup ~ AME + Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief + total_score + fract_ivC, data = cri)
+m4a <- lm(Hrej ~ AME + Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief + total_score + fract_ivC, data = cri)
+
+tab_model(m3,m3a,m4,m4a, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+
+
+```
+
+### Percent Significant and Choices per Team
+Create a variable for the percentage of models supporting the conclusion by team
+
+```{r recode, warning = F, message = F}
+cri <- cri %>% 
+  ungroup
+
+# remove AME & p = NA rows so they don't bias the weighting values
+cri$ct <- 1
+
+crimis <- subset(cri, !is.na(cri$AME))
+crimis <- subset(cri, !is.na(cri$p))
+
+# set up an indicator for deserving / undeserving DVs
+
+crimis <- crimis %>% 
+  mutate(des = ifelse(Jobs == "Jobs", 0, ifelse(IncDiff == "IncDiff", 0, ifelse(House == "House", 0, ifelse(OldAge == "OldAge", 1, ifelse(Unemp == "Unemp", 1, ifelse(Health == "Health", 1, 0)))))),
+         undes = ifelse(OldAge == "OldAge", 0, ifelse(Unemp == "Unemp", 0, ifelse(Health == "Health", 0, ifelse(Jobs == "Jobs", 1, ifelse(IncDiff == "IncDiff", 1, 0))))))
+
+criT <- crimis %>% 
+  group_by(u_teamid) %>% 
+  mutate(pct_sig = mean(AME_sup, na.rm =T),
+         stock_weight = sum(main_IV_type=="Stock" & main_IV_measurement == "Immigrant, foreign-born", na.rm=T),
+         flow_weight = sum(main_IV_type=="Flow" & main_IV_measurement == "Immigrant, foreign-born", na.rm=T),
+         cflow_weight = sum(main_IV_type=="Change in Flow" & main_IV_measurement == "Immigrant, foreign-born"),
+         outstock_weight = sum(main_IV_type=="Stock" & main_IV_measurement == "Refugee" | main_IV_type=="Stock" & main_IV_measurement == "Non-Western Immigrant" | main_IV_type=="Stock" & main_IV_measurement == "Asylum applicants" | main_IV_type=="Stock" & main_IV_measurement == "Muslim-country Immigrant"),
+         outflow_weight = sum(main_IV_type=="Flow" & main_IV_measurement == "Refugee" | main_IV_type=="Flow" & main_IV_measurement == "Non-Western Immigrant" | main_IV_type=="Flow" & main_IV_measurement == "Asylum applicants" | main_IV_type=="Flow" & main_IV_measurement == "Muslim-country Immigrant"),
+         instock_weight = sum(main_IV_type == "Stock" & main_IV_measurement == "Western Immigrant"),
+         inflow_weight = sum(main_IV_type == "Flow" & main_IV_measurement == "Western Immigrant"),
+         sdv_weight = sum(ct[Scale == 0]),
+         lat_weight = sum(ct[Scale == "Scale"]),
+         des_weight = sum(ct[des == 1]),
+         undes_weight = sum(ct[undes == 1])) %>%
+  ungroup()
+
+# Remove teams without results
+
+criT <- completeFun(criT, "AME")
+criT <- completeFun(criT, "p")
+# Sig rate per team + conclusion is later (see chink further down)
+
+cri_team <- aggregate(select(criT, u_teamid, Hresult, AME, AME_Z, AME_sup, AME_sup_p10, upper, lower, p, pct_sig, stat, topic, belief, total_score, inv_weight, DV, Jobs, Unemp, IncDiff, OldAge, Health, House, Scale, num_countries, Hsupport_stock, Hreject_stock, Hnotest_stock, Hsupport_net, Hreject_net, Hnotest_net, Hsup), by = list(criT$u_teamid, criT$Hresult), FUN = mean)
+
+cri_team <- subset(cri_team, u_teamid !=0)
+
+png(file = wdir("Fig2_hist.png"), width = 620)
+hist(cri_team$pct_sig, main = "", xlab = "Percent of Models with Negative Effects, p<0.05", ylab = "Number of Teams")
+dev.off()
+
+```
+
+```{r bootmean}
+# Data are not normally distributed, calculate bootstrapped mean and CI
+
+# function to obtain the mean
+Bmean <- function(cri_team, pct_sig) {
+  d <- cri_team[pct_sig] # allows boot to select sample 
+    return(mean(d))
+} 
+
+# function to obtain the sd
+Bsd <- function(cri_team, pct_sig) {
+  d <- cri_team[pct_sig] # allows boot to select sample 
+    return(sd(d))
+}
+
+# bootstrapping with 1000 replications 
+results <- boot(data=cri_team$pct_sig, statistic=Bmean, R=1000)
+results_sd <- boot(data=cri_team$pct_sig, statistic=Bsd, R=1000)
+# view results
+
+plot(results)
+
+# get 95% confidence interval 
+boot.ci(results, type=c("norm", "basic", "perc", "bca"))
+```
+```{r sdbootstrap}
+plot(results_sd)
+
+# get 95% confidence interval 
+boot.ci(results_sd, type=c("norm", "basic", "perc", "bca"))
+```
+
+
+
+```{r tabl1ctab}
+
+# Majority of the models should support the hypothesis to claim support
+cri_team$pct_sig_maj <- ifelse(cri_team$AME_sup > 0.5,"aAbove 50pct", ifelse(cri_team$AME_sup > 0.399 & cri_team$AME_sup < 0.50001, "bBtw 40 and 50pct", "cBelow 40pct"))
+cri_team$pct_sig_maj_p10 <- ifelse(cri_team$AME_sup_p10 > 0.5,"aAbove 50pct", ifelse(cri_team$AME_sup_p10 > 0.399 & cri_team$AME_sup_p10 < 0.50001, "bBtw 40 and 50pct", "cBelow 40pct"))
+
+
+ctab_p05 <- ftable(cri_team$pct_sig_maj, cri_team$Hsup)
+ctab_p10 <- ftable(cri_team$pct_sig_maj_p10, cri_team$Hsup)
+
+ctab_p05_3h <- ftable(cri_team$pct_sig_maj, cri_team$Group.2)
+ctab_p10_3h <- ftable(cri_team$pct_sig_maj_p10, cri_team$Group.2)
+
+cri_team <- select(cri_team, AME_sup, AME_sup_p10, pct_sig, Hsup, everything())
+
+# Explaining the teams who had no majority significant models supporting the Hypothesis but still concluded support.
+
+# Team 6 considers 3 out of 8 effects being positive and significant. 
+# Team 101 & 62, their support comes from the significant effects of Alesina-fractionalization and MCP
+# Team 104, results significant at the p<.1 level
+
+# Explaining the teams with 0.5 percent significant by concluding reject
+# 38 found one out of two coefficients significant and negative, but decided the effect was too small and that the percentage of foreign-born (stock) was the better measure as opposed to net migration, and for stock the effect was insig.
+# 22 and 69 found 0.5, just not convinced, mixed results.
+
+ctab_p05_3h <- as.data.frame(stats:::format.ftable(ctab_p05_3h))
+ctab_p10_3h <- as.data.frame(stats:::format.ftable(ctab_p10_3h))
+t1_ctab <- rbind(ctab_p05_3h,ctab_p10_3h)
+t1_ctab <- t1_ctab[-c(1,2,6,7),-c(2)]
+colnames(t1_ctab) <- c("label","No Test","Reject","Support")
+kable(t1_ctab)
+```
+
+
+
+```{r recode_choices}
+# Choices and outcomes
+
+# need a weight variable that is the inverse
+criT$stock_weight <- 1/criT$stock_weight
+criT$flow_weight <- 1/criT$flow_weight
+criT$cflow_weight <- 1/criT$cflow_weight
+criT$outstock_weight <- 1/criT$outstock_weight
+criT$outflow_weight <- 1/criT$outflow_weight
+criT$instock_weight <- 1/criT$instock_weight
+criT$inflow_weight <- 1/criT$inflow_weight
+criT$sdv_weight <- 1/criT$sdv_weight
+criT$lat_weight <- 1/criT$lat_weight 
+criT$des_weight <- 1/criT$des_weight
+criT$undes_weight <- 1/criT$undes_weight
+
+
+
+
+###########
+#  STOCK  #
+###########
+
+# note that 'AME' here just means the number of significant negative tests
+
+stockAME <- weighted.mean(criT$AME_sup[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Immigrant, foreign-born"], criT$stock_weight[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Immigrant, foreign-born"], na.rm = T)
+
+stockP <- weighted.mean(criT$p[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Immigrant, foreign-born"], criT$stock_weight[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Immigrant, foreign-born"], na.rm = T)
+
+stockSCORE <- weighted.mean(criT$total_score[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Immigrant, foreign-born"], criT$stock_weight[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Immigrant, foreign-born"], na.rm=T)
+
+# count number of teams that have a stock model as at least one of their models
+
+stockN <- sum(criT$ct[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Immigrant, foreign-born" & criT$stock_weight!="Inf"] * criT$stock_weight[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Immigrant, foreign-born" & criT$stock_weight!="Inf"], na.rm=T)
+
+stockNtotal <- sum(criT$ct[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Immigrant, foreign-born"])/sum(criT$ct[criT$main_IV_measurement == "Immigrant, foreign-born" & criT$main_IV_type != "Change in Flow"])
+
+stockNtotalmods <- sum(criT$ct[criT$main_IV_type != "Change in Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"])
+
+###########
+#  FLOW   #
+###########
+
+flowAME <- weighted.mean(criT$AME_sup[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"], criT$flow_weight[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"], na.rm = T)
+
+flowP <- weighted.mean(criT$p[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"], criT$flow_weight[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"], na.rm = T)
+
+flowSCORE <- weighted.mean(criT$total_score[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"], criT$flow_weight[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"], na.rm=T)
+
+# count number of teams that have a flow model as at least one of their models
+
+flowN <- sum(criT$ct[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Immigrant, foreign-born" & criT$flow_weight!="Inf"] * criT$flow_weight[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Immigrant, foreign-born" & criT$flow_weight!="Inf"], na.rm=T)
+
+flowNtotal <- sum(criT$ct[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"])/sum(criT$ct[criT$main_IV_measurement == "Immigrant, foreign-born" & criT$main_IV_type != "Change in Flow"])
+
+flowNtotalmods <- sum(criT$ct[criT$main_IV_type != "Change in Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"])
+
+#####################
+#  CHANGE IN FLOW   #
+#####################
+
+cflowAME <- weighted.mean(criT$AME_sup[criT$main_IV_type == "Change in Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"], criT$cflow_weight[criT$main_IV_type == "Change in Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"], na.rm = T)
+
+cflowP <- weighted.mean(criT$p[criT$main_IV_type == "Change in Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"], criT$cflow_weight[criT$main_IV_type == "Change in Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"], na.rm = T)
+
+cflowSCORE <- weighted.mean(criT$total_score[criT$main_IV_type == "Change in Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"], criT$cflow_weight[criT$main_IV_type == "Change in Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"], na.rm=T)
+
+# count number of teams that have a cflow model as at least one of their models
+
+cflowN <- sum(criT$ct[criT$main_IV_type == "Change in Flow" & criT$main_IV_measurement == "Immigrant, foreign-born" & criT$cflow_weight!="Inf"] * criT$cflow_weight[criT$main_IV_type == "Change in Flow" & criT$main_IV_measurement == "Immigrant, foreign-born" & criT$cflow_weight!="Inf"], na.rm=T)
+
+cflowNtotal <- sum(criT$ct[criT$main_IV_type == "Change in Flow" & criT$main_IV_measurement == "Immigrant, foreign-born"])/sum(criT$ct[criT$main_IV_measurement == "Immigrant, foreign-born"])
+
+cflowNtotalmods <- sum(criT$ct[criT$main_IV_measurement == "Immigrant, foreign-born"])
+
+# Outgroup = refugee, non-western and Muslim-country immigrants
+
+#####################
+#  OUTGROUP STOCK   #
+#####################
+
+outstockAME <- weighted.mean(criT$AME_sup[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Refugee" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Non-Western Immigrant" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Asylum applicants" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Muslim-country Immigrant"], criT$outstock_weight[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Refugee" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Non-Western Immigrant" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Asylum applicants" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Muslim-country Immigrant"], na.rm = T)
+
+outstockP <- weighted.mean(criT$p[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Refugee" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Non-Western Immigrant" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Asylum applicants" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Muslim-country Immigrant"], criT$outstock_weight[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Refugee" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Non-Western Immigrant" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Asylum applicants" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Muslim-country Immigrant"], na.rm = T)
+
+outstockSCORE <- weighted.mean(criT$total_score[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Refugee" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Non-Western Immigrant" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Asylum applicants" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Muslim-country Immigrant"], criT$outstock_weight[criT$main_IV_type == "Stock"& criT$main_IV_measurement == "Refugee" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Non-Western Immigrant" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Asylum applicants" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Muslim-country Immigrant"], na.rm=T)
+
+# count number of teams that have a outstock model as at least one of their models
+
+outstockN <- sum(criT$ct[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Refugee" & criT$outstock_weight!="Inf" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Non-Western Immigrant" & criT$outstock_weight!="Inf" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Asylum applicants" & criT$outstock_weight!="Inf" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Muslim-country Immigrant" & criT$outstock_weight!="Inf"] * criT$outstock_weight[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Refugee" & criT$outstock_weight!="Inf" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Non-Western Immigrant" & criT$outstock_weight!="Inf" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Asylum applicants" & criT$outstock_weight!="Inf" | criT$main_IV_type=="Stock" & criT$main_IV_measurement == "Muslim-country Immigrant" & criT$outstock_weight!="Inf"], na.rm=T)
+
+# use stock of foreign-born as reference
+outstockNtotal <- sum(criT$ct[criT$main_IV_type == "Stock" & criT$main_IV_measurement != "Immigrant, foreign-born"])/(sum(criT$ct[criT$main_IV_type == "Stock" & criT$main_IV_measurement != "Immigrant, foreign-born"])+ stockNtotalmods)
+
+outstockNtotalmods <- sum(criT$ct[criT$main_IV_type == "Stock" & criT$main_IV_measurement != "Immigrant, foreign-born"]) + stockNtotalmods
+
+
+
+#####################
+#  OUTGROUP FLOW    #
+#####################
+
+
+
+outflowAME <- weighted.mean(criT$AME_sup[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Refugee" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Non-Western Immigrant" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Asylum applicants" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Muslim-country Immigrant"], criT$outflow_weight[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Refugee" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Non-Western Immigrant" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Asylum applicants" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Muslim-country Immigrant"], na.rm = T)
+
+outflowP <- weighted.mean(criT$p[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Refugee" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Non-Western Immigrant" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Asylum applicants" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Muslim-country Immigrant"], criT$outflow_weight[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Refugee" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Non-Western Immigrant" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Asylum applicants" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Muslim-country Immigrant"], na.rm = T)
+
+outflowSCORE <- weighted.mean(criT$total_score[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Refugee" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Non-Western Immigrant" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Asylum applicants" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Muslim-country Immigrant"], criT$outflow_weight[criT$main_IV_type == "Flow"& criT$main_IV_measurement == "Refugee" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Non-Western Immigrant" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Asylum applicants" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Muslim-country Immigrant"], na.rm=T)
+
+# count number of teams that have a outflow model as at least one of their models
+
+outflowN <- sum(criT$ct[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Refugee" & criT$outflow_weight!="Inf" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Non-Western Immigrant" & criT$outflow_weight!="Inf" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Asylum applicants" & criT$outflow_weight!="Inf" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Muslim-country Immigrant" & criT$outflow_weight!="Inf"] * criT$outflow_weight[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Refugee" & criT$outflow_weight!="Inf" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Non-Western Immigrant" & criT$outflow_weight!="Inf" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Asylum applicants" & criT$outflow_weight!="Inf" | criT$main_IV_type=="Flow" & criT$main_IV_measurement == "Muslim-country Immigrant" & criT$outflow_weight!="Inf"], na.rm=T)
+
+# use flow of foreign-born as reference
+outflowNtotal <- sum(criT$ct[criT$main_IV_type == "Flow" & criT$main_IV_measurement != "Immigrant, foreign-born"])/(sum(criT$ct[criT$main_IV_type == "Flow" & criT$main_IV_measurement != "Immigrant, foreign-born"]) + flowNtotalmods)
+
+outflowNtotalmods <- sum(criT$ct[criT$main_IV_type == "Flow" & criT$main_IV_measurement != "Immigrant, foreign-born"]) + flowNtotalmods
+
+
+####################
+#  Single Item DV  #
+####################
+
+# note that 'AME' here just means the number of significant negative tests
+
+sdvAME <- weighted.mean(criT$AME_sup[criT$Scale == 0], criT$sdv_weight[criT$Scale == 0], na.rm = T)
+
+sdvP <- weighted.mean(criT$p[criT$Scale == 0], criT$sdv_weight[criT$Scale == 0], na.rm = T)
+
+sdvSCORE <- weighted.mean(criT$total_score[criT$Scale == 0], criT$sdv_weight[criT$Scale == 0], na.rm=T)
+
+# count number of teams that have a sdv model as at least one of their models
+
+sdvN <- sum(criT$ct[criT$Scale == 0 & criT$sdv_weight!="Inf"] * criT$sdv_weight[criT$Scale == 0 & criT$sdv_weight!="Inf"], na.rm=T)
+
+sdvNtotal <- sum(criT$ct[criT$Scale == 0])/sum(criT$ct)
+
+sdvNtotalmods <- sum(criT$ct[criT$Scale == 0])
+
+####################
+#  Latent Scale DV #
+####################
+
+# note that 'AME' here just means the number of significant negative tests
+
+latAME <- weighted.mean(criT$AME_sup[criT$Scale == "Scale"], criT$lat_weight[criT$Scale == "Scale"], na.rm = T)
+
+latP <- weighted.mean(criT$p[criT$Scale == "Scale"], criT$lat_weight[criT$Scale == "Scale"], na.rm = T)
+
+latSCORE <- weighted.mean(criT$total_score[criT$Scale == "Scale"], criT$lat_weight[criT$Scale == "Scale"], na.rm=T)
+
+# count number of teams that have a lat model as at least one of their models
+
+latN <- sum(criT$ct[criT$Scale == "Scale" & criT$lat_weight!="Inf"] * criT$lat_weight[criT$Scale == "Scale" & criT$lat_weight!="Inf"], na.rm=T)
+
+latNtotal <- sum(criT$ct[criT$Scale == "Scale"])/sum(criT$ct)
+
+latNtotalmods <- sum(criT$ct[criT$Scale == "Scale"])
+
+#######################
+#  Deserving policies #
+#######################
+
+# OldAge, Health & Unemp
+
+# note that 'AME' here just means the number of significant negative tests
+
+desAME <- weighted.mean(criT$AME_sup[(criT$des == 1)], criT$des_weight[(criT$des == 1)], na.rm = T)
+
+desP <- weighted.mean(criT$p[(criT$des == 1)], criT$des_weight[(criT$des == 1)], na.rm = T)
+
+desSCORE <- weighted.mean(criT$total_score[(criT$des == 1)], criT$des_weight[(criT$des == 1)], na.rm=T)
+
+# count number of teams that have a des model as at least one of their models
+
+desN <- sum(criT$ct[criT$des == 1 & criT$des_weight!="Inf"] * criT$des_weight[criT$des == 1 & criT$des_weight!="Inf"], na.rm=T)
+
+desNtotal <- sum(criT$ct[criT$des == 1])/sum(criT$ct)
+
+desNtotalmods <- sum(criT$ct[criT$des == 1])
+
+#######################
+#  Un-Deserving policies #
+#######################
+
+# OldAge, Health & Unemp
+
+# note that 'AME' here just means the number of significant negative tests
+
+undesAME <- weighted.mean(criT$AME_sup[(criT$undes == 1)], criT$undes_weight[(criT$undes == 1)], na.rm = T)
+
+undesP <- weighted.mean(criT$p[(criT$undes == 1)], criT$undes_weight[(criT$undes == 1)], na.rm = T)
+
+undesSCORE <- weighted.mean(criT$total_score[(criT$undes == 1)], criT$undes_weight[(criT$undes == 1)], na.rm=T)
+
+# count number of teams that have a undes model as at least one of their models
+
+undesN <- sum(criT$ct[criT$undes == 1 & criT$undes_weight!="Inf"] * criT$undes_weight[criT$undes == 1 & criT$undes_weight!="Inf"], na.rm=T)
+
+undesNtotal <- sum(criT$ct[criT$undes == 1])/sum(criT$ct)
+
+undesNtotalmods <- sum(criT$ct[criT$undes == 1])
+
+
+```
+
+
+For now, ingroup stock and flow are not used in the table.
+
+```{r recode_choices_notused, include = F}
+#Ingroup = Western migrants
+
+#####################
+#  INGROUP STOCK    #
+#####################
+
+instockAME <- weighted.mean(criT$AME_sup[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Western Immigrant"], criT$instock_weight[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Western Immigrant"], na.rm = T)
+
+instockP <- weighted.mean(criT$p[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Western Immigrant"], criT$instock_weight[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Western Immigrant"], na.rm = T)
+
+instockSCORE <- weighted.mean(criT$total_score[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Western Immigrant"], criT$instock_weight[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Western Immigrant"], na.rm=T)
+
+# count number of teams that have a instock model as at least one of their models
+
+instockN <- sum(criT$ct[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Western Immigrant" & criT$instock_weight!="Inf"] * criT$instock_weight[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Western Immigrant" & criT$instock_weight!="Inf"], na.rm=T)
+
+instockNtotal <- sum(criT$ct[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Western Immigrant"])/sum(criT$ct[criT$main_IV_measurement == "Western Immigrant" & criT$main_IV_type != "Change in Flow"])
+
+instockNtotalmods <- sum(criT$ct[criT$main_IV_type == "Stock" & criT$main_IV_measurement == "Western Immigrant"])
+
+
+#####################
+#  INGROUP FLOW     #
+#####################
+
+inflowAME <- weighted.mean(criT$AME_sup[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Western Immigrant"], criT$inflow_weight[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Western Immigrant"], na.rm = T)
+
+inflowP <- weighted.mean(criT$p[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Western Immigrant"], criT$inflow_weight[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Western Immigrant"], na.rm = T)
+
+inflowSCORE <- weighted.mean(criT$total_score[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Western Immigrant"], criT$inflow_weight[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Western Immigrant"], na.rm=T)
+
+# count number of teams that have a inflow model as at least one of their models
+
+inflowN <- sum(criT$ct[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Western Immigrant" & criT$inflow_weight!="Inf"] * criT$inflow_weight[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Western Immigrant" & criT$inflow_weight!="Inf"], na.rm=T)
+
+inflowNtotal <- sum(criT$ct[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Western Immigrant"])/sum(criT$ct[criT$main_IV_measurement == "Western Immigrant" & criT$main_IV_type != "Change in Flow"])
+
+inflowNtotalmods <- sum(criT$ct[criT$main_IV_type == "Flow" & criT$main_IV_measurement == "Western Immigrant"])
+
+
+```
+
+## Table 2. Research Decisions and their Subjective and Objective Outcomes
+
+```{r recode_choices_table}
+# Now compile Table 1
+
+t1 <- data.frame(matrix(nrow=5,ncol=13))
+colnames(t1) <- c("Yes","No","Avgscore","Gap1","Gap2","Gap3",	"Pct_Support","Gapa","Gapb","Gapc","Incl","Total","Pct_With")
+
+t1[1,1:13] <- c(stockN,77-stockN,round(stockSCORE,2),NA,NA,NA,round(100*stockAME,1),NA,NA,NA,stockP,stockNtotalmods,round(100*stockNtotal,1))
+
+t1[2,1:13] <- c(flowN,77-flowN,round(flowSCORE,2),NA,NA,NA,round(100*flowAME,1),NA,NA,NA,flowP,flowNtotalmods,round(100*flowNtotal,1))
+
+t1[3,1:13] <- c(cflowN,77-cflowN,round(cflowSCORE,2),NA,NA,NA,round(100*cflowAME,1),NA,NA,NA,cflowP,cflowNtotalmods,round(100*cflowNtotal,1))
+
+t1[4,1:13] <- c(outstockN,77-outstockN,round(outstockSCORE,2),NA,NA,NA,round(100*outstockAME,1),NA,NA,NA,outstockP,outstockNtotalmods,round(100*outstockNtotal,1))
+
+t1[5,1:13] <- c(outflowN,77-outflowN,round(outflowSCORE,2),NA,NA,NA,round(100*outflowAME,1),NA,NA,NA,outflowP,outflowNtotalmods,round(100*outflowNtotal,1))
+
+t1[6,1:13] <- c(sdvN,77-sdvN,round(sdvSCORE,2),NA,NA,NA,round(100*sdvAME,1),NA,NA,NA,sdvP,sdvNtotalmods,round(100*sdvNtotal,1))
+
+t1[7,1:13] <- c(latN,77-latN,round(latSCORE,2),NA,NA,NA,round(100*latAME,1),NA,NA,NA,latP,latNtotalmods,round(100*latNtotal,1))
+
+t1[8,1:13] <- c(desN,77-desN,round(desSCORE,2),NA,NA,NA,round(100*desAME,1),NA,NA,NA,desP,desNtotalmods,round(100*desNtotal,1))
+
+t1[9,1:13] <- c(undesN,77-undesN,round(undesSCORE,2),NA,NA,NA,round(100*undesAME,1),NA,NA,NA,undesP,undesNtotalmods,round(100*undesNtotal,1))
+
+# unique(criT$u_teamid)
+```
+
+##### % Sig. Pooled Analysis
+
+This should be run with 'no test' models removed.
+
+```{r regpctsig}
+criN <- subset(cri, Hresult != "No test")
+subset
+
+mX1 <- lm(Hsup ~ AME, data = criN)
+mX2 <- lm(Hsup ~ AME + pct_sig, data = criN)
+mX3 <- lm(Hsup ~ AME + pct_sig + Scale + total_score, data = criN)
+mX4 <- lm(Hsup ~ AME + pct_sig + Scale + stat + topic + belief + total_score, data = criN)
+
+tab_model(mX1,mX2,mX3,mX4, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+
+
+```
+
+##### % Sig. Team-Level
+
+ with 'no test' models removed (just support versus reject)
+```{r regpctsigT, message = F, warning = F}
+criP <- select(criN, u_teamid, Hresult, Hsup, AME, AME_Z, upper, lower, p, pct_sig, stat, topic, belief, total_score, inv_weight, DV, Jobs, Unemp, IncDiff, OldAge, Health, House, Scale, num_countries)
+criT <- aggregate(criP, by = list(criP$u_teamid, criP$Hresult), FUN = mean)
+
+mX1t <- lm(Hsup ~ AME_Z, data = criT)
+mX2t <- lm(Hsup ~ AME_Z + pct_sig, data = criT)
+mX3t <- lm(Hsup ~ AME_Z + pct_sig + total_score, data = criT)
+mX4t <- lm(Hsup ~ AME_Z + pct_sig + stat + topic + belief + total_score, data = criT)
+
+tab_model(mX1t,mX2t,mX3t,mX4t, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+
+```
+
+### A Particular DV Significance Predicting Result
+
+For this we take only teams that modeled single-items. We make a variable representing whether a significant negative effect was found for each DV as a dichotmous variable. Then regress these on the likelihood of Hsupport, and vice-versa for Hreject. We have to exclude House and Health, because some teams did not include them because they were 'primed' to use only 4 DVs because they were in the experimental replication group, even though our instructions asked the teams to use all 6. We remove the Scale models.
+
+Result is that it does not matter
+
+```{r regspicDV, message = F, warning = F}
+
+criPP <- criP %>%
+  mutate(JobsS = ifelse(Scale=="Scale",0,ifelse(AME < 0 & p < 0.05 & Jobs=="Jobs",1,0)),
+         UnempS = ifelse(Scale=="Scale",0,ifelse(AME < 0 & p < 0.05 & Unemp=="Unemp",1,0)),
+         IncDiffS = ifelse(Scale=="Scale",0,ifelse(AME < 0 & p < 0.05 & IncDiff=="IncDiff",1,0)),
+         OldAgeS = ifelse(Scale=="Scale",0,ifelse(AME < 0 & p < 0.05 & OldAge=="OldAge",1,0)),
+         JobsR = ifelse(Scale=="Scale",0,ifelse(AME > 0 & p < 0.05 & Jobs=="Jobs",1,0)),
+         UnempR = ifelse(Scale=="Scale",0,ifelse(AME > 0 & p < 0.05 & Unemp=="Unemp",1,0)),
+         IncDiffR = ifelse(Scale=="Scale",0,ifelse(AME > 0 & p < 0.05 & IncDiff=="IncDiff",1,0)),
+         OldAgeR = ifelse(Scale=="Scale",0,ifelse(AME > 0 & p < 0.05 & OldAge=="OldAge",1,0)))
+criPP <- criPP %>%
+  group_by(u_teamid) %>%
+  mutate(JobsS = max(JobsS),
+         UnempS = max(UnempS),
+         IncDiffS = max(IncDiffS),
+         OldAgeS = max(OldAgeS),
+         JobsR = max(JobsR),
+         UnempR = max(UnempR),
+         IncDiffR = max(IncDiffR),
+         OldAgeR = max(OldAgeR),) %>%
+  ungroup()
+
+criPPT<- aggregate(criPP, by = list(criPP$u_teamid, criPP$Hresult), FUN = mean)
+criPPT$num_countries <- round(criPPT$num_countries, 0)
+mX1ts <- lm(Hsup ~ JobsS + UnempS + IncDiffS + OldAgeS, data = criPPT)
+mX1tsa <- lm(Hsup ~ JobsS + UnempS + IncDiffS + OldAgeS + JobsS*IncDiffS, data = criPPT)
+mX2ts <- lm(Hsup ~ AME_Z + JobsS + UnempS + IncDiffS + OldAgeS, data = criPPT)
+mX3ts <- lm(Hsup ~ AME_Z + pct_sig + JobsS + UnempS + IncDiffS + OldAgeS, data = criPPT)
+mX4ts <- lm(Hsup ~ AME_Z + pct_sig + JobsS + UnempS + IncDiffS + OldAgeS + stat + topic + belief + total_score, data = criPPT)
+
+tab_model(mX1ts,mX1tsa,mX2ts,mX3ts,mX4ts, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+
+```
+
+### Model Descriptives
+
+```{r modeldesc}
+
+
+
+
+```
+
+
+
+### Funnel Plots
+
+package metaviz
+
+```{r funnel}
+pacman::p_load("metafor")
+
+#add se
+
+cri_complete <- completeFun(cri, "AME_Z")
+cri_complete <- completeFun(cri_complete, "error")
+cri_complete$stder = (cri_complete$upper - cri_complete$lower)/3.92
+
+res <- rma(yi = AME_Z, vi = stder, ni = num_countries, dat=cri_complete)
+funnel(res, yaxis="ni")
+funnel(res)
+funnel
+```
+
+
+
+
+
+
+### Raincloud Plots
+```{r coefplot2}
+plot_model(m2a, axis.labels = c("Belief: Hyp is True", "Topical Knowledge","Statistical Skills","Multi-Question Scale","Health Care","Housing","Old Age","Income Diff","Unemp","Jobs")) +
+  labs(title = "Figure X. Marginal Effects of Immigration on Policy Preferences", subtitle = "By Question Types and Researcher Qualities") +
+  geom_hline(yintercept=0) +
+  ylim(-0.3,0.3) +
+
+  theme(
+  panel.background = element_blank(),
+  panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                colour = "grey80"), 
+  panel.grid.minor = element_blank(),
+  plot.margin = margin(t = 0.5, r = 0.5, b = 0.5, l = 1, unit = "cm"),
+  plot.title = element_text(hjust = -6.8),
+  plot.subtitle = element_text(hjust = -0.64))
+  
+```
+
+```{r regss}
+tab_model(m2a, m3a,  p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+```
+
+
+```{r rain1, warning=F, message=F}
+# set up raincloud funciton in ggplot, you have to get this file from https://github.com/RainCloudPlots/RainCloudPlots, we should CITE them, see git instructions
+source(paste0(wd,"/R_rainclouds.R"))
+ 
+pacman::p_load("cowplot","readr")
+
+# get clean grouping variable (all scale types in one factor)
+cri <- cri %>%
+  mutate(DVs = ifelse(Scale=="Scale","Scale",DV),
+         AME_Zt = ifelse(AME_Z > 1, 1, AME_Z),
+         AME_Zt = ifelse(AME_Zt < -1, -1, AME_Zt),
+         iv_type2 = ifelse(main_IV_type=="Change in Flow","Flow",main_IV_type),
+         iv_type2 = as.factor(iv_type2),
+         DVn = as.factor(DVs))
+
+cri$DVnn <- (as.numeric(as.factor(cri$DVn))-.15)
+
+rain1 <- ggplot(cri,aes(x=DVs,y=AME_Zt,fill = DVs))+
+  geom_flat_violin(position = position_nudge(x = .2, y = 0),adjust =2)+
+  geom_point(position = position_jitter(width = .15), size = .25)+
+  ylab('Avg. Marginal Effect of Immigration')+xlab('DVs: Type of Policy Preference')+
+  coord_flip()+theme_cowplot()+guides(fill = FALSE)+
+  ylim(-0.1,0.1)+
+  scale_x_discrete(limits = c("Scale","Health", "House","IncDiff","OldAge","Jobs","Unemp")) +
+  ggtitle('Research Variability by Outcome Measument Type')
+rain1
+
+
+```
+
+
+```{r rain2, warning=F, message=F, echo=T}
+
+
+rain2 <- ggplot(cri, aes(x=DVn, y=AME_Zt, fill = iv_type2))+
+  geom_flat_violin(aes(fill = iv_type2), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  geom_point(aes(x = DVnn, y = AME_Zt, color = iv_type2), position = position_jitter(width = .15), size = 1, shape = 20)+
+  scale_x_discrete(limits = c("Scale","Health", "House","IncDiff","OldAge","Jobs","Unemp")) +
+  ylab('Avg. Marginal Effect')+xlab('Dependent Variable Type')+
+  ylim(-0.12,0.12)+
+  coord_flip()+guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Research Variability by Outcome and Input Types')
+rain2
+
+
+
+# +geom_boxplot(aes(x = DVn, y = AME_Zt, fill = iv_type2),outlier.shape = NA, alpha = .5, width = .1, colour = "black")
+  #  scale_x_discrete(limits = c("Scale","Health", "House","IncDiff","OldAge","Jobs","Unemp")) +
+
+```
+
+```{r rain3, warning=F, message=F, echo=T}
+
+# dichotomize researcher qualities
+cri <- cri %>%
+  mutate(topic_d = ifelse(topic > 0, 1, 0),
+         belief_d = ifelse(belief > 0, 1, 0),
+         stat_d = ifelse(stat > 0, 1, 0),
+         belief_strength_d = ifelse(belief_strength > 4, 1, 0),
+         topic_interest_d = ifelse(topic_interest > 4.4, 1, 0),
+         pub_interest_d = ifelse(pub_interest > 4.4, 1, 0))
+
+# To achieve this plot we need to treat the data as repeated measures, thus stack 6 of the same databases on top of each other
+
+# first trim database
+
+cris <- select(cri, AME_Zt, topic_d, belief_d, stat_d, belief_strength_d, topic_interest_d, pub_interest_d, DVn, DVnn, DV, iv_type2)
+cris$qual <- NA
+
+cris1 <- cris %>%
+  mutate(qual = belief_d,
+         DVx = "Belief")
+cris2 <- cris %>%
+  mutate(qual = belief_strength_d,
+         DVx = "Belief_Strength")
+cris3 <- cris %>%
+  mutate(qual = topic_interest_d,
+         DVx = "Motivation_Topical") # CRI Motivation
+cris4 <- cris %>%
+  mutate(qual = pub_interest_d,
+         DVx = "Motivation_Publication") # CRI Motivation
+cris5 <- cris %>%
+  mutate(qual = stat_d,
+         DVx = "Statistical_Skills")
+cris6 <- cris %>%
+  mutate(qual = topic_d,
+         DVx = "Topical_Knowledge")
+
+cris <- rbind(cris1, cris2, cris3, cris4, cris5, cris6)
+rm(cris1, cris2, cris3, cris4, cris5, cris6)
+cris <- cris %>%
+  mutate(qual = ifelse(qual==1,"Greater","Lesser"),
+         DVx = as.factor(DVx))
+
+cris$DVnn <- (as.numeric(as.factor(cris$DVx))-.15)
+
+cris <- completeFun(cris, "qual")
+
+# Now standardize within DV measurement types
+
+cris <- cris %>%
+  group_by(DVn) %>%
+  mutate(AME_Zt.sd = as.numeric(scale(AME_Zt)),
+         AME_Zt.sd = AME_Zt.sd*0.04) %>%
+         ungroup()
+
+rain3 <- ggplot(cris, aes(x=DVx, y=AME_Zt.sd, fill = qual))+
+  geom_flat_violin(aes(fill = qual), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  geom_point(aes(x = DVnn, y = AME_Zt.sd, color = qual), position = position_jitter(width = .15), size = 1, shape = 20)+
+  scale_x_discrete(limits = c("Topical_Knowledge", "Statistical_Skills", "Motivation_Publication", "Motivation_Topical", "Belief_Strength", "Belief")) +
+  ylab('Avg. Marginal Effect')+xlab('Researcher Qualities')+
+  ylim(-0.04,0.04)+
+  coord_flip()+guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Research Variability by Researcher Qualities')
+rain3
+
+
+
+# +geom_boxplot(aes(x = DVn, y = AME_Zt, fill = iv_type2),outlier.shape = NA, alpha = .5, width = .1, colour = "black")
+  #  scale_x_discrete(limits = c("Scale","Health", "House","IncDiff","OldAge","Jobs","Unemp")) +
+
+```
+
+
+```{r rain4stock, warning=F, message=F, echo=T}
+
+# Split plots by Stock and Flow
+cris_stock <- subset(cris, iv_type2 == "Stock")
+cris_flow <- subset(cris, iv_type2 == "Flow")
+
+rain4stock <- ggplot(cris_stock, aes(x=DVx, y=AME_Zt.sd, fill = qual))+
+  geom_flat_violin(aes(fill = qual), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  geom_point(aes(x = DVnn, y = AME_Zt.sd, color = qual), position = position_jitter(width = .15), size = 1, shape = 20)+
+  scale_x_discrete(limits = c("Topical_Knowledge", "Statistical_Skills", "Motivation_Publication", "Motivation_Topical", "Belief_Strength", "Belief")) +
+  ylab('Avg. Marginal Effect')+xlab('Researcher Qualities')+
+  ylim(-0.04,0.04)+
+  coord_flip()+guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Research Variability by Researcher Qualities, Immigrant Stock Models') +
+  theme(plot.title = element_text(hjust = 1))
+rain4stock
+
+```
+
+```{r rain4flow, warning=F, message=F, echo=T}
+
+
+rain4flow <- ggplot(cris_flow, aes(x=DVx, y=AME_Zt.sd, fill = qual))+
+  geom_flat_violin(aes(fill = qual), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  geom_point(aes(x = DVnn, y = AME_Zt.sd, color = qual), position = position_jitter(width = .15), size = 1, shape = 20)+
+  scale_x_discrete(limits = c("Topical_Knowledge", "Statistical_Skills", "Motivation_Publication", "Motivation_Topical", "Belief_Strength", "Belief")) +
+  ylab('Avg. Marginal Effect')+xlab('Researcher Qualities')+
+  ylim(-0.04,0.04)+
+  coord_flip()+guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Research Variability by Researcher Qualities, Immigrant Flow Models') +
+  theme(plot.title = element_text(hjust = 1))
+rain4flow
+
+```
+
+### Margins as Spec Curve
+
+
+#### All DVs
+
+```{r mspec, message=F, warning=F}
+dfx <- crispectest %>%
+  mutate(AMEssd = ifelse(iv_type == "Stock", est, NA),
+         AMEfsd = ifelse(iv_type == "Flow", est, NA),
+         AMEssd = sd(AMEssd, na.rm = T),
+         AMEfsd = sd(AMEfsd, na.rm = T),
+         estz = est*(AMEssd/AMEfsd),
+         lower = lb*(AMEssd/AMEfsd),
+         upper = ub*(AMEssd/AMEfsd),
+         est = ifelse(iv_type == "Flow", estz, est),
+         lb = ifelse(iv_type == "Flow", lower, lb),
+         ub = ifelse(iv_type == "Flow", upper, ub),
+         # Trim to the range -0.5 to 0.5
+         est = ifelse(est < -0.5, -0.5, est),
+         est = ifelse(est > 0.5, 0.5, est),
+         lb = ifelse(lb < -0.5, -0.5, lb),
+         lb = ifelse(lb > 0.5, 0.5, lb),
+         ub = ifelse(ub < -0.5, -0.5, ub),
+         ub = ifelse(ub > 0.5, 0.5, ub), 
+         waves = ifelse(w1990!= "0" & w1996!="0" & w2006!="0" & w2016!="0", "All", ifelse(w1990== "0" & w1996=="w1996" & w2006=="w2006" & w2016=="0", "1996/2006", ifelse(w1990== "0" & w1996=="0" & w2006=="w2006" & w2016=="w2016", "2006/2016", "Other"))),
+         cases = ifelse(eeurope == 1, "E_Europe", ifelse(allavailable == 1, "All Available", "Rich Dems")))
+
+dfx <- left_join(dfx, popdf_out, by = "id")
+dfx$vote <- ifelse(dfx$total_score > 0.65, "Highest", ifelse(dfx$total_score < 0.650001 & dfx$total_score > 0.55, "High", ifelse(dfx$total_score < 0.550001 & dfx$total_score > 0.38, "Mid", ifelse(dfx$total_score < 0.38001, "Low", NA))))
+
+df3 <- as.data.frame(select(dfx, vote, waves, cases, mator, mlm,  est, lb, ub))
+  # remove/adjust attributes
+  choic <- 1:4
+  attr(df3, "choices") <- choic
+  rownames(df3) <- NULL
+plot_rdf_spec_curve(df3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
+png(wdir("spec_curve_votes.png"))
+print(plot_rdf_spec_curve(df3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F))
+dev.off()
+
+```
+
+#### Only Jobs and IncDif
+
+```{r mspecx, message=F, warning=F}
+df4 <- subset(dfx, dv_type == "IncDiff" | dv_type == "Jobs")
+
+df4 <- as.data.frame(select(df4, vote, waves, cases, mlm,  est, lb, ub))
+  # remove/adjust attributes
+  choic <- 1:4
+  attr(df4, "choices") <- choic
+  rownames(df4) <- NULL
+plot_rdf_spec_curve(df4, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
+```
+
+
+
+### P-Value as Spec Curve
+
+```{r pspec, message=F, warning=F}
+
+```
+
+
+### Total Score as Spec Curve
+
+```{r scorespec, message=F, warning=F}
+
+df5 <- as.data.frame(select(dfx, total_score, waves, cases, mator, mlm,  est, lb, ub))
+df5 <- df5 %>%
+  mutate(est = total_score,
+         lb = total_score-0.05,
+         ub = total_score+0.05)
+
+df5 <- select(df5, waves, cases, mator, mlm,  est, lb, ub)
+  # remove/adjust attributes
+  choic <- 1:4
+  attr(df5, "choices") <- choic
+  rownames(df5) <- NULL
+plot_rdf_spec_curve(df5, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
+png(wdir("spec_curve_votesDV.png"))
+print(plot_rdf_spec_curve(df5, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F))
+dev.off()
+
+```
+
+### Conclusions as Spec Curve
+
+```{r hypspeca, message=F, warning=F, echo=T}
+
+df6 <- as.data.frame(select(dfx, Hresult, vote, dv_type, iv_type, waves, cases, mator, mlm,  est, lb, ub))
+# Sort data by size of effect (as we have no other logical sorting system)
+
+df6 <- df6[order(df6$est),]
+
+
+df6 <- df6 %>%
+  mutate(Hresult = car::recode(Hresult, "'Support' = 0.1; 'Reject' = -0.1;'No test'= 0"),
+         est = Hresult,
+         lb = Hresult-0.01,
+         ub = Hresult+0.01)
+
+
+
+df7 <- select(df6, waves, cases, mator, mlm,  est, lb, ub)
+df8 <- select(df6, dv_type, iv_type, vote, mlm, est, lb, ub)
+  # remove/adjust attributes
+  choic <- 1:4
+  attr(df7, "choices") <- choic
+  rownames(df7) <- NULL
+plot_rdf_spec_curve(df7, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
+png(wdir("spec_curve_Ha.png"))
+print(plot_rdf_spec_curve(df7, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F))
+dev.off()
+
+```
+
+```{r hypspec, message=F, warning=F, echo=T}
+  # remove/adjust attributes
+  choic <- 1:4
+  attr(df8, "choices") <- choic
+  rownames(df8) <- NULL
+plot_rdf_spec_curve(df8, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
+png(wdir("spec_curve_Hb.png"))
+print(plot_rdf_spec_curve(df8, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F))
+dev.off()
+
+```

@@ -1,0 +1,77 @@
+  TITLE:
+  Team 16;
+
+  DATA:
+  FILE = C:/data/t16.csv;
+  LISTWISE = ON;
+
+  VARIABLE:
+  NAMES = country wave
+  old unemp inc jobs
+  female age age2
+  eduP eduS eduT      !tertiary as reference
+  gdp_o gdp_wb
+  stock_wb stock_un
+  stock_o
+  net_un
+  employ
+  socx;
+
+  USEVARIABLES = old unemp inc jobs
+  female age age2
+  eduP eduS
+  gdp_o
+  stock_un
+  !net_un
+  employ
+  socx
+  cw;
+
+  MISSING = all (-99);
+
+  !CATEGORICAL = old unemp inc jobs;
+
+  WITHIN = female age age2
+  eduP eduS;
+
+  BETWEEN = gdp_o
+  stock_un
+  !net_un
+  employ
+  socx;
+
+  CLUSTER = cw;
+
+  DEFINE:
+  if (old > 4) then old = 3;
+  age2 = age2/100;
+  gdp_o = gdp_o/1000;
+  cw = country * wave;
+  unemp = (-1*unemp)+5;
+  old = (-1*old)+5;
+  inc = (-1*inc)+5;
+  jobs = (-1*jobs)+5;
+
+  ANALYSIS:
+  TYPE = TWOLEVEL;
+  ESTIMATOR = BAYES;
+  PROCESSORS = 2;
+  !BITERATIONS=(10000);
+  !PARAMETERIZATION = THETA;
+
+  MODEL:
+  %WITHIN%
+  attw by unemp old inc jobs;
+
+  attw on female age age2
+  eduP eduS;
+
+  %BETWEEN%
+  attb by unemp old inc jobs;
+
+  attb on gdp_o stock_un
+  !net_un
+  employ socx;
+
+  OUTPUT:
+  RESIDUAL STDYX TECH1 TECH4;

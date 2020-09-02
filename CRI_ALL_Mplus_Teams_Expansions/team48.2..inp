@@ -1,0 +1,142 @@
+Title: New model, last part of the replication project
+ 
+ 
+        Data:
+        File is C:/data/t48.csv ;
+
+        
+        Variable:
+        Names are 
+        cntry	year	wave	cntrywave	
+        emprate	foreignpct	netmig	socx
+        	
+        jobs1	health1	elderly1	
+        unemp1	reduxinc1	housing1	
+
+        sex	age	edu1	edu2	
+        employ1	employ3	employ2	employ5	
+        income	inc_z
+        ;
+
+
+ USEVARIABLE ARE   
+        year
+        emprate !we loose too many countrywaves	
+        foreignpct	
+        netmig	! we loose too many countrywaves
+        socx !we loose too many countrywaves
+        
+        
+
+        sex	age	edu1	
+        !edu2	!we loose lots of countries
+        employ1	
+        employ3	
+        employ2	
+        inc_z !we loose 2 country waves
+        !employ5	!we loose lots of countries
+        !income !we loose lots of countries
+        
+        jobs	health	elderly	
+        unemp	reduxinc	housing
+        age2
+        ;
+
+        !SUBPOPULATION ARE (S001 EQ 2); 
+
+        CLUSTER = cntry cntrywave  ;
+         BETWEEN =
+
+         !independent variable
+         foreignpct         
+
+         !control variables
+         socx !social welfare expenditures as a percent of GDP
+         emprate !employment rate
+         netmig !netmigration 
+         year
+            ;
+
+
+        WITHIN = 
+
+        ! dependent variables
+        !jobs	health	elderly	
+        !unemp	reduxinc	housing
+
+
+        !control variables
+        age !age
+        age2 !age squared
+        sex !sex recoded such 1 = female
+        edu1 !education: less than second education
+        !edu2 !education: university or above
+        employ1 !employment status: part-time
+        employ2 !employment status: unemployed
+        employ3 !employment status: not in the labor force
+        !employ5 !employment status: self-employment
+
+      
+        inc_z !We include relative income  based on country-year-specific z -scores, which
+                !allow for international and over-time comparison without currency conversion or inflation-adjustment.
+       
+   
+        ;
+
+
+  Missing are all (-9999) ; 
+ 
+  
+  ANALYSIS: TYPE = TWOLEVEL COMPLEX;
+  !Type = basic ;
+
+
+  DEFINE:
+      age2 = (age**2)/10; 
+       !inc = income /1000;
+
+      
+      ! PI added this to be equivalent
+      jobs = 5 - jobs1;
+      health = 5 - health1;
+      elderly = 5 - elderly1;
+      unemp = 5 - unemp1;
+      reduxinc = 5 - reduxinc1;
+      housing = 5 - housing1;
+      standardize (jobs);
+      standardize (health);
+      standardize (elderly);
+      standardize (unemp);
+      standardize (reduxinc);
+      standardize (housing);
+
+     MODEL:
+    
+    %WITHIN%
+    
+     jobs	health	elderly	on 
+     sex age edu1  age2 employ1
+     employ3 
+     employ2 inc_z;
+
+        unemp	reduxinc	housing on 
+        sex age edu1  age2 employ1
+        employ3 
+        employ2 inc_z;
+
+
+ 
+
+  %BETWEEN%
+   DV by reduxinc elderly health unemp jobs			 
+   		housing;
+   
+   DV on year foreignpct
+   emprate socx netmig;
+
+      
+
+  
+! PI added
+OUTPUT: CINTERVAL; 
+

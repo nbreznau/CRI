@@ -1,0 +1,1171 @@
+Mplus VERSION 8.2
+MUTHEN & MUTHEN
+01/04/2020   3:53 PM
+
+INPUT INSTRUCTIONS
+
+  DATA: file is C:/data/t41.dat;
+
+  VARIABLE:
+
+  NAMES ARE country_year
+  V1_n
+  ID
+  CASEID
+  COUNTRY
+  ISO
+  JOBS
+  HEALTH
+  OLD
+  UNEMP
+  INCOME
+  HOUSING
+  SEX
+  AGE
+  AGE_CAT
+  DK_AGE
+  MARITAL
+  Mar_1
+  Mar_2
+  Mar_3
+  Mar_4
+  Mar_5
+  DEGREE
+  ATTEND
+  ATTEND_C
+  ATT_1
+  ATT_2
+  ATT_3
+  URBRURAL
+  URBRURAL_R
+  UR_1
+  UR_2
+  UR_3
+  HOMPOP
+  MAINSTAT
+  EMP_1
+  EMP_2
+  CHILD
+  LIB
+  SOC
+  CONS
+  WEIGHT
+  deg_1
+  deg_2
+  deg_3
+  mignet_un10
+  migstock_wb
+  migstock_un
+  mignet_un
+  socx_oecd
+  wdi_unempilo
+  AV_stock_un
+  AV_net_un
+  AV_socx_oecd
+  AV_wdi_unempilo
+  AV_mignet_un10
+  C_Y_stock_un
+  C_Y_net_un
+  C_Y_socx_oecd
+  C_Y_wdi_unemplilo
+  C_Y_mignet_un10
+  age_2
+  age_3
+  age_4
+  age_5
+  age_6
+  age_7
+  ;
+
+  USEVARIABLES ARE AGE_CAT
+  SEX
+  V1_n
+  HOMPOP
+  EMP_1
+  deg_3
+
+  C_Y_stock_un
+  AV_stock_un
+  C_Y_socx_oecd
+  AV_socx_oecd
+  welfare2
+  ;
+
+  missing are all (-9999);
+
+  cluster = country country_year;
+
+  weight is weight;
+
+  Within = AGE_CAT
+  SEX
+  V1_n
+  HOMPOP
+  EMP_1
+  deg_3
+  ;
+
+  Between = (country_year) C_Y_stock_un C_Y_socx_oecd (country) AV_stock_un AV_socx_oecd;
+
+
+
+  DEFINE:
+  !welfare1 = (JOBS + UNEMP + INCOME + HOUSING) / 4;
+  welfare2 = (HEALTH + OLD ) / 2;
+
+  ANALYSIS:
+
+  type = threelevel;
+  estimator = MLR;
+
+  MODEL:
+
+  %within%
+  welfare2 on AGE_CAT
+  SEX
+  V1_n
+  HOMPOP
+  EMP_1
+  deg_3
+  ;
+
+  %Between country_year%
+  welfare2 on C_Y_stock_un C_Y_socx_oecd;
+
+  %Between country%
+  welfare2 on AV_stock_un AV_socx_oecd;
+
+  output: sampstat; cinterval;
+
+
+
+*** WARNING in VARIABLE command
+  Note that only the first 8 characters of variable names are used in the output.
+  Shorten variable names to avoid any confusion.
+*** WARNING
+  Data set contains cases with missing on x-variables.
+  These cases were not included in the analysis.
+  Number of cases with missing on x-variables:  9731
+*** WARNING
+  Data set contains cases with missing on all variables except
+  x-variables.  These cases were not included in the analysis.
+  Number of cases with missing on all variables except x-variables:  753
+   3 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                       29315
+
+Number of dependent variables                                    1
+Number of independent variables                                 10
+Number of continuous latent variables                            0
+
+Observed dependent variables
+
+  Continuous
+   WELFARE2
+
+Observed independent variables
+   AGE_CAT     SEX         V1_N        HOMPOP      EMP_1       DEG_3
+   C_Y_STOC    AV_STOCK    C_Y_SOCX    AV_SOCX_
+
+Variables with special functions
+
+  Cluster variables     COUNTRY   COUNTRY_
+  Weight variable (cluster-size scaling)
+    WEIGHT
+
+  Within variables
+   AGE_CAT     SEX         V1_N        HOMPOP      EMP_1       DEG_3
+
+  Level 2 between variables
+   C_Y_STOC    C_Y_SOCX
+
+  Level 3 between variables
+   AV_STOCK    AV_SOCX_
+
+
+Estimator                                                      MLR
+Information matrix                                        OBSERVED
+Maximum number of iterations                                   100
+Convergence criterion                                    0.100D-05
+Maximum number of EM iterations                                500
+Convergence criteria for the EM algorithm
+  Loglikelihood change                                   0.100D-02
+  Relative loglikelihood change                          0.100D-05
+  Derivative                                             0.100D-03
+Minimum variance                                         0.100D-03
+Maximum number of steepest descent iterations                   20
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-02
+Optimization algorithm                                         EMA
+
+Input data file(s)
+  C:/data/t41.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+     Number of COUNTRY_YEAR clusters            24
+     Number of COUNTRY clusters                 15
+
+     Average cluster size for COUNTRY_YEAR level     1221.458
+
+     Estimated Intraclass Correlations for the Y Variables for COUNTRY_YEAR level
+
+                Intraclass
+     Variable  Correlation
+
+     WELFARE2     0.010
+
+     Average cluster size for COUNTRY level     1954.333
+
+     Estimated Intraclass Correlations for the Y Variables for COUNTRY level
+
+                Intraclass
+     Variable  Correlation
+
+     WELFARE2     0.112
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+     PROPORTION OF DATA PRESENT
+
+
+           Covariance Coverage
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2       1.000
+ AGE_CAT        1.000         1.000
+ SEX            1.000         1.000         1.000
+ V1_N           1.000         1.000         1.000         1.000
+ HOMPOP         1.000         1.000         1.000         1.000         1.000
+ EMP_1          1.000         1.000         1.000         1.000         1.000
+ DEG_3          1.000         1.000         1.000         1.000         1.000
+ C_Y_STOC       1.000         1.000         1.000         1.000         1.000
+ AV_STOCK       1.000         1.000         1.000         1.000         1.000
+ C_Y_SOCX       1.000         1.000         1.000         1.000         1.000
+ AV_SOCX_       1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              EMP_1         DEG_3         C_Y_STOC      AV_STOCK      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          1.000
+ DEG_3          1.000         1.000
+ C_Y_STOC       1.000         1.000         1.000
+ AV_STOCK       1.000         1.000         1.000         1.000
+ C_Y_SOCX       1.000         1.000         1.000         1.000         1.000
+ AV_SOCX_       1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              AV_SOCX_
+              ________
+ AV_SOCX_       1.000
+
+
+SAMPLE STATISTICS
+
+NOTE:  The sample statistics for within and between refer to the
+       maximum-likelihood estimated within and between covariance
+       matrices, respectively.
+
+
+     ESTIMATED SAMPLE STATISTICS FOR WITHIN
+
+
+           Means
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                0.000        47.813         1.516         0.461         2.733
+
+
+           Means
+              EMP_1         DEG_3         C_Y_STOC      AV_STOCK      C_Y_SOCX
+              ________      ________      ________      ________      ________
+                0.607         0.463         0.000         0.000         0.000
+
+
+           Means
+              AV_SOCX_
+              ________
+                0.000
+
+
+           Covariances
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2       0.225
+ AGE_CAT       -0.410       249.623
+ SEX           -0.018        -0.187         0.250
+ V1_N           0.000         0.484        -0.003         0.248
+ HOMPOP         0.025        -7.251        -0.004        -0.032         1.932
+ EMP_1          0.010        -2.618        -0.020        -0.010         0.117
+ DEG_3          0.016        -0.659        -0.001         0.047        -0.001
+ C_Y_STOC       0.000         0.000         0.000         0.000         0.000
+ AV_STOCK       0.000         0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              EMP_1         DEG_3         C_Y_STOC      AV_STOCK      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          0.239
+ DEG_3          0.046         0.249
+ C_Y_STOC       0.000         0.000         0.000
+ AV_STOCK       0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              AV_SOCX_
+              ________
+ AV_SOCX_       0.000
+
+
+           Correlations
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2       1.000
+ AGE_CAT       -0.055         1.000
+ SEX           -0.076        -0.024         1.000
+ V1_N          -0.002         0.062        -0.013         1.000
+ HOMPOP         0.037        -0.330        -0.005        -0.046         1.000
+ EMP_1          0.043        -0.339        -0.083        -0.042         0.172
+ DEG_3          0.069        -0.084        -0.006         0.190        -0.002
+ C_Y_STOC       0.000         0.000         0.000         0.000         0.000
+ AV_STOCK       0.000         0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              EMP_1         DEG_3         C_Y_STOC      AV_STOCK      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          1.000
+ DEG_3          0.188         1.000
+ C_Y_STOC       0.000         0.000         0.000
+ AV_STOCK       0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              AV_SOCX_
+              ________
+ AV_SOCX_       0.000
+
+
+     ESTIMATED SAMPLE STATISTICS FOR BETWEEN COUNTRY_YEAR
+
+
+           Means
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           Means
+              EMP_1         DEG_3         C_Y_STOC      AV_STOCK      C_Y_SOCX
+              ________      ________      ________      ________      ________
+                0.000         0.000        -0.042         0.000        -0.125
+
+
+           Means
+              AV_SOCX_
+              ________
+                0.000
+
+
+           Covariances
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2       0.002
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+ C_Y_STOC       0.002         0.000         0.000         0.000         0.000
+ AV_STOCK       0.000         0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.023         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              EMP_1         DEG_3         C_Y_STOC      AV_STOCK      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+ C_Y_STOC       0.000         0.000         2.536
+ AV_STOCK       0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         1.763         0.000         2.657
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              AV_SOCX_
+              ________
+ AV_SOCX_       0.000
+
+
+           Correlations
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2       1.000
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+ C_Y_STOC       0.026         0.000         0.000         0.000         0.000
+ AV_STOCK       0.000         0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.278         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              EMP_1         DEG_3         C_Y_STOC      AV_STOCK      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+ C_Y_STOC       0.000         0.000         1.000
+ AV_STOCK       0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.679         0.000         1.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              AV_SOCX_
+              ________
+ AV_SOCX_       0.000
+
+
+     ESTIMATED SAMPLE STATISTICS FOR BETWEEN COUNTRY
+
+
+           Means
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                1.392         0.000         0.000         0.000         0.000
+
+
+           Means
+              EMP_1         DEG_3         C_Y_STOC      AV_STOCK      C_Y_SOCX
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000        13.439         0.000
+
+
+           Means
+              AV_SOCX_
+              ________
+               22.337
+
+
+           Covariances
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2       0.029
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+ C_Y_STOC       0.000         0.000         0.000         0.000         0.000
+ AV_STOCK       0.550         0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_      -0.088         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              EMP_1         DEG_3         C_Y_STOC      AV_STOCK      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+ C_Y_STOC       0.000         0.000         0.000
+ AV_STOCK       0.000         0.000         0.000        29.141
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000       -13.319         0.000
+
+
+           Covariances
+              AV_SOCX_
+              ________
+ AV_SOCX_      17.927
+
+
+           Correlations
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2       1.000
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+ C_Y_STOC       0.000         0.000         0.000         0.000         0.000
+ AV_STOCK       0.603         0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_      -0.123         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              EMP_1         DEG_3         C_Y_STOC      AV_STOCK      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+ C_Y_STOC       0.000         0.000         0.000
+ AV_STOCK       0.000         0.000         0.000         1.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000        -0.583         0.000
+
+
+           Correlations
+              AV_SOCX_
+              ________
+ AV_SOCX_       1.000
+
+
+     MAXIMUM LOG-LIKELIHOOD VALUE FOR THE UNRESTRICTED (H1) MODEL IS -19577.050
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     WELFARE2              1.380       1.287       1.000   56.51%       1.000      1.000      1.000
+           29315.000       0.256       1.594       4.000    0.16%       1.500      2.000
+     AGE_CAT              47.813      -0.083      22.000    8.83%      31.000     41.000     51.000
+           29315.000     249.623      -1.210      70.000   20.53%      51.000     70.000
+     SEX                   1.516      -0.066       1.000   47.84%       1.000      1.000      2.000
+           29315.000       0.250      -1.996       2.000   52.16%       2.000      2.000
+     V1_N                  0.461       0.157       0.000   53.90%       0.000      0.000      0.000
+           29315.000       0.248      -1.975       1.000   46.10%       1.000      1.000
+     HOMPOP                2.733       1.456       0.000    0.16%       2.000      2.000      2.000
+           29315.000       1.932      11.285      34.000    0.00%       3.000      4.000
+     EMP_1                 0.607      -0.437       0.000   41.02%       0.000      0.000      1.000
+           29315.000       0.239      -1.809       1.000   58.98%       1.000      1.000
+     DEG_3                 0.463       0.149       0.000   53.57%       0.000      0.000      0.000
+           29315.000       0.249      -1.978       1.000   46.43%       1.000      1.000
+     C_Y_STOCK_UN         -0.042       0.101      -3.270    4.17%      -1.170     -0.880     -0.535
+              24.000       2.536      -0.693       3.280    4.17%       0.510      1.180
+     AV_STOCK_UN          13.439       0.905       4.690    6.67%       9.290     11.190     11.640
+              15.000      29.141       0.456      26.700    6.67%      12.000     14.960
+     C_Y_SOCX_OECD        -0.125       0.212      -3.350    4.17%      -1.600     -0.900     -0.575
+              24.000       2.657      -0.628       3.350    4.17%      -0.350      1.500
+     AV_SOCX_OECD         22.337       0.163      15.950    6.67%      17.300     20.450     22.300
+              15.000      17.927      -1.102      30.200    6.67%      22.900     27.000
+
+     THE STANDARD ERRORS OF THE MODEL PARAMETER ESTIMATES MAY NOT BE
+     TRUSTWORTHY FOR SOME PARAMETERS DUE TO A NON-POSITIVE DEFINITE
+     FIRST-ORDER DERIVATIVE PRODUCT MATRIX.  THIS MAY BE DUE TO THE STARTING
+     VALUES BUT MAY ALSO BE AN INDICATION OF MODEL NONIDENTIFICATION.  THE
+     CONDITION NUMBER IS       0.307D-10.  PROBLEM INVOLVING THE FOLLOWING PARAMETER:
+     Parameter 8, %BETWEEN COUNTRY_YEAR%: WELFARE2 ON C_Y_STOCK_UN
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                       14
+
+Loglikelihood
+
+          H0 Value                      -19577.050
+          H0 Scaling Correction Factor      9.9151
+            for MLR
+          H1 Value                      -19577.050
+          H1 Scaling Correction Factor      9.9151
+            for MLR
+
+Information Criteria
+
+          Akaike (AIC)                   39182.099
+          Bayesian (BIC)                 39298.101
+          Sample-Size Adjusted BIC       39253.609
+            (n* = (n + 2) / 24)
+
+Chi-Square Test of Model Fit
+
+          Value                              0.000*
+          Degrees of Freedom                     0
+          P-Value                           1.0000
+          Scaling Correction Factor         1.0000
+            for MLR
+
+*   The chi-square value for MLM, MLMV, MLR, ULSMV, WLSM and WLSMV cannot be used
+    for chi-square difference testing in the regular way.  MLM, MLR and WLSM
+    chi-square difference testing is described on the Mplus website.  MLMV, WLSMV,
+    and ULSMV difference testing is done using the DIFFTEST option.
+
+RMSEA (Root Mean Square Error Of Approximation)
+
+          Estimate                           0.000
+
+CFI/TLI
+
+          CFI                                1.000
+          TLI                                1.000
+
+Chi-Square Test of Model Fit for the Baseline Model
+
+          Value                            141.247
+          Degrees of Freedom                    10
+          P-Value                           0.0000
+
+SRMR (Standardized Root Mean Square Residual)
+
+          Value for Within                   0.000
+          Value for Between Level 2          0.004
+          Value for Between Level 3          0.001
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+Within Level
+
+ WELFARE2   ON
+    AGE_CAT           -0.001      0.001     -2.418      0.016
+    SEX               -0.073      0.011     -6.880      0.000
+    V1_N              -0.012      0.068     -0.172      0.863
+    HOMPOP             0.007      0.003      2.396      0.017
+    EMP_1              0.006      0.008      0.701      0.483
+    DEG_3              0.063      0.017      3.714      0.000
+
+ Residual Variances
+    WELFARE2           0.222      0.019     11.652      0.000
+
+Between COUNTRY_YEAR Level
+
+ WELFARE2   ON
+    C_Y_STOCK_        -0.009      0.016     -0.599      0.549
+    C_Y_SOCX_O         0.015      0.006      2.293      0.022
+
+ Residual Variances
+    WELFARE2           0.002      0.001      2.653      0.008
+
+Between COUNTRY Level
+
+ WELFARE2   ON
+    AV_STOCK_U         0.025      0.008      3.320      0.001
+    AV_SOCX_OE         0.014      0.013      1.096      0.273
+
+ Intercepts
+    WELFARE2           0.868      0.356      2.440      0.015
+
+ Residual Variances
+    WELFARE2           0.016      0.005      3.187      0.001
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.307E-10
+       (ratio of smallest to largest eigenvalue)
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+Within Level
+
+ WELFARE2 ON
+    AGE_CAT         -0.003      -0.002      -0.002      -0.001       0.000       0.000       0.000
+    SEX             -0.100      -0.093      -0.090      -0.073      -0.055      -0.052      -0.045
+    V1_N            -0.187      -0.145      -0.123      -0.012       0.100       0.121       0.163
+    HOMPOP          -0.001       0.001       0.002       0.007       0.013       0.014       0.016
+    EMP_1           -0.016      -0.010      -0.008       0.006       0.020       0.022       0.027
+    DEG_3            0.019       0.030       0.035       0.063       0.091       0.096       0.107
+
+ Residual Variances
+    WELFARE2         0.173       0.185       0.191       0.222       0.253       0.259       0.271
+
+Between COUNTRY_YEAR Level
+
+ WELFARE2 ON
+    C_Y_STOCK_      -0.050      -0.040      -0.035      -0.009       0.016       0.021       0.031
+    C_Y_SOCX_O      -0.002       0.002       0.004       0.015       0.025       0.027       0.031
+
+ Residual Variances
+    WELFARE2         0.000       0.001       0.001       0.002       0.003       0.004       0.004
+
+Between COUNTRY Level
+
+ WELFARE2 ON
+    AV_STOCK_U       0.006       0.010       0.013       0.025       0.038       0.040       0.045
+    AV_SOCX_OE      -0.019      -0.011      -0.007       0.014       0.035       0.038       0.046
+
+ Intercepts
+    WELFARE2        -0.048       0.171       0.283       0.868       1.453       1.565       1.784
+
+ Residual Variances
+    WELFARE2         0.003       0.006       0.008       0.016       0.024       0.026       0.029
+
+
+TECHNICAL 1 OUTPUT
+
+
+     PARAMETER SPECIFICATION FOR WITHIN
+
+
+           NU
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                    0             0             0             0             0
+
+
+           NU
+              EMP_1         DEG_3
+              ________      ________
+                    0             0
+
+
+           LAMBDA
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2           0             0             0             0             0
+ AGE_CAT            0             0             0             0             0
+ SEX                0             0             0             0             0
+ V1_N               0             0             0             0             0
+ HOMPOP             0             0             0             0             0
+ EMP_1              0             0             0             0             0
+ DEG_3              0             0             0             0             0
+
+
+           LAMBDA
+              EMP_1         DEG_3
+              ________      ________
+ WELFARE2           0             0
+ AGE_CAT            0             0
+ SEX                0             0
+ V1_N               0             0
+ HOMPOP             0             0
+ EMP_1              0             0
+ DEG_3              0             0
+
+
+           THETA
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2           0
+ AGE_CAT            0             0
+ SEX                0             0             0
+ V1_N               0             0             0             0
+ HOMPOP             0             0             0             0             0
+ EMP_1              0             0             0             0             0
+ DEG_3              0             0             0             0             0
+
+
+           THETA
+              EMP_1         DEG_3
+              ________      ________
+ EMP_1              0
+ DEG_3              0             0
+
+
+           ALPHA
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                    0             0             0             0             0
+
+
+           ALPHA
+              EMP_1         DEG_3
+              ________      ________
+                    0             0
+
+
+           BETA
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2           0             1             2             3             4
+ AGE_CAT            0             0             0             0             0
+ SEX                0             0             0             0             0
+ V1_N               0             0             0             0             0
+ HOMPOP             0             0             0             0             0
+ EMP_1              0             0             0             0             0
+ DEG_3              0             0             0             0             0
+
+
+           BETA
+              EMP_1         DEG_3
+              ________      ________
+ WELFARE2           5             6
+ AGE_CAT            0             0
+ SEX                0             0
+ V1_N               0             0
+ HOMPOP             0             0
+ EMP_1              0             0
+ DEG_3              0             0
+
+
+           PSI
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2           7
+ AGE_CAT            0             0
+ SEX                0             0             0
+ V1_N               0             0             0             0
+ HOMPOP             0             0             0             0             0
+ EMP_1              0             0             0             0             0
+ DEG_3              0             0             0             0             0
+
+
+           PSI
+              EMP_1         DEG_3
+              ________      ________
+ EMP_1              0
+ DEG_3              0             0
+
+
+     PARAMETER SPECIFICATION FOR BETWEEN COUNTRY_YEAR
+
+
+           NU
+              WELFARE2      C_Y_STOC      C_Y_SOCX
+              ________      ________      ________
+                    0             0             0
+
+
+           LAMBDA
+              WELFARE2      C_Y_STOC      C_Y_SOCX
+              ________      ________      ________
+ WELFARE2           0             0             0
+ C_Y_STOC           0             0             0
+ C_Y_SOCX           0             0             0
+
+
+           THETA
+              WELFARE2      C_Y_STOC      C_Y_SOCX
+              ________      ________      ________
+ WELFARE2           0
+ C_Y_STOC           0             0
+ C_Y_SOCX           0             0             0
+
+
+           ALPHA
+              WELFARE2      C_Y_STOC      C_Y_SOCX
+              ________      ________      ________
+                    0             0             0
+
+
+           BETA
+              WELFARE2      C_Y_STOC      C_Y_SOCX
+              ________      ________      ________
+ WELFARE2           0             8             9
+ C_Y_STOC           0             0             0
+ C_Y_SOCX           0             0             0
+
+
+           PSI
+              WELFARE2      C_Y_STOC      C_Y_SOCX
+              ________      ________      ________
+ WELFARE2          10
+ C_Y_STOC           0             0
+ C_Y_SOCX           0             0             0
+
+
+     PARAMETER SPECIFICATION FOR BETWEEN COUNTRY
+
+
+           NU
+              WELFARE2      AV_STOCK      AV_SOCX_
+              ________      ________      ________
+                    0             0             0
+
+
+           LAMBDA
+              WELFARE2      AV_STOCK      AV_SOCX_
+              ________      ________      ________
+ WELFARE2           0             0             0
+ AV_STOCK           0             0             0
+ AV_SOCX_           0             0             0
+
+
+           THETA
+              WELFARE2      AV_STOCK      AV_SOCX_
+              ________      ________      ________
+ WELFARE2           0
+ AV_STOCK           0             0
+ AV_SOCX_           0             0             0
+
+
+           ALPHA
+              WELFARE2      AV_STOCK      AV_SOCX_
+              ________      ________      ________
+                   11             0             0
+
+
+           BETA
+              WELFARE2      AV_STOCK      AV_SOCX_
+              ________      ________      ________
+ WELFARE2           0            12            13
+ AV_STOCK           0             0             0
+ AV_SOCX_           0             0             0
+
+
+           PSI
+              WELFARE2      AV_STOCK      AV_SOCX_
+              ________      ________      ________
+ WELFARE2          14
+ AV_STOCK           0             0
+ AV_SOCX_           0             0             0
+
+
+     STARTING VALUES FOR WITHIN
+
+
+           NU
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           NU
+              EMP_1         DEG_3
+              ________      ________
+                0.000         0.000
+
+
+           LAMBDA
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2       1.000         0.000         0.000         0.000         0.000
+ AGE_CAT        0.000         1.000         0.000         0.000         0.000
+ SEX            0.000         0.000         1.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         1.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         1.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+
+
+           LAMBDA
+              EMP_1         DEG_3
+              ________      ________
+ WELFARE2       0.000         0.000
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000
+ V1_N           0.000         0.000
+ HOMPOP         0.000         0.000
+ EMP_1          1.000         0.000
+ DEG_3          0.000         1.000
+
+
+           THETA
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2       0.000
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+
+
+           THETA
+              EMP_1         DEG_3
+              ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+
+
+           ALPHA
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           ALPHA
+              EMP_1         DEG_3
+              ________      ________
+                0.000         0.000
+
+
+           BETA
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2       0.000         0.000         0.000         0.000         0.000
+ AGE_CAT        0.000         0.000         0.000         0.000         0.000
+ SEX            0.000         0.000         0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+
+
+           BETA
+              EMP_1         DEG_3
+              ________      ________
+ WELFARE2       0.000         0.000
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000
+ V1_N           0.000         0.000
+ HOMPOP         0.000         0.000
+ EMP_1          0.000         0.000
+ DEG_3          0.000         0.000
+
+
+           PSI
+              WELFARE2      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ WELFARE2       0.128
+ AGE_CAT        0.000       124.812
+ SEX            0.000         0.000         0.125
+ V1_N           0.000         0.000         0.000         0.124
+ HOMPOP         0.000         0.000         0.000         0.000         0.966
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+
+
+           PSI
+              EMP_1         DEG_3
+              ________      ________
+ EMP_1          0.119
+ DEG_3          0.000         0.124
+
+
+     STARTING VALUES FOR BETWEEN COUNTRY_YEAR
+
+
+           NU
+              WELFARE2      C_Y_STOC      C_Y_SOCX
+              ________      ________      ________
+                0.000         0.000         0.000
+
+
+           LAMBDA
+              WELFARE2      C_Y_STOC      C_Y_SOCX
+              ________      ________      ________
+ WELFARE2       1.000         0.000         0.000
+ C_Y_STOC       0.000         1.000         0.000
+ C_Y_SOCX       0.000         0.000         1.000
+
+
+           THETA
+              WELFARE2      C_Y_STOC      C_Y_SOCX
+              ________      ________      ________
+ WELFARE2       0.000
+ C_Y_STOC       0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000
+
+
+           ALPHA
+              WELFARE2      C_Y_STOC      C_Y_SOCX
+              ________      ________      ________
+                0.000         0.000         0.000
+
+
+           BETA
+              WELFARE2      C_Y_STOC      C_Y_SOCX
+              ________      ________      ________
+ WELFARE2       0.000         0.000         0.000
+ C_Y_STOC       0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000
+
+
+           PSI
+              WELFARE2      C_Y_STOC      C_Y_SOCX
+              ________      ________      ________
+ WELFARE2       0.128
+ C_Y_STOC       0.000         1.264
+ C_Y_SOCX       0.000         0.000         1.400
+
+
+     STARTING VALUES FOR BETWEEN COUNTRY
+
+
+           NU
+              WELFARE2      AV_STOCK      AV_SOCX_
+              ________      ________      ________
+                0.000         0.000         0.000
+
+
+           LAMBDA
+              WELFARE2      AV_STOCK      AV_SOCX_
+              ________      ________      ________
+ WELFARE2       1.000         0.000         0.000
+ AV_STOCK       0.000         1.000         0.000
+ AV_SOCX_       0.000         0.000         1.000
+
+
+           THETA
+              WELFARE2      AV_STOCK      AV_SOCX_
+              ________      ________      ________
+ WELFARE2       0.000
+ AV_STOCK       0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000
+
+
+           ALPHA
+              WELFARE2      AV_STOCK      AV_SOCX_
+              ________      ________      ________
+                1.380         0.000         0.000
+
+
+           BETA
+              WELFARE2      AV_STOCK      AV_SOCX_
+              ________      ________      ________
+ WELFARE2       0.000         0.000         0.000
+ AV_STOCK       0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000
+
+
+           PSI
+              WELFARE2      AV_STOCK      AV_SOCX_
+              ________      ________      ________
+ WELFARE2       0.128
+ AV_STOCK       0.000        14.636
+ AV_SOCX_       0.000         0.000         8.198
+
+
+DIAGRAM INFORMATION
+
+  Mplus diagrams are currently not available for multilevel analysis.
+  No diagram output was produced.
+
+
+     Beginning Time:  15:53:39
+        Ending Time:  15:53:44
+       Elapsed Time:  00:00:05
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2018 Muthen & Muthen

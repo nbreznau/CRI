@@ -1,0 +1,1171 @@
+Mplus VERSION 8.2
+MUTHEN & MUTHEN
+01/04/2020   3:54 PM
+
+INPUT INSTRUCTIONS
+
+  DATA: file is C:/data/t41.dat;
+
+  VARIABLE:
+
+  NAMES ARE country_year
+  V1_n
+  ID
+  CASEID
+  COUNTRY
+  ISO
+  JOBS
+  HEALTH
+  OLD
+  UNEMP
+  INCOME
+  HOUSING
+  SEX
+  AGE
+  AGE_CAT
+  DK_AGE
+  MARITAL
+  Mar_1
+  Mar_2
+  Mar_3
+  Mar_4
+  Mar_5
+  DEGREE
+  ATTEND
+  ATTEND_C
+  ATT_1
+  ATT_2
+  ATT_3
+  URBRURAL
+  URBRURAL_R
+  UR_1
+  UR_2
+  UR_3
+  HOMPOP
+  MAINSTAT
+  EMP_1
+  EMP_2
+  CHILD
+  LIB
+  SOC
+  CONS
+  WEIGHT
+  deg_1
+  deg_2
+  deg_3
+  mignet_un10
+  migstock_wb
+  migstock_un
+  mignet_un
+  socx_oecd
+  wdi_unempilo
+  AV_stock_un
+  AV_net_un
+  AV_socx_oecd
+  AV_wdi_unempilo
+  AV_mignet_un10
+  C_Y_stock_un
+  C_Y_net_un
+  C_Y_socx_oecd
+  C_Y_wdi_unemplilo
+  C_Y_mignet_un10
+  age_2
+  age_3
+  age_4
+  age_5
+  age_6
+  age_7
+  ;
+
+  USEVARIABLES ARE AGE_CAT
+  SEX
+  V1_n
+  HOMPOP
+  EMP_1
+  deg_3
+
+  C_Y_net_un
+  AV_net_un
+  C_Y_socx_oecd
+  AV_socx_oecd
+  Sum_scale_welfare
+  ;
+
+  missing are all (-9999);
+
+  cluster = country country_year;
+
+  weight is weight;
+
+  Within = AGE_CAT
+  SEX
+  V1_n
+  HOMPOP
+  EMP_1
+  deg_3
+  ;
+
+  Between = (country_year) C_Y_net_un
+  C_Y_socx_oecd (country) AV_net_un AV_socx_oecd;
+
+
+
+  DEFINE:
+  Sum_scale_welfare = (JOBS + HEALTH + OLD + UNEMP + INCOME + HOUSING) / 6;
+
+  ANALYSIS:
+
+  type = threelevel;
+  estimator = MLR;
+
+  MODEL:
+
+  %within%
+  sum_scale_welfare on AGE_CAT
+  SEX
+  V1_n
+  HOMPOP
+  EMP_1
+  deg_3
+  ;
+
+  %Between country_year%
+  sum_scale_welfare on C_Y_net_un C_Y_socx_oecd;
+
+  %Between country%
+  sum_scale_welfare on AV_net_un AV_socx_oecd;
+
+  output: sampstat; cinterval;
+
+
+
+*** WARNING in VARIABLE command
+  Note that only the first 8 characters of variable names are used in the output.
+  Shorten variable names to avoid any confusion.
+*** WARNING
+  Data set contains cases with missing on x-variables.
+  These cases were not included in the analysis.
+  Number of cases with missing on x-variables:  11170
+*** WARNING
+  Data set contains cases with missing on all variables except
+  x-variables.  These cases were not included in the analysis.
+  Number of cases with missing on all variables except x-variables:  3527
+   3 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                       25102
+
+Number of dependent variables                                    1
+Number of independent variables                                 10
+Number of continuous latent variables                            0
+
+Observed dependent variables
+
+  Continuous
+   SUM_SCALE_
+
+Observed independent variables
+   AGE_CAT     SEX         V1_N        HOMPOP      EMP_1       DEG_3
+   C_Y_NET_    AV_NET_U    C_Y_SOCX    AV_SOCX_
+
+Variables with special functions
+
+  Cluster variables     COUNTRY   COUNTRY_
+  Weight variable (cluster-size scaling)
+    WEIGHT
+
+  Within variables
+   AGE_CAT     SEX         V1_N        HOMPOP      EMP_1       DEG_3
+
+  Level 2 between variables
+   C_Y_NET_    C_Y_SOCX
+
+  Level 3 between variables
+   AV_NET_U    AV_SOCX_
+
+
+Estimator                                                      MLR
+Information matrix                                        OBSERVED
+Maximum number of iterations                                   100
+Convergence criterion                                    0.100D-05
+Maximum number of EM iterations                                500
+Convergence criteria for the EM algorithm
+  Loglikelihood change                                   0.100D-02
+  Relative loglikelihood change                          0.100D-05
+  Derivative                                             0.100D-03
+Minimum variance                                         0.100D-03
+Maximum number of steepest descent iterations                   20
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-02
+Optimization algorithm                                         EMA
+
+Input data file(s)
+  C:/data/t41.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+     Number of COUNTRY_YEAR clusters            22
+     Number of COUNTRY clusters                 14
+
+     Average cluster size for COUNTRY_YEAR level     1141.000
+
+     Estimated Intraclass Correlations for the Y Variables for COUNTRY_YEAR level
+
+                Intraclass
+     Variable  Correlation
+
+     SUM_SCAL     0.009
+
+     Average cluster size for COUNTRY level     1793.000
+
+     Estimated Intraclass Correlations for the Y Variables for COUNTRY level
+
+                Intraclass
+     Variable  Correlation
+
+     SUM_SCAL     0.123
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+     PROPORTION OF DATA PRESENT
+
+
+           Covariance Coverage
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       1.000
+ AGE_CAT        1.000         1.000
+ SEX            1.000         1.000         1.000
+ V1_N           1.000         1.000         1.000         1.000
+ HOMPOP         1.000         1.000         1.000         1.000         1.000
+ EMP_1          1.000         1.000         1.000         1.000         1.000
+ DEG_3          1.000         1.000         1.000         1.000         1.000
+ C_Y_NET_       1.000         1.000         1.000         1.000         1.000
+ AV_NET_U       1.000         1.000         1.000         1.000         1.000
+ C_Y_SOCX       1.000         1.000         1.000         1.000         1.000
+ AV_SOCX_       1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          1.000
+ DEG_3          1.000         1.000
+ C_Y_NET_       1.000         1.000         1.000
+ AV_NET_U       1.000         1.000         1.000         1.000
+ C_Y_SOCX       1.000         1.000         1.000         1.000         1.000
+ AV_SOCX_       1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              AV_SOCX_
+              ________
+ AV_SOCX_       1.000
+
+
+SAMPLE STATISTICS
+
+NOTE:  The sample statistics for within and between refer to the
+       maximum-likelihood estimated within and between covariance
+       matrices, respectively.
+
+
+     ESTIMATED SAMPLE STATISTICS FOR WITHIN
+
+
+           Means
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                0.000        47.820         1.504         0.461         2.738
+
+
+           Means
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U      C_Y_SOCX
+              ________      ________      ________      ________      ________
+                0.610         0.468         0.000         0.000         0.000
+
+
+           Means
+              AV_SOCX_
+              ________
+                0.000
+
+
+           Covariances
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       0.244
+ AGE_CAT       -0.423       246.530
+ SEX           -0.028        -0.259         0.250
+ V1_N          -0.002         0.473        -0.004         0.248
+ HOMPOP         0.032        -7.071        -0.002        -0.032         1.878
+ EMP_1          0.029        -2.525        -0.019        -0.010         0.116
+ DEG_3          0.034        -0.624        -0.001         0.053         0.001
+ C_Y_NET_       0.000         0.000         0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          0.238
+ DEG_3          0.046         0.249
+ C_Y_NET_       0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              AV_SOCX_
+              ________
+ AV_SOCX_       0.000
+
+
+           Correlations
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       1.000
+ AGE_CAT       -0.055         1.000
+ SEX           -0.115        -0.033         1.000
+ V1_N          -0.008         0.060        -0.018         1.000
+ HOMPOP         0.048        -0.329        -0.003        -0.047         1.000
+ EMP_1          0.121        -0.330        -0.079        -0.041         0.174
+ DEG_3          0.137        -0.080        -0.004         0.213         0.001
+ C_Y_NET_       0.000         0.000         0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          1.000
+ DEG_3          0.191         1.000
+ C_Y_NET_       0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              AV_SOCX_
+              ________
+ AV_SOCX_       0.000
+
+
+     ESTIMATED SAMPLE STATISTICS FOR BETWEEN COUNTRY_YEAR
+
+
+           Means
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           Means
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U      C_Y_SOCX
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.405         0.000        -0.136
+
+
+           Means
+              AV_SOCX_
+              ________
+                0.000
+
+
+           Covariances
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       0.003
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+ C_Y_NET_       0.030         0.000         0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.005         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+ C_Y_NET_       0.000         0.000        10.925
+ AV_NET_U       0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000        -1.493         0.000         2.634
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              AV_SOCX_
+              ________
+ AV_SOCX_       0.000
+
+
+           Correlations
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       1.000
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+ C_Y_NET_       0.180         0.000         0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.059         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+ C_Y_NET_       0.000         0.000         1.000
+ AV_NET_U       0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000        -0.278         0.000         1.000
+ AV_SOCX_       0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              AV_SOCX_
+              ________
+ AV_SOCX_       0.000
+
+
+     ESTIMATED SAMPLE STATISTICS FOR BETWEEN COUNTRY
+
+
+           Means
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                1.819         0.000         0.000         0.000         0.000
+
+
+           Means
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U      C_Y_SOCX
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         3.782         0.000
+
+
+           Means
+              AV_SOCX_
+              ________
+               22.696
+
+
+           Covariances
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       0.034
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+ C_Y_NET_       0.000         0.000         0.000         0.000         0.000
+ AV_NET_U       0.158         0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_      -0.117         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+ C_Y_NET_       0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         4.101
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000        -2.651         0.000
+
+
+           Covariances
+              AV_SOCX_
+              ________
+ AV_SOCX_      17.266
+
+
+           Correlations
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       1.000
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+ C_Y_NET_       0.000         0.000         0.000         0.000         0.000
+ AV_NET_U       0.421         0.000         0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_      -0.152         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U      C_Y_SOCX
+              ________      ________      ________      ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+ C_Y_NET_       0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         1.000
+ C_Y_SOCX       0.000         0.000         0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000        -0.315         0.000
+
+
+           Correlations
+              AV_SOCX_
+              ________
+ AV_SOCX_       1.000
+
+
+     MAXIMUM LOG-LIKELIHOOD VALUE FOR THE UNRESTRICTED (H1) MODEL IS -17409.956
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     SUM_SCALE_WELFA       1.788       0.455       1.000   11.19%       1.333      1.667      1.833
+           25102.000       0.290      -0.197       4.000    0.05%       1.833      2.167
+     AGE_CAT              47.820      -0.083      22.000    8.71%      31.000     41.000     51.000
+           25102.000     246.530      -1.196      70.000   20.02%      51.000     70.000
+     SEX                   1.504      -0.017       1.000   49.10%       1.000      1.000      2.000
+           25102.000       0.250      -2.000       2.000   50.90%       2.000      2.000
+     V1_N                  0.461       0.157       0.000   53.90%       0.000      0.000      0.000
+           25102.000       0.248      -1.975       1.000   46.10%       1.000      1.000
+     HOMPOP                2.738       1.067       0.000    0.18%       2.000      2.000      2.000
+           25102.000       1.878       2.635      17.000    0.00%       3.000      4.000
+     EMP_1                 0.610      -0.451       0.000   40.52%       0.000      0.000      1.000
+           25102.000       0.238      -1.796       1.000   59.48%       1.000      1.000
+     DEG_3                 0.468       0.127       0.000   53.00%       0.000      0.000      0.000
+           25102.000       0.249      -1.984       1.000   47.00%       1.000      1.000
+     C_Y_NET_UN            0.405       0.283      -7.900    4.55%      -2.150     -0.900      0.275
+              22.000      10.925       1.386       7.950    4.55%       0.900      2.350
+     AV_NET_UN             3.782       0.161       0.350    7.14%       1.950      3.150      3.225
+              14.000       4.101      -0.999       7.450    7.14%       3.250      5.500
+     C_Y_SOCX_OECD        -0.136       0.232      -3.350    4.55%      -1.600     -0.900     -0.575
+              22.000       2.634      -0.474       3.350    4.55%      -0.350      1.500
+     AV_SOCX_OECD         22.696       0.051      15.950    7.14%      18.750     21.400     22.600
+              14.000      17.266      -1.025      30.200    7.14%      22.900     27.000
+
+     THE STANDARD ERRORS OF THE MODEL PARAMETER ESTIMATES MAY NOT BE
+     TRUSTWORTHY FOR SOME PARAMETERS DUE TO A NON-POSITIVE DEFINITE
+     FIRST-ORDER DERIVATIVE PRODUCT MATRIX.  THIS MAY BE DUE TO THE STARTING
+     VALUES BUT MAY ALSO BE AN INDICATION OF MODEL NONIDENTIFICATION.  THE
+     CONDITION NUMBER IS       0.822D-16.  PROBLEM INVOLVING THE FOLLOWING PARAMETER:
+     Parameter 14, %BETWEEN COUNTRY%: SUM_SCALE_WELFARE
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                       14
+
+Loglikelihood
+
+          H0 Value                      -17409.955
+          H0 Scaling Correction Factor      5.7040
+            for MLR
+          H1 Value                      -17409.956
+          H1 Scaling Correction Factor      5.7040
+            for MLR
+
+Information Criteria
+
+          Akaike (AIC)                   34847.910
+          Bayesian (BIC)                 34961.740
+          Sample-Size Adjusted BIC       34917.249
+            (n* = (n + 2) / 24)
+
+Chi-Square Test of Model Fit
+
+          Value                              0.000*
+          Degrees of Freedom                     0
+          P-Value                           1.0000
+          Scaling Correction Factor         1.0000
+            for MLR
+
+*   The chi-square value for MLM, MLMV, MLR, ULSMV, WLSM and WLSMV cannot be used
+    for chi-square difference testing in the regular way.  MLM, MLR and WLSM
+    chi-square difference testing is described on the Mplus website.  MLMV, WLSMV,
+    and ULSMV difference testing is done using the DIFFTEST option.
+
+RMSEA (Root Mean Square Error Of Approximation)
+
+          Estimate                           0.000
+
+CFI/TLI
+
+          CFI                                1.000
+          TLI                                1.000
+
+Chi-Square Test of Model Fit for the Baseline Model
+
+          Value                            372.272
+          Degrees of Freedom                    10
+          P-Value                           0.0000
+
+SRMR (Standardized Root Mean Square Residual)
+
+          Value for Within                   0.000
+          Value for Between Level 2          0.004
+          Value for Between Level 3          0.001
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+Within Level
+
+ SUM_SCALE_ ON
+    AGE_CAT            0.000      0.001     -0.643      0.520
+    SEX               -0.108      0.016     -6.884      0.000
+    V1_N              -0.032      0.052     -0.615      0.539
+    HOMPOP             0.010      0.005      2.264      0.024
+    EMP_1              0.079      0.012      6.553      0.000
+    DEG_3              0.126      0.014      8.814      0.000
+
+ Residual Variances
+    SUM_SCALE_         0.234      0.014     16.510      0.000
+
+Between COUNTRY_YEAR Level
+
+ SUM_SCALE_ ON
+    C_Y_NET_UN         0.003      0.002      1.664      0.096
+    C_Y_SOCX_O         0.004      0.012      0.338      0.735
+
+ Residual Variances
+    SUM_SCALE_         0.002      0.001      2.637      0.008
+
+Between COUNTRY Level
+
+ SUM_SCALE_ ON
+    AV_NET_UN          0.038      0.027      1.418      0.156
+    AV_SOCX_OE        -0.001      0.007     -0.126      0.900
+
+ Intercepts
+    SUM_SCALE_         1.753      0.240      7.294      0.000
+
+ Residual Variances
+    SUM_SCALE_         0.028      0.011      2.600      0.009
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.822E-16
+       (ratio of smallest to largest eigenvalue)
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+Within Level
+
+ SUM_SCAL ON
+    AGE_CAT         -0.002      -0.001      -0.001       0.000       0.001       0.001       0.001
+    SEX             -0.148      -0.138      -0.133      -0.108      -0.082      -0.077      -0.067
+    V1_N            -0.167      -0.135      -0.119      -0.032       0.054       0.071       0.103
+    HOMPOP          -0.001       0.001       0.003       0.010       0.018       0.019       0.022
+    EMP_1            0.048       0.055       0.059       0.079       0.099       0.102       0.110
+    DEG_3            0.089       0.098       0.103       0.126       0.150       0.154       0.163
+
+ Residual Variances
+    SUM_SCALE_       0.197       0.206       0.210       0.234       0.257       0.261       0.270
+
+Between COUNTRY_YEAR Level
+
+ SUM_SCAL ON
+    C_Y_NET_UN      -0.002      -0.001       0.000       0.003       0.007       0.007       0.008
+    C_Y_SOCX_O      -0.026      -0.019      -0.015       0.004       0.023       0.026       0.034
+
+ Residual Variances
+    SUM_SCALE_       0.000       0.001       0.001       0.002       0.004       0.004       0.005
+
+Between COUNTRY Level
+
+ SUM_SCAL ON
+    AV_NET_UN       -0.031      -0.015      -0.006       0.038       0.082       0.091       0.107
+    AV_SOCX_OE      -0.019      -0.015      -0.013      -0.001       0.011       0.013       0.017
+
+ Intercepts
+    SUM_SCALE_       1.134       1.282       1.357       1.753       2.148       2.224       2.372
+
+ Residual Variances
+    SUM_SCALE_       0.000       0.007       0.010       0.028       0.046       0.050       0.056
+
+
+TECHNICAL 1 OUTPUT
+
+
+     PARAMETER SPECIFICATION FOR WITHIN
+
+
+           NU
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                    0             0             0             0             0
+
+
+           NU
+              EMP_1         DEG_3
+              ________      ________
+                    0             0
+
+
+           LAMBDA
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL           0             0             0             0             0
+ AGE_CAT            0             0             0             0             0
+ SEX                0             0             0             0             0
+ V1_N               0             0             0             0             0
+ HOMPOP             0             0             0             0             0
+ EMP_1              0             0             0             0             0
+ DEG_3              0             0             0             0             0
+
+
+           LAMBDA
+              EMP_1         DEG_3
+              ________      ________
+ SUM_SCAL           0             0
+ AGE_CAT            0             0
+ SEX                0             0
+ V1_N               0             0
+ HOMPOP             0             0
+ EMP_1              0             0
+ DEG_3              0             0
+
+
+           THETA
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL           0
+ AGE_CAT            0             0
+ SEX                0             0             0
+ V1_N               0             0             0             0
+ HOMPOP             0             0             0             0             0
+ EMP_1              0             0             0             0             0
+ DEG_3              0             0             0             0             0
+
+
+           THETA
+              EMP_1         DEG_3
+              ________      ________
+ EMP_1              0
+ DEG_3              0             0
+
+
+           ALPHA
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                    0             0             0             0             0
+
+
+           ALPHA
+              EMP_1         DEG_3
+              ________      ________
+                    0             0
+
+
+           BETA
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL           0             1             2             3             4
+ AGE_CAT            0             0             0             0             0
+ SEX                0             0             0             0             0
+ V1_N               0             0             0             0             0
+ HOMPOP             0             0             0             0             0
+ EMP_1              0             0             0             0             0
+ DEG_3              0             0             0             0             0
+
+
+           BETA
+              EMP_1         DEG_3
+              ________      ________
+ SUM_SCAL           5             6
+ AGE_CAT            0             0
+ SEX                0             0
+ V1_N               0             0
+ HOMPOP             0             0
+ EMP_1              0             0
+ DEG_3              0             0
+
+
+           PSI
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL           7
+ AGE_CAT            0             0
+ SEX                0             0             0
+ V1_N               0             0             0             0
+ HOMPOP             0             0             0             0             0
+ EMP_1              0             0             0             0             0
+ DEG_3              0             0             0             0             0
+
+
+           PSI
+              EMP_1         DEG_3
+              ________      ________
+ EMP_1              0
+ DEG_3              0             0
+
+
+     PARAMETER SPECIFICATION FOR BETWEEN COUNTRY_YEAR
+
+
+           NU
+              SUM_SCAL      C_Y_NET_      C_Y_SOCX
+              ________      ________      ________
+                    0             0             0
+
+
+           LAMBDA
+              SUM_SCAL      C_Y_NET_      C_Y_SOCX
+              ________      ________      ________
+ SUM_SCAL           0             0             0
+ C_Y_NET_           0             0             0
+ C_Y_SOCX           0             0             0
+
+
+           THETA
+              SUM_SCAL      C_Y_NET_      C_Y_SOCX
+              ________      ________      ________
+ SUM_SCAL           0
+ C_Y_NET_           0             0
+ C_Y_SOCX           0             0             0
+
+
+           ALPHA
+              SUM_SCAL      C_Y_NET_      C_Y_SOCX
+              ________      ________      ________
+                    0             0             0
+
+
+           BETA
+              SUM_SCAL      C_Y_NET_      C_Y_SOCX
+              ________      ________      ________
+ SUM_SCAL           0             8             9
+ C_Y_NET_           0             0             0
+ C_Y_SOCX           0             0             0
+
+
+           PSI
+              SUM_SCAL      C_Y_NET_      C_Y_SOCX
+              ________      ________      ________
+ SUM_SCAL          10
+ C_Y_NET_           0             0
+ C_Y_SOCX           0             0             0
+
+
+     PARAMETER SPECIFICATION FOR BETWEEN COUNTRY
+
+
+           NU
+              SUM_SCAL      AV_NET_U      AV_SOCX_
+              ________      ________      ________
+                    0             0             0
+
+
+           LAMBDA
+              SUM_SCAL      AV_NET_U      AV_SOCX_
+              ________      ________      ________
+ SUM_SCAL           0             0             0
+ AV_NET_U           0             0             0
+ AV_SOCX_           0             0             0
+
+
+           THETA
+              SUM_SCAL      AV_NET_U      AV_SOCX_
+              ________      ________      ________
+ SUM_SCAL           0
+ AV_NET_U           0             0
+ AV_SOCX_           0             0             0
+
+
+           ALPHA
+              SUM_SCAL      AV_NET_U      AV_SOCX_
+              ________      ________      ________
+                   11             0             0
+
+
+           BETA
+              SUM_SCAL      AV_NET_U      AV_SOCX_
+              ________      ________      ________
+ SUM_SCAL           0            12            13
+ AV_NET_U           0             0             0
+ AV_SOCX_           0             0             0
+
+
+           PSI
+              SUM_SCAL      AV_NET_U      AV_SOCX_
+              ________      ________      ________
+ SUM_SCAL          14
+ AV_NET_U           0             0
+ AV_SOCX_           0             0             0
+
+
+     STARTING VALUES FOR WITHIN
+
+
+           NU
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           NU
+              EMP_1         DEG_3
+              ________      ________
+                0.000         0.000
+
+
+           LAMBDA
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       1.000         0.000         0.000         0.000         0.000
+ AGE_CAT        0.000         1.000         0.000         0.000         0.000
+ SEX            0.000         0.000         1.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         1.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         1.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+
+
+           LAMBDA
+              EMP_1         DEG_3
+              ________      ________
+ SUM_SCAL       0.000         0.000
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000
+ V1_N           0.000         0.000
+ HOMPOP         0.000         0.000
+ EMP_1          1.000         0.000
+ DEG_3          0.000         1.000
+
+
+           THETA
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       0.000
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+
+
+           THETA
+              EMP_1         DEG_3
+              ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+
+
+           ALPHA
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           ALPHA
+              EMP_1         DEG_3
+              ________      ________
+                0.000         0.000
+
+
+           BETA
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       0.000         0.000         0.000         0.000         0.000
+ AGE_CAT        0.000         0.000         0.000         0.000         0.000
+ SEX            0.000         0.000         0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+
+
+           BETA
+              EMP_1         DEG_3
+              ________      ________
+ SUM_SCAL       0.000         0.000
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000
+ V1_N           0.000         0.000
+ HOMPOP         0.000         0.000
+ EMP_1          0.000         0.000
+ DEG_3          0.000         0.000
+
+
+           PSI
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       0.145
+ AGE_CAT        0.000       123.265
+ SEX            0.000         0.000         0.125
+ V1_N           0.000         0.000         0.000         0.124
+ HOMPOP         0.000         0.000         0.000         0.000         0.939
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+
+
+           PSI
+              EMP_1         DEG_3
+              ________      ________
+ EMP_1          0.119
+ DEG_3          0.000         0.124
+
+
+     STARTING VALUES FOR BETWEEN COUNTRY_YEAR
+
+
+           NU
+              SUM_SCAL      C_Y_NET_      C_Y_SOCX
+              ________      ________      ________
+                0.000         0.000         0.000
+
+
+           LAMBDA
+              SUM_SCAL      C_Y_NET_      C_Y_SOCX
+              ________      ________      ________
+ SUM_SCAL       1.000         0.000         0.000
+ C_Y_NET_       0.000         1.000         0.000
+ C_Y_SOCX       0.000         0.000         1.000
+
+
+           THETA
+              SUM_SCAL      C_Y_NET_      C_Y_SOCX
+              ________      ________      ________
+ SUM_SCAL       0.000
+ C_Y_NET_       0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000
+
+
+           ALPHA
+              SUM_SCAL      C_Y_NET_      C_Y_SOCX
+              ________      ________      ________
+                0.000         0.000         0.000
+
+
+           BETA
+              SUM_SCAL      C_Y_NET_      C_Y_SOCX
+              ________      ________      ________
+ SUM_SCAL       0.000         0.000         0.000
+ C_Y_NET_       0.000         0.000         0.000
+ C_Y_SOCX       0.000         0.000         0.000
+
+
+           PSI
+              SUM_SCAL      C_Y_NET_      C_Y_SOCX
+              ________      ________      ________
+ SUM_SCAL       0.145
+ C_Y_NET_       0.000         7.090
+ C_Y_SOCX       0.000         0.000         1.408
+
+
+     STARTING VALUES FOR BETWEEN COUNTRY
+
+
+           NU
+              SUM_SCAL      AV_NET_U      AV_SOCX_
+              ________      ________      ________
+                0.000         0.000         0.000
+
+
+           LAMBDA
+              SUM_SCAL      AV_NET_U      AV_SOCX_
+              ________      ________      ________
+ SUM_SCAL       1.000         0.000         0.000
+ AV_NET_U       0.000         1.000         0.000
+ AV_SOCX_       0.000         0.000         1.000
+
+
+           THETA
+              SUM_SCAL      AV_NET_U      AV_SOCX_
+              ________      ________      ________
+ SUM_SCAL       0.000
+ AV_NET_U       0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000
+
+
+           ALPHA
+              SUM_SCAL      AV_NET_U      AV_SOCX_
+              ________      ________      ________
+                1.788         0.000         0.000
+
+
+           BETA
+              SUM_SCAL      AV_NET_U      AV_SOCX_
+              ________      ________      ________
+ SUM_SCAL       0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000
+ AV_SOCX_       0.000         0.000         0.000
+
+
+           PSI
+              SUM_SCAL      AV_NET_U      AV_SOCX_
+              ________      ________      ________
+ SUM_SCAL       0.145
+ AV_NET_U       0.000         1.821
+ AV_SOCX_       0.000         0.000         7.570
+
+
+DIAGRAM INFORMATION
+
+  Mplus diagrams are currently not available for multilevel analysis.
+  No diagram output was produced.
+
+
+     Beginning Time:  15:54:46
+        Ending Time:  15:54:51
+       Elapsed Time:  00:00:05
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2018 Muthen & Muthen
