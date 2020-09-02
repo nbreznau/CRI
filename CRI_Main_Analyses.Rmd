@@ -3,7 +3,7 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-agg_png(file = wdir("COVIDiSTRESS/Fig2_2nd.png"), width = 1000, height = 600, res = 144)
+
 ## THE CROWDSOURCED REPLICATION INITIATIVE (CRI)
    <a href=https://osf.io/preprints/socarxiv/6j9qb/>"Executive Report"</a> contains details of the project.
 
@@ -40,7 +40,7 @@ wdir <- function(x){
   paste(wd,x, sep = "/")
 }
 
-pacman::p_load("devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","readxl","mlogit","metaviz","jtools","sjPlot","sjmisc","sjlabelled","knitr","boot","ragg")
+pacman::p_load("devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","readxl","mlogit","metaviz","jtools","sjPlot","sjmisc","sjlabelled","knitr","boot","ragg","kableExtra")
 
 # Load Researcher Degrees of Freedom Analysis package
 #  
@@ -56,13 +56,218 @@ completeFun <- function(data, desiredCols) {
 
 ### Load Data
 
-This dataset was worked up from the file CRI_Spec_Analysis.Rmd
+This dataset was worked up from the file CRI_Spec_Analysis.Rmd. 
 
 
 ```{r load, warning=F,message=F}
-load(".Rdata")
+load(file = wdir("Env1.Rdata"))
 ```
 
+## Analysis
+
+### Specification Curve Overviews
+```{r fig1prep, warning = F}
+
+
+df2 <- df %>%
+  mutate(AMEssd = ifelse(iv_type == "Stock", est, NA),
+         AMEfsd = ifelse(iv_type == "Flow", est, NA),
+         AMEssd = sd(AMEssd, na.rm = T),
+         AMEfsd = sd(AMEfsd, na.rm = T),
+         estz = est*(AMEssd/AMEfsd),
+         lower = lb*(AMEssd/AMEfsd),
+         upper = ub*(AMEssd/AMEfsd),
+         est = ifelse(iv_type == "Flow", estz, est),
+         lb = ifelse(iv_type == "Flow", lower, lb),
+         ub = ifelse(iv_type == "Flow", upper, ub),
+         # Trim to the range -0.5 to 0.5
+         est = ifelse(est < -0.5, -0.5, est),
+         est = ifelse(est > 0.5, 0.5, est),
+         lb = ifelse(lb < -0.5, -0.5, lb),
+         lb = ifelse(lb > 0.5, 0.5, lb),
+         ub = ifelse(ub < -0.5, -0.5, ub),
+         ub = ifelse(ub > 0.5, 0.5, ub))
+```
+#### Figure 1. Basic Features
+
+```{r fig1_Overview, echo = T}
+df2 <- as.data.frame(select(df2, dv_type, iv_type, software, Hresult, est, lb, ub))
+
+agg_png(file = wdir("Fig1_Overview.png"), width = 800, height = 500, res = 144)
+  # remove/adjust attributes
+  choic <- 1:4
+  attr(df2, "choices") <- choic
+  rownames(df2) <- NULL
+plot_rdf_spec_curve(df2, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Standardized \nMarginal Effect", ribbon = F)
+dev.off()
+
+knitr::include_graphics(wdir("Fig1_Overview.png"))
+
+```
+#### Figure 2. Most Popular Features
+
+#### All DVs
+
+```{r fig2, message=F, warning=F, echo = T}
+dfx <- crispectest %>%
+  mutate(AMEssd = ifelse(iv_type == "Stock", est, NA),
+         AMEfsd = ifelse(iv_type == "Flow", est, NA),
+         AMEssd = sd(AMEssd, na.rm = T),
+         AMEfsd = sd(AMEfsd, na.rm = T),
+         estz = est*(AMEssd/AMEfsd),
+         lower = lb*(AMEssd/AMEfsd),
+         upper = ub*(AMEssd/AMEfsd),
+         est = ifelse(iv_type == "Flow", estz, est),
+         lb = ifelse(iv_type == "Flow", lower, lb),
+         ub = ifelse(iv_type == "Flow", upper, ub),
+         # Trim to the range -0.5 to 0.5
+         est = ifelse(est < -0.5, -0.5, est),
+         est = ifelse(est > 0.5, 0.5, est),
+         lb = ifelse(lb < -0.5, -0.5, lb),
+         lb = ifelse(lb > 0.5, 0.5, lb),
+         ub = ifelse(ub < -0.5, -0.5, ub),
+         ub = ifelse(ub > 0.5, 0.5, ub), 
+         waves = ifelse(w1990!= "0" & w1996!="0" & w2006!="0" & w2016!="0", "All", ifelse(w1990== "0" & w1996=="w1996" & w2006=="w2006" & w2016=="0", "1996/2006", ifelse(w1990== "0" & w1996=="0" & w2006=="w2006" & w2016=="w2016", "2006/2016", "Other"))),
+         cases = ifelse(eeurope == 1, "E_Europe", ifelse(allavailable == 1, "All Available", "Rich Dems")))
+
+dfx <- left_join(dfx, popdf_out, by = "id")
+dfx$vote <- ifelse(dfx$total_score > 0.65, "Highest", ifelse(dfx$total_score < 0.650001 & dfx$total_score > 0.55, "High", ifelse(dfx$total_score < 0.550001 & dfx$total_score > 0.38, "Mid", ifelse(dfx$total_score < 0.38001, "Low", NA))))
+
+df3 <- as.data.frame(select(dfx, vote, waves, cases, mator, mlm,  est, lb, ub))
+  # remove/adjust attributes
+  choic <- 1:4
+  attr(df3, "choices") <- choic
+  rownames(df3) <- NULL
+plot_rdf_spec_curve(df3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
+agg_png(file = wdir("Fig2_Popular.png"), width = 800, height = 500, res = 144)
+print(plot_rdf_spec_curve(df3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Standardized \nMarginal Effect", ribbon = F))
+dev.off()
+
+knitr::include_graphics(wdir("Fig2_Popular.png"))
+
+```
+
+### Mesaurement of Participant Team Qualities
+
+#### Correlations of Participant Survey Responses
+
+Aggregated by team
+
+```{r f3}
+# make a dataset for correlation
+
+cor <- select(cri, stat1,stat2,stat3,stat4,stat5,stat6,stat7,topic1,topic2,topic3,topic4,topic5,topic6,topic7,topic8,topic9,belief1,belief2,belief3,belief4,belief5,belief6,belief7,belief_strength,pro_immigrant,total_score,u_teamid)
+
+cor <- aggregate(cor, by=list(cor$u_teamid), FUN=mean, na.rm=T)
+cor <- replace(cor, cor=="-Inf",NA)
+
+# team 27 missing 3 values, fill them in for consistency, fill represents a teaching of 12 stats courses score
+cor <- cor %>%
+  mutate(stat1 = ifelse(u_teamid == 27,3,stat1),
+         stat2 = ifelse(u_teamid == 27,3,stat2),
+         topic4 = ifelse(u_teamid == 27,4,topic4))
+
+# drop Brady and Finnigan's original analysis
+cor <- completeFun(cor, "stat1")
+
+cor1 <- cor(cor, use = "pairwise.complete.obs")
+
+kable_styling(kable(cor1, digits = 2))
+
+
+```
+
+#### Measurement Model
+
+```{r SEM}
+
+pacman::p_load("lavaan")
+
+cfa <- ' stat =~ stat1 + + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
+         topic =~ topic1 + topic2 + topic3 + topic4 + topic5 + topic6 + topic7 + topic8 + topic9
+         belief =~ belief1 + belief2 + belief3 + belief4 + belief5 + belief6 + belief7 '
+fit <- cfa(cfa, data = cor)
+summary(fit, fit.measures=TRUE)
+
+# predicted factor scores
+cor1 <- as.data.frame(lavPredict(fit))
+cor <- cbind(cor,cor1)
+
+# put them back into the main data
+cor1 <- select(cor, u_teamid, stat, topic, belief)
+
+cri <- left_join(cri,cor1,by = "u_teamid")
+```
+
+### Explaining Results Variance With DV Type
+
+
+```{r varexp, include = TRUE}
+
+
+#DVs only
+m1a <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
+m1b <- lm(p ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
+m1c <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri)
+
+m2a <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief, data = cri)
+m3a <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief + total_score, data = cri)
+
+tab_model(m1a,m1b,m1c, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+
+
+```
+
+#### Variance Explained using Team-Weighting
+
+```{r varexpw, include = TRUE}
+
+#DVs only
+m1aw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri, weight = inv_weight)
+m1bw <- lm(p ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri, weight = inv_weight)
+m1cw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri, weight = inv_weight)
+
+m2aw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief, data = cri, weight = inv_weight)
+m3aw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief + total_score, data = cri, weight = inv_weight)
+
+tab_model(m1aw,m1bw,m1cw, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+
+
+```
+
+#### Total score explains nothing of variance
+
+```{r regs, echo=T}
+tab_model(m2a, m3a,  p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+```
+
+#### With weights
+```{r regsw, echo=T}
+tab_model(m2aw, m3aw,  p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+```
+
+
+### For Appendix
+```{r coefplot, echo=T}
+
+agg_png(file = wdir("Fig3_Coeff.png"), width = 800, height = 500, res = 144)
+plot_model(m2a, axis.labels = c("Belief: Hyp is True", "Topical Knowledge","Statistical Skills","Multi-Question Scale","Health Care","Housing","Old Age","Income Diff","Unemp","Jobs")) +
+  labs(title = "Figure X. Marginal Effects of Immigration on Policy Preferences", subtitle = "By Question Types and Researcher Qualities") +
+  geom_hline(yintercept=0) +
+  ylim(-0.3,0.3) +
+
+  theme(
+  panel.background = element_blank(),
+  panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                colour = "grey80"), 
+  panel.grid.minor = element_blank(),
+  plot.margin = margin(t = 0.5, r = 0.5, b = 0.5, l = 1, unit = "cm"),
+  plot.title = element_text(hjust = -6.8),
+  plot.subtitle = element_text(hjust = -0.64))
+dev.off()
+
+knitr::include_graphics(wdir("Fig3_Coeff.png"))
+```
 
 ```{r concreg, warning=F,message=F}
 cri <- cri %>%
@@ -135,9 +340,11 @@ cri_team <- aggregate(select(criT, u_teamid, Hresult, AME, AME_Z, AME_sup, AME_s
 
 cri_team <- subset(cri_team, u_teamid !=0)
 
-png(file = wdir("Fig2_hist.png"), width = 620)
+
 hist(cri_team$pct_sig, main = "", xlab = "Percent of Models with Negative Effects, p<0.05", ylab = "Number of Teams")
-dev.off()
+
+
+
 
 ```
 
@@ -497,8 +704,10 @@ t1[9,1:13] <- c(undesN,77-undesN,round(undesSCORE,2),NA,NA,NA,round(100*undesAME
 This should be run with 'no test' models removed.
 
 ```{r regpctsig}
-criN <- subset(cri, Hresult != "No test")
-subset
+
+
+criN <- subset(criT, Hresult != "No test")
+
 
 mX1 <- lm(Hsup ~ AME, data = criN)
 mX2 <- lm(Hsup ~ AME + pct_sig, data = criN)
@@ -578,27 +787,6 @@ tab_model(mX1ts,mX1tsa,mX2ts,mX3ts,mX4ts, p.style = "stars", show.ci = F, rm.ter
 
 
 
-### Funnel Plots
-
-package metaviz
-
-```{r funnel}
-pacman::p_load("metafor")
-
-#add se
-
-cri_complete <- completeFun(cri, "AME_Z")
-cri_complete <- completeFun(cri_complete, "error")
-cri_complete$stder = (cri_complete$upper - cri_complete$lower)/3.92
-
-res <- rma(yi = AME_Z, vi = stder, ni = num_countries, dat=cri_complete)
-funnel(res, yaxis="ni")
-funnel(res)
-funnel
-```
-
-
-
 
 
 
@@ -668,15 +856,81 @@ rain2 <- ggplot(cri, aes(x=DVn, y=AME_Zt, fill = iv_type2))+
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Research Variability by Outcome and Input Types')
+  ggtitle('Figure 4. Researcher Variability by Dependent Variable and Test Variable') +
+  theme(
+    axis.text=element_text(size=12),
+    axis.title=element_text(size=14),
+    plot.title=element_text(size=14),
+  )
+agg_png(file = wdir("Fig4_Rain.png"), height = 360, width = 440, scaling = .4, res = 144)
 rain2
+dev.off()
+
+knitr::include_graphics( wdir("Fig4_Rain.png"))
 
 
-
-# +geom_boxplot(aes(x = DVn, y = AME_Zt, fill = iv_type2),outlier.shape = NA, alpha = .5, width = .1, colour = "black")
-  #  scale_x_discrete(limits = c("Scale","Health", "House","IncDiff","OldAge","Jobs","Unemp")) +
 
 ```
+
+#### Quantify the difference in variance by group
+
+##### First a Table of Means and Variances
+```{r mean_var}
+
+tab_mv <- as.data.frame(matrix(nrow = 7, ncol = 7))
+tab_mv[,1] <- c("Unemp","Jobs","OldAge","IncDiff","House","Health", "Scale")
+colnames(tab_mv) <- c("Dep Var","Stock_Mean","Stock_SD","Flow_Mean","Flow_SD","Mean_P","SD_P")
+
+# Get means for stock models
+tab_mv[1,2] <- mean(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "Unemp"], na.rm = T)
+tab_mv[2,2] <- mean(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "Jobs"], na.rm = T)
+tab_mv[3,2] <- mean(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "OldAge"], na.rm = T)
+tab_mv[4,2] <- mean(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "IncDiff"], na.rm = T)
+tab_mv[5,2] <- mean(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "House"], na.rm = T)
+tab_mv[6,2] <- mean(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "Health"], na.rm = T)
+tab_mv[7,2] <- mean(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "Scale"], na.rm = T)
+
+# Get SD for stock models
+tab_mv[1,3] <- sd(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "Unemp"], na.rm = T)
+tab_mv[2,3] <- sd(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "Jobs"], na.rm = T)
+tab_mv[3,3] <- sd(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "OldAge"], na.rm = T)
+tab_mv[4,3] <- sd(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "IncDiff"], na.rm = T)
+tab_mv[5,3] <- sd(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "House"], na.rm = T)
+tab_mv[6,3] <- sd(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "Health"], na.rm = T)
+tab_mv[7,3] <- sd(cri$AME_Zt[cri$iv_type2 == "Stock" & cri$DVn == "Scale"], na.rm = T)
+
+# Get means for flow  models
+tab_mv[1,4] <- mean(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "Unemp"], na.rm = T)
+tab_mv[2,4] <- mean(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "Jobs"], na.rm = T)
+tab_mv[3,4] <- mean(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "OldAge"], na.rm = T)
+tab_mv[4,4] <- mean(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "IncDiff"], na.rm = T)
+tab_mv[5,4] <- mean(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "House"], na.rm = T)
+tab_mv[6,4] <- mean(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "Health"], na.rm = T)
+tab_mv[7,4] <- mean(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "Scale"], na.rm = T)
+
+# Get SD for stock models
+tab_mv[1,5] <- sd(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "Unemp"], na.rm = T)
+tab_mv[2,5] <- sd(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "Jobs"], na.rm = T)
+tab_mv[3,5] <- sd(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "OldAge"], na.rm = T)
+tab_mv[4,5] <- sd(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "IncDiff"], na.rm = T)
+tab_mv[5,5] <- sd(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "House"], na.rm = T)
+tab_mv[6,5] <- sd(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "Health"], na.rm = T)
+tab_mv[7,5] <- sd(cri$AME_Zt[cri$iv_type2 == "Flow" & cri$DVn == "Scale"], na.rm = T)
+
+# mean p-values
+tab_mv$Mean_P <- pt((tab_mv$Stock_Mean-tab_mv$Flow_Mean)/sqrt(((599*tab_mv$Stock_SD^2) + (599*tab_mv$Flow_SD^2))/(1198)),1198)
+
+# variance p-values
+
+tab_mv$f <- ifelse(tab_mv$Stock_SD > tab_mv$Flow_SD, (tab_mv$Stock_SD^2)/(tab_mv$Flow_SD^2),(tab_mv$Flow_SD^2)/(tab_mv$Stock_SD^2))
+
+tab_mv$SD_P <- round(pf(tab_mv$f, 77, 77, lower.tail = F),4)
+
+tab_mv <- tab_mv[1:7,1:7]
+
+```
+
+
 
 ```{r rain3, warning=F, message=F, echo=T}
 
@@ -795,44 +1049,7 @@ rain4flow
 ### Margins as Spec Curve
 
 
-#### All DVs
 
-```{r mspec, message=F, warning=F}
-dfx <- crispectest %>%
-  mutate(AMEssd = ifelse(iv_type == "Stock", est, NA),
-         AMEfsd = ifelse(iv_type == "Flow", est, NA),
-         AMEssd = sd(AMEssd, na.rm = T),
-         AMEfsd = sd(AMEfsd, na.rm = T),
-         estz = est*(AMEssd/AMEfsd),
-         lower = lb*(AMEssd/AMEfsd),
-         upper = ub*(AMEssd/AMEfsd),
-         est = ifelse(iv_type == "Flow", estz, est),
-         lb = ifelse(iv_type == "Flow", lower, lb),
-         ub = ifelse(iv_type == "Flow", upper, ub),
-         # Trim to the range -0.5 to 0.5
-         est = ifelse(est < -0.5, -0.5, est),
-         est = ifelse(est > 0.5, 0.5, est),
-         lb = ifelse(lb < -0.5, -0.5, lb),
-         lb = ifelse(lb > 0.5, 0.5, lb),
-         ub = ifelse(ub < -0.5, -0.5, ub),
-         ub = ifelse(ub > 0.5, 0.5, ub), 
-         waves = ifelse(w1990!= "0" & w1996!="0" & w2006!="0" & w2016!="0", "All", ifelse(w1990== "0" & w1996=="w1996" & w2006=="w2006" & w2016=="0", "1996/2006", ifelse(w1990== "0" & w1996=="0" & w2006=="w2006" & w2016=="w2016", "2006/2016", "Other"))),
-         cases = ifelse(eeurope == 1, "E_Europe", ifelse(allavailable == 1, "All Available", "Rich Dems")))
-
-dfx <- left_join(dfx, popdf_out, by = "id")
-dfx$vote <- ifelse(dfx$total_score > 0.65, "Highest", ifelse(dfx$total_score < 0.650001 & dfx$total_score > 0.55, "High", ifelse(dfx$total_score < 0.550001 & dfx$total_score > 0.38, "Mid", ifelse(dfx$total_score < 0.38001, "Low", NA))))
-
-df3 <- as.data.frame(select(dfx, vote, waves, cases, mator, mlm,  est, lb, ub))
-  # remove/adjust attributes
-  choic <- 1:4
-  attr(df3, "choices") <- choic
-  rownames(df3) <- NULL
-plot_rdf_spec_curve(df3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
-png(wdir("spec_curve_votes.png"))
-print(plot_rdf_spec_curve(df3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F))
-dev.off()
-
-```
 
 #### Only Jobs and IncDif
 

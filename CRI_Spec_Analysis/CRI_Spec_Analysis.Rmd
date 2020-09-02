@@ -344,7 +344,6 @@ knitr::include_graphics(wdir("Fig1_pcurve.png"))
 We face a problem that a one percent change in net migration (within-country) is huge relative to a 1% difference in percent foreign-born across countries.
 
 ```{r standardizeDV}
-
 # Standardization will produce some extreme outliers, so a 'better' strategy is to adjust the sd of Flow to be equal to that of Stock. However, there are some wide outliers in stock that bunches up the dispersion of flow, therefore we need the sd without these extreme outliers
 
 # Team 104 is massive outlier, we have to rescale the estimates into a realistic range
@@ -383,10 +382,10 @@ df2 <- df %>%
          lb = ifelse(lb > 0.5, 0.5, lb),
          ub = ifelse(ub < -0.5, -0.5, ub),
          ub = ifelse(ub > 0.5, 0.5, ub))
+```
 
 
-
-
+```{r fig1_Overview, echo = T}
 df2 <- as.data.frame(select(df2, dv_type, iv_type, software, Hresult, est, lb, ub))
 
 agg_png(file = wdir("Fig1_Overview.png"), width = 800, height = 500, res = 144)
@@ -397,7 +396,7 @@ agg_png(file = wdir("Fig1_Overview.png"), width = 800, height = 500, res = 144)
 plot_rdf_spec_curve(df2, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Standardized \nMarginal Effect", ribbon = F)
 dev.off()
 
-knitr::include_graphics(wdir("Fig1_pcurve.png"))
+knitr::include_graphics(wdir("Fig1_Overview.png"))
 
 ```
 
@@ -768,118 +767,7 @@ cri <- left_join(cri, popdf_out, by = "id")
 
 
 
-## Analysis
 
-### Mesaurement of Participant Team Qualities
-
-#### Correlations
-
-```{r f3}
-# make a dataset for correlation
-
-cor <- select(cri, stat1,stat2,stat3,stat4,stat5,stat6,stat7,topic1,topic2,topic3,topic4,topic5,topic6,topic7,topic8,topic9,belief1,belief2,belief3,belief4,belief5,belief6,belief7,belief_strength,pro_immigrant,total_score,u_teamid)
-
-cor <- aggregate(cor, by=list(cor$u_teamid), FUN=mean, na.rm=T)
-cor <- replace(cor, cor=="-Inf",NA)
-
-# team 27 missing 3 values, fill them in for consistency, fill represents a teaching of 12 stats courses score
-cor <- cor %>%
-  mutate(stat1 = ifelse(u_teamid == 27,3,stat1),
-         stat2 = ifelse(u_teamid == 27,3,stat2),
-         topic4 = ifelse(u_teamid == 27,4,topic4))
-
-# drop Brady and Finnigan's original analysis
-cor <- completeFun(cor, "stat1")
-
-cor1 <- cor(cor, use = "pairwise.complete.obs")
-corrplot::corrplot(cor1)
-
-```
-
-#### Measurement Model
-
-```{r SEM}
-
-pacman::p_load("lavaan")
-
-cfa <- ' stat =~ stat1 + + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
-         topic =~ topic1 + topic2 + topic3 + topic4 + topic5 + topic6 + topic7 + topic8 + topic9
-         belief =~ belief1 + belief2 + belief3 + belief4 + belief5 + belief6 + belief7 '
-fit <- cfa(cfa, data = cor)
-summary(fit, fit.measures=TRUE)
-
-# predicted factor scores
-cor1 <- as.data.frame(lavPredict(fit))
-cor <- cbind(cor,cor1)
-
-# put them back into the main data
-cor1 <- select(cor, u_teamid, stat, topic, belief)
-
-cri <- left_join(cri,cor1,by = "u_teamid")
-```
-
-### Explaining Results Variance (or Not)
-
-
-```{r varexp, include = TRUE}
-pacman::p_load("jtools","sjPlot","sjmisc","sjlabelled")
-
-#DVs only
-m1a <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
-m1b <- lm(p ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
-m1c <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri)
-
-m2a <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief, data = cri)
-m3a <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief + total_score, data = cri)
-
-tab_model(m1a,m1b,m1c, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
-
-
-```
-
-Varaince Explained using Team-Weighting
-```{r varexpw, include = TRUE}
-pacman::p_load("jtools","sjPlot","sjmisc","sjlabelled")
-
-#DVs only
-m1aw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri, weight = inv_weight)
-m1bw <- lm(p ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri, weight = inv_weight)
-m1cw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri, weight = inv_weight)
-
-m2aw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief, data = cri, weight = inv_weight)
-m3aw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief + total_score, data = cri, weight = inv_weight)
-
-tab_model(m1aw,m1bw,m1cw, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
-
-
-```
-Total score explains nothing of variance
-
-```{r regs, echo=T}
-tab_model(m2a, m3a,  p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
-```
-
-With weights
-```{r regsw, echo=T}
-tab_model(m2aw, m3aw,  p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
-```
-
-```{r coefplot, echo=T}
-plot_model(m2a, axis.labels = c("Belief: Hyp is True", "Topical Knowledge","Statistical Skills","Multi-Question Scale","Health Care","Housing","Old Age","Income Diff","Unemp","Jobs")) +
-  labs(title = "Figure X. Marginal Effects of Immigration on Policy Preferences", subtitle = "By Question Types and Researcher Qualities") +
-  geom_hline(yintercept=0) +
-  ylim(-0.3,0.3) +
-
-  theme(
-  panel.background = element_blank(),
-  panel.grid.major = element_line(size = 0.5, linetype = 'solid',
-                                colour = "grey80"), 
-  panel.grid.minor = element_blank(),
-  plot.margin = margin(t = 0.5, r = 0.5, b = 0.5, l = 1, unit = "cm"),
-  plot.title = element_text(hjust = -6.8),
-  plot.subtitle = element_text(hjust = -0.64))
-  
-```
 ######################################################################################
 
 Save Point
@@ -887,7 +775,9 @@ Save Point
 
 
 ```{r concreg, warning=F,message=F}
-save.image()
+rm(df1,df2)
+
+save.image(file = wdir("Env1.Rdata"))
 ```
 
 
