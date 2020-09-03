@@ -40,7 +40,7 @@ wdir <- function(x){
   paste(wd,x, sep = "/")
 }
 
-pacman::p_load("devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","readxl","mlogit","metaviz","jtools","sjPlot","sjmisc","sjlabelled","knitr","boot","ragg","kableExtra")
+pacman::p_load("devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","readxl","mlogit","metaviz","jtools","sjPlot","sjmisc","sjlabelled","knitr","boot","ragg","kableExtra", "arsenal")
 
 # Load Researcher Degrees of Freedom Analysis package
 #  
@@ -61,7 +61,59 @@ This dataset was worked up from the file CRI_Spec_Analysis.Rmd.
 
 ```{r load, warning=F,message=F}
 load(file = wdir("Env1.Rdata"))
+
+# put team_id back into dataset (this should be done in an early command file, change at some point)
+
+idm <- select(cri, u_teamid, id)
+crispectest <- left_join(crispectest, idm, by = "id")
+
 ```
+
+### Descriptives
+
+```{r descriptive, warning = F, message = F}
+# mistake in countries (will be fixed next time code is run from scratch)
+
+cri$countries <- ifelse(cri$countries == 0, 1, cri$countries)
+
+
+cri <- cri %>%
+  mutate(other = ifelse(stata == 0 & r == 0, 1, 0),
+         otherE = ifelse(ols == 0 & logit == 0, 1, 0), 
+         Hresult = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hnotest_stock==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hsupport_stock==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hreject_stock==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hreject_net==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hreject_net==1, "Reject", NA)))))))))))),
+         Hsup = ifelse(Hresult=="Support",1,0),
+         Hrej = ifelse(Hresult=="Reject",1,0),
+         HresultF = as.factor(Hresult),
+         AME_sup = ifelse(AME < 0 & p < 0.05, 1, 0),
+         AME_sup_p10 = ifelse(AME < 0 & p < 0.1, 1, 0),
+         countries = as.numeric(countries),
+         countrynum = ifelse(countries < 10, "< 10", ifelse(countries > 9 & countries < 17, "10-16", ifelse(countries > 16 & countries < 26, "17-25", ifelse(countries > 25, "> 25", NA)))))
+
+
+# select variables
+cri_desc  <- select(cri, AME, AME_Z, p, Hresult, inv_weight, countrynum, total_score, stata, r, other, ols, logit, otherE, main_IV_type)
+
+t1 <- tableby(main_IV_type ~ ., data = cri_desc)
+
+my_labels <- list(
+  AME = "Avg. Marginal Effect",
+  AME_Z = "Avg. Marginal Effect, Standardized",
+  p = "p-value of AME",
+  Hresult = "Subjective Conclusion",
+  inv_weight = "Models per Team",
+  countrynum = "Number of Countries in Model",
+  total_score = "Subjective Vote: Quality of Model",
+  stata = "Software: Stata",
+  r = "Software: R",
+  other = "Sofware: other",
+  ols = "Estimator: OLS",
+  logit = "Estimator: Logit",
+  otherE = "Estimator: Other"
+)
+
+summary(t1, labelTranslations = my_labels)
+```
+
 
 ## Analysis
 
@@ -93,15 +145,19 @@ df2 <- df %>%
 ```{r fig1_Overview, echo = T}
 df2 <- as.data.frame(select(df2, dv_type, iv_type, software, Hresult, est, lb, ub))
 
-agg_png(file = wdir("Fig1_Overview.png"), width = 800, height = 500, res = 144)
   # remove/adjust attributes
   choic <- 1:4
   attr(df2, "choices") <- choic
   rownames(df2) <- NULL
-plot_rdf_spec_curve(df2, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Standardized \nMarginal Effect", ribbon = F)
+#agg_png(file = wdir("Fig1_Overview.png"), width = 800, res = 144,  bit = 16)
+png(filename = wdir("Fig1_Overview.png"), width = 960, height = 720, res = 144)
+  
+    plot_rdf_spec_curve(df2, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = " \nStandardized \nMarginal Effect", ribbon = F) 
 dev.off()
 
 knitr::include_graphics(wdir("Fig1_Overview.png"))
+
+
 
 ```
 #### Figure 2. Most Popular Features
@@ -132,20 +188,23 @@ dfx <- crispectest %>%
 
 dfx <- left_join(dfx, popdf_out, by = "id")
 dfx$vote <- ifelse(dfx$total_score > 0.65, "Highest", ifelse(dfx$total_score < 0.650001 & dfx$total_score > 0.55, "High", ifelse(dfx$total_score < 0.550001 & dfx$total_score > 0.38, "Mid", ifelse(dfx$total_score < 0.38001, "Low", NA))))
-
-df3 <- as.data.frame(select(dfx, vote, waves, cases, mator, mlm,  est, lb, ub))
+dfx$estimator <- dfx$mator
+dfx <- dfx %>%
+  mutate(estimator = ifelse(estimator == "logit", "Logit", ifelse(estimator == "bayes", "Bayes", ifelse(estimator == "ols", "OLS", ifelse(estimator == "ologit", "Ord_Logit", ifelse(estimator == "mlogit", "Multi_Logit", ifelse(estimator == "ml_glm", "MLM_GLM", NA)))))))
+df3 <- as.data.frame(select(dfx, vote, waves, cases, estimator, est, lb, ub))
   # remove/adjust attributes
   choic <- 1:4
   attr(df3, "choices") <- choic
   rownames(df3) <- NULL
-plot_rdf_spec_curve(df3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
-agg_png(file = wdir("Fig2_Popular.png"), width = 800, height = 500, res = 144)
-print(plot_rdf_spec_curve(df3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Standardized \nMarginal Effect", ribbon = F))
+ 
+png(filename = wdir("Fig2_Popular.png"), width = 960, height = 720, res = 144)
+plot_rdf_spec_curve(df3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Standardized \nMarginal Effect", ribbon = F)
 dev.off()
 
 knitr::include_graphics(wdir("Fig2_Popular.png"))
 
 ```
+
 
 ### Mesaurement of Participant Team Qualities
 
@@ -202,7 +261,7 @@ cri <- left_join(cri,cor1,by = "u_teamid")
 ### Explaining Results Variance With DV Type
 
 
-```{r varexp, include = TRUE}
+```{r varexp, include = TRUE, warning = F}
 
 
 #DVs only
@@ -269,16 +328,78 @@ dev.off()
 knitr::include_graphics(wdir("Fig3_Coeff.png"))
 ```
 
-```{r concreg, warning=F,message=F}
+
+
+#### Figure 3. Subjective Results
+
+```{r fig3_subj, echo = T}
+
 cri <- cri %>%
-  mutate(Hresult = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hnotest_stock==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hsupport_stock==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hreject_stock==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hreject_net==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hreject_net==1, "Reject", NA)))))))))))),
-         Hsup = ifelse(Hresult=="Support",1,0),
-         Hrej = ifelse(Hresult=="Reject",1,0),
-         HresultF = as.factor(Hresult),
-         AME_sup = ifelse(AME < 0 & p < 0.05, 1, 0),
-         AME_sup_p10 = ifelse(AME < 0 & p < 0.1, 1, 0))
+  mutate(Hresult_n = ifelse(Hresult == "Support", 1, ifelse(Hresult == "Reject", -1, ifelse(Hresult == "No test", 0, NA))))
+
+
+df4 <- as.data.frame(select(cri, u_teamid, total_score, inv_weight, stat, belief, Hresult_n, AME_Z))
+
+df4a <- aggregate(df4, FUN = mean, na.rm = T, by = list(df4$u_teamid,df4$Hresult_n))
+
+df4a <- df4a %>%
+  mutate(average_coefficient = ifelse(AME_Z < -0.01, "Negative", ifelse(AME_Z > 0.01, "Positive", "Near Zero")),
+         num_of_models = ifelse(inv_weight < 7, "Few, < 7", ifelse(inv_weight > 31, "Many, > 31", "Moderate, 7-31")),
+         prior_belief = ifelse(belief > 0.3, "H is True", ifelse(belief < -0.3, "H is False", "Uncertain")),
+         stats_skills = ifelse(stat > 0.5, "Higher", ifelse(stat < 0, "Lower", "Middle")),
+         est = Hresult_n,
+         lb = Hresult_n - 0.1,
+         ub = Hresult_n + 0.1)
+
+df4a <- completeFun(df4a, c("average_coefficient", "prior_belief", "stats_skills"))
+
+df4a$vote <- ifelse(df4a$total_score > 0.55, "High", ifelse(df4a$total_score < 0.550001 & df4a$total_score > 0.38, "Mid", ifelse(df4a$total_score < 0.38001, "Low", NA)))
+df4a <- completeFun(df4a, c("average_coefficient","prior_belief","stats_skills"))
+
+df4 <- select(df4a, average_coefficient, vote, prior_belief, stats_skills, num_of_models, est, lb, ub)
+
+# THANKS TO:
+## Transparent colors
+## Mark Gardener 2015
+## www.dataanalytics.org.uk
+
+t_col <- function(color, percent = 50, name = NULL) {
+  #      color = color name
+  #    percent = % transparency
+  #       name = an optional name for the color
+
+# Get RGB values for named color
+rgb.val <- col2rgb(color)
+
+# Make new color using input color as base and alpha set by transparency
+t.col <- rgb(rgb.val[1], rgb.val[2], rgb.val[3],
+             max = 255,
+             alpha = (100 - percent) * 255 / 100,
+             names = name)
+# Save the color
+invisible(t.col)
+}
+hidecolor <- t_col("pink", perc = 100, name = "lt.pink")
+
+  # remove/adjust attributes
+  choic <- 1:5
+  attr(df4, "choices") <- choic
+  rownames(df4) <- NULL
+
+png(filename = wdir("Fig3_Subj.png"), width = 720, height = 620, res = 144)
+print(plot_rdf_spec_curve(df4, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", ribbon_color = hidecolor, choice_ind_point = F, lower_to_upper = 2.5, pt_size = 0.5, est_label = " \nSubjective\nConclusion", ribbon = F))
+dev.off()
+
+knitr::include_graphics(wdir("Fig3_Subj.png"))
+```
+
+
+```{r}
+ggplot(aes(x = stat, y = AME_Z, color = Hresult), data = cri) + 
+  geom_point()
 
 ```
+
 
 ```{r concreg2, warning=F,message=F}
 
@@ -862,7 +983,7 @@ rain2 <- ggplot(cri, aes(x=DVn, y=AME_Zt, fill = iv_type2))+
     axis.title=element_text(size=14),
     plot.title=element_text(size=14),
   )
-agg_png(file = wdir("Fig4_Rain.png"), height = 360, width = 440, scaling = .4, res = 144)
+png(filename = wdir("Fig4_Rain.png"), height = 720, width = 800, res = 144)
 rain2
 dev.off()
 
@@ -930,7 +1051,42 @@ tab_mv <- tab_mv[1:7,1:7]
 
 ```
 
+#### Figure 5. Spec Curve. Stock Models Only
 
+```{r spec_curve5, echo = T}
+df3s <- subset(dfx, dfx$iv_type == "Stock")
+
+df3s <- as.data.frame(select(df3s, vote, waves, cases, estimator, est, lb, ub))
+
+  # remove/adjust attributes
+  choic <- 1:4
+  attr(df3s, "choices") <- choic
+  rownames(df3s) <- NULL
+
+png(filename = wdir("Fig5_Stock_Popular.png"), width = 960, height = 720, res = 144)
+plot_rdf_spec_curve(df3s, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Standardized \nMarginal Effect", ribbon = F)
+dev.off()
+
+knitr::include_graphics(wdir("Fig5_Stock_Popular.png"))
+```
+#### Figure 6. Spec Curve. Flow Models Only
+
+```{r spec_curve6, echo = T}
+df3f <- subset(dfx, dfx$iv_type == "Flow")
+
+df3f <- as.data.frame(select(df3f, vote, waves, cases, estimator, est, lb, ub))
+
+  # remove/adjust attributes
+  choic <- 1:4
+  attr(df3f, "choices") <- choic
+  rownames(df3f) <- NULL
+
+png(filename = wdir("Fig5_Stock_Popular.png"), width = 960, height = 720, res = 144)
+plot_rdf_spec_curve(df3f, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Standardized \nMarginal Effect", ribbon = F)
+dev.off()
+
+knitr::include_graphics(wdir("Fig5_Stock_Popular.png"))
+```
 
 ```{r rain3, warning=F, message=F, echo=T}
 
