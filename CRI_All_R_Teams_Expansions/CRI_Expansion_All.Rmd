@@ -85,7 +85,7 @@ pacman::p_load("magrittr","tidyverse","margins")
 
 
 # Create a working directory string and a function to call the wd for every code chunk
-wd <- "C:/data" #set your wd here
+wd <- "C:/Github" #set your wd here
 pfunc <- function(x){
   paste(wd,x, sep = "/")
 }
@@ -9187,7 +9187,7 @@ if(file.exists(pfunc("team106.RData"))){
       load(pfunc("team106.RData"))
 } else {
 
-pacman::p_load(tidyverse, plyr, haven, ordinal, miceadds, car, ggeffects)
+pacman::p_load(tidyverse, plyr, haven, ordinal, miceadds, car, ggeffects,rms)
 
 
 
@@ -9365,39 +9365,62 @@ anova(jobs_o_flex, jobs_o_equi)
 
 # Over all these results imply (according to our analysis plan) that we should analyse the dependent variables `oldAge` and `unemployed` using cumulative link models and 'jobs' and 'income' with linear regression.
 
-# PI rescale for comparability across teams
-data$immgrStockCh <- data$immgrStockCh/10
 
 #### Modeling the research questions ############################
 ### DV:`oldAge`###
+
+### Predictor immgrStock
+
 oldAge_o_mod <- clm(oldAge_o ~ 1 + immgrStock*scale(immgrStockCh) + as.factor(cntry) + as.factor(year) + scale(gdp) + scale(gini), threshold = "flexible", data = data)
 summary(oldAge_o_mod)
 
-# PI note: the team does not reveal how they calculate average marginal effects. The margins command does not work for clm models so we go for ggemmeans marginal effects as the next best thing. Coefficients cannot be taken directly due to the interaction. Also, we have to average across the 4 categories of the DV.
-m1 <- ggemmeans(oldAge_o_mod, terms = c("immgrStock [12.85,13.85]"), ci.lvl = 0.95)
+
+## Marginal Effects
+oldAge_o_mod_ME <- margins.oglmx(oldAge_o_mod)
+oldAge_o_mod_ME
+
+### Predictor immgrStock_abs_m
+
+## Cumulative Link Model
+oldAge_o_abs_mod <- ologit.reg(oldAge_o ~ 1 + immgrStock_abs_m*scale(immgrStockCh) + as.factor(cntry) + as.factor(year) + scale(gdp) + scale(gini), data = data)
+
+summary(oldAge_o_abs_mod)
+
+## Marginal Effects
+oldAge_o_abs_mod_ME <- margins.oglmx(oldAge_o_abs_mod)
+oldAge_o_abs_mod_ME 
 
 
-m1a <- m1[1:4,]
-m1b <- m1[5:8,]
-m1c <- cbind(m1a,m1b)
-m1c$delta <- m1c[9]-m1c[2]
-m1c$error <- m1c[2]-m1c[4]
-m1c <- m1c[,15:16]
 
-team106 <- data.frame(matrix(NA, nrow = 8, ncol=4))
-colnames(team106) = c("AME","lower","upper","id")
-team106[1,1] = colMeans(m1c$delta)
 ### DV:`unemployed`###
-unemployed_o_mod <- clm(unemployed_o ~ 1 + immgrStock*scale(immgrStockCh) + as.factor(cntry) + as.factor(year) + scale(gdp) + scale(gini), threshold = "flexible", data = data)
+### Predictor immgrStock
+
+## Cumulative Link Model
+unemployed_o_mod <- ologit.reg(unemployed_o ~ 1 + immgrStock*scale(immgrStockCh) + as.factor(cntry) + as.factor(year) + scale(gdp) + scale(gini), data = data)
+
 summary(unemployed_o_mod)
 
+## Marginal Effects
+unemployed_o_mod_ME <- margins.oglmx(unemployed_o_mod)
+unemployed_o_mod_ME 
+
+### Predictor immgrStock_abs_m
+## Cumulative Link Model
+unemployed_o_abs_mod <- ologit.reg(unemployed_o ~ 1 + immgrStock_abs_m*scale(immgrStockCh) + as.factor(cntry) + as.factor(year) + scale(gdp) + scale(gini), data = data)
+
+summary(unemployed_o_abs_mod)
+
+## Marginal Effects
+unemployed_o_abs_mod_ME <- margins.oglmx(unemployed_o_abs_mod)
+unemployed_o_abs_mod_ME
 
 
-###PI note, there is a bug in the margins package (use traceback() to see) and it cannot handle the ols command, therefore we had to replicate the 'income' and 'jobs' models using lm() instead.
 
-# Team's original ols code
+
 
 ### DV:`incomeDiff`###
+### Predictor immgrStock
+
 # can't define year as.factor() inside ols(), so we''ve got to do it here
 data_ols <- data%>%
   mutate(year = as.factor(year))
@@ -9411,30 +9434,25 @@ incomeDiff_mod <- ols(scale(incomeDiff) ~ immgrStock + scale(immgrStockCh) + imm
                       data = data_ols,
                       na.action = na.delete)
 
+
+### Predictor immgrStock_abs_m
+# the regression with immgrStock_abs_m
+incomeDiff_mod_abs <- ols(scale(incomeDiff) ~ immgrStock_abs_m + scale(immgrStockCh) + immgrStock_abs_m*scale(immgrStockCh) + year + scale(gdp) + scale(gini),
+                  x=T,
+                  y=T,
+                  data = data_ols,
+                  na.action = "na.delete")
+
+
 # Adjusting SEs with Huber-White correction
 incomeDiff_mod_hw <- robcov(incomeDiff_mod, cluster = data$cntry)
 incomeDiff_mod_hw
 
-###PI note, listwise deletion will be performed before the analysis to avoid new-level error in the margins phase.
-
-data_ols_c <- data_ols[complete.cases(data_ols),]
-data_ols_c$year <- factor(data_ols_c$year)
-
-# PI adjusting SEs had to use lm and sandwich instead of ols and robcov
-if (require("sandwich")) {
-  incd <- lm(scale(incomeDiff) ~ immgrStock + scale(immgrStockCh) + immgrStock*scale(immgrStockCh) + year + scale(gdp) + scale(gini), data = data_ols_c)
-  summary(margins(incd))
-  ## heteroskedasticity-consistent covariance matrix
-  incdame <- summary(margins(incd, vcov = vcovCL(incd, cluster = ~ cntry)))
-}
-
-incdame <- incdame[3:4,2:7]
-incdame <- round(incdame,5)
 
 
 
-#Team original
 ### DV:`jobs`###
+### Predictor immgrStock
 # the regression with immgrStock
 jobs_mod <- ols(scale(jobs) ~ immgrStock + scale(immgrStockCh) + immgrStock*scale(immgrStockCh) + year + scale(gdp) + scale(gini),
                 x=T,
@@ -9445,21 +9463,115 @@ jobs_mod <- ols(scale(jobs) ~ immgrStock + scale(immgrStockCh) + immgrStock*scal
 jobs_mod_hw <- robcov(jobs_mod, cluster = data$cntry)
 jobs_mod_hw
 
-# PI adjusting SEs had to use lm and sandwich instead of ols and robcov
-if (require("sandwich")) {
-  jobs <- lm(scale(jobs) ~ immgrStock + scale(immgrStockCh) + immgrStock*scale(immgrStockCh) + year + scale(gdp) + scale(gini), data = data_ols_c)
-  summary(margins(jobs))
-  ## heteroskedasticity-consistent covariance matrix
-  jobsame <- summary(margins(jobs, vcov = vcovCL(jobs, cluster = ~ cntry)))
+### Predictor immgrStock_abs_m
+# the regression with immgrStock_abs_m
+jobs_mod_abs <- ols(scale(jobs) ~ immgrStock_abs_m + scale(immgrStockCh) + immgrStock_abs_m*scale(immgrStockCh) + year + scale(gdp) + scale(gini),
+                  x=T,
+                  y=T,
+                  data = data_ols,
+                  na.action = "na.delete")
+
+# Adjusting SEs with Huber-White correction
+jobs_mod_abs_hw <- robcov(jobs_mod_abs, cluster = data$cntry)
+jobs_mod_abs_hw
+
+# As both Effects of immgrStock became significant, we did’t compute Bayes Factors (according to our analysis plan).
+
+#### Summary 
+# We compiled our results in the regarded way (see table below).
+
+# calculating SEs from OLS
+incomeDiff_mod_hw_se <- sqrt(diag(incomeDiff_mod_hw$var))[2]
+incomeDiff_mod_abs_hw_se <- sqrt(diag(incomeDiff_mod_abs_hw$var))[2]
+jobs_mod_hw_se <- sqrt(diag(jobs_mod_hw$var))[2]
+jobs_mod_abs_hw_se <- sqrt(diag(jobs_mod_abs_hw$var))[2]
+
+
+
+results <- data.frame("Coefficients" = c("ME: +1%immgr", "CI_lower", "CI_upper", 
+                                         "ME: +1Person immgr", "CI_lower", "CI_upper"),
+                      "oldAge_rl1" = c(oldAge_o_mod_ME[[1]][14,1],
+                                       oldAge_o_mod_ME[[1]][14,1]-(1.96*oldAge_o_mod_ME[[1]][14,2]),
+                                       oldAge_o_mod_ME[[1]][14,1]+(1.96*oldAge_o_mod_ME[[1]][14,2]),
+                                       (oldAge_o_abs_mod_ME[[1]][14,1]/1000000),
+                                       ((oldAge_o_abs_mod_ME[[1]][14,1]-(1.96*oldAge_o_abs_mod_ME[[1]][14,2]))/1000000),
+                                       (oldAge_o_abs_mod_ME[[1]][14,1]+(1.96*oldAge_o_abs_mod_ME[[1]][14,2]))/1000000),
+                      "oldAge_rl2" = c(oldAge_o_mod_ME[[2]][14,1],
+                                       oldAge_o_mod_ME[[2]][14,1]-(1.96*oldAge_o_mod_ME[[2]][14,2]),
+                                       oldAge_o_mod_ME[[2]][14,1]+(1.96*oldAge_o_mod_ME[[2]][14,2]),
+                                       oldAge_o_abs_mod_ME[[2]][14,1]/1000000,
+                                       (oldAge_o_abs_mod_ME[[2]][14,1]-(1.96*oldAge_o_abs_mod_ME[[2]][14,2]))/1000000,
+                                       (oldAge_o_abs_mod_ME[[2]][14,1]+(1.96*oldAge_o_abs_mod_ME[[2]][14,2]))/1000000),
+                      "oldAge_rl3" = c(oldAge_o_mod_ME[[3]][14,1],
+                                       oldAge_o_mod_ME[[3]][14,1]-(1.96*oldAge_o_mod_ME[[3]][14,2]),
+                                       oldAge_o_mod_ME[[3]][14,1]+(1.96*oldAge_o_mod_ME[[3]][14,2]),
+                                       oldAge_o_abs_mod_ME[[3]][14,1]/1000000,
+                                       (oldAge_o_abs_mod_ME[[3]][14,1]-(1.96*oldAge_o_abs_mod_ME[[3]][14,2]))/1000000,
+                                       (oldAge_o_abs_mod_ME[[3]][14,1]+(1.96*oldAge_o_abs_mod_ME[[3]][14,2]))/1000000),
+                      "oldAge_rl4" = c(oldAge_o_mod_ME[[4]][14,1],
+                                       oldAge_o_mod_ME[[4]][14,1]-(1.96*oldAge_o_mod_ME[[4]][14,2]),
+                                       oldAge_o_mod_ME[[4]][14,1]+(1.96*oldAge_o_mod_ME[[4]][14,2]),
+                                       oldAge_o_abs_mod_ME[[4]][14,1]/1000000,
+                                       (oldAge_o_abs_mod_ME[[4]][14,1]-(1.96*oldAge_o_abs_mod_ME[[4]][14,2]))/1000000,
+                                       (oldAge_o_abs_mod_ME[[4]][14,1]+(1.96*oldAge_o_abs_mod_ME[[4]][14,2]))/1000000),
+                      "unemployed_rl1" = c(unemployed_o_mod_ME[[1]][14,1],
+                                       unemployed_o_mod_ME[[1]][14,1]-(1.96*unemployed_o_mod_ME[[1]][14,2]),
+                                       unemployed_o_mod_ME[[1]][14,1]+(1.96*unemployed_o_mod_ME[[1]][14,2]),
+                                       unemployed_o_abs_mod_ME[[1]][14,1]/1000000,
+                                       (unemployed_o_abs_mod_ME[[1]][14,1]-(1.96*unemployed_o_abs_mod_ME[[1]][14,2]))/1000000,
+                                       (unemployed_o_abs_mod_ME[[1]][14,1]+(1.96*unemployed_o_abs_mod_ME[[1]][14,2]))/1000000),
+                      "unemployed_rl2" = c(unemployed_o_mod_ME[[2]][14,1],
+                                       unemployed_o_mod_ME[[2]][14,1]-(1.96*unemployed_o_mod_ME[[2]][14,2]),
+                                       unemployed_o_mod_ME[[2]][14,1]+(1.96*unemployed_o_mod_ME[[2]][14,2]),
+                                       unemployed_o_abs_mod_ME[[2]][14,1]/1000000,
+                                       (unemployed_o_abs_mod_ME[[2]][14,1]-(1.96*unemployed_o_abs_mod_ME[[2]][14,2]))/1000000,
+                                       (unemployed_o_abs_mod_ME[[2]][14,1]+(1.96*unemployed_o_abs_mod_ME[[2]][14,2]))/1000000),
+                      "unemployed_rl3" = c(unemployed_o_mod_ME[[3]][14,1],
+                                       unemployed_o_mod_ME[[3]][14,1]-(1.96*unemployed_o_mod_ME[[3]][14,2]),
+                                       unemployed_o_mod_ME[[3]][14,1]+(1.96*unemployed_o_mod_ME[[3]][14,2]),
+                                       unemployed_o_abs_mod_ME[[3]][14,1]/1000000,
+                                       (unemployed_o_abs_mod_ME[[3]][14,1]-(1.96*unemployed_o_abs_mod_ME[[3]][14,2]))/1000000,
+                                       (unemployed_o_abs_mod_ME[[3]][14,1]+(1.96*unemployed_o_abs_mod_ME[[3]][14,2]))/1000000),
+                      "unemployed_rl4" = c(unemployed_o_mod_ME[[4]][14,1],
+                                       unemployed_o_mod_ME[[4]][14,1]-(1.96*unemployed_o_mod_ME[[4]][14,2]),
+                                       unemployed_o_mod_ME[[4]][14,1]+(1.96*unemployed_o_mod_ME[[4]][14,2]),
+                                       unemployed_o_abs_mod_ME[[4]][14,1]/1000000,
+                                       (unemployed_o_abs_mod_ME[[4]][14,1]-(1.96*unemployed_o_abs_mod_ME[[4]][14,2]))/1000000,
+                                       (unemployed_o_abs_mod_ME[[4]][14,1]+(1.96*unemployed_o_abs_mod_ME[[4]][14,2]))/1000000),
+                      "incomeDiff" = c(coefficients(incomeDiff_mod_hw)[2],
+                                       coefficients(incomeDiff_mod_hw)[2]-(1.96*incomeDiff_mod_hw_se),
+                                       coefficients(incomeDiff_mod_hw)[2]+(1.96*incomeDiff_mod_hw_se),
+                                       coefficients(incomeDiff_mod_abs_hw)[2]/1000000,
+                                       (coefficients(incomeDiff_mod_abs_hw)[2]-(1.96*incomeDiff_mod_abs_hw_se))/1000000,
+                                       (coefficients(incomeDiff_mod_abs_hw)[2]+(1.96*incomeDiff_mod_abs_hw_se))/1000000),
+                      "jobs" = c(coefficients(jobs_mod_hw)[2],
+                                 coefficients(jobs_mod_hw)[2]-(1.96*jobs_mod_hw_se),
+                                 coefficients(jobs_mod_hw)[2]+(1.96*jobs_mod_hw_se),
+                                 coefficients(jobs_mod_abs_hw)[2]/1000000,
+                                 (coefficients(jobs_mod_abs_hw)[2]-(1.96*jobs_mod_abs_hw_se))/1000000,
+                                 (coefficients(jobs_mod_abs_hw)[2]+(1.96*jobs_mod_abs_hw_se))/1000000)
+                      )
+
+library(readxl)
+read_xlsx("results.xlsx")%>%knitr::kable(., digits = 4)
+results <- lapply(results, format, digits=4)
+
+results[2:11] <- format(results[2:11], digits = 4)
+results %>%
+  knitr::kable(., digits = 4)
 }
 
-jobsame <- jobsame[3:4,2:7]
-jobsame <- round(jobsame,5)
 
-# PI bind AMEs
+# Note: For oldAge and unemployed cumulative link models, for inceomeDiff and jobs ordinary least squares regressions are computed.
+# Note: oldAge_rl1 means ‘response level 1’ for variable oldAge and so forth.
+# Note: Marginal effects within the cumulative link models should be interpreted as shifts of the latent variable in terms of scale units.
+
+#### Conclusion 
 
 
-}
+# On the hypothesis “that a greater stock or a greater increase in the stock of foreign persons in a given society leads the general public to become less supportive of social policy”:
+# This hypothesis would assume a positive association between the variable immgrStock and social policy variables oldAge, unemployed, incomeDiff and jobs (as higher values in the latter variables indicate less support). We only found these expected effects in the marginal effects for % Immigrant Stock on the two variables incomeDiff and jobs. All other predictors we found either negative effects (= higher immigrant stock related to more support for social policy) or absence of evidence. If we would have to decide between (a) support, (b) lack of support, or (c) not testable over all DVs, we would argue that the effects are too heterogeneous to state that there is support and thus go for (b) lack of support.
+
 ```
 
 
@@ -9515,6 +9627,11 @@ cri_margins <- dplyr::select(cri_margins, -c("se"))
 
 write.xlsx(cri_margins, file = pfunc("cri_margins.xlsx"))
 #merge into Excel master file by hand for now
+
+
+
+
+
 
 ```
 
