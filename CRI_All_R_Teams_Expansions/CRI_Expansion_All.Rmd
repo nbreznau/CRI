@@ -9372,10 +9372,9 @@ anova(jobs_o_flex, jobs_o_equi)
 ### DV:`oldAge`###
 
 ### Predictor immgrStock
+oldAge_o_mod <- ologit.reg(oldAge_o ~ 1 + immgrStock*scale(immgrStockCh) + as.factor(cntry) + as.factor(year) + scale(gdp) + scale(gini), data = data) # ich gehe davon aus, dass der default flexible thresholds ist?
 
-oldAge_o_mod <- clm(oldAge_o ~ 1 + immgrStock*scale(immgrStockCh) + as.factor(cntry) + as.factor(year) + scale(gdp) + scale(gini), threshold = "flexible", data = data)
 summary(oldAge_o_mod)
-
 ## Marginal Effects
 oldAge_o_mod_ME <- oglmx::margins.oglmx(oldAge_o_mod)
 oldAge_o_mod_ME
@@ -9423,18 +9422,16 @@ unemployed_o_abs_mod_ME
 ### Predictor immgrStock
 
 # can't define year as.factor() inside ols(), so we''ve got to do it here
-data_ols <- data%>%
+data_ols <- data %>%
   mutate(year = as.factor(year))
 
 # the regression with immgrStock
 
-
-incomeDiff_mod <- ols(scale(incomeDiff) ~ immgrStock + scale(immgrStockCh) + immgrStock*scale(immgrStockCh) + year + scale(gdp) + scale(gini),
-                      x=T,
-                      y=T,
-                      data = data_ols,
-                      na.action = na.delete)
-
+incomeDiff_mod <- rms::ols(scale(incomeDiff) ~ immgrStock + scale(immgrStockCh) + immgrStock*scale(immgrStockCh) + year + scale(gdp) + scale(gini),
+                    x=T,
+                    y=T,
+                    data = data,
+                    na.action = "na.delete")
 
 ### Predictor immgrStock_abs_m
 # the regression with immgrStock_abs_m
