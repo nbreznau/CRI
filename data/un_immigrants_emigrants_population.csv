@@ -1,0 +1,118 @@
+Variable,Country,Year,Value
+Immigrant stock,Australia,1995,4153330
+Emigrant stock,Australia,1995,342288
+Immigrant stock,Australia,2005,4878030
+Emigrant stock,Australia,2005,428554
+Immigrant stock,Australia,2015,6763663
+Emigrant stock,Australia,2015,526579
+Population,Australia,1995,18076743
+Population,Australia,2005,20238903
+Population,Australia,2015,23799556
+Immigrant stock,Canada,1995,4864778
+Emigrant stock,Canada,1995,1042148
+Immigrant stock,Canada,2005,6078985
+Emigrant stock,Canada,2005,1167051
+Immigrant stock,Canada,2015,7835502
+Emigrant stock,Canada,2015,1286176
+Population,Canada,1995,29330073
+Population,Canada,2005,32287980
+Population,Canada,2015,35949709
+Immigrant stock,France,1995,6087993
+Emigrant stock,France,1995,1324864
+Immigrant stock,France,2005,6737600
+Emigrant stock,France,2005,1704260
+Immigrant stock,France,2015,7784418
+Emigrant stock,France,2015,2145975
+Population,France,1995,58241791
+Population,France,2005,61233900
+Population,France,2015,64457201
+Immigrant stock,Germany,1995,7464406
+Emigrant stock,Germany,1995,3263505
+Immigrant stock,Germany,2005,10299160
+Emigrant stock,Germany,2005,3571277
+Immigrant stock,Germany,2015,12005690
+Emigrant stock,Germany,2015,4045411
+Population,Germany,1995,81240604
+Population,Germany,2005,81671234
+Population,Germany,2015,81707789
+Immigrant stock,Ireland,1995,226892
+Emigrant stock,Ireland,1995,804432
+Immigrant stock,Ireland,2005,589046
+Emigrant stock,Ireland,2005,768249
+Immigrant stock,Ireland,2015,746260
+Emigrant stock,Ireland,2015,882022
+Population,Ireland,1995,3651545
+Population,Ireland,2005,4212977
+Population,Ireland,2015,4700107
+Immigrant stock,Japan,1995,1381097
+Emigrant stock,Japan,1995,646677
+Immigrant stock,Japan,2005,2012916
+Emigrant stock,Japan,2005,717379
+Immigrant stock,Japan,2015,2043877
+Emigrant stock,Japan,2015,797496
+Population,Japan,1995,126375466
+Population,Japan,2005,128335767
+Population,Japan,2015,127974958
+Immigrant stock,New Zealand,1995,588617
+Emigrant stock,New Zealand,1995,418841
+Immigrant stock,New Zealand,2005,839952
+Emigrant stock,New Zealand,2005,555134
+Immigrant stock,New Zealand,2015,1039736
+Emigrant stock,New Zealand,2015,802335
+Population,New Zealand,1995,3674936
+Population,New Zealand,2005,4135355
+Population,New Zealand,2015,4614532
+Immigrant stock,Norway,1995,233302
+Emigrant stock,Norway,1995,147132
+Immigrant stock,Norway,2005,361144
+Emigrant stock,Norway,2005,174767
+Immigrant stock,Norway,2015,741813
+Emigrant stock,Norway,2015,193477
+Population,Norway,1995,4366995
+Population,Norway,2005,4632364
+Population,Norway,2015,5199836
+Immigrant stock,Spain,1995,1020067
+Emigrant stock,Spain,1995,1368440
+Immigrant stock,Spain,2005,4107226
+Emigrant stock,Spain,2005,1131590
+Immigrant stock,Spain,2015,5852953
+Emigrant stock,Spain,2015,1251004
+Population,Spain,1995,39890498
+Population,Spain,2005,44042632
+Population,Spain,2015,46397664
+Immigrant stock,Sweden,1995,936022
+Emigrant stock,Sweden,1995,218774
+Immigrant stock,Sweden,2005,1125790
+Emigrant stock,Sweden,2005,270989
+Immigrant stock,Sweden,2015,1639771
+Emigrant stock,Sweden,2015,333428
+Population,Sweden,1995,8836420
+Population,Sweden,2005,9038623
+Population,Sweden,2015,9763565
+Immigrant stock,Switzerland,1995,1478829
+Emigrant stock,Switzerland,1995,335918
+Immigrant stock,Switzerland,2005,1805437
+Emigrant stock,Switzerland,2005,505392
+Immigrant stock,Switzerland,2015,2438702
+Emigrant stock,Switzerland,2015,664557
+Population,Switzerland,1995,7018525
+Population,Switzerland,2005,7410308
+Population,Switzerland,2015,8319769
+Immigrant stock,United Kingdom,1995,4155293
+Emigrant stock,United Kingdom,1995,2602539
+Immigrant stock,United Kingdom,2005,5926156
+Emigrant stock,United Kingdom,2005,4121654
+Immigrant stock,United Kingdom,2015,8543120
+Emigrant stock,United Kingdom,2015,4917460
+Population,United Kingdom,1995,57978321
+Population,United Kingdom,2005,60286754
+Population,United Kingdom,2015,65397080
+Immigrant stock,United States,1995,28451053
+Emigrant stock,United States,1995,1836539
+Immigrant stock,United States,2005,39258293
+Emigrant stock,United States,2005,2303555
+Immigrant stock,United States,2015,46627102
+Emigrant stock,United States,2015,3023657
+Population,United States,1995,265658849
+Population,United States,2005,295129501
+Population,United States,2015,319929162
