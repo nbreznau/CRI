@@ -9421,13 +9421,13 @@ unemployed_o_abs_mod_ME
 ### DV:`incomeDiff`###
 ### Predictor immgrStock
 
-# can't define year as.factor() inside ols(), so we''ve got to do it here
+# can't define year as.factor() inside ols(), so we've got to do it here
 data_ols <- data %>%
   mutate(year = as.factor(year))
 
 # the regression with immgrStock
 
-incomeDiff_mod <- rms::ols(scale(incomeDiff) ~ immgrStock + scale(immgrStockCh) + immgrStock*scale(immgrStockCh) + year + scale(gdp) + scale(gini),
+incomeDiff_mod <- ols(scale(incomeDiff) ~ immgrStock + scale(immgrStockCh) + immgrStock*scale(immgrStockCh) + year + scale(gdp) + scale(gini),
                     x=T,
                     y=T,
                     data = data,
@@ -9550,9 +9550,9 @@ results <- data.frame("Coefficients" = c("ME: +1%immgr", "CI_lower", "CI_upper",
                                  (coefficients(jobs_mod_abs_hw)[2]+(1.96*jobs_mod_abs_hw_se))/1000000)
                       )
 
-library(readxl)
-read_xlsx("results.xlsx")%>%knitr::kable(., digits = 4)
-results <- lapply(results, format, digits=4)
+# library(readxl)
+# read_xlsx("results.xlsx")%>%knitr::kable(., digits = 4)
+# results <- lapply(results, format, digits=4)
 
 results[2:11] <- format(results[2:11], digits = 4)
 results %>%
