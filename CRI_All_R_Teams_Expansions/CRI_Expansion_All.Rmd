@@ -37,8 +37,13 @@ output: html_notebook
        ZA1490.dta
        ZA1950.dta
        ZA2900.dta
+       ZA2900.csv
+       za2900.xlsx
        ZA4700.dta
-       ZA6900_v2-0-0.dta  
+       ZA4700.csv
+       za4700.xlsx
+       ZA6900_v2-0-0.dta
+       ZA6900_v2-0-0.csv
        L2data.dta
        
 ### Provided by the teams
@@ -48,9 +53,6 @@ output: html_notebook
        API_SL.UEM.TOTL.ZS_DS2_en_excel_v2_10181074.xlsx                    #Team 28 unemployment data
        L2data_exp2.dta                                                     #Team 28 - own L2 data compiling
        issp1985_2016.dta
-       pooled.dta (created in Stata from CRI_Expansion_All.do)
-       issp_l2.RData
-       un_immigrants_emigrants_population.csv
        factor analysis model20.RData                                       #team 20's factor model results
        2003_fractionalization.xls                                          #team 62 Alesina data
        un_immigrants_emigrants_population.csv                              #team 69 hand coded immigration data
@@ -85,7 +87,7 @@ pacman::p_load("magrittr","tidyverse","margins")
 
 
 # Create a working directory string and a function to call the wd for every code chunk
-wd <- "C:/Github" #set your wd here
+wd <- "C:/Github/CRI/data" #set your wd here
 pfunc <- function(x){
   paste(wd,x, sep = "/")
 }
@@ -1201,7 +1203,7 @@ l106 <- read_excel(pfunc("za4700.xlsx"))
   
 # Get individual-level data 2016
 
-l116 <- read.csv(pfunc('za6900_v2-0-0.csv'), header = TRUE, sep = ',')
+l116 <- read.csv(pfunc('ZA6900_v2-0-0.csv'), header = TRUE, sep = ',')
 
 # Set missings in l116 dataset 
 
@@ -9187,7 +9189,7 @@ if(file.exists(pfunc("team106.RData"))){
       load(pfunc("team106.RData"))
 } else {
 
-pacman::p_load(tidyverse, plyr, haven, ordinal, miceadds, car, ggeffects,rms)
+pacman::p_load(tidyverse, plyr, haven, ordinal, miceadds, car, ggeffects,rms, oglmx)
 
 
 
@@ -9374,9 +9376,8 @@ anova(jobs_o_flex, jobs_o_equi)
 oldAge_o_mod <- clm(oldAge_o ~ 1 + immgrStock*scale(immgrStockCh) + as.factor(cntry) + as.factor(year) + scale(gdp) + scale(gini), threshold = "flexible", data = data)
 summary(oldAge_o_mod)
 
-
 ## Marginal Effects
-oldAge_o_mod_ME <- margins.oglmx(oldAge_o_mod)
+oldAge_o_mod_ME <- oglmx::margins.oglmx(oldAge_o_mod)
 oldAge_o_mod_ME
 
 ### Predictor immgrStock_abs_m
