@@ -1,5 +1,5 @@
 ---
-title: "CRI Analysis"
+title: "Tech 2, Specification Curves: THE CROWDSOURCED REPLICATION INITIATIVE (CRI)"
 output:
   html_document:
     df_print: paged
@@ -42,7 +42,7 @@ wdir <- function(x){
   paste(wd,x, sep = "/")
 }
 
-pacman::p_load("readstata13","devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","readxl","mlogit","metaviz","jtools","sjPlot","sjmisc","sjlabelled","knitr","boot","ragg")
+pacman::p_load("readstata13","devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","mlogit","knitr","ragg")
 
 # Load Researcher Degrees of Freedom Analysis package
 #  
@@ -57,241 +57,69 @@ completeFun <- function(data, desiredCols) {
 ```
 
 
-## Data Prep
+### Load Data
+
+This dataset was worked up from the file CRI_Data_Prep_1.Rmd. 
 
 
-### CRI Margins & Model Specs
-
-CRI Model Specifications and Margins in the file "CRI Model Specifications and Margins.xlsx"
-
-The Stata code is available at https://github.com/nbreznau/CRI_All_Stata_Teams_Expansion
-
-The R Code is available at https://github.com/nbreznau/CRI_All_R_Teams_Expansions
-
-Details about the qualitative coding can be found in the Executive Report.
-
-```{r merge, include=FALSE}
-# Data generated from qualitative model specification coding
-crispec <- read_excel(wdir("CRI Model Specifications and Margins.xlsx"), sheet = "Data")
-
-crispec <- crispec %>%
-  dplyr::rename(
-    AU = australia  ,
-    AT = austria  ,
-    BE = belgium	 ,
-    BG = bulgaria	 ,
-    CA = canada	 ,
-    CL = chile	 ,
-    HR = croatia	 ,
-    CY = cyprus	 ,
-    CZ = czechia	 ,
-    DK = denmark	 ,
-    FI = finland	 ,
-    FR = france	 ,
-    DE = germany	 ,
-    HU = hungary	 ,
-    IS = iceland	 ,
-    IN = india	 ,
-    IE = ireland	 ,
-    IL = israel	 ,
-    IT = italy	 ,
-    JP = japan	 ,
-    KR = korea	 ,
-    LV = latvia  ,
-    LT = lithuania	 ,
-    NT = netherlands  ,
-    NZ = new_zealand	 ,
-    NO = norway  ,
-    PH = philippines  ,
-    PL = poland	 ,
-    PT = portugal	 ,
-    RU = russia	 ,
-    SK = slovakia	 ,
-    SI = slovenia	 ,
-    ES = spain	 ,
-    SE = sweden  ,
-    CH = switzerland  ,
-    UK = great_britain  ,
-    US = usa	 ,
-    ZA = south_africa  ,
-    TW = taiwan  ,
-    TR = turkey  ,
-    UY = uruguay	 ,
-    VE = venezuela  ,
-    Scale = scale,
-  )
-
-crispec <- crispec[order(crispec$count),]
-
-
-#replace all 1's with the column name for all countries
-w <- select(crispec, AU:VE, id)
-
-for (i in 1:length(w)) {
-    w[[i]] <- ifelse(w[[i]]=="1", colnames(w)[i], w[[i]])
-}
-
-w <- select(w, -c(germany_west, germany_east, n_ireland))
-
-crispeca <- select(crispec, -c(AU:VE))
-crispec <- merge(crispeca, w , by = "id")
-                     
-crispec <- dplyr::select(crispec, stata, r, mlwin, mplus, spss, socx_ivC, unemprate_ivC, emplrate_ivC, gdp_ivC, w1985, w1990, w1996, w2006, w2016, logit, ols, ologit, mlogit, ml_glm, bayes, everything())
-
-crispec$u_teamid <- crispec$team
-
-
-#output file for merging with Unipark
-save.dta13(crispec, file = "C:/data/results_spec.dta")
-
-
-#create single categorical variables, watch out, these column numbers change if transformations added above
-crispec$software <- names(crispec[1:5])[apply(crispec[1:5], 1, match, x = 1)] 
-crispec$indepv <- names(crispec[6:9])[apply(crispec[6:9], 1, match, x = 1)]
-#this wave command doesn't do what we want, remove at some point
-crispec$wave <- names(crispec[10:14])[apply(crispec[10:14], 1, match, x = 1)]
-crispec$mator <- names(crispec[15:20])[apply(crispec[15:20], 1, match, x = 1)]
-crispec$countries <- as.character(crispec$num_countries)
-
-#create variable with string values for all countries that are present in model
-crispec <- crispec %>%
-  unite("incl_countries", AU:VE, sep = " ", remove = F)
-
-#replace 1's with DV name
-z <- select(crispec, Jobs:Scale, id)
-z2 <- which(z=="1",arr.ind=TRUE)
-z[z2] <- names(z)[z2[,"col"]]
-crispecc <- select(crispec, -c(Jobs:Scale))
-crispec <- merge(crispecc, z , by = "id")
-
-crispec <- crispec %>%
-  unite("wave_str", w1985:w2016, sep = " ", remove = F)
-
-crispec <- crispec %>%
-  unite("DV_str", Jobs:Scale, sep = " ", remove = F)
-
-#create output to recombine with master excel sheet
-write.csv(crispec, file = wdir("xout.csv"))
-
-# replace 1's with wave name
-y <- select(crispec, w1985:w2016, id)
-y2 <- which(y=="1",arr.ind=TRUE)
-y[y2] <- names(y)[y2[,"col"]]
-crispecb <- select(crispec, -c(w1985:w2016))
-crispec <- merge(crispecb, y , by = "id")
-
-rm(crispeca,crispecb,crispecc,w,y,y2,z,z2)
-
-
-#replace p values of 0.000000 with 0.00001
-crispec <- crispec %>%
-  mutate(p = ifelse(p==0.00000,0.00001,p))
+```{r load, warning=F,message=F}
+cri <- read.csv(file = wdir("Env1.csv"), header = T)
 
 ```
 
 
+## Specification Curves
 
-```{r curvesetup, include=F}
-crispectest <- dplyr::select(crispec, id, Hsupport, Hreject, Hnotest, DV, main_IV_type, software, dichotomize, twowayfe, cluster_any, mlm_re, mlm_fe, mator, logit, indepv, wave, w1985:w2016, countries, AU:VE, Jobs:Scale, p, AME, lower, upper, eeurope, allavailable, hybrid_mlm, Hmixed, Hsupport_stock, Hreject_stock, Hnotest_stock, Hsupport_net, Hreject_net, Hnotest_net)
+### Average Marginal Effects
 
-crispectest <- rename(crispectest, est = AME, lb = lower, ub = upper, dv_m = dichotomize, dv_type = DV, iv_type = main_IV_type)
+Standardized scores
 
-crispectest <- crispectest %>%
-      mutate(twowayfe = ifelse(twowayfe == 1,"Yes","No"),
-      cluster_any = ifelse(cluster_any == 1,"Yes","No"),
-      mlm_re = ifelse(mlm_re == 1,"Yes","No"),
-      mlm_fe = ifelse(mlm_fe == 1,"Yes","No"),
-      hybrid_mlm = ifelse(hybrid_mlm==1, "Yes","No"),
-      mlm = ifelse(mlm_re == "Yes" | mlm_fe == "Yes" | hybrid_mlm == "Yes", "Yes", "No"),
-      logit = ifelse(logit == 1,"Yes","No"),
-      dv_m = ifelse(dv_m == 1,"dichotomous","continuous"),
-      Hresult = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse(Hmixed==1 & iv_type == "Stock" & Hnotest_stock==1, "No test", ifelse(Hmixed==1 & iv_type == "Stock" & Hsupport_stock==1, "Support", ifelse(Hmixed==1 & iv_type == "Stock" & Hreject_stock==1, "Reject", ifelse(Hmixed==1 & iv_type == "Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & iv_type == "Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & iv_type == "Flow" & Hreject_net==1, "Reject", ifelse(Hmixed==1 & iv_type == "Change in Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & iv_type == "Change in Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & iv_type == "Change in Flow" & Hreject_net==1, "Reject", NA)))))))))))))
+```{r fig1_DV1, include=F}
 
 
-# combine all different scale types, plus rmv extra space in Jobs
-crispectest$dv_type <- recode(crispectest$dv_type, 
-                              "Scale_6" = "Scale",
-                              "Scale_4" = "Scale",
-                              "Scale_5" = "Scale",
-                              "Scale_Desrv" = "Scale",
-                              "Scale_Univ" = "Scale",
-                              "Jobs " = "Jobs")
-
-crispectest$indepv <- recode(crispectest$indepv,
-                             "socx_ivC" = "Soc_Spending",
-                             "unemprate_ivC" = "Unemp_Rate",
-                             "emplrate_ivC" = "Emp_Rate",
-                             "gdp_ivC" = "GDP_Per_Capita")
-
-crispectest$indepv[is.na(crispectest$indepv)] <- "None"
-
-crispectest$software <- recode(crispectest$software,
-                             "stata" = "Stata",
-                             "r" = "R",
-                             "spss" = "SPSS",
-                             "mplus" = "Mplus",
-                             "mlwin" = "MLwiN")
-
-
-crispectest <- crispectest[order(crispectest$est),]
-
-cat <- select(crispectest, c(AU:VE), id)
-crispectest <- select(crispectest, -c(AU:VE))
-crispectest <- merge(crispectest,cat, by="id")
-
-crispectest1 <- dplyr::select(crispectest, dv_type, iv_type, software, indepv, mator, dv_m, twowayfe, cluster_any, AU:VE, Jobs:Scale,  w1985:w2016, p, est, lb, ub, id, eeurope, allavailable, mlm, Hresult)
+crispectest <- dplyr::select(cri, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe_str, cluster_any_str, AU:VE, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_str, Hresult_str, u_teamid)
 
 #Remove NAs
 crispectest <- as.data.frame(na.omit(crispectest))
-crispectest1 <- as.data.frame(na.omit(crispectest1))
+  
+  # some upper and lower bounds are exactly zero, adjust fix this
+crispectest$lower_Z <- ifelse(crispectest$lower_Z > -0.00000001 & crispectest$lower_Z < 0.00000001, -0.0001, crispectest$lower_Z)
+crispectest$upper_Z <- ifelse(crispectest$upper_Z > -0.00000001 & crispectest$upper_Z < 0.00000001, 0.0001, crispectest$upper_Z)
 
-  # remove/adjust attributes
+  #trim to have better plot range
+  crispectest$lower_Z <- ifelse(crispectest$lower_Z < -0.999, -0.999, crispectest$lower_Z)
+  crispectest$upper_Z <- ifelse(crispectest$upper_Z > 0.999, 0.999, crispectest$upper_Z)
+  crispectest$upper_Z <- ifelse(crispectest$upper_Z < -0.999, -0.995, crispectest$upper_Z)
+  crispectest$AME_Z <- ifelse(crispectest$AME_Z < -0.999, -0.997, crispectest$AME_Z)
+  crispectest$AME_Z <- ifelse(crispectest$AME_Z > 0.999, 0.997, crispectest$AME_Z)
+
+#data prep
+crispectest$est <- round(crispectest$AME_Z, 6)
+crispectest$lb <- round(crispectest$lower_Z, 6)
+crispectest$ub <- round(crispectest$upper_Z, 6)
+
+crispectest1 <- select(crispectest, dv_type, iv_type, software, indepv, est, lb, ub)
+
+# remove/adjust attributes
   crispectest1 <- crispectest1[names(crispectest1)]
-  choices <- 1:6
+  choices <- 1:4
   attr(crispectest1, "choices") <- choices
   rownames(crispectest1) <- NULL
   
-  # some upper and lower bounds are exactly zero, jitter to fix this
-  crispectest1$lb[crispectest1$lb==0] <- -0.0001
-  crispectest1$ub[crispectest1$ub==0] <- 0.0001
+png(file = wdir("Fig1_AME.png"), width = 1200, height = 850, res = 144)
 
-  #trim to have better plot range
-  crispectest1$lb <- ifelse(crispectest1$lb < -0.999, -0.999, crispectest1$lb)
-  crispectest1$ub <- ifelse(crispectest1$ub > 0.999, 0.999, crispectest1$ub)
-  crispectest1$ub <- ifelse(crispectest1$ub < -0.999, -0.995, crispectest1$ub)
-  crispectest1$est <- ifelse(crispectest1$est < -0.999, -0.997, crispectest1$est)
-  crispectest1$est <- ifelse(crispectest1$est > 0.999, 0.997, crispectest1$est)
+plot_rdf_spec_curve(crispectest1, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, ribbon = T)
+dev.off()
 
-#data prep
-# for a few outliers
-crispectest <- crispectest1
-crispectest1 <- subset(crispectest1, select = -c(id, eeurope, allavailable))
-#select data for shiny app at GitHub/CRI_shiny/
-df <- crispectest1
-save(df, file = "C:/data/dfcri.Rda")
+knitr::include_graphics(wdir("Fig1_AME.png"))
 ```
 
- 
-#### Quick Preview
 
-Effect sizes are not comprable, don't use.
-
-```{r f1net, include = F, echo = T}
+### P-Values
 
 
-df1 <- as.data.frame(select(df, dv_type, iv_type, software, indepv, est, lb, ub))
-  # remove/adjust attributes
-  choic <- 1:4
-  attr(df1, "choices") <- choic
-  rownames(df1) <- NULL
-plot_rdf_spec_curve(df1, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
-
-
-
-
-```
 ```{r pvalcrv, echo=T}
-df1 <- as.data.frame(select(df, dv_type, iv_type, p, lb, ub))
+df1 <- as.data.frame(select(crispectest, dv_type, iv_type, p, lb, ub))
 
 
 
@@ -333,451 +161,69 @@ hidecolor <- t_col("pink", perc = 100, name = "lt.pink")
   choic <- 1:2
   attr(df1, "choices") <- choic
   rownames(df1) <- NULL
-agg_png(file = wdir("Fig1_pcurve.png"), width = 800, height = 500, res = 144)
-  plot_rdf_spec_curve(df1, est = "p", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, ribbon_color = hidecolor, lower_to_upper = 1, est_label = "Confidence Level, p<0.05", ribbon = F)
+agg_png(file = wdir("Fig2_pcurve.png"), width = 800, height = 500, res = 144)
+  plot_rdf_spec_curve(df1, est = "p", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, ribbon_color = hidecolor, lower_to_upper = 1, est_label = "Confidence Level\n(p<0.05)", ribbon = F)
 dev.off()
 
-knitr::include_graphics(wdir("Fig1_pcurve.png"))
+knitr::include_graphics(wdir("Fig2_pcurve.png"))
+
+```
+### Subjective Test Results
+
+Support, Reject, No Test
+
+```{r subj, warning = F, message = F}
+
+# some teams had different conclusions associated with different models, therefore we need to aggregate the data by team and by conclusion
+
+
+cri_team <- select(cri, u_teamid, id, logit, ols, ologit, mlogit, ml_glm, bayes, count, p, main_IV_as_control, countries, Hresult_str)
+
+
+cri_team1 <- select(cri, twowayfe:inv_weight, AME_Z:upper_Z, total_score:belief)
+
+cri_team <- cbind(cri_team, cri_team1)
+
+cri_team <- aggregate(cri_team, by = list(cri_team$u_teamid, cri_team$Hresult_str), FUN = mean, na.rm = T)
+
+# we could not aggregate strings so we have to run recodes again
+
+cri_team <- cri_team %>%
+  mutate(software = ifelse(stata == 1, "Stata", ifelse(r == 1, "R", ifelse(spss == 1, "SPSS", ifelse(mplus == 1, "Mplus", ifelse(mlwin == 1, "MLwin", NA))))),
+         belief_cat = ifelse(belief < -0.1, "Low", ifelse(belief > -0.099999 & belief < 0.25, "Neutral", "Strong")),
+         stat_cat = ifelse(stat < -0.2, "Low", ifelse(stat > -0.1999999 & stat < 0.35, "Neutral", "Strong")),
+         est = ifelse(Group.2 == "Reject", -0.1, ifelse(Group.2 == "No test", 0, 0.1)),
+         lb = ifelse(est == -0.1, -0.11, ifelse(est == 0, -0.01, .09)),
+         ub = ifelse(est == -0.1, -0.09, ifelse(est == 0, 0.01, .011)))
+
+
+
+
+# software, belief_cat, stat_cat, AME_Z, lower_Z, upper_Z
+
+
+
 
 ```
 
-We face a problem that a one percent change in net migration (within-country) is huge relative to a 1% difference in percent foreign-born across countries.
-
-```{r standardizeDV}
-# Standardization will produce some extreme outliers, so a 'better' strategy is to adjust the sd of Flow to be equal to that of Stock. However, there are some wide outliers in stock that bunches up the dispersion of flow, therefore we need the sd without these extreme outliers
-
-# Team 104 is massive outlier, we have to rescale the estimates into a realistic range
-crispec <- crispec %>%
-  mutate(AME = ifelse(id == "t104m2" | id == "t104m4", AME/10, AME),
-         lower = ifelse(id == "t104m2" | id == "t104m4", lower/10, lower),
-         upper = ifelse(id == "t104m2" | id == "t104m4", upper/10, upper))
-
-crispec <- crispec %>%
-  mutate(AMEssd = ifelse(main_IV_type == "Stock", AME, NA),
-         AMEfsd = ifelse(main_IV_type == "Flow", AME, NA),
-         AMEssd = sd(AMEssd, na.rm = T),
-         AMEfsd = sd(AMEfsd, na.rm = T),
-         AME_Z = AME*(AMEssd/AMEfsd),
-         lower_Z = lower*(AMEssd/AMEfsd),
-         upper_Z = upper*(AMEssd/AMEfsd),
-         AME_Z = ifelse(main_IV_type == "Flow", AME_Z, AME),
-         lower_Z = ifelse(main_IV_type == "Flow", lower_Z, lower),
-         upper_Z = ifelse(main_IV_type == "Flow", upper_Z, upper))
-
-df2 <- df %>%
-  mutate(AMEssd = ifelse(iv_type == "Stock", est, NA),
-         AMEfsd = ifelse(iv_type == "Flow", est, NA),
-         AMEssd = sd(AMEssd, na.rm = T),
-         AMEfsd = sd(AMEfsd, na.rm = T),
-         estz = est*(AMEssd/AMEfsd),
-         lower = lb*(AMEssd/AMEfsd),
-         upper = ub*(AMEssd/AMEfsd),
-         est = ifelse(iv_type == "Flow", estz, est),
-         lb = ifelse(iv_type == "Flow", lower, lb),
-         ub = ifelse(iv_type == "Flow", upper, ub),
-         # Trim to the range -0.5 to 0.5
-         est = ifelse(est < -0.5, -0.5, est),
-         est = ifelse(est > 0.5, 0.5, est),
-         lb = ifelse(lb < -0.5, -0.5, lb),
-         lb = ifelse(lb > 0.5, 0.5, lb),
-         ub = ifelse(ub < -0.5, -0.5, ub),
-         ub = ifelse(ub > 0.5, 0.5, ub))
-```
 
 
-```{r fig1_Overview, echo = T}
-df2 <- as.data.frame(select(df2, dv_type, iv_type, software, Hresult, est, lb, ub))
+```{r team_hresultspec}
+df_team <- select(cri_team, software, belief_cat, stat_cat, est, lb, ub)
 
-agg_png(file = wdir("Fig1_Overview.png"), width = 800, height = 500, res = 144)
-  # remove/adjust attributes
-  choic <- 1:4
-  attr(df2, "choices") <- choic
-  rownames(df2) <- NULL
-plot_rdf_spec_curve(df2, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Standardized \nMarginal Effect", ribbon = F)
+df_team <- subset(df_team, !is.na(belief_cat))
+# remove/adjust attributes
+  choic <- 1:3
+  attr(df_team, "choices") <- choic
+  rownames(df_team) <- NULL
+
+  agg_png(file = wdir("Fig3_subj.png"), width = 500, height = 500, res = 144)
+  plot_rdf_spec_curve(df_team, est = "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, ribbon_color = hidecolor, lower_to_upper = 2, est_label = "Hypothesis Test", ribbon = F)
 dev.off()
 
-knitr::include_graphics(wdir("Fig1_Overview.png"))
-
-```
-
-### Merge in UniPark Survey
-
-Original work up of individual/team researcher qualities done in Stata
-
-NOTE: These Stata files include identifying information breaking the anonymity of the teams, so we have to clean them before making them public.
-
-Required code files:
-  master.do
-      convert spss.do
-      merge_waves.do
-      recode.do
-  Cri_spec.do
-
-Required data files:
-  W1_export.sps
-  W2_export.sps
-  W3_export.sps
-  W4_export.sps
+knitr::include_graphics(wdir("Fig3_subj.png"))
   
-Note that teams are now in wide format, so that each variable has up to three values, one for each team member. Also, each result is attached to each team member, thus there are N-results repeated observations of team members.
-
-```{r combine }
-cri2 <- readstata13::read.dta13(file = "C:/data/cri_combined_recoded_long_nolab.dta")
-
-cri <- full_join(crispec, cri2, by = "u_teamid")
-
-# remove teams that dropped out
-#Column no missing function
-cri <- completeFun(cri, "id")
-#output for Alex
-save.dta13(cri, file = "C:/data/cri_master.dta")
-
-cri <- select(cri, u_teamid, id, everything())
-
-
 ```
 
-
-```{r codebook, include=F, warning=F, message=F}
-# Note that at the end of each variable we add a 1, 2 and 3 for up to three team member's responses
-
-# These are the labels for the unipark variables
-
-#Statistical knowledge and experience
-
-# v_100 #Not enough methods skills, 1-did not constrain me
-# v_101 #Not enough software programming skills, 1-did not constrain me
-# v_34 #Difficulty of replication, 1-most difficult
-# backgr_exp_teach_stat #"1 How many stats/quant methods courses taught?"
-# backgr_exp_famil_mlm #"1 Familiarity with multilevel modeling (5=very familiar)"
-# v_18 #"1 Published on statistics/methods?"
-# v_21 #"1 Published using multilevel regression?"
-# 
-# #Topical knowledge and experience
-# 
-# v_17 #"1 Published on immigration?"
-# v_19 #"1 Published on public policy/welf state?"
-# v_20 #"1 Published on policy prefs/public opinion?"
-# v_88  #I was very interested in the substantive topic.
-# v_35 #"1 Not at all familiar with the lilterature on immigration/policy"
-# v_36 #"1 Read some of the literature on imm/policy" (vague in-between category, drop)
-# v_37 #"1 Read much of the literature on imm/policy"
-# v_38 #"1 Published articles or books on imm/policy"
-# v_39 #"1 Taught courses on imm/policy"
-# v_40 #"1 Often discuss imm/policy with colleagues"
-# 
-# belief_H1_1 #Belief in hypothesis
-# belief_agecare_1
-# belief_unempl_1
-# belief_income_1
-# belief_housing_1
-# belief_labour_1
-# belief_health_1
-# 
-# 
-# label var v_171 "1 Published on immigration?"
-# label var v_181 "1 Published on statistics/methods?"
-# label var v_191 "1 Published on public policy/welf state?"
-# label var v_201 "1 Published on policy prefs/public opinion?"
-# label var v_211 "1 Published using multilevel regression?"
-# label var v_172 "2 Published on immigration?"
-# label var v_182 "2 Published on statistics/methods?"
-# label var v_192 "2 Published on public policy/welf state?"
-# label var v_202 "2 Published on policy prefs/public opinion?"
-# label var v_212 "2 Published using multilevel regression?"
-# label var v_173 "3 Published on immigration?"
-# label var v_183 "3 Published on statistics/methods?"
-# label var v_193 "3 Published on public policy/welf state?"
-# label var v_203 "3 Published on policy prefs/public opinion?"
-# label var v_213 "3 Published using multilevel regression?"
-# 
-# label var backgr_exp_teach_stat1 "1 How many stats/quant methods courses taught?"
-# label var backgr_exp_famil_mlm1 "1 Familiarity with multilevel modeling (5=very familiar)"
-# label var belief_H1_11 "1 Immigration reduces/increase support for social policy (1=strongly reduces)"
-# label var backgr_exp_teach_stat2 "2 How many stats/quant methods courses taught?"
-# label var backgr_exp_famil_mlm2 "2 Familiarity with multilevel modeling (5=very familiar)"
-# label var belief_H1_12 "2 Immigration reduces/increase support for social policy (1=strongly reduces)"
-# label var backgr_exp_teach_stat3 "3 How many stats/quant methods courses taught?"
-# label var backgr_exp_famil_mlm3 "3 Familiarity with multilevel modeling (5=very familiar)"
-# label var belief_H1_13 "3 Immigration reduces/increase support for social policy (1=strongly reduces)"
-# 
-# label var v_331 "1 Individual time spent on replication"
-# label var v_341 "1 Difficulty of replication (1=most difficult)"
-# label var v_351 "1 Not at all familiar with the lilterature on immigration/policy"
-# label var v_361 "1 Read some of the literature on imm/policy"
-# label var v_371 "1 Read much of the literature on imm/policy"
-# label var v_381 "1 Published articles or books on imm/policy"
-# label var v_391 "1 Taught courses on imm/policy"
-# label var v_401 "1 Often discuss imm/policy with colleagues"
-# label var v_411 "1 Enjoyment of replication (1=extremely fun)"
-# label var v_431 "1 Convincingness of Brady & Finnigan tests(1=most convincing)"
-# label var v_332 "2 Individual time spent on replication"
-# label var v_342 "2 Difficulty of replication (1=most difficult)"
-# label var v_352 "2 Not at all familiar with the lilterature on immigration/policy"
-# label var v_362 "2 Read some of the literature on imm/policy"
-# label var v_372 "2 Read much of the literature on imm/policy"
-# label var v_382 "2 Published articles or books on imm/policy"
-# label var v_392 "2 Taught courses on imm/policy"
-# label var v_402 "2 Often discuss imm/policy with colleagues"
-# label var v_412 "2 Enjoyment of replication (1=extremely fun)"
-# label var v_432 "2 Convincingness of Brady & Finnigan tests(1=most convincing)"
-# label var v_333 "3 Individual time spent on replication"
-# label var v_343 "3 Difficulty of replication (1=most difficult)"
-# label var v_353 "3 Not at all familiar with the lilterature on immigration/policy"
-# label var v_363 "3 Read some of the literature on imm/policy"
-# label var v_373 "3 Read much of the literature on imm/policy"
-# label var v_383 "3 Published articles or books on imm/policy"
-# label var v_393 "3 Taught courses on imm/policy"
-# label var v_403 "3 Often discuss imm/policy with colleagues"
-# label var v_413 "3 Enjoyment of replication (1=extremely fun)"
-# label var v_433 "3 Convincingness of Brady & Finnigan tests(1=most convincing)"
-# 
-# -> tabulation of v_88  
-# 
-#            I was very interested in the |
-#                      substantive topic. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-# Reason does not apply to me apply at al |         10        6.33        6.33
-#           Reason applies to me a little |         30       18.99       25.32
-#                             Neither nor |         22       13.92       39.24
-#           Reason somewhat applies to me |         51       32.28       71.52
-#              Reason applies to me a lot |         45       28.48      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        158      100.00
-# 
-# -> tabulation of v_89  
-# 
-# Colleagues asked me to join their team. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-#                                       0 |          2        1.27        1.27
-# Reason does not apply to me apply at al |         63       39.87       41.14
-#           Reason applies to me a little |         15        9.49       50.63
-#                             Neither nor |          4        2.53       53.16
-#           Reason somewhat applies to me |         33       20.89       74.05
-#              Reason applies to me a lot |         41       25.95      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        158      100.00
-# 
-# -> tabulation of v_90  
-# 
-#            The prospect of a scientific |
-#              publication was appealing. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-#                                       0 |          1        0.63        0.63
-# Reason does not apply to me apply at al |         10        6.33        6.96
-#           Reason applies to me a little |         19       12.03       18.99
-#                             Neither nor |         24       15.19       34.18
-#           Reason somewhat applies to me |         66       41.77       75.95
-#              Reason applies to me a lot |         38       24.05      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        158      100.00
-# 
-# -> tabulation of v_91  
-# 
-#         I expected the project to be an |
-#                   enjoyable experience. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-#                                       0 |          1        0.63        0.63
-# Reason does not apply to me apply at al |          2        1.27        1.90
-#           Reason applies to me a little |          4        2.53        4.43
-#                             Neither nor |         15        9.49       13.92
-#           Reason somewhat applies to me |         76       48.10       62.03
-#              Reason applies to me a lot |         60       37.97      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        158      100.00
-# 
-# -> tabulation of v_93  
-# 
-#            I was very interested in the |
-#      replication aspect of the project. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-#                                       0 |          1        0.64        0.64
-# Reason does not apply to me apply at al |          2        1.27        1.91
-#           Reason applies to me a little |          3        1.91        3.82
-#                             Neither nor |          4        2.55        6.37
-#           Reason somewhat applies to me |         61       38.85       45.22
-#              Reason applies to me a lot |         86       54.78      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        157      100.00
-# 
-# -> tabulation of v_94  
-# 
-# I expected to learn and to develop as a |
-#                             researcher. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-#                                       0 |          2        1.27        1.27
-# Reason does not apply to me apply at al |          2        1.27        2.55
-#           Reason applies to me a little |         14        8.92       11.46
-#                             Neither nor |         19       12.10       23.57
-#           Reason somewhat applies to me |         74       47.13       70.70
-#              Reason applies to me a lot |         46       29.30      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        157      100.00
-# 
-# -> tabulation of v_95  
-# 
-# The CRI seemed like a valuable addition |
-#                               to my CV. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-# Reason does not apply to me apply at al |         31       19.75       19.75
-#           Reason applies to me a little |         43       27.39       47.13
-#                             Neither nor |         43       27.39       74.52
-#           Reason somewhat applies to me |         32       20.38       94.90
-#              Reason applies to me a lot |          8        5.10      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        157      100.00
-# 
-# -> tabulation of v_96  
-# 
-#  I joined because I know one or more of |
-#                         the organizers. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-# Reason does not apply to me apply at al |        108       68.79       68.79
-#           Reason applies to me a little |          9        5.73       74.52
-#                             Neither nor |         13        8.28       82.80
-#           Reason somewhat applies to me |         19       12.10       94.90
-#              Reason applies to me a lot |          8        5.10      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        157      100.00
-# 
-# -> tabulation of v_98  
-# 
-#              Not enough time |      Freq.     Percent        Cum.
-# -----------------------------+-----------------------------------
-#                            0 |          1        0.64        0.64
-#         Did not constrain me |          8        5.10        5.73
-# Constrained me only a little |         26       16.56       22.29
-#      Constrained me somewhat |         51       32.48       54.78
-#  Constrained me considerably |         71       45.22      100.00
-# -----------------------------+-----------------------------------
-#                        Total |        157      100.00
-# 
-# -> tabulation of v_99  
-# 
-#  Inadequate materials (e.g., |
-# software or computing power) |      Freq.     Percent        Cum.
-# -----------------------------+-----------------------------------
-#         Did not constrain me |        110       70.06       70.06
-# Constrained me only a little |         27       17.20       87.26
-#      Constrained me somewhat |         13        8.28       95.54
-#  Constrained me considerably |          7        4.46      100.00
-# -----------------------------+-----------------------------------
-#                        Total |        157      100.00
-# 
-# -> tabulation of v_100  
-# 
-#    Not enough methods skills |      Freq.     Percent        Cum.
-# -----------------------------+-----------------------------------
-#         Did not constrain me |         65       41.40       41.40
-# Constrained me only a little |         53       33.76       75.16
-#      Constrained me somewhat |         30       19.11       94.27
-#  Constrained me considerably |          9        5.73      100.00
-# -----------------------------+-----------------------------------
-#                        Total |        157      100.00
-# 
-# -> tabulation of v_101  
-# 
-#          Not enough software |
-#           programming skills |      Freq.     Percent        Cum.
-# -----------------------------+-----------------------------------
-#         Did not constrain me |        110       70.06       70.06
-# Constrained me only a little |         35       22.29       92.36
-#      Constrained me somewhat |         12        7.64      100.00
-# -----------------------------+-----------------------------------
-#                        Total |        157      100.00
-# 
-# -> tabulation of v_102  
-# 
-#  Having strict deadlines was |
-#             a problem for me |      Freq.     Percent        Cum.
-# -----------------------------+-----------------------------------
-#         Did not constrain me |         40       25.48       25.48
-# Constrained me only a little |         49       31.21       56.69
-#      Constrained me somewhat |         48       30.57       87.26
-#  Constrained me considerably |         20       12.74      100.00
-# -----------------------------+-----------------------------------
-#                        Total |        157      100.00
-```
-
-
-
-```{r recodes, warning=F, message=F}
-
-#Generate team-specific qualities
-
-# Because the CRI required teams to define the data-generating model (or at least a test of it) and use statistical competencies to carry it out, we suspect that the highest statistical and topical knowledge and experience per team will have the greatest influence on the results. Therefore, for the concepts 'Stats Level' and 'Topic Level' we take the row min or max for each team (depending on coding. 
-
-cri <- cri %>%
-  rowwise() %>%
-      mutate(stat1 = 4+(-1*min(v_1001, v_1002, v_1003, na.rm = T)), #lower is less constrained
-             stat2 = 4+(-1*min(v_1011, v_1012, v_1013, na.rm = T)), #lower is less constrained
-             stat3 = max(v_341, v_342, v_343, na.rm = T), #higher is less dificult
-             stat4 = max(backgr_exp_teach_stat1, backgr_exp_teach_stat2, backgr_exp_teach_stat3, na.rm = T), #higher more courses taught
-             stat5 = max(backgr_exp_famil_mlm1, backgr_exp_famil_mlm2, backgr_exp_famil_mlm3, na.rm = T), #higher more MLM familiarity
-             stat6 = max(v_181, v_182, v_183, na.rm = T), #higher is more stat publications
-             stat7 = max(v_211, v_212, v_213, na.rm = T), #higher is more MLM publications
-             topic1 = max(v_171, v_172, v_173, na.rm = T), #higher is more Imm pubs
-             topic2 = max(v_191, v_192, v_193, na.rm = T), #higher is more Policy pubs
-             topic3 = max(v_201, v_202, v_203, na.rm = T), #higher is more Policy/Opinion pubs
-             topic4 = max(v_881, v_882, v_883, na.rm = T), #higher is more interest in topic
-             topic5 = 1+(-1*min(v_351, v_352, v_353, na.rm = T)), #lower not relevant
-             topic6 = max(v_371, v_372, v_373, na.rm = T), #Higher relevant
-             topic7 = max(v_381, v_382, v_383, na.rm = T), #Higher relevant
-             topic8 = max(v_391, v_392, v_393, na.rm = T), #Higher relevant
-             topic9 = max(v_401, v_402, v_403, na.rm = T), #Higher relevant
-             belief1 = max(belief_H1_11,belief_H1_12,belief_H1_13, na.rm = T), # higher more belief
-             belief2 = max(belief_agecare_11,belief_agecare_12,belief_agecare_13, na.rm = T), # higher more belief
-             belief3 = max(belief_unempl_11,belief_unempl_12,belief_unempl_13, na.rm = T), # higher more belief
-             belief4 = max(belief_income_11,belief_income_12,belief_income_13, na.rm = T), # higher more belief
-             belief5 = max(belief_housing_11,belief_housing_12,belief_housing_13, na.rm = T), # higher more belief
-             belief6 = max(belief_labour_11,belief_labour_12,belief_labour_13, na.rm = T), # higher more belief
-             belief7 = max(belief_health_11,belief_health_12,belief_health_13, na.rm = T), # higher more belief
-             belief_strength = max(belief_certainty_11,belief_certainty_12,belief_certainty_13, na.rm = T),
-             pro_immigrant = min(attitude_immigration_11,attitude_immigration_12,attitude_immigration_13, na.rm = T),
-             changemind_delib = max(delib_changemind1,delib_changemind2,delib_changemind3, na.rm = T),
-             topic_interest = max(v_881,v_882,v_883, na.rm=T),
-             pub_interest = max(v_901,v_902,v_903, na.rm=T))
-
-
-cri <- cri %>%
-         mutate(belief_strength = ifelse(belief_strength == "Inf", NA, belief_strength),
-                belief_strength = ifelse(belief_strength == "-Inf", NA, belief_strength),
-                pro_immigrant = ifelse(pro_immigrant == "-Inf", NA, pro_immigrant),
-                pro_immigrant = ifelse(pro_immigrant == "-Inf", NA, pro_immigrant),
-                topic_interest = ifelse(topic_interest == "-Inf", NA, topic_interest),
-                topic_interest = ifelse(topic_interest == "-Inf", NA, topic_interest),
-                pub_interest = ifelse(pub_interest == "-Inf", NA, pub_interest),
-                pub_interest = ifelse(pub_interest == "-Inf", NA, pub_interest),
-                changemind_delib = ifelse(changemind_delib == "-Inf", NA, changemind_delib),
-                changemind_delib = ifelse(changemind_delib == "-Inf", NA, changemind_delib))
-
-```
-
-### Merge in Subjective Voting
-
-The file popdf_out.Rdata is needed for this, see CRI_Subj_Votes.R add link
-
-```{r votes, message = F, warning=F}
-
-load(file = wdir("popdf_out.Rdata"))
-
-cri <- left_join(cri, popdf_out, by = "id")
-
-```
-
-
-
-
-######################################################################################
-
-Save Point
-
-
-
-```{r concreg, warning=F,message=F}
-rm(df1,df2)
-
-save.image(file = wdir("Env1.Rdata"))
-```
 
 

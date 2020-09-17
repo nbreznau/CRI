@@ -1,5 +1,5 @@
 ---
-title: "Data Prep 1: THE CROWDSOURCED REPLICATION INITIATIVE (CRI)"
+title: "Tech 1, Data Prep: THE CROWDSOURCED REPLICATION INITIATIVE (CRI)"
 output:
   html_document:
     df_print: paged
@@ -29,7 +29,7 @@ wdir <- function(x){
   paste(wd,x, sep = "/")
 }
 
-pacman::p_load("readstata13","devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","readxl","mlogit","metaviz","jtools","sjPlot","sjmisc","sjlabelled","knitr","boot","ragg")
+pacman::p_load("readstata13","dplyr","readr","ExPanDaR","lattice","tidyr","readxl","knitr","boot","ragg","kableExtra")
 
 #Column no missing function
 completeFun <- function(data, desiredCols) {
@@ -170,7 +170,7 @@ crispec <- crispec %>%
       mlm_re_str = ifelse(mlm_re == 1,"Yes","No"),
       mlm_fe_str = ifelse(mlm_fe == 1,"Yes","No"),
       hybrid_mlm_str = ifelse(hybrid_mlm==1, "Yes","No"),
-      mlm_str = ifelse(mlm_re == "Yes" | mlm_fe == "Yes" | hybrid_mlm == "Yes", "Yes", "No"),
+      mlm_str = ifelse(mlm_re_str == "Yes" | mlm_fe_str == "Yes" | hybrid_mlm_str == "Yes", "Yes", "No"),
       logit_str = ifelse(logit == 1,"Yes","No"),
       iv_type = main_IV_type,
       dv_m_str = ifelse(dichotomize == 1,"dichotomous","continuous"),
@@ -178,12 +178,12 @@ crispec <- crispec %>%
 
 # combine all different scale types, plus rmv extra space in Jobs
 crispec$dv_type <- crispec$DV
-crispec$dv_type <- recode(crispec$dv_type, 
+crispec$dv_type <- car::recode(crispec$dv_type, 
                               "c('Scale_6', 'Scale_4', 'Scale_5', 'Scale_Desrv', 'Scale_Univ') = 'Scale';
                               'Jobs ' = 'Jobs'")
-recode
+
 # Better labelling
-crispec$indepv <- recode(crispec$indepv,
+crispec$indepv <- car::recode(crispec$indepv,
                              "'socx_ivC' = 'Soc_Spending';
                              'unemprate_ivC' = 'Unemp_Rate';
                              'emplrate_ivC' = 'Emp_Rate';
@@ -191,7 +191,7 @@ crispec$indepv <- recode(crispec$indepv,
 
 crispec$indepv[is.na(crispec$indepv)] <- 'None'
 
-crispec$software <- recode(crispec$software,
+crispec$software <- car::recode(crispec$software,
                              "'stata' = 'Stata';
                              'r' = 'R';
                              'spss' = 'SPSS';
@@ -597,8 +597,71 @@ cri <- left_join(cri, popdf_out, by = "id")
 
 ```
 
+### Merge in team size variable
+
+```{r teamsize}
+
+teamsize <- read.csv(file = wdir("teamsize.csv"), header = T)
+
+cri <- left_join(cri, teamsize, by = "u_teamid")
+
+rm(teamsize, cri2, crispec)
+
+```
+
+### Make Scales of Team Qualities
+
+### Mesaurement of Participant Team Qualities
+
+#### Correlations of Participant Survey Responses
+
+Aggregated by team
+
+```{r f3}
+# make a dataset for correlation
+
+cor <- select(cri, stat1,stat2,stat3,stat4,stat5,stat6,stat7,topic1,topic2,topic3,topic4,topic5,topic6,topic7,topic8,topic9,belief1,belief2,belief3,belief4,belief5,belief6,belief7,belief_strength,pro_immigrant,total_score,u_teamid)
+
+cor <- aggregate(cor, by=list(cor$u_teamid), FUN=mean, na.rm=T)
+cor <- replace(cor, cor=="-Inf",NA)
+
+# team 27 missing 3 values, fill them in for consistency, fill represents a teaching of 12 stats courses score
+cor <- cor %>%
+  mutate(stat1 = ifelse(u_teamid == 27,3,stat1),
+         stat2 = ifelse(u_teamid == 27,3,stat2),
+         topic4 = ifelse(u_teamid == 27,4,topic4))
+
+# drop Brady and Finnigan's original analysis
+cor <- completeFun(cor, "stat1")
+
+cor1 <- cor(cor, use = "pairwise.complete.obs")
+
+kable_styling(kable(cor1, digits = 2))
 
 
+```
+
+#### Measurement Model
+
+```{r SEM}
+
+pacman::p_load("lavaan")
+
+cfa <- ' stat =~ stat1 + + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
+         topic =~ topic1 + topic2 + topic3 + topic4 + topic5 + topic6 + topic7 + topic8 + topic9
+         belief =~ belief1 + belief2 + belief3 + belief4 + belief5 + belief6 + belief7 '
+fit <- cfa(cfa, data = cor)
+summary(fit, fit.measures=TRUE)
+
+# predicted factor scores
+cor1 <- as.data.frame(lavPredict(fit))
+cor <- cbind(cor,cor1)
+
+# put them back into the main data
+cor1 <- select(cor, u_teamid, stat, topic, belief)
+
+cri <- left_join(cri,cor1,by = "u_teamid")
+```
 
 ######################################################################################
 
@@ -606,10 +669,11 @@ Save Point
 
 
 
-```{r concreg, warning=F,message=F}
-rm(df1,df2)
+```{r save_out, warning=F,message=F}
+rm(cor,cor1,fit,popdf_out)
 
-save.image(file = wdir("Env1.Rdata"))
+# save as csv to ensure no attributes carry over
+write.csv(cri, file = wdir("Env1.csv"), row.names = F)
 ```
 
 

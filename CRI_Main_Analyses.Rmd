@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "Tech 3, Main Analyses: THE CROWDSOURCED REPLICATION INITIATIVE (CRI)"
 output: html_notebook
 ---
 
@@ -40,7 +40,7 @@ wdir <- function(x){
   paste(wd,x, sep = "/")
 }
 
-pacman::p_load("devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","readxl","mlogit","metaviz","jtools","sjPlot","sjmisc","sjlabelled","knitr","boot","ragg","kableExtra", "arsenal")
+pacman::p_load("devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","readxl","mlogit","metaviz","jtools","sjPlot","sjmisc","sjlabelled","knitr","boot","ragg","kableExtra")
 
 # Load Researcher Degrees of Freedom Analysis package
 #  
@@ -56,26 +56,19 @@ completeFun <- function(data, desiredCols) {
 
 ### Load Data
 
-This dataset was worked up from the file CRI_Spec_Analysis.Rmd. 
+This dataset was worked up from the file CRI_Data_Prep_1.Rmd. 
 
 
 ```{r load, warning=F,message=F}
-load(file = wdir("Env1.Rdata"))
-
-# put team_id back into dataset (this should be done in an early command file, change at some point)
-
-idm <- select(cri, u_teamid, id)
-crispectest <- left_join(crispectest, idm, by = "id")
+cri <- read.csv(file = wdir("Env1.csv"), header = T)
 
 ```
 
 ### Descriptives
 
+#### Model Level
+
 ```{r descriptive, warning = F, message = F}
-# mistake in countries (will be fixed next time code is run from scratch)
-
-cri$countries <- ifelse(cri$countries == 0, 1, cri$countries)
-
 
 cri <- cri %>%
   mutate(other = ifelse(stata == 0 & r == 0, 1, 0),
@@ -89,29 +82,96 @@ cri <- cri %>%
          countries = as.numeric(countries),
          countrynum = ifelse(countries < 10, "< 10", ifelse(countries > 9 & countries < 17, "10-16", ifelse(countries > 16 & countries < 26, "17-25", ifelse(countries > 25, "> 25", NA)))))
 
+cri <- cri %>%
+  mutate(jobs = ifelse(Jobs == 0, 0, 1),
+         unemp = ifelse(Unemp == 0, 0, 1),
+         incdiff = ifelse(IncDiff == 0, 0, 1),
+         oldage = ifelse(OldAge == 0, 0, 1),
+         house = ifelse(House == 0, 0, 1),
+         health = ifelse(Health == 0, 0, 1),
+         scale = ifelse(Scale == 0, 0, 1),
+         wave_1985 = ifelse(w1985 == 0, 0, 1),
+         wave_1990 = ifelse(w1990 == 0, 0, 1),
+         wave_1996 = ifelse(w1996 == 0, 0, 1),
+         wave_2006 = ifelse(w2006 == 0, 0, 1),
+         wave_2016 = ifelse(w2016 == 0, 0, 1),
+         Hno = ifelse(Hresult == "No test", 1, 0),
+         iv_stock = ifelse(main_IV_type == "Stock", 1, 0),
+         iv_flow = ifelse(main_IV_type == "Flow", 1, 0),
+         iv_change_flow = ifelse(main_IV_type == "Change in Flow", 1, 0)
+  )
 
-# select variables
-cri_desc  <- select(cri, AME, AME_Z, p, Hresult, inv_weight, countrynum, total_score, stata, r, other, ols, logit, otherE, main_IV_type)
 
-t1 <- tableby(main_IV_type ~ ., data = cri_desc)
+sum1 <- summarise_at(cri, vars(AME, AME_Z, p, Hsup, Hrej, Hno, jobs:wave_2016, num_countries, dichotomize,  iv_stock, iv_flow, iv_change_flow, main_IV_as_control, twowayfe, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, total_score, stat, belief, topic), funs(mean), na.rm = T)
 
-my_labels <- list(
-  AME = "Avg. Marginal Effect",
-  AME_Z = "Avg. Marginal Effect, Standardized",
-  p = "p-value of AME",
-  Hresult = "Subjective Conclusion",
-  inv_weight = "Models per Team",
-  countrynum = "Number of Countries in Model",
-  total_score = "Subjective Vote: Quality of Model",
-  stata = "Software: Stata",
-  r = "Software: R",
-  other = "Sofware: other",
-  ols = "Estimator: OLS",
-  logit = "Estimator: Logit",
-  otherE = "Estimator: Other"
-)
+sum1.1 <- summarise_at(cri, vars(AME, AME_Z, p, Hsup, Hrej, Hno, jobs:wave_2016, num_countries, dichotomize,  iv_stock, iv_flow, iv_change_flow, main_IV_as_control, twowayfe, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, total_score, stat, belief, topic), funs(sd), na.rm = T)
 
-summary(t1, labelTranslations = my_labels)
+# need to fix to get accurate N counts at some point
+sum2 <- summarise_at(cri, vars(AME, AME_Z, p, Hsup, Hrej, Hno, jobs:wave_2016, num_countries, dichotomize,  iv_stock, iv_flow, iv_change_flow, main_IV_as_control, twowayfe, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, total_score, stat, belief, topic), funs(n()))
+
+sum3 <- summarise_at(cri, vars(AME, AME_Z, p, Hsup, Hrej, Hno, jobs:wave_2016, num_countries, dichotomize,  iv_stock, iv_flow, iv_change_flow, main_IV_as_control, twowayfe, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, total_score, stat, belief, topic), funs(min), na.rm = T)
+
+sum4 <- summarise_at(cri, vars(AME, AME_Z, p, Hsup, Hrej, Hno, jobs:wave_2016, num_countries, dichotomize,  iv_stock, iv_flow, iv_change_flow, main_IV_as_control, twowayfe, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, total_score, stat, belief, topic), funs(max), na.rm = T)
+
+sum1[2,] <- c("AME","AME, beta","p-value","Support Hypothesis", "Reject Hypothesis", "Not testable Hypothesis", "DV: Jobs", "DV: Unemp", "DV: Income Diffs","DV: Old Age", "Dv: Housing", "DV: Health care", "DV: Constructed Scale", "ISSP Wave: 1985", "ISSP Wave: 1990", "ISSP Wave: 1996", "ISSP Wave: 2006", "ISSP Wave: 2016", "# of countries used", "Dichotomized DV", "Test IV: Stock of Immigrants", "Test IV: Flow of Immigrants", "Test IV: Change in Flow","Both Test IVs included","Two-Way FEs (year & country dummies","Any form of SE clutering","Number of Models (by team)","Team size","Software: Stata","software: R","Software: SPSS","Software: Mplus","software: MLwin","Subjective model score","Statistics skills (by team)","Belief that Hypothesis is true (by team)","Interst in the research topic (by team)")
+
+cri_sum <- rbind(sum1, sum1.1, sum2, sum3, sum4)
+
+cri_sum <- as.data.frame(t(cri_sum))
+
+colnames(cri_sum) <- c("mean","variable", "sd","N","min","max")
+
+cri_sum <- select(cri_sum, variable, mean, everything())
+
+cri_sum$mean <- round(as.numeric(cri_sum$mean), 4)
+cri_sum$sd <- round(as.numeric(cri_sum$sd), 4)
+cri_sum$min <- round(as.numeric(cri_sum$min), 4)
+cri_sum$max <- round(as.numeric(cri_sum$max), 4)
+
+t1 <- kable(cri_sum, row.names = F)
+
+kable_styling(t1)
+
+```
+
+#### Team Level
+
+```{r desc_team}
+cri_team <- select(cri, u_teamid, AME, AME_Z, p, Hsup, Hrej, Hno, jobs:wave_2016, num_countries, dichotomize,  iv_stock, iv_flow, iv_change_flow, main_IV_as_control, twowayfe, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, total_score, stat, belief, topic)
+
+cri_team <- aggregate(cri_team, FUN = mean, na.rm = T, by = list(cri_team$u_teamid))
+
+sum1 <- summarise_at(cri_team, vars(AME, AME_Z, p, Hsup, Hrej, Hno, jobs:wave_2016, num_countries, dichotomize,  iv_stock, iv_flow, iv_change_flow, main_IV_as_control, twowayfe, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, total_score, stat, belief, topic), funs(mean), na.rm = T)
+
+sum1.1 <- summarise_at(cri_team, vars(AME, AME_Z, p, Hsup, Hrej, Hno, jobs:wave_2016, num_countries, dichotomize,  iv_stock, iv_flow, iv_change_flow, main_IV_as_control, twowayfe, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, total_score, stat, belief, topic), funs(sd), na.rm = T)
+
+# need to fix to get accurate N counts at some point
+sum2 <- summarise_at(cri_team, vars(AME, AME_Z, p, Hsup, Hrej, Hno, jobs:wave_2016, num_countries, dichotomize,  iv_stock, iv_flow, iv_change_flow, main_IV_as_control, twowayfe, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, total_score, stat, belief, topic), funs(n()))
+
+sum3 <- summarise_at(cri_team, vars(AME, AME_Z, p, Hsup, Hrej, Hno, jobs:wave_2016, num_countries, dichotomize,  iv_stock, iv_flow, iv_change_flow, main_IV_as_control, twowayfe, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, total_score, stat, belief, topic), funs(min), na.rm = T)
+
+sum4 <- summarise_at(cri_team, vars(AME, AME_Z, p, Hsup, Hrej, Hno, jobs:wave_2016, num_countries, dichotomize,  iv_stock, iv_flow, iv_change_flow, main_IV_as_control, twowayfe, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, total_score, stat, belief, topic), funs(max), na.rm = T)
+
+sum1[2,] <- c("AME (team average)","AME, beta (team average)","p-value (team average)","Support Hypothesis", "Reject Hypothesis", "Not testable Hypothesis", "DV: Jobs (team average)", "DV: Unemp (team average)", "DV: Income Diffs (team average)","DV: Old Age (team average)", "Dv: Housing (team average)", "DV: Health care (team average)", "DV: Constructed Scale (team average)", "ISSP Wave: 1985 (team average)", "ISSP Wave: 1990 (team average)", "ISSP Wave: 1996 (team average)", "ISSP Wave: 2006 (team average)", "ISSP Wave: 2016 (team average)", "# of countries used (team average)", "Dichotomized DV (team average)", "Test IV: Stock of Immigrants (team average)", "Test IV: Flow of Immigrants (team average)", "Test IV: Change in Flow (team average)","Both Test IVs included (team average)","Two-Way FEs (year & country dummies (team average)","Any form of SE clutering (team average)","Number of Models ","Team size","Software: Stata","software: R","Software: SPSS","Software: Mplus","software: MLwin","Subjective model score","Statistics skills","Belief that Hypothesis is true","Interst in the research topic")
+
+cri_sum <- rbind(sum1, sum1.1, sum2, sum3, sum4)
+
+cri_sum <- as.data.frame(t(cri_sum))
+
+colnames(cri_sum) <- c("mean","variable", "sd","N","min","max")
+
+cri_sum <- select(cri_sum, variable, mean, everything())
+
+cri_sum$mean <- round(as.numeric(cri_sum$mean), 4)
+cri_sum$sd <- round(as.numeric(cri_sum$sd), 4)
+cri_sum$min <- round(as.numeric(cri_sum$min), 4)
+cri_sum$max <- round(as.numeric(cri_sum$max), 4)
+
+rm(sum1,sum1.1,sum2,sum3,sum4)
+
+t2 <- kable(cri_sum, row.names = F)
+
+kable_styling(t2)
 ```
 
 
@@ -206,57 +266,7 @@ knitr::include_graphics(wdir("Fig2_Popular.png"))
 ```
 
 
-### Mesaurement of Participant Team Qualities
 
-#### Correlations of Participant Survey Responses
-
-Aggregated by team
-
-```{r f3}
-# make a dataset for correlation
-
-cor <- select(cri, stat1,stat2,stat3,stat4,stat5,stat6,stat7,topic1,topic2,topic3,topic4,topic5,topic6,topic7,topic8,topic9,belief1,belief2,belief3,belief4,belief5,belief6,belief7,belief_strength,pro_immigrant,total_score,u_teamid)
-
-cor <- aggregate(cor, by=list(cor$u_teamid), FUN=mean, na.rm=T)
-cor <- replace(cor, cor=="-Inf",NA)
-
-# team 27 missing 3 values, fill them in for consistency, fill represents a teaching of 12 stats courses score
-cor <- cor %>%
-  mutate(stat1 = ifelse(u_teamid == 27,3,stat1),
-         stat2 = ifelse(u_teamid == 27,3,stat2),
-         topic4 = ifelse(u_teamid == 27,4,topic4))
-
-# drop Brady and Finnigan's original analysis
-cor <- completeFun(cor, "stat1")
-
-cor1 <- cor(cor, use = "pairwise.complete.obs")
-
-kable_styling(kable(cor1, digits = 2))
-
-
-```
-
-#### Measurement Model
-
-```{r SEM}
-
-pacman::p_load("lavaan")
-
-cfa <- ' stat =~ stat1 + + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
-         topic =~ topic1 + topic2 + topic3 + topic4 + topic5 + topic6 + topic7 + topic8 + topic9
-         belief =~ belief1 + belief2 + belief3 + belief4 + belief5 + belief6 + belief7 '
-fit <- cfa(cfa, data = cor)
-summary(fit, fit.measures=TRUE)
-
-# predicted factor scores
-cor1 <- as.data.frame(lavPredict(fit))
-cor <- cbind(cor,cor1)
-
-# put them back into the main data
-cor1 <- select(cor, u_teamid, stat, topic, belief)
-
-cri <- left_join(cri,cor1,by = "u_teamid")
-```
 
 ### Explaining Results Variance With DV Type
 
