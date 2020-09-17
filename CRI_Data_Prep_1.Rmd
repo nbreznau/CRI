@@ -1,0 +1,615 @@
+---
+title: "Data Prep 1: THE CROWDSOURCED REPLICATION INITIATIVE (CRI)"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+Principal Investigators:
+   Nate Breznau
+   
+   Eike Mark Rinke
+   
+   Alexander Wuttke
+
+Code Compiled by 
+   Nate Breznau, breznau.nate@gmail.com
+   
+   Hung Nguyen, hunghvnguyen@gmail.com
+   
+
+```{r setup, include=FALSE}
+rm(list = ls())
+library(pacman)
+
+# Create a working directory string and a function to call the wd for every code chunk
+wd <- "C:/GitHub/CRI/data" #set your wd here
+wdir <- function(x){
+  paste(wd,x, sep = "/")
+}
+
+pacman::p_load("readstata13","devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","readxl","mlogit","metaviz","jtools","sjPlot","sjmisc","sjlabelled","knitr","boot","ragg")
+
+#Column no missing function
+completeFun <- function(data, desiredCols) {
+  completeVec <- complete.cases(data[, desiredCols])
+  return(data[completeVec, ])
+}
+```
+
+
+## Data Prep
+
+
+### CRI Margins & Model Specs
+
+CRI Model Specifications and Margins in the file "CRI Model Specifications and Margins.xlsx". This model specification file was qualitatively coded by hand from all team's code.
+
+```{r merge}
+# Data generated from qualitative model specification coding
+crispec <- read_excel(wdir("CRI Model Specifications and Margins.xlsx"), sheet = "Data")
+
+crispec <- crispec %>%
+  dplyr::rename(
+    AU = australia  ,
+    AT = austria  ,
+    BE = belgium	 ,
+    BG = bulgaria	 ,
+    CA = canada	 ,
+    CL = chile	 ,
+    HR = croatia	 ,
+    CY = cyprus	 ,
+    CZ = czechia	 ,
+    DK = denmark	 ,
+    FI = finland	 ,
+    FR = france	 ,
+    DE = germany	 ,
+    HU = hungary	 ,
+    IS = iceland	 ,
+    IN = india	 ,
+    IE = ireland	 ,
+    IL = israel	 ,
+    IT = italy	 ,
+    JP = japan	 ,
+    KR = korea	 ,
+    LV = latvia  ,
+    LT = lithuania	 ,
+    NT = netherlands  ,
+    NZ = new_zealand	 ,
+    NO = norway  ,
+    PH = philippines  ,
+    PL = poland	 ,
+    PT = portugal	 ,
+    RU = russia	 ,
+    SK = slovakia	 ,
+    SI = slovenia	 ,
+    ES = spain	 ,
+    SE = sweden  ,
+    CH = switzerland  ,
+    UK = great_britain  ,
+    US = usa	 ,
+    ZA = south_africa  ,
+    TW = taiwan  ,
+    TR = turkey  ,
+    UY = uruguay	 ,
+    VE = venezuela  ,
+    Scale = scale,
+  )
+
+
+
+#replace all 1's with the column name for all countries
+w <- select(crispec, AU:VE, id)
+
+for (i in 1:length(w)) {
+    w[[i]] <- ifelse(w[[i]]=="1", colnames(w)[i], w[[i]])
+}
+
+# country divisions not used
+w <- select(w, -c(germany_west, germany_east, n_ireland))
+
+crispeca <- select(crispec, -c(AU:VE))
+crispec <- merge(crispeca, w , by = "id")
+                     
+crispec$u_teamid <- crispec$team
+crispec <- select(crispec, -team)
+
+#create single categorical variables with string labels in cells
+crispec$software <- names(crispec[which(colnames(crispec)=="stata") :which(colnames(crispec)=="mlwin")])[apply(crispec[which(colnames(crispec)=="stata") :which(colnames(crispec)=="mlwin")], 1, match, x = 1)]
+
+# The main 4 country-level 'control' variables
+crispec$indepv <- names(crispec[which(colnames(crispec)=="emplrate_ivC") :which(colnames(crispec)=="gdp_ivC")])[apply(crispec[which(colnames(crispec)=="emplrate_ivC") :which(colnames(crispec)=="gdp_ivC")], 1, match, x = 1)]
+
+# Estimators
+crispec <- select(crispec, logit, ols, ologit, mlogit, ml_glm, bayes, everything())
+crispec$mator <- names(crispec[1:6])[apply(crispec[1:6], 1, match, x = 1)]
+
+# number of countries
+crispec$countries <- as.character(crispec$num_countries)
+#create variable with string values for all countries that are present in model
+crispec <- crispec %>%
+  unite("incl_countries", AU:VE, sep = " ", remove = F)
+
+#replace 1's with DV name
+z <- select(crispec, Jobs:Scale, id)
+z2 <- which(z=="1",arr.ind=TRUE)
+z[z2] <- names(z)[z2[,"col"]]
+crispecc <- select(crispec, -c(Jobs:Scale))
+crispec <- merge(crispecc, z , by = "id")
+
+crispec <- crispec %>%
+  unite("wave_str", w1985:w2016, sep = " ", remove = F)
+
+crispec <- crispec %>%
+  unite("DV_str", Jobs:Scale, sep = " ", remove = F)
+
+#create output to recombine with master excel sheet
+write.csv(crispec, file = wdir("xout.csv"))
+
+# replace 1's with wave name
+y <- select(crispec, w1985:w2016, id)
+y2 <- which(y=="1",arr.ind=TRUE)
+y[y2] <- names(y)[y2[,"col"]]
+crispecb <- select(crispec, -c(w1985:w2016))
+crispec <- merge(crispecb, y , by = "id")
+
+rm(crispeca,crispecb,crispecc,w,y,y2,z,z2)
+
+
+#replace p values of 0.000000 with 0.00001
+crispec <- crispec %>%
+  mutate(p = ifelse(p==0.00000,0.00001,p))
+
+
+
+# more string variables
+crispec <- crispec %>%
+      mutate(twowayfe_str = ifelse(twowayfe == 1,"Yes","No"),
+      cluster_any_str = ifelse(cluster_any == 1,"Yes","No"),
+      mlm_re_str = ifelse(mlm_re == 1,"Yes","No"),
+      mlm_fe_str = ifelse(mlm_fe == 1,"Yes","No"),
+      hybrid_mlm_str = ifelse(hybrid_mlm==1, "Yes","No"),
+      mlm_str = ifelse(mlm_re == "Yes" | mlm_fe == "Yes" | hybrid_mlm == "Yes", "Yes", "No"),
+      logit_str = ifelse(logit == 1,"Yes","No"),
+      iv_type = main_IV_type,
+      dv_m_str = ifelse(dichotomize == 1,"dichotomous","continuous"),
+      Hresult_str = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse(Hmixed==1 & iv_type == "Stock" & Hnotest_stock==1, "No test", ifelse(Hmixed==1 & iv_type == "Stock" & Hsupport_stock==1, "Support", ifelse(Hmixed==1 & iv_type == "Stock" & Hreject_stock==1, "Reject", ifelse(Hmixed==1 & iv_type == "Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & iv_type == "Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & iv_type == "Flow" & Hreject_net==1, "Reject", ifelse(Hmixed==1 & iv_type == "Change in Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & iv_type == "Change in Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & iv_type == "Change in Flow" & Hreject_net==1, "Reject", NA)))))))))))))
+
+# combine all different scale types, plus rmv extra space in Jobs
+crispec$dv_type <- crispec$DV
+crispec$dv_type <- recode(crispec$dv_type, 
+                              "c('Scale_6', 'Scale_4', 'Scale_5', 'Scale_Desrv', 'Scale_Univ') = 'Scale';
+                              'Jobs ' = 'Jobs'")
+recode
+# Better labelling
+crispec$indepv <- recode(crispec$indepv,
+                             "'socx_ivC' = 'Soc_Spending';
+                             'unemprate_ivC' = 'Unemp_Rate';
+                             'emplrate_ivC' = 'Emp_Rate';
+                             'gdp_ivC' = 'GDP_Per_Capita'")
+
+crispec$indepv[is.na(crispec$indepv)] <- 'None'
+
+crispec$software <- recode(crispec$software,
+                             "'stata' = 'Stata';
+                             'r' = 'R';
+                             'spss' = 'SPSS';
+                             'mplus' = 'Mplus';
+                             'mlwin' = 'MLwiN'")
+
+
+
+```
+
+#### Standardization
+
+We face a problem that a one percent change in net migration (within-country) is huge relative to a 1% difference in percent foreign-born across countries.
+
+```{r standardizeDV}
+# Standardization will produce some extreme outliers, so a 'better' strategy is to adjust the sd of Flow to be equal to that of Stock. However, there are some wide outliers in stock that bunches up the dispersion of flow, therefore we need the sd without these extreme outliers
+
+# Team 104 is massive outlier, we have to rescale the estimates
+crispec <- crispec %>%
+  mutate(AME = ifelse(id == "t104m2" | id == "t104m4", AME/10, AME),
+         lower = ifelse(id == "t104m2" | id == "t104m4", lower/10, lower),
+         upper = ifelse(id == "t104m2" | id == "t104m4", upper/10, upper))
+
+crispec <- crispec %>%
+  mutate(AMEssd = ifelse(main_IV_type == "Stock", AME, NA),
+         AMEfsd = ifelse(main_IV_type == "Flow", AME, NA),
+         AMEssd = sd(AMEssd, na.rm = T),
+         AMEfsd = sd(AMEfsd, na.rm = T),
+         AME_Z = AME*(AMEssd/AMEfsd),
+         lower_Z = lower*(AMEssd/AMEfsd),
+         upper_Z = upper*(AMEssd/AMEfsd),
+         AME_Z = ifelse(main_IV_type == "Flow", AME_Z, AME),
+         lower_Z = ifelse(main_IV_type == "Flow", lower_Z, lower),
+         upper_Z = ifelse(main_IV_type == "Flow", upper_Z, upper))
+
+# preserving the order of teams and models
+crispec <- crispec[order(crispec$count),]
+```
+
+
+### Merge in UniPark Survey
+
+Original work up of individual/team researcher qualities done in Stata
+
+NOTE: These Stata files include identifying information breaking the anonymity of the teams, so we have to clean them before making them public. We may not do this (what do we gain?) so therefore, we have provided a file with the cleaned and merged data "cri_combined_recoded_long_nolab.dta"
+
+Required code files:
+  master.do
+      convert spss.do
+      merge_waves.do
+      recode.do
+  Cri_spec.do
+
+Required data files:
+  W1_export.sps
+  W2_export.sps
+  W3_export.sps
+  W4_export.sps
+  
+Note that teams are now in wide format, so that each variable has up to three values, one for each team member. Also, each result is attached to each team member, thus there are N-results repeated observations of team members.
+
+F
+
+```{r combine }
+cri2 <- readstata13::read.dta13(wdir("cri_combined_recoded_long_nolab.dta"))
+
+cri <- full_join(crispec, cri2, by = "u_teamid")
+
+# remove teams that dropped out
+#Column no missing function
+cri <- completeFun(cri, "id")
+
+cri <- select(cri, u_teamid, id, everything())
+
+
+```
+
+
+```{r codebook, include=F, warning=F, message=F}
+# Note that at the end of each variable we add a 1, 2 and 3 for up to three team member's responses
+
+# These are the labels for the unipark variables
+
+#Statistical knowledge and experience
+
+# v_100 #Not enough methods skills, 1-did not constrain me
+# v_101 #Not enough software programming skills, 1-did not constrain me
+# v_34 #Difficulty of replication, 1-most difficult
+# backgr_exp_teach_stat #"1 How many stats/quant methods courses taught?"
+# backgr_exp_famil_mlm #"1 Familiarity with multilevel modeling (5=very familiar)"
+# v_18 #"1 Published on statistics/methods?"
+# v_21 #"1 Published using multilevel regression?"
+# 
+# #Topical knowledge and experience
+# 
+# v_17 #"1 Published on immigration?"
+# v_19 #"1 Published on public policy/welf state?"
+# v_20 #"1 Published on policy prefs/public opinion?"
+# v_88  #I was very interested in the substantive topic.
+# v_35 #"1 Not at all familiar with the lilterature on immigration/policy"
+# v_36 #"1 Read some of the literature on imm/policy" (vague in-between category, drop)
+# v_37 #"1 Read much of the literature on imm/policy"
+# v_38 #"1 Published articles or books on imm/policy"
+# v_39 #"1 Taught courses on imm/policy"
+# v_40 #"1 Often discuss imm/policy with colleagues"
+# 
+# belief_H1_1 #Belief in hypothesis
+# belief_agecare_1
+# belief_unempl_1
+# belief_income_1
+# belief_housing_1
+# belief_labour_1
+# belief_health_1
+# 
+# 
+# label var v_171 "1 Published on immigration?"
+# label var v_181 "1 Published on statistics/methods?"
+# label var v_191 "1 Published on public policy/welf state?"
+# label var v_201 "1 Published on policy prefs/public opinion?"
+# label var v_211 "1 Published using multilevel regression?"
+# label var v_172 "2 Published on immigration?"
+# label var v_182 "2 Published on statistics/methods?"
+# label var v_192 "2 Published on public policy/welf state?"
+# label var v_202 "2 Published on policy prefs/public opinion?"
+# label var v_212 "2 Published using multilevel regression?"
+# label var v_173 "3 Published on immigration?"
+# label var v_183 "3 Published on statistics/methods?"
+# label var v_193 "3 Published on public policy/welf state?"
+# label var v_203 "3 Published on policy prefs/public opinion?"
+# label var v_213 "3 Published using multilevel regression?"
+# 
+# label var backgr_exp_teach_stat1 "1 How many stats/quant methods courses taught?"
+# label var backgr_exp_famil_mlm1 "1 Familiarity with multilevel modeling (5=very familiar)"
+# label var belief_H1_11 "1 Immigration reduces/increase support for social policy (1=strongly reduces)"
+# label var backgr_exp_teach_stat2 "2 How many stats/quant methods courses taught?"
+# label var backgr_exp_famil_mlm2 "2 Familiarity with multilevel modeling (5=very familiar)"
+# label var belief_H1_12 "2 Immigration reduces/increase support for social policy (1=strongly reduces)"
+# label var backgr_exp_teach_stat3 "3 How many stats/quant methods courses taught?"
+# label var backgr_exp_famil_mlm3 "3 Familiarity with multilevel modeling (5=very familiar)"
+# label var belief_H1_13 "3 Immigration reduces/increase support for social policy (1=strongly reduces)"
+# 
+# label var v_331 "1 Individual time spent on replication"
+# label var v_341 "1 Difficulty of replication (1=most difficult)"
+# label var v_351 "1 Not at all familiar with the lilterature on immigration/policy"
+# label var v_361 "1 Read some of the literature on imm/policy"
+# label var v_371 "1 Read much of the literature on imm/policy"
+# label var v_381 "1 Published articles or books on imm/policy"
+# label var v_391 "1 Taught courses on imm/policy"
+# label var v_401 "1 Often discuss imm/policy with colleagues"
+# label var v_411 "1 Enjoyment of replication (1=extremely fun)"
+# label var v_431 "1 Convincingness of Brady & Finnigan tests(1=most convincing)"
+# label var v_332 "2 Individual time spent on replication"
+# label var v_342 "2 Difficulty of replication (1=most difficult)"
+# label var v_352 "2 Not at all familiar with the lilterature on immigration/policy"
+# label var v_362 "2 Read some of the literature on imm/policy"
+# label var v_372 "2 Read much of the literature on imm/policy"
+# label var v_382 "2 Published articles or books on imm/policy"
+# label var v_392 "2 Taught courses on imm/policy"
+# label var v_402 "2 Often discuss imm/policy with colleagues"
+# label var v_412 "2 Enjoyment of replication (1=extremely fun)"
+# label var v_432 "2 Convincingness of Brady & Finnigan tests(1=most convincing)"
+# label var v_333 "3 Individual time spent on replication"
+# label var v_343 "3 Difficulty of replication (1=most difficult)"
+# label var v_353 "3 Not at all familiar with the lilterature on immigration/policy"
+# label var v_363 "3 Read some of the literature on imm/policy"
+# label var v_373 "3 Read much of the literature on imm/policy"
+# label var v_383 "3 Published articles or books on imm/policy"
+# label var v_393 "3 Taught courses on imm/policy"
+# label var v_403 "3 Often discuss imm/policy with colleagues"
+# label var v_413 "3 Enjoyment of replication (1=extremely fun)"
+# label var v_433 "3 Convincingness of Brady & Finnigan tests(1=most convincing)"
+# 
+# -> tabulation of v_88  
+# 
+#            I was very interested in the |
+#                      substantive topic. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+# Reason does not apply to me apply at al |         10        6.33        6.33
+#           Reason applies to me a little |         30       18.99       25.32
+#                             Neither nor |         22       13.92       39.24
+#           Reason somewhat applies to me |         51       32.28       71.52
+#              Reason applies to me a lot |         45       28.48      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        158      100.00
+# 
+# -> tabulation of v_89  
+# 
+# Colleagues asked me to join their team. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+#                                       0 |          2        1.27        1.27
+# Reason does not apply to me apply at al |         63       39.87       41.14
+#           Reason applies to me a little |         15        9.49       50.63
+#                             Neither nor |          4        2.53       53.16
+#           Reason somewhat applies to me |         33       20.89       74.05
+#              Reason applies to me a lot |         41       25.95      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        158      100.00
+# 
+# -> tabulation of v_90  
+# 
+#            The prospect of a scientific |
+#              publication was appealing. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+#                                       0 |          1        0.63        0.63
+# Reason does not apply to me apply at al |         10        6.33        6.96
+#           Reason applies to me a little |         19       12.03       18.99
+#                             Neither nor |         24       15.19       34.18
+#           Reason somewhat applies to me |         66       41.77       75.95
+#              Reason applies to me a lot |         38       24.05      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        158      100.00
+# 
+# -> tabulation of v_91  
+# 
+#         I expected the project to be an |
+#                   enjoyable experience. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+#                                       0 |          1        0.63        0.63
+# Reason does not apply to me apply at al |          2        1.27        1.90
+#           Reason applies to me a little |          4        2.53        4.43
+#                             Neither nor |         15        9.49       13.92
+#           Reason somewhat applies to me |         76       48.10       62.03
+#              Reason applies to me a lot |         60       37.97      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        158      100.00
+# 
+# -> tabulation of v_93  
+# 
+#            I was very interested in the |
+#      replication aspect of the project. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+#                                       0 |          1        0.64        0.64
+# Reason does not apply to me apply at al |          2        1.27        1.91
+#           Reason applies to me a little |          3        1.91        3.82
+#                             Neither nor |          4        2.55        6.37
+#           Reason somewhat applies to me |         61       38.85       45.22
+#              Reason applies to me a lot |         86       54.78      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        157      100.00
+# 
+# -> tabulation of v_94  
+# 
+# I expected to learn and to develop as a |
+#                             researcher. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+#                                       0 |          2        1.27        1.27
+# Reason does not apply to me apply at al |          2        1.27        2.55
+#           Reason applies to me a little |         14        8.92       11.46
+#                             Neither nor |         19       12.10       23.57
+#           Reason somewhat applies to me |         74       47.13       70.70
+#              Reason applies to me a lot |         46       29.30      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        157      100.00
+# 
+# -> tabulation of v_95  
+# 
+# The CRI seemed like a valuable addition |
+#                               to my CV. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+# Reason does not apply to me apply at al |         31       19.75       19.75
+#           Reason applies to me a little |         43       27.39       47.13
+#                             Neither nor |         43       27.39       74.52
+#           Reason somewhat applies to me |         32       20.38       94.90
+#              Reason applies to me a lot |          8        5.10      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        157      100.00
+# 
+# -> tabulation of v_96  
+# 
+#  I joined because I know one or more of |
+#                         the organizers. |      Freq.     Percent        Cum.
+# ----------------------------------------+-----------------------------------
+# Reason does not apply to me apply at al |        108       68.79       68.79
+#           Reason applies to me a little |          9        5.73       74.52
+#                             Neither nor |         13        8.28       82.80
+#           Reason somewhat applies to me |         19       12.10       94.90
+#              Reason applies to me a lot |          8        5.10      100.00
+# ----------------------------------------+-----------------------------------
+#                                   Total |        157      100.00
+# 
+# -> tabulation of v_98  
+# 
+#              Not enough time |      Freq.     Percent        Cum.
+# -----------------------------+-----------------------------------
+#                            0 |          1        0.64        0.64
+#         Did not constrain me |          8        5.10        5.73
+# Constrained me only a little |         26       16.56       22.29
+#      Constrained me somewhat |         51       32.48       54.78
+#  Constrained me considerably |         71       45.22      100.00
+# -----------------------------+-----------------------------------
+#                        Total |        157      100.00
+# 
+# -> tabulation of v_99  
+# 
+#  Inadequate materials (e.g., |
+# software or computing power) |      Freq.     Percent        Cum.
+# -----------------------------+-----------------------------------
+#         Did not constrain me |        110       70.06       70.06
+# Constrained me only a little |         27       17.20       87.26
+#      Constrained me somewhat |         13        8.28       95.54
+#  Constrained me considerably |          7        4.46      100.00
+# -----------------------------+-----------------------------------
+#                        Total |        157      100.00
+# 
+# -> tabulation of v_100  
+# 
+#    Not enough methods skills |      Freq.     Percent        Cum.
+# -----------------------------+-----------------------------------
+#         Did not constrain me |         65       41.40       41.40
+# Constrained me only a little |         53       33.76       75.16
+#      Constrained me somewhat |         30       19.11       94.27
+#  Constrained me considerably |          9        5.73      100.00
+# -----------------------------+-----------------------------------
+#                        Total |        157      100.00
+# 
+# -> tabulation of v_101  
+# 
+#          Not enough software |
+#           programming skills |      Freq.     Percent        Cum.
+# -----------------------------+-----------------------------------
+#         Did not constrain me |        110       70.06       70.06
+# Constrained me only a little |         35       22.29       92.36
+#      Constrained me somewhat |         12        7.64      100.00
+# -----------------------------+-----------------------------------
+#                        Total |        157      100.00
+# 
+# -> tabulation of v_102  
+# 
+#  Having strict deadlines was |
+#             a problem for me |      Freq.     Percent        Cum.
+# -----------------------------+-----------------------------------
+#         Did not constrain me |         40       25.48       25.48
+# Constrained me only a little |         49       31.21       56.69
+#      Constrained me somewhat |         48       30.57       87.26
+#  Constrained me considerably |         20       12.74      100.00
+# -----------------------------+-----------------------------------
+#                        Total |        157      100.00
+```
+
+
+
+```{r recodes, warning=F, message=F}
+
+#Generate team-specific qualities
+
+# Because the CRI required teams to define the data-generating model (or at least a test of it) and use statistical competencies to carry it out, we suspect that the highest statistical and topical knowledge and experience per team will have the greatest influence on the results. Therefore, for the concepts 'Stats Level' and 'Topic Level' we take the row min or max for each team (depending on coding. 
+
+cri <- cri %>%
+  rowwise() %>%
+      mutate(stat1 = 4+(-1*min(v_1001, v_1002, v_1003, na.rm = T)), #lower is less constrained
+             stat2 = 4+(-1*min(v_1011, v_1012, v_1013, na.rm = T)), #lower is less constrained
+             stat3 = max(v_341, v_342, v_343, na.rm = T), #higher is less dificult
+             stat4 = max(backgr_exp_teach_stat1, backgr_exp_teach_stat2, backgr_exp_teach_stat3, na.rm = T), #higher more courses taught
+             stat5 = max(backgr_exp_famil_mlm1, backgr_exp_famil_mlm2, backgr_exp_famil_mlm3, na.rm = T), #higher more MLM familiarity
+             stat6 = max(v_181, v_182, v_183, na.rm = T), #higher is more stat publications
+             stat7 = max(v_211, v_212, v_213, na.rm = T), #higher is more MLM publications
+             topic1 = max(v_171, v_172, v_173, na.rm = T), #higher is more Imm pubs
+             topic2 = max(v_191, v_192, v_193, na.rm = T), #higher is more Policy pubs
+             topic3 = max(v_201, v_202, v_203, na.rm = T), #higher is more Policy/Opinion pubs
+             topic4 = max(v_881, v_882, v_883, na.rm = T), #higher is more interest in topic
+             topic5 = 1+(-1*min(v_351, v_352, v_353, na.rm = T)), #lower not relevant
+             topic6 = max(v_371, v_372, v_373, na.rm = T), #Higher relevant
+             topic7 = max(v_381, v_382, v_383, na.rm = T), #Higher relevant
+             topic8 = max(v_391, v_392, v_393, na.rm = T), #Higher relevant
+             topic9 = max(v_401, v_402, v_403, na.rm = T), #Higher relevant
+             belief1 = max(belief_H1_11,belief_H1_12,belief_H1_13, na.rm = T), # higher more belief
+             belief2 = max(belief_agecare_11,belief_agecare_12,belief_agecare_13, na.rm = T), # higher more belief
+             belief3 = max(belief_unempl_11,belief_unempl_12,belief_unempl_13, na.rm = T), # higher more belief
+             belief4 = max(belief_income_11,belief_income_12,belief_income_13, na.rm = T), # higher more belief
+             belief5 = max(belief_housing_11,belief_housing_12,belief_housing_13, na.rm = T), # higher more belief
+             belief6 = max(belief_labour_11,belief_labour_12,belief_labour_13, na.rm = T), # higher more belief
+             belief7 = max(belief_health_11,belief_health_12,belief_health_13, na.rm = T), # higher more belief
+             belief_strength = max(belief_certainty_11,belief_certainty_12,belief_certainty_13, na.rm = T),
+             pro_immigrant = min(attitude_immigration_11,attitude_immigration_12,attitude_immigration_13, na.rm = T),
+             changemind_delib = max(delib_changemind1,delib_changemind2,delib_changemind3, na.rm = T),
+             topic_interest = max(v_881,v_882,v_883, na.rm=T),
+             pub_interest = max(v_901,v_902,v_903, na.rm=T))
+
+
+cri <- cri %>%
+         mutate(belief_strength = ifelse(belief_strength == "Inf", NA, belief_strength),
+                belief_strength = ifelse(belief_strength == "-Inf", NA, belief_strength),
+                pro_immigrant = ifelse(pro_immigrant == "-Inf", NA, pro_immigrant),
+                pro_immigrant = ifelse(pro_immigrant == "-Inf", NA, pro_immigrant),
+                topic_interest = ifelse(topic_interest == "-Inf", NA, topic_interest),
+                topic_interest = ifelse(topic_interest == "-Inf", NA, topic_interest),
+                pub_interest = ifelse(pub_interest == "-Inf", NA, pub_interest),
+                pub_interest = ifelse(pub_interest == "-Inf", NA, pub_interest),
+                changemind_delib = ifelse(changemind_delib == "-Inf", NA, changemind_delib),
+                changemind_delib = ifelse(changemind_delib == "-Inf", NA, changemind_delib))
+
+```
+
+### Merge in Subjective Voting
+
+The file popdf_out.Rdata is needed for this, see CRI_Subj_Votes.R add link
+
+```{r votes, message = F, warning=F}
+
+load(file = wdir("popdf_out.Rdata"))
+
+cri <- left_join(cri, popdf_out, by = "id")
+
+```
+
+
+
+
+######################################################################################
+
+Save Point
+
+
+
+```{r concreg, warning=F,message=F}
+rm(df1,df2)
+
+save.image(file = wdir("Env1.Rdata"))
+```
+
+

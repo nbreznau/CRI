@@ -9192,7 +9192,6 @@ if(file.exists(pfunc("team106.RData"))){
 pacman::p_load(tidyverse, plyr, haven, ordinal, miceadds, car, ggeffects,rms, oglmx)
 
 
-
 ############################################################## #
 ## IMPORT DATA #################################################
 ############################################################## #
@@ -9280,8 +9279,8 @@ datal2 <- datal2 %>%
          immgrStockCh = mignet_un,                                   #just renaming for more intuitive data handling
          pop_tot = pop_wb,
          immgrStock_abs = migstock_un/100*pop_tot,
-         # immgrStock_abs_m = migstock_un/100*pop_tot/1000000, 
-         ### PI Note, this value is the ratio of immigrants to natives multiplied by the popoulation divided by 1 million. This number results in very strange values that as far as we can tell have no logical interpretation. So we changed it to the actual stock measure that we think they intended to use
+         immgrStock_abs_m = migstock_un/100*pop_tot/1000000, 
+         ### PI Note, this value is the ratio of immigrants to natives multiplied by the population divided by 1 million. This is the stock in raw numbers, not as a percentage of the population
          immgrStock_abs_m = migstock_un,
          gini_wb = gini_wb/100,                                      # gini_wb is scaled differently than the other ginis
          gdp = apply(data.frame(gdp_oecd, gdp_wb, gdp_twn), 1, median, na.rm = T),                  #as there are multiple GDP scores that are partially missing: median
@@ -9425,26 +9424,30 @@ unemployed_o_abs_mod_ME
 data_ols <- data %>%
   mutate(year = as.factor(year))
 
+# PIs could not make this code run, had to recode year into a dummy
+data_ols$y1996 <- ifelse(data_ols$year == 1996, 1, 0)
+
+
 # the regression with immgrStock
 
-incomeDiff_mod <- ols(scale(incomeDiff) ~ immgrStock + scale(immgrStockCh) + immgrStock*scale(immgrStockCh) + year + scale(gdp) + scale(gini),
-                    x=T,
-                    y=T,
-                    data = data,
-                    na.action = "na.delete")
-
-### Predictor immgrStock_abs_m
-# the regression with immgrStock_abs_m
-incomeDiff_mod_abs <- ols(scale(incomeDiff) ~ immgrStock_abs_m + scale(immgrStockCh) + immgrStock_abs_m*scale(immgrStockCh) + year + scale(gdp) + scale(gini),
-                  x=T,
-                  y=T,
-                  data = data_ols,
-                  na.action = "na.delete")
-
+incomeDiff_mod <- ols(scale(incomeDiff) ~ immgrStock + scale(immgrStockCh) + immgrStock*scale(immgrStockCh) + y1996 + scale(gdp) + scale(gini), x=T, y=T, data = data_ols, na.action = na.delete)
 
 # Adjusting SEs with Huber-White correction
 incomeDiff_mod_hw <- robcov(incomeDiff_mod, cluster = data$cntry)
 incomeDiff_mod_hw
+
+### Predictor immgrStock_abs_m
+# the regression with immgrStock_abs_m
+incomeDiff_mod_abs <- ols(scale(incomeDiff) ~ immgrStock_abs_m + scale(immgrStockCh) + immgrStock_abs_m*scale(immgrStockCh) + y1996 + scale(gdp) + scale(gini),
+                  x=T,
+                  y=T,
+                  data = data_ols,
+                  na.action = na.delete)
+
+
+# Adjusting SEs with Huber-White correction
+  incomeDiff_mod_abs_hw <- robcov(incomeDiff_mod_abs, cluster = data$cntry)
+  incomeDiff_mod_abs_hw
 
 
 
@@ -9452,22 +9455,22 @@ incomeDiff_mod_hw
 ### DV:`jobs`###
 ### Predictor immgrStock
 # the regression with immgrStock
-jobs_mod <- ols(scale(jobs) ~ immgrStock + scale(immgrStockCh) + immgrStock*scale(immgrStockCh) + year + scale(gdp) + scale(gini),
+jobs_mod <- ols(scale(jobs) ~ immgrStock + scale(immgrStockCh) + immgrStock*scale(immgrStockCh) + y1996 + scale(gdp) + scale(gini),
                 x=T,
                 y=T,
                 data = data_ols,
-                na.action = "na.delete")
+                na.action = na.delete)
 # Adjusting SEs with Huber-White correction
 jobs_mod_hw <- robcov(jobs_mod, cluster = data$cntry)
 jobs_mod_hw
 
 ### Predictor immgrStock_abs_m
 # the regression with immgrStock_abs_m
-jobs_mod_abs <- ols(scale(jobs) ~ immgrStock_abs_m + scale(immgrStockCh) + immgrStock_abs_m*scale(immgrStockCh) + year + scale(gdp) + scale(gini),
+jobs_mod_abs <- ols(scale(jobs) ~ immgrStock_abs_m + scale(immgrStockCh) + immgrStock_abs_m*scale(immgrStockCh) + y1996 + scale(gdp) + scale(gini),
                   x=T,
                   y=T,
                   data = data_ols,
-                  na.action = "na.delete")
+                  na.action = na.delete)
 
 # Adjusting SEs with Huber-White correction
 jobs_mod_abs_hw <- robcov(jobs_mod_abs, cluster = data$cntry)
@@ -9550,19 +9553,18 @@ results <- data.frame("Coefficients" = c("ME: +1%immgr", "CI_lower", "CI_upper",
                                  (coefficients(jobs_mod_abs_hw)[2]+(1.96*jobs_mod_abs_hw_se))/1000000)
                       )
 
-# library(readxl)
-# read_xlsx("results.xlsx")%>%knitr::kable(., digits = 4)
-# results <- lapply(results, format, digits=4)
 
-results[2:11] <- format(results[2:11], digits = 4)
-results %>%
+results[,2:11] <- round(results[,2:11], 4)
+results_tab <- results %>%
   knitr::kable(., digits = 4)
-}
+
 
 
 # Note: For oldAge and unemployed cumulative link models, for inceomeDiff and jobs ordinary least squares regressions are computed.
 # Note: oldAge_rl1 means ‘response level 1’ for variable oldAge and so forth.
 # Note: Marginal effects within the cumulative link models should be interpreted as shifts of the latent variable in terms of scale units.
+
+
 
 #### Conclusion 
 
@@ -9570,6 +9572,71 @@ results %>%
 # On the hypothesis “that a greater stock or a greater increase in the stock of foreign persons in a given society leads the general public to become less supportive of social policy”:
 # This hypothesis would assume a positive association between the variable immgrStock and social policy variables oldAge, unemployed, incomeDiff and jobs (as higher values in the latter variables indicate less support). We only found these expected effects in the marginal effects for % Immigrant Stock on the two variables incomeDiff and jobs. All other predictors we found either negative effects (= higher immigrant stock related to more support for social policy) or absence of evidence. If we would have to decide between (a) support, (b) lack of support, or (c) not testable over all DVs, we would argue that the effects are too heterogeneous to state that there is support and thus go for (b) lack of support.
 
+data <- subset(data, data$year != 2016)
+
+# PI NOTE Treat four ordered logits as 1, 2, 3 and 4 and then estimate the 
+# difference between the population mean with this coding scheme and 
+# the predicted population mean based on the likelihood of being in each
+# category given a 1 point higher value of the indep. variable. This gives 
+# an approximation of what the overall population mean would be given 
+# unequal effect intervals.
+
+
+oldAge_mean <- mean(data$oldAge, na.rm = T)
+unemp_mean <- mean(data$unemployed, na.rm = T)
+oldAge_1n <- sum(data$oldAge[data$oldAge == 1], na.rm = T)
+oldAge_2n <- (sum(data$oldAge[data$oldAge == 2], na.rm = T))/2
+oldAge_3n <- (sum(data$oldAge[data$oldAge == 3], na.rm = T))/3
+oldAge_4n <- (sum(data$oldAge[data$oldAge == 4], na.rm = T))/4
+unemp_1n <- sum(data$unemployed[data$unemployed == 1], na.rm = T)
+unemp_2n <- (sum(data$unemployed[data$unemployed == 2], na.rm = T))/2
+unemp_3n <- (sum(data$unemployed[data$unemployed == 3], na.rm = T))/3
+unemp_4n <- (sum(data$unemployed[data$unemployed == 4], na.rm = T))/4
+
+oldAge_1n_p <- oldAge_1n*(1+results[1,2])
+oldAge_2n_p <- oldAge_2n*(1+results[1,3])
+oldAge_3n_p <- oldAge_3n*(1+results[1,4])
+oldAge_4n_p <- oldAge_4n*(1+results[1,5])
+unemp_1n_p <- unemp_1n*(1+results[1,6])
+unemp_2n_p <- unemp_2n*(1+results[1,7])
+unemp_3n_p <- unemp_3n*(1+results[1,8])
+unemp_4n_p <- unemp_4n*(1+results[1,9])
+
+oldAge_AME <- round(((oldAge_1n_p + oldAge_2n_p*2 + oldAge_3n_p*3 + oldAge_4n_p*4)/(oldAge_1n_p + oldAge_2n_p + oldAge_3n_p + oldAge_4n_p)) - oldAge_mean, 5)
+oldAge_CIlo <- round(((results[2,2])*oldAge_1n + (results[2,3])*oldAge_2n + (results[2,4])*oldAge_3n + (results[2,4])*oldAge_4n)/(oldAge_1n + oldAge_2n + oldAge_3n + oldAge_4n), 5)
+oldAge_CIhi <- round(((results[3,2])*oldAge_1n + (results[3,3])*oldAge_2n + (results[3,4])*oldAge_3n + (results[3,4])*oldAge_4n)/(oldAge_1n + oldAge_2n + oldAge_3n + oldAge_4n), 5)
+
+unemp_AME <- round(((unemp_1n_p + unemp_2n_p*2 + unemp_3n_p*3 + unemp_4n_p*4)/(unemp_1n_p + unemp_2n_p + unemp_3n_p + unemp_4n_p)) - unemp_mean, 5)
+unemp_CIlo <- round(((results[2,6])*unemp_1n + (results[2,7])*unemp_2n + (results[2,8])*unemp_3n + (results[2,9])*unemp_4n)/(unemp_1n + unemp_2n + unemp_3n + unemp_4n), 5)
+unemp_CIhi <- round(((results[3,6])*unemp_1n + (results[3,7])*unemp_2n + (results[3,8])*unemp_3n + (results[3,9])*unemp_4n)/(unemp_1n + unemp_2n + unemp_3n + unemp_4n), 5)
+
+team106 <- as.data.frame(matrix(nrow = 4, ncol = 4))
+colnames(team106) <- c("AME", "lower", "upper", "id")
+team106[1,1] <- results[1,11]
+team106[1,2] <- results[2,11]
+team106[1,3] <- results[3,11]
+team106[1,4] <- "t106m1"
+
+team106[2,1] <- unemp_AME
+team106[2,2] <- unemp_CIlo
+team106[2,3] <- unemp_CIhi
+team106[2,4] <- "t106m2"
+
+team106[3,1] <- results[1,10]
+team106[3,2] <- results[2,10]
+team106[3,3] <- results[3,10]
+team106[3,4] <- "t106m3"
+
+team106[4,1] <- oldAge_AME
+team106[4,2] <- oldAge_CIlo
+team106[4,3] <- oldAge_CIhi
+team106[4,4] <- "t106m4"
+
+save(team106, file = pfunc("team106.Rdata"))
+
+rm(list = ls()[!ls() %in% keep])
+detachAllPackages()
+}
 ```
 
 
@@ -9592,7 +9659,7 @@ for (i in teamrs){
 }
 
 
-rout <- dplyr::bind_rows(team3,team12,team16,team18,team20,team28,team33,team35,team40,team41,team48,team56,team59,team61,team62,team69,team70,team77,team82,team84,team87,team93,team94,team98,team104)
+rout <- dplyr::bind_rows(team3,team12,team16,team18,team20,team28,team33,team35,team40,team41,team48,team56,team59,team61,team62,team69,team70,team77,team82,team84,team87,team93,team94,team98,team104,team106)
 rout <- dplyr::select(rout, id, AME, lower, upper)
 
 
