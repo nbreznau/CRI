@@ -29,7 +29,7 @@ wdir <- function(x){
   paste(wd,x, sep = "/")
 }
 
-pacman::p_load("readstata13","dplyr","readr","ExPanDaR","lattice","tidyr","readxl","knitr","boot","ragg","kableExtra")
+pacman::p_load("readstata13","dplyr","readr","lattice","tidyr","readxl","knitr","boot","ragg","kableExtra")
 
 #Column no missing function
 completeFun <- function(data, desiredCols) {
@@ -44,13 +44,70 @@ completeFun <- function(data, desiredCols) {
 
 ### CRI Margins & Model Specs
 
-CRI Model Specifications and Margins in the file "CRI Model Specifications and Margins.xlsx". This model specification file was qualitatively coded by hand from all team's code.
+CRI Model Specifications and Margins in the file "CRI Model Specifications and Margins.xlsx". This model specification file was qualitatively coded by hand from each team's code and the margins came from CRI_Expansion_All.Rmd.
 
-```{r merge}
+We set up two versions here: *cri* and *cri_str*. One is for dichotomous numerical values and the other is for string names of each variable (good for spec curve plotting).
+
+
+
+```{r load}
 # Data generated from qualitative model specification coding
-crispec <- read_excel(wdir("CRI Model Specifications and Margins.xlsx"), sheet = "Data")
+cri_str <- read_excel(wdir("CRI Model Specifications and Margins.xlsx"), sheet = "Data")
 
-crispec <- crispec %>%
+# replace p values of 0.000000 with 0.00001
+cri_str <- cri_str %>%
+  mutate(p = ifelse(p < 0.00001, 0.00001,p))
+```
+
+### Standardization
+
+We face a problem that a one percent change in net migration (within-country) is huge relative to a 1% difference in percent foreign-born across countries.
+
+Standardization will produce some extreme outliers, so a 'better' strategy is to adjust the sd of Flow to be equal to that of Stock. However, there are some wide outliers in stock that bunches up the dispersion of flow, therefore we need the sd without these extreme outliers
+
+```{r standardizeDV}
+# Team 104 is massive outlier, we have to rescale the estimates
+cri_str <- cri_str %>%
+  mutate(AME = ifelse(id == "t104m2" | id == "t104m4", AME/10, AME),
+         lower = ifelse(id == "t104m2" | id == "t104m4", lower/10, lower),
+         upper = ifelse(id == "t104m2" | id == "t104m4", upper/10, upper))
+
+cri_str <- cri_str %>%
+  mutate(AMEssd = ifelse(main_IV_type == "Stock", AME, NA),
+         AMEfsd = ifelse(main_IV_type == "Flow", AME, NA),
+         AMEssd = sd(AMEssd, na.rm = T),
+         AMEfsd = sd(AMEfsd, na.rm = T),
+         AME_Z = AME*(AMEssd/AMEfsd),
+         lower_Z = lower*(AMEssd/AMEfsd),
+         upper_Z = upper*(AMEssd/AMEfsd),
+         AME_Z = ifelse(main_IV_type == "Flow", AME_Z, AME),
+         lower_Z = ifelse(main_IV_type == "Flow", lower_Z, lower),
+         upper_Z = ifelse(main_IV_type == "Flow", upper_Z, upper))
+
+cri_str <- select(cri_str, -c(AMEssd,AMEfsd))
+
+```
+
+
+```{r recodes}
+cri_str <- cri_str %>%
+  mutate(Hresult = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hnotest_stock==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hsupport_stock==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hreject_stock==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hreject_net==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hreject_net==1, "Reject", NA)))))))))))),
+         Hsup = ifelse(Hresult=="Support",1,0),
+         Hrej = ifelse(Hresult=="Reject",1,0),
+         Hno = ifelse((Hresult == "Support" | Hresult == "Reject"), 0, 1),
+         HresultF = as.factor(Hresult),
+         AME_sup_p05 = ifelse(AME < 0 & p < 0.05, 1, 0),
+         AME_sup_p10 = ifelse(AME < 0 & p < 0.1, 1, 0),
+         countries = as.numeric(num_countries)
+         )
+
+cri_str <- select(cri_str, -c(num_countries))
+
+
+
+
+# easier country names (for string version)
+cri_str <- cri_str %>%
   dplyr::rename(
     AU = australia  ,
     AT = austria  ,
@@ -93,14 +150,19 @@ crispec <- crispec %>%
     TW = taiwan  ,
     TR = turkey  ,
     UY = uruguay	 ,
-    VE = venezuela  ,
-    Scale = scale,
+    VE = venezuela  
   )
 
+# preserving the order of teams and models
+cri_str <- cri_str[order(cri_str$count),]
 
+# make two datasets, one numeric, one string
+cri <- cri_str
+```
 
-#replace all 1's with the column name for all countries
-w <- select(crispec, AU:VE, id)
+```{r string_encode}
+#replace all 1's with the column name for all variable
+w <- select(cri_str, Jobs:anynonlin, id)
 
 for (i in 1:length(w)) {
     w[[i]] <- ifelse(w[[i]]=="1", colnames(w)[i], w[[i]])
@@ -108,130 +170,77 @@ for (i in 1:length(w)) {
 
 # country divisions not used
 w <- select(w, -c(germany_west, germany_east, n_ireland))
+cri <- select(cri, -c(germany_west, germany_east, n_ireland))
 
-crispeca <- select(crispec, -c(AU:VE))
-crispec <- merge(crispeca, w , by = "id")
-                     
-crispec$u_teamid <- crispec$team
-crispec <- select(crispec, -team)
+crispeca <- select(cri_str, -c(Jobs:anynonlin))
+cri_str <- merge(crispeca, w , by = "id")
 
-#create single categorical variables with string labels in cells
-crispec$software <- names(crispec[which(colnames(crispec)=="stata") :which(colnames(crispec)=="mlwin")])[apply(crispec[which(colnames(crispec)=="stata") :which(colnames(crispec)=="mlwin")], 1, match, x = 1)]
+cri_str <- select(cri_str, Jobs:anynonlin, everything())
 
-# The main 4 country-level 'control' variables
-crispec$indepv <- names(crispec[which(colnames(crispec)=="emplrate_ivC") :which(colnames(crispec)=="gdp_ivC")])[apply(crispec[which(colnames(crispec)=="emplrate_ivC") :which(colnames(crispec)=="gdp_ivC")], 1, match, x = 1)]
+# replace 0's with NA
+cri_str[c(1:161)][cri_str[c(1:161)] == 0] <- NA
+```
 
-# Estimators
-crispec <- select(crispec, logit, ols, ologit, mlogit, ml_glm, bayes, everything())
-crispec$mator <- names(crispec[1:6])[apply(crispec[1:6], 1, match, x = 1)]
+### Categorical Variables
 
-# number of countries
-crispec$countries <- as.character(crispec$num_countries)
-#create variable with string values for all countries that are present in model
-crispec <- crispec %>%
-  unite("incl_countries", AU:VE, sep = " ", remove = F)
+We take the dichotomous variables and merge them into categorical variables for each type of model component.
 
-#replace 1's with DV name
-z <- select(crispec, Jobs:Scale, id)
-z2 <- which(z=="1",arr.ind=TRUE)
-z[z2] <- names(z)[z2[,"col"]]
-crispecc <- select(crispec, -c(Jobs:Scale))
-crispec <- merge(crispecc, z , by = "id")
+```{r cat_vars}
 
-crispec <- crispec %>%
-  unite("wave_str", w1985:w2016, sep = " ", remove = F)
+cri_str <- cri_str %>%
+  mutate(iv_type = coalesce(Stock,Flow,ChangeFlow), # main test var
+         mator = coalesce(ols,logit,bayes,ologit,mlogit,ml_glm), # Estimator
+         software = coalesce(stata,r,mplus,mlwin,spss), # Software
+         indepv = coalesce(socx_ivC, unemprate_ivC, emplrate_ivC, gdp_ivC) # main country-level IVs
+         )
 
-crispec <- crispec %>%
-  unite("DV_str", Jobs:Scale, sep = " ", remove = F)
+# send to numerical data for use as factor variables
 
-#create output to recombine with master excel sheet
-write.csv(crispec, file = wdir("xout.csv"))
+cri_strT <- select(cri_str, id, iv_type, mator, software, indepv)
 
-# replace 1's with wave name
-y <- select(crispec, w1985:w2016, id)
-y2 <- which(y=="1",arr.ind=TRUE)
-y[y2] <- names(y)[y2[,"col"]]
-crispecb <- select(crispec, -c(w1985:w2016))
-crispec <- merge(crispecb, y , by = "id")
+cri <- left_join(cri, cri_strT, by = "id")
 
-rm(crispeca,crispecb,crispecc,w,y,y2,z,z2)
+rm(crispeca,w)
 
+# use numerical data to generate unidimensional strings
+criT <- cri %>%
+      mutate(twowayfe = ifelse(twowayfe == 1,"Yes","No"),
+      cluster_any = ifelse(cluster_any == 1,"Yes","No"),
+      mlm_re = ifelse(mlm_re == 1,"Yes","No"),
+      mlm_fe = ifelse(mlm_fe == 1,"Yes","No"),
+      logit = ifelse(logit == 1,"Yes","No"),
+      dichotomize = ifelse(dichotomize == 1,"dichotomous","continuous")
+      )
 
-#replace p values of 0.000000 with 0.00001
-crispec <- crispec %>%
-  mutate(p = ifelse(p==0.00000,0.00001,p))
+criT <- select(criT, id, twowayfe, cluster_any, mlm_re, mlm_fe, logit, dichotomize)
+cri_str <- select(cri_str, -c(twowayfe, cluster_any, mlm_re, mlm_fe, logit, dichotomize))
+cri_str <- left_join(cri_str, criT, by = "id")
 
-
-
-# more string variables
-crispec <- crispec %>%
-      mutate(twowayfe_str = ifelse(twowayfe == 1,"Yes","No"),
-      cluster_any_str = ifelse(cluster_any == 1,"Yes","No"),
-      mlm_re_str = ifelse(mlm_re == 1,"Yes","No"),
-      mlm_fe_str = ifelse(mlm_fe == 1,"Yes","No"),
-      hybrid_mlm_str = ifelse(hybrid_mlm==1, "Yes","No"),
-      mlm_str = ifelse(mlm_re_str == "Yes" | mlm_fe_str == "Yes" | hybrid_mlm_str == "Yes", "Yes", "No"),
-      logit_str = ifelse(logit == 1,"Yes","No"),
-      iv_type = main_IV_type,
-      dv_m_str = ifelse(dichotomize == 1,"dichotomous","continuous"),
-      Hresult_str = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse(Hmixed==1 & iv_type == "Stock" & Hnotest_stock==1, "No test", ifelse(Hmixed==1 & iv_type == "Stock" & Hsupport_stock==1, "Support", ifelse(Hmixed==1 & iv_type == "Stock" & Hreject_stock==1, "Reject", ifelse(Hmixed==1 & iv_type == "Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & iv_type == "Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & iv_type == "Flow" & Hreject_net==1, "Reject", ifelse(Hmixed==1 & iv_type == "Change in Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & iv_type == "Change in Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & iv_type == "Change in Flow" & Hreject_net==1, "Reject", NA)))))))))))))
+rm(criT, cri_strT)
 
 # combine all different scale types, plus rmv extra space in Jobs
-crispec$dv_type <- crispec$DV
-crispec$dv_type <- car::recode(crispec$dv_type, 
+cri_str$dv_type <- cri_str$DV
+cri_str$dv_type <- car::recode(cri_str$dv_type, 
                               "c('Scale_6', 'Scale_4', 'Scale_5', 'Scale_Desrv', 'Scale_Univ') = 'Scale';
                               'Jobs ' = 'Jobs'")
 
-# Better labelling
-crispec$indepv <- car::recode(crispec$indepv,
-                             "'socx_ivC' = 'Soc_Spending';
+# Better labeling
+cri_str$indepv <- car::recode(cri_str$indepv,
+                             "'socx_ivC' = 'Soc_Spending'; 
                              'unemprate_ivC' = 'Unemp_Rate';
                              'emplrate_ivC' = 'Emp_Rate';
                              'gdp_ivC' = 'GDP_Per_Capita'")
 
-crispec$indepv[is.na(crispec$indepv)] <- 'None'
+cri_str$indepv[is.na(cri_str$indepv)] <- 'None'
 
-crispec$software <- car::recode(crispec$software,
+cri_str$software <- car::recode(cri_str$software,
                              "'stata' = 'Stata';
                              'r' = 'R';
                              'spss' = 'SPSS';
                              'mplus' = 'Mplus';
                              'mlwin' = 'MLwiN'")
 
-
-
 ```
-
-#### Standardization
-
-We face a problem that a one percent change in net migration (within-country) is huge relative to a 1% difference in percent foreign-born across countries.
-
-```{r standardizeDV}
-# Standardization will produce some extreme outliers, so a 'better' strategy is to adjust the sd of Flow to be equal to that of Stock. However, there are some wide outliers in stock that bunches up the dispersion of flow, therefore we need the sd without these extreme outliers
-
-# Team 104 is massive outlier, we have to rescale the estimates
-crispec <- crispec %>%
-  mutate(AME = ifelse(id == "t104m2" | id == "t104m4", AME/10, AME),
-         lower = ifelse(id == "t104m2" | id == "t104m4", lower/10, lower),
-         upper = ifelse(id == "t104m2" | id == "t104m4", upper/10, upper))
-
-crispec <- crispec %>%
-  mutate(AMEssd = ifelse(main_IV_type == "Stock", AME, NA),
-         AMEfsd = ifelse(main_IV_type == "Flow", AME, NA),
-         AMEssd = sd(AMEssd, na.rm = T),
-         AMEfsd = sd(AMEfsd, na.rm = T),
-         AME_Z = AME*(AMEssd/AMEfsd),
-         lower_Z = lower*(AMEssd/AMEfsd),
-         upper_Z = upper*(AMEssd/AMEfsd),
-         AME_Z = ifelse(main_IV_type == "Flow", AME_Z, AME),
-         lower_Z = ifelse(main_IV_type == "Flow", lower_Z, lower),
-         upper_Z = ifelse(main_IV_type == "Flow", upper_Z, upper))
-
-# preserving the order of teams and models
-crispec <- crispec[order(crispec$count),]
-```
-
-
 ### Merge in UniPark Survey
 
 Original work up of individual/team researcher qualities done in Stata
@@ -253,15 +262,15 @@ Required data files:
   
 Note that teams are now in wide format, so that each variable has up to three values, one for each team member. Also, each result is attached to each team member, thus there are N-results repeated observations of team members.
 
-F
+
 
 ```{r combine }
 cri2 <- readstata13::read.dta13(wdir("cri_combined_recoded_long_nolab.dta"))
 
-cri <- full_join(crispec, cri2, by = "u_teamid")
+cri <- full_join(cri, cri2, by = "u_teamid")
 
 # remove teams that dropped out
-#Column no missing function
+# Column no missing function
 cri <- completeFun(cri, "id")
 
 cri <- select(cri, u_teamid, id, everything())
@@ -574,28 +583,17 @@ cri <- cri %>%
 cri <- cri %>%
          mutate(belief_strength = ifelse(belief_strength == "Inf", NA, belief_strength),
                 belief_strength = ifelse(belief_strength == "-Inf", NA, belief_strength),
+                pro_immigrant = ifelse(pro_immigrant == "Inf", NA, pro_immigrant),
                 pro_immigrant = ifelse(pro_immigrant == "-Inf", NA, pro_immigrant),
-                pro_immigrant = ifelse(pro_immigrant == "-Inf", NA, pro_immigrant),
+                topic_interest = ifelse(topic_interest == "Inf", NA, topic_interest),
                 topic_interest = ifelse(topic_interest == "-Inf", NA, topic_interest),
-                topic_interest = ifelse(topic_interest == "-Inf", NA, topic_interest),
+                pub_interest = ifelse(pub_interest == "Inf", NA, pub_interest),
                 pub_interest = ifelse(pub_interest == "-Inf", NA, pub_interest),
-                pub_interest = ifelse(pub_interest == "-Inf", NA, pub_interest),
-                changemind_delib = ifelse(changemind_delib == "-Inf", NA, changemind_delib),
+                changemind_delib = ifelse(changemind_delib == "Inf", NA, changemind_delib),
                 changemind_delib = ifelse(changemind_delib == "-Inf", NA, changemind_delib))
 
 ```
 
-### Merge in Subjective Voting
-
-The file popdf_out.Rdata is needed for this, see CRI_Subj_Votes.R add link
-
-```{r votes, message = F, warning=F}
-
-load(file = wdir("popdf_out.Rdata"))
-
-cri <- left_join(cri, popdf_out, by = "id")
-
-```
 
 ### Merge in team size variable
 
@@ -605,7 +603,7 @@ teamsize <- read.csv(file = wdir("teamsize.csv"), header = T)
 
 cri <- left_join(cri, teamsize, by = "u_teamid")
 
-rm(teamsize, cri2, crispec)
+rm(teamsize, cri2)
 
 ```
 
@@ -620,7 +618,7 @@ Aggregated by team
 ```{r f3}
 # make a dataset for correlation
 
-cor <- select(cri, stat1,stat2,stat3,stat4,stat5,stat6,stat7,topic1,topic2,topic3,topic4,topic5,topic6,topic7,topic8,topic9,belief1,belief2,belief3,belief4,belief5,belief6,belief7,belief_strength,pro_immigrant,total_score,u_teamid)
+cor <- select(cri, stat1,stat2,stat3,stat4,stat5,stat6,stat7,topic1,topic2,topic3,topic4,topic5,topic6,topic7,topic8,topic9,belief1,belief2,belief3,belief4,belief5,belief6,belief7,belief_strength,pro_immigrant,u_teamid)
 
 cor <- aggregate(cor, by=list(cor$u_teamid), FUN=mean, na.rm=T)
 cor <- replace(cor, cor=="-Inf",NA)
@@ -661,19 +659,83 @@ cor <- cbind(cor,cor1)
 cor1 <- select(cor, u_teamid, stat, topic, belief)
 
 cri <- left_join(cri,cor1,by = "u_teamid")
+
+
+
+
 ```
 
-######################################################################################
+### Merge in Subjective Voting
+
+The file popdf_out.Rdata is needed for this, see CRI_Subj_Votes.R add link
+
+```{r votes, message = F, warning=F}
+
+load(file = wdir("popdf_out.Rdata"))
+
+cri <- left_join(cri, popdf_out, by = "id")
+
+# create levels of subjective responses and voting
+criT <- cri %>%
+  mutate(stat_cat = ifelse(stat > 0.45, "Highest", ifelse(stat > 0, "High", ifelse(stat > -0.3, "Low", "Lowest"))),
+         belief_cat = ifelse(belief > 0.4, "Highest", ifelse(belief > 0.10, "High", ifelse(belief > -0.39, "Low", "Lowest"))),
+         topic_cat = ifelse(topic > 0.4, "Highest", ifelse(topic > 0, "High", ifelse(topic > -0.4, "Low", "Lowest"))),
+         total_score_cat = ifelse(total_score > 0.53, "Highest", ifelse(total_score > 0.41, "High", ifelse(total_score > 0.32, "Low", "Lowest"))))
+
+criT <- select(criT, stat_cat, belief_cat, topic_cat, total_score_cat, id)
+
+cri_str <- left_join(cri_str, criT, by = "id")
+
+cri <- select(cri, -c(u_expgroup1:belief7))
+
+rm(cor, cor1, fit, popdf_out, criT)
+
+```
+
+### Number of positive test results per team
+
+```{r postest}
+cri <- cri %>%
+  group_by(u_teamid,Hresult) %>%
+  mutate(pos_test_pct_p05 = sum(AME_sup_p05, na.rm = T)/inv_weight,
+         pos_test_pct_p10 = sum(AME_sup_p10, na.rm = T)/inv_weight) %>%
+  ungroup()
+```
+
+
+#### Team Level Dataset
+
+```{r team_data, message = F, warning=F}
+
+cri_team <- cri
+
+cri_team <- aggregate(cri_team, by = list(cri_team$u_teamid, cri_team$Hresult), FUN = mean, na.rm = T)
+
+# can't aggregate strings so we have to run recodes again
+
+cri_team <- cri_team %>%
+  mutate(stat_cat = ifelse(stat > 0.75, "Highest", ifelse(stat > .25, "High", ifelse(stat > -0.25, "Low", "Lowest"))),
+         belief_cat = ifelse(belief > 0.6, "Highest", ifelse(belief > 0.25, "High", ifelse(belief > -0.25, "Low", "Lowest"))),
+         topic_cat = ifelse(topic > 0.75, "Highest", ifelse(topic > 0.25, "High", ifelse(topic > -0.25, "Low", "Lowest"))),
+         total_score_cat = ifelse(total_score > 0.53, "Highest", ifelse(total_score > 0.41, "High", ifelse(total_score > 0.34, "Low", "Lowest"))),
+         Hresult = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse((Hnotest_stock==1 & Stock==1) | (Hnotest_net==1 & Flow==1), "No test", ifelse((Hsupport_stock==1 & Stock ==1) | (Hsupport_net==1 & Flow==1), "Support", ifelse((Hreject_stock==1 & Stock==1) | (Hreject_net==1 & Flow==1), "Reject", NA)))))))
+
+
+```
+
+
+
 
 Save Point
 
 
 
 ```{r save_out, warning=F,message=F}
-rm(cor,cor1,fit,popdf_out)
 
 # save as csv to ensure no attributes carry over
-write.csv(cri, file = wdir("Env1.csv"), row.names = F)
+write.csv(cri, file = wdir("cri.csv"), row.names = F)
+write.csv(cri_str, file = wdir("cri_str.csv"), row.names = F)
+write.csv(cri_team, file = wdir("cri_team.csv"), row.names = F)
 ```
 
 

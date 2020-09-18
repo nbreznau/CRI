@@ -59,11 +59,13 @@ completeFun <- function(data, desiredCols) {
 
 ### Load Data
 
-This dataset was worked up from the file CRI_Data_Prep_1.Rmd. 
+Datasets worked up from the file CRI_Data_Prep_1.Rmd. 
 
 
 ```{r load, warning=F,message=F}
-cri <- read.csv(file = wdir("Env1.csv"), header = T)
+cri <- read.csv(file = wdir("cri.csv"), header = T)
+cri_str <- read.csv(file = wdir("cri_str.csv"), header = T)
+cri_team <- read.csv(file = wdir("cri_team.csv"), header = T)
 
 ```
 
@@ -77,38 +79,48 @@ Standardized scores
 ```{r fig1_DV1, include=F}
 
 
-crispectest <- dplyr::select(cri, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe_str, cluster_any_str, AU:VE, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_str, Hresult_str, u_teamid)
+crispectest <- dplyr::select(cri_str, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe, cluster_any, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_any, Hresult, total_score_cat, belief_cat, stat_cat, topic_cat, u_teamid)
 
 #Remove NAs
-crispectest <- as.data.frame(na.omit(crispectest))
+crispectest <- subset(crispectest, !is.na(crispectest$AME_Z))
+crispectest <- subset(crispectest, !is.na(crispectest$lower_Z))
   
   # some upper and lower bounds are exactly zero, adjust fix this
 crispectest$lower_Z <- ifelse(crispectest$lower_Z > -0.00000001 & crispectest$lower_Z < 0.00000001, -0.0001, crispectest$lower_Z)
 crispectest$upper_Z <- ifelse(crispectest$upper_Z > -0.00000001 & crispectest$upper_Z < 0.00000001, 0.0001, crispectest$upper_Z)
 
   #trim to have better plot range
-  crispectest$lower_Z <- ifelse(crispectest$lower_Z < -0.999, -0.999, crispectest$lower_Z)
-  crispectest$upper_Z <- ifelse(crispectest$upper_Z > 0.999, 0.999, crispectest$upper_Z)
-  crispectest$upper_Z <- ifelse(crispectest$upper_Z < -0.999, -0.995, crispectest$upper_Z)
-  crispectest$AME_Z <- ifelse(crispectest$AME_Z < -0.999, -0.997, crispectest$AME_Z)
-  crispectest$AME_Z <- ifelse(crispectest$AME_Z > 0.999, 0.997, crispectest$AME_Z)
+  crispectest$lower_Z <- ifelse(crispectest$lower_Z < -0.75, -0.75, crispectest$lower_Z)
+  crispectest$upper_Z <- ifelse(crispectest$upper_Z > 0.75, 0.75, crispectest$upper_Z)
+  crispectest$upper_Z <- ifelse(crispectest$upper_Z < -0.75, -0.745, crispectest$upper_Z)
+  crispectest$AME_Z <- ifelse(crispectest$AME_Z < -0.75, -0.747, crispectest$AME_Z)
+  crispectest$AME_Z <- ifelse(crispectest$AME_Z > 0.75, 0.747, crispectest$AME_Z)
 
 #data prep
 crispectest$est <- round(crispectest$AME_Z, 6)
 crispectest$lb <- round(crispectest$lower_Z, 6)
 crispectest$ub <- round(crispectest$upper_Z, 6)
 
-crispectest1 <- select(crispectest, dv_type, iv_type, software, indepv, est, lb, ub)
+crispectest1 <- select(crispectest, total_score_cat, belief_cat, stat_cat, topic_cat, indepv, est, lb, ub)
 
+# crispectest1 <- crispectest1 %>%
+#   mutate(dv_type = ifelse(is.na(dv_type), 0, dv_type),
+#          iv_type = ifelse(is.na(iv_type), 0, iv_type),
+#          software = ifelse(is.na(software), 0, software),
+#          indepv = ifelse(is.na(indepv), 0, indepv))
+
+crispectest1 <- subset(crispectest1, !is.na(crispectest1$total_score_cat))
+crispectest1 <- subset(crispectest1, !is.na(crispectest1$belief_cat))
 # remove/adjust attributes
   crispectest1 <- crispectest1[names(crispectest1)]
   choices <- 1:4
   attr(crispectest1, "choices") <- choices
   rownames(crispectest1) <- NULL
-  
+
+#
 png(file = wdir("Fig1_AME.png"), width = 1200, height = 850, res = 144)
 
-plot_rdf_spec_curve(crispectest1, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, ribbon = T)
+plot_rdf_spec_curve(crispectest1, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, pt_size = 0.3, ribbon = T)
 dev.off()
 
 knitr::include_graphics(wdir("Fig1_AME.png"))
@@ -119,9 +131,9 @@ knitr::include_graphics(wdir("Fig1_AME.png"))
 
 
 ```{r pvalcrv, echo=T}
-df1 <- as.data.frame(select(crispectest, dv_type, iv_type, p, lb, ub))
+df1 <- as.data.frame(select(crispectest, belief_cat, stat_cat, p, lb, ub))
 
-
+df1 <- subset(df1, !is.na(df1$belief_cat))
 
 # make negative p-values for negative effects, and make 1-p
 
@@ -172,53 +184,26 @@ knitr::include_graphics(wdir("Fig2_pcurve.png"))
 
 Support, Reject, No Test
 
-```{r subj, warning = F, message = F}
-
-# some teams had different conclusions associated with different models, therefore we need to aggregate the data by team and by conclusion
-
-
-cri_team <- select(cri, u_teamid, id, logit, ols, ologit, mlogit, ml_glm, bayes, count, p, main_IV_as_control, countries, Hresult_str)
-
-
-cri_team1 <- select(cri, twowayfe:inv_weight, AME_Z:upper_Z, total_score:belief)
-
-cri_team <- cbind(cri_team, cri_team1)
-
-cri_team <- aggregate(cri_team, by = list(cri_team$u_teamid, cri_team$Hresult_str), FUN = mean, na.rm = T)
-
-# we could not aggregate strings so we have to run recodes again
-
-cri_team <- cri_team %>%
-  mutate(software = ifelse(stata == 1, "Stata", ifelse(r == 1, "R", ifelse(spss == 1, "SPSS", ifelse(mplus == 1, "Mplus", ifelse(mlwin == 1, "MLwin", NA))))),
-         belief_cat = ifelse(belief < -0.1, "Low", ifelse(belief > -0.099999 & belief < 0.25, "Neutral", "Strong")),
-         stat_cat = ifelse(stat < -0.2, "Low", ifelse(stat > -0.1999999 & stat < 0.35, "Neutral", "Strong")),
-         est = ifelse(Group.2 == "Reject", -0.1, ifelse(Group.2 == "No test", 0, 0.1)),
-         lb = ifelse(est == -0.1, -0.11, ifelse(est == 0, -0.01, .09)),
-         ub = ifelse(est == -0.1, -0.09, ifelse(est == 0, 0.01, .011)))
-
-
-
-
-# software, belief_cat, stat_cat, AME_Z, lower_Z, upper_Z
-
-
-
-
-```
-
-
 
 ```{r team_hresultspec}
-df_team <- select(cri_team, software, belief_cat, stat_cat, est, lb, ub)
+df_team <- select(cri_team, software, pos_test_pct_p05, pos_test_pct_p10, belief_cat, stat_cat, topic_cat, total_score_cat, Hresult)
 
-df_team <- subset(df_team, !is.na(belief_cat))
+df_team <- df_team %>%
+  mutate(Test_Results_p05 = ifelse(pos_test_pct_p05 > 0.7, "70%+", ifelse(pos_test_pct_p05 > 0.5, "50-70%", ifelse(pos_test_pct_p05 > 0.25, "25-50%", "25%-"))),
+         est = ifelse(Hresult == "Support", 0.01, ifelse(Hresult == "Reject", -0.01, 0)),
+         lb = ifelse(est == 0.01, 0.009, ifelse(est == -0.01, -0.011, -0.01)),
+         ub = ifelse(est == 0.01, 0.011, ifelse(est == -0.01, -0.009, 0.01)))
+
+df3 <- select(df_team, Test_Results_p05, belief_cat, est, ub, lb)
+
+df3 <- subset(df3, !is.na(belief_cat))
 # remove/adjust attributes
-  choic <- 1:3
-  attr(df_team, "choices") <- choic
-  rownames(df_team) <- NULL
+  choic <- 1:2
+  attr(df3, "choices") <- choic
+  rownames(df3) <- NULL
 
-  agg_png(file = wdir("Fig3_subj.png"), width = 500, height = 500, res = 144)
-  plot_rdf_spec_curve(df_team, est = "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, ribbon_color = hidecolor, lower_to_upper = 2, est_label = "Hypothesis Test", ribbon = F)
+  agg_png(file = wdir("Fig3_subj.png"), width = 750, height = 750, res = 144)
+  plot_rdf_spec_curve(df3, est = "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, ribbon_color = hidecolor, pt_size = .5, lower_to_upper = 2, est_label = "Hypothesis Test", ribbon = F)
 dev.off()
 
 knitr::include_graphics(wdir("Fig3_subj.png"))
