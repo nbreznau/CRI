@@ -1,0 +1,122 @@
+---
+title: "Tech 2, Descriptives"
+output: html_notebook
+---
+
+
+
+   
+   
+
+```{r setup, include=FALSE}
+rm(list = ls())
+library(pacman)
+
+pacman::p_load("dplyr","knitr","kableExtra")
+
+```
+
+### Data Prep
+
+These datasets were worked up from the file 01_CRI_Data_Prep.Rmd. 
+
+cri = numerical values
+cri_str = string values
+cri_team = team-level data (by conclusion)
+
+#### Load
+
+```{r load, warning=F,message=F}
+cri <- read.csv(file = "data/cri.csv", header = T)
+cri_str <- read.csv(file = "data/cri_str.csv", header = T)
+cri_team <- read.csv(file = "data/cri_team.csv", header = T)
+
+```
+
+#### Merge
+
+```{r merge, warning=F,message=F}
+cri_stra <- select(cri_str, dv_type, id)
+df <- left_join(cri, cri_stra, by = "id")
+```
+
+
+### Descriptives
+
+#### Model Level
+
+```{r descriptive, warning = F, message = F, echo=T}
+
+
+
+sum1 <- summarise_at(cri, vars(AME, AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(mean), na.rm = T)
+
+sum1.1 <- summarise_at(cri,vars(AME, AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(sd), na.rm = T)
+
+# need to fix to get accurate N counts at some point
+sum2 <- summarise_at(cri, vars(AME, AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(n()))
+
+sum3 <- summarise_at(cri, vars(AME, AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(min), na.rm = T)
+
+sum4 <- summarise_at(cri, vars(AME, AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(max), na.rm = T)
+
+sum1[2,] <- c("AME","AME, beta","p-value","Support Hypothesis", "Reject Hypothesis", "Not testable Hypothesis", "DV: Jobs", "DV: Unemp", "DV: Income Diffs","DV: Old Age", "Dv: Housing", "DV: Health care", "DV: Constructed Scale", "Test IV: Stock of Immigrants", "Test IV: Flow of Immigrants", "Test IV: Change in Flow", "ISSP Wave: 1985", "ISSP Wave: 1990", "ISSP Wave: 1996", "ISSP Wave: 2006", "ISSP Wave: 2016", "# of countries used", "Dichotomized DV", "Both Test IVs included","Two-Way FEs (year & country dummies", "Used a Multilevel Model", "Used any form of SE clutering","Number of Models (by team)","Team size","Software: Stata","software: R","Software: SPSS","Software: Mplus","software: MLwin", "Belief that Hypothesis is true (by team)", "Positive affect to immigrants/immigration","Interst in the research topic (by team)","Statistics skills (by team)", "Subjective model score")
+
+cri_sum <- rbind(sum1, sum1.1, sum2, sum3, sum4)
+
+cri_sum <- as.data.frame(t(cri_sum))
+
+colnames(cri_sum) <- c("mean","variable", "sd","N","min","max")
+
+cri_sum <- select(cri_sum, variable, mean, everything())
+
+cri_sum$mean <- round(as.numeric(cri_sum$mean), 4)
+cri_sum$sd <- round(as.numeric(cri_sum$sd), 4)
+cri_sum$min <- round(as.numeric(cri_sum$min), 4)
+cri_sum$max <- round(as.numeric(cri_sum$max), 4)
+
+t1 <- kable(cri_sum, row.names = F)
+
+kable_styling(t1)
+
+```
+
+#### Team-Result Level
+
+some teams reported two results split along the type of test variable, for these teams there are two cases in this table (89 cases for 73 teams plus the B&F original)
+
+```{r desc_team, echo = T}
+
+sum1 <- summarise_at(cri_team, vars(AME, AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(mean), na.rm = T)
+
+sum1.1 <- summarise_at(cri_team, vars(AME, AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(sd), na.rm = T)
+
+# need to fix to get accurate N counts at some point
+sum2 <- summarise_at(cri_team, vars(AME, AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(n()))
+
+sum3 <- summarise_at(cri_team, vars(AME, AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(min), na.rm = T)
+
+sum4 <- summarise_at(cri_team, vars(AME, AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(max), na.rm = T)
+
+sum1[2,] <- c("AME (team average)","AME, beta (team average)","p-value (team average)","Support Hypothesis", "Reject Hypothesis", "Not testable Hypothesis", "DV: Jobs (team average)", "DV: Unemp (team average)", "DV: Income Diffs (team average)","DV: Old Age (team average)", "Dv: Housing (team average)", "DV: Health care (team average)", "DV: Constructed Scale (team average)", "Test IV: Stock of Immigrants (team average)", "Test IV: Flow of Immigrants (team average)", "Test IV: Change in Flow (team average)", "ISSP Wave: 1985 (team average)", "ISSP Wave: 1990 (team average)", "ISSP Wave: 1996 (team average)", "ISSP Wave: 2006 (team average)", "ISSP Wave: 2016 (team average)", "# of countries used (team average)", "Dichotomized DV (team average)", "Both Test IVs included (team average)","Two-Way FEs (year & country dummies (team average)", "Use a Multilevel Model (team average)", "Any form of SE clutering (team average)","Number of Models ","Team size","Software: Stata","software: R","Software: SPSS","Software: Mplus","software: MLwin","Belief that Hypothesis is true (by team)", "Positive affect to immigrants/immigration","Interst in the research topic (by team)","Statistics skills (by team)", "Subjective model score")
+
+cri_sum <- rbind(sum1, sum1.1, sum2, sum3, sum4)
+
+cri_sum <- as.data.frame(t(cri_sum))
+
+colnames(cri_sum) <- c("mean","variable", "sd","N","min","max")
+
+cri_sum <- select(cri_sum, variable, mean, everything())
+
+cri_sum$mean <- round(as.numeric(cri_sum$mean), 4)
+cri_sum$sd <- round(as.numeric(cri_sum$sd), 4)
+cri_sum$min <- round(as.numeric(cri_sum$min), 4)
+cri_sum$max <- round(as.numeric(cri_sum$max), 4)
+
+rm(sum1,sum1.1,sum2,sum3,sum4)
+
+t2 <- kable(cri_sum, row.names = F)
+
+kable_styling(t2)
+```
+

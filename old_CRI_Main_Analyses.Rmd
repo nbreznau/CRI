@@ -34,11 +34,6 @@ Code Compiled by
 rm(list = ls())
 library(pacman)
 
-# Create a working directory string and a function to call the wd for every code chunk
-wd <- "C:/Github/CRI/data" #set your wd here
-wdir <- function(x){
-  paste(wd,x, sep = "/")
-}
 
 pacman::p_load("devtools","ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","metaviz","jtools","sjPlot","sjmisc","sjlabelled","knitr","boot","ragg","kableExtra")
 
@@ -54,21 +49,30 @@ completeFun <- function(data, desiredCols) {
 }
 ```
 
-### Load Data
+### Data Prep
 
-These datasets were worked up from the file CRI_Data_Prep_1.Rmd. 
+These datasets were worked up from the file 01_CRI_Data_Prep.Rmd. 
 
 cri = numerical values
 cri_str = string values
 cri_team = team-level data (by conclusion)
 
+#### Load
 
 ```{r load, warning=F,message=F}
-cri <- read.csv(file = wdir("cri.csv"), header = T)
-cri_str <- read.csv(file = wdir("cri_str.csv"), header = T)
-cri_team <- read.csv(file = wdir("cri_team.csv"), header = T)
+cri <- read.csv(file = "data/cri.csv", header = T)
+cri_str <- read.csv(file = "data/cri_str.csv", header = T)
+cri_team <- read.csv(file = "data/cri_team.csv", header = T)
 
 ```
+
+#### Merge
+
+```{r merge, warning=F,message=F}
+cri_stra <- select(cri_str, dv_type, id)
+df <- left_join(cri, cri_stra, by = "id")
+```
+
 
 ### Descriptives
 
@@ -150,23 +154,27 @@ kable_styling(t2)
 ```
 
 
+
 ## Analysis
 
 ### Specification Curve Overviews
 ```{r fig1prep, warning = F}
 
 
-df2 <- df %>%
-  mutate(AMEssd = ifelse(iv_type == "Stock", est, NA),
-         AMEfsd = ifelse(iv_type == "Flow", est, NA),
+df <- df %>%
+  mutate(est = AME_Z,
+         AMEssd = ifelse(iv_type == "Stock", AME_Z, NA),
+         AMEfsd = ifelse(iv_type == "Flow", AME_Z, NA),
          AMEssd = sd(AMEssd, na.rm = T),
          AMEfsd = sd(AMEfsd, na.rm = T),
-         estz = est*(AMEssd/AMEfsd),
-         lower = lb*(AMEssd/AMEfsd),
-         upper = ub*(AMEssd/AMEfsd),
-         est = ifelse(iv_type == "Flow", estz, est),
-         lb = ifelse(iv_type == "Flow", lower, lb),
-         ub = ifelse(iv_type == "Flow", upper, ub),
+         estz = AME_Z*(AMEssd/AMEfsd),
+         lb = lower_Z,
+         ub = upper_Z,
+         lbz = lower_Z*(AMEssd/AMEfsd),
+         ubz = upper_Z*(AMEssd/AMEfsd),
+         est = ifelse(iv_type == "Flow", estz, AME_Z),
+         lb = ifelse(iv_type == "Flow", lb, lbz),
+         ub = ifelse(iv_type == "Flow", ub, ubz),
          # Trim to the range -0.5 to 0.5
          est = ifelse(est < -0.5, -0.5, est),
          est = ifelse(est > 0.5, 0.5, est),
@@ -174,23 +182,40 @@ df2 <- df %>%
          lb = ifelse(lb > 0.5, 0.5, lb),
          ub = ifelse(ub < -0.5, -0.5, ub),
          ub = ifelse(ub > 0.5, 0.5, ub))
+
+df <- df %>%
+  mutate(est = round(est, 5),
+         lb = round(est, 5),
+         ub = round(est, 5),
+         lb = ifelse(est == lb, lb - 0.00001, lb),
+         ub = ifelse(est == ub, ub + 0.00001, ub))
+# remove missing
+
+
+
+
 ```
 #### Figure 1. Basic Features
 
 ```{r fig1_Overview, echo = T}
-df2 <- as.data.frame(select(df2, dv_type, iv_type, software, Hresult, est, lb, ub))
+df2 <- as.data.frame(select(df, dv_type, Hresult, iv_type, software, est, lb, ub)) 
+df2 <- completeFun(df2, c("est","lb","ub"))
+# 
 
-  # remove/adjust attributes
+
+ # remove/adjust attributes
   choic <- 1:4
   attr(df2, "choices") <- choic
   rownames(df2) <- NULL
-#agg_png(file = wdir("Fig1_Overview.png"), width = 800, res = 144,  bit = 16)
-png(filename = wdir("Fig1_Overview.png"), width = 960, height = 720, res = 144)
   
-    plot_rdf_spec_curve(df2, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = " \nStandardized \nMarginal Effect", ribbon = F) 
+#agg_png(file = "data/Fig1_Overview.png", width = 800, res = 144,  bit = 16)
+png(filename = "data/Fig1_Overview.png", width = 960, height = 720, res = 144)
+
+plot_rdf_spec_curve(df2, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = " \nStandardized \nMarginal Effect", ribbon = F)
+
 dev.off()
 
-knitr::include_graphics(wdir("Fig1_Overview.png"))
+knitr::include_graphics("data/Fig1_Overview.png")
 
 
 
@@ -232,11 +257,11 @@ df3 <- as.data.frame(select(dfx, vote, waves, cases, estimator, est, lb, ub))
   attr(df3, "choices") <- choic
   rownames(df3) <- NULL
  
-png(filename = wdir("Fig2_Popular.png"), width = 960, height = 720, res = 144)
+png(filename = "data/Fig2_Popular.png", width = 960, height = 720, res = 144)
 plot_rdf_spec_curve(df3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Standardized \nMarginal Effect", ribbon = F)
 dev.off()
 
-knitr::include_graphics(wdir("Fig2_Popular.png"))
+knitr::include_graphics("data/Fig2_Popular.png")
 
 ```
 
@@ -294,7 +319,7 @@ tab_model(m2aw, m3aw,  p.style = "stars", show.ci = F, rm.terms = c("(Intercept)
 ### For Appendix
 ```{r coefplot, echo=T}
 
-agg_png(file = wdir("Fig3_Coeff.png"), width = 800, height = 500, res = 144)
+agg_png(file = "data/Fig3_Coeff.png", width = 800, height = 500, res = 144)
 plot_model(m2a, axis.labels = c("Belief: Hyp is True", "Topical Knowledge","Statistical Skills","Multi-Question Scale","Health Care","Housing","Old Age","Income Diff","Unemp","Jobs")) +
   labs(title = "Figure X. Marginal Effects of Immigration on Policy Preferences", subtitle = "By Question Types and Researcher Qualities") +
   geom_hline(yintercept=0) +
@@ -310,7 +335,7 @@ plot_model(m2a, axis.labels = c("Belief: Hyp is True", "Topical Knowledge","Stat
   plot.subtitle = element_text(hjust = -0.64))
 dev.off()
 
-knitr::include_graphics(wdir("Fig3_Coeff.png"))
+knitr::include_graphics("data/Fig3_Coeff.png")
 ```
 
 
@@ -371,11 +396,11 @@ hidecolor <- t_col("pink", perc = 100, name = "lt.pink")
   attr(df4, "choices") <- choic
   rownames(df4) <- NULL
 
-png(filename = wdir("Fig3_Subj.png"), width = 720, height = 620, res = 144)
+png(filename = "data/Fig3_Subj.png", width = 720, height = 620, res = 144)
 print(plot_rdf_spec_curve(df4, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", ribbon_color = hidecolor, choice_ind_point = F, lower_to_upper = 2.5, pt_size = 0.5, est_label = " \nSubjective\nConclusion", ribbon = F))
 dev.off()
 
-knitr::include_graphics(wdir("Fig3_Subj.png"))
+knitr::include_graphics("data/Fig3_Subj.png")
 ```
 
 
@@ -968,11 +993,11 @@ rain2 <- ggplot(cri, aes(x=DVn, y=AME_Zt, fill = iv_type2))+
     axis.title=element_text(size=14),
     plot.title=element_text(size=14),
   )
-png(filename = wdir("Fig4_Rain.png"), height = 720, width = 800, res = 144)
+png(filename = "data/Fig4_Rain.png", height = 720, width = 800, res = 144)
 rain2
 dev.off()
 
-knitr::include_graphics( wdir("Fig4_Rain.png"))
+knitr::include_graphics( "data/Fig4_Rain.png")
 
 
 
@@ -1048,11 +1073,11 @@ df3s <- as.data.frame(select(df3s, vote, waves, cases, estimator, est, lb, ub))
   attr(df3s, "choices") <- choic
   rownames(df3s) <- NULL
 
-png(filename = wdir("Fig5_Stock_Popular.png"), width = 960, height = 720, res = 144)
+png(filename = "data/Fig5_Stock_Popular.png", width = 960, height = 720, res = 144)
 plot_rdf_spec_curve(df3s, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Standardized \nMarginal Effect", ribbon = F)
 dev.off()
 
-knitr::include_graphics(wdir("Fig5_Stock_Popular.png"))
+knitr::include_graphics("data/Fig5_Stock_Popular.png")
 ```
 #### Figure 6. Spec Curve. Flow Models Only
 
@@ -1066,11 +1091,11 @@ df3f <- as.data.frame(select(df3f, vote, waves, cases, estimator, est, lb, ub))
   attr(df3f, "choices") <- choic
   rownames(df3f) <- NULL
 
-png(filename = wdir("Fig5_Stock_Popular.png"), width = 960, height = 720, res = 144)
+png(filename = "data/Fig5_Stock_Popular.png", width = 960, height = 720, res = 144)
 plot_rdf_spec_curve(df3f, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Standardized \nMarginal Effect", ribbon = F)
 dev.off()
 
-knitr::include_graphics(wdir("Fig5_Stock_Popular.png"))
+knitr::include_graphics("data/Fig5_Stock_Popular.png")
 ```
 
 ```{r rain3, warning=F, message=F, echo=T}
@@ -1230,7 +1255,7 @@ df5 <- select(df5, waves, cases, mator, mlm,  est, lb, ub)
   attr(df5, "choices") <- choic
   rownames(df5) <- NULL
 plot_rdf_spec_curve(df5, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
-png(wdir("spec_curve_votesDV.png"))
+png("data/spec_curve_votesDV.png")
 print(plot_rdf_spec_curve(df5, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F))
 dev.off()
 
@@ -1261,7 +1286,7 @@ df8 <- select(df6, dv_type, iv_type, vote, mlm, est, lb, ub)
   attr(df7, "choices") <- choic
   rownames(df7) <- NULL
 plot_rdf_spec_curve(df7, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
-png(wdir("spec_curve_Ha.png"))
+png("data/spec_curve_Ha.png")
 print(plot_rdf_spec_curve(df7, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F))
 dev.off()
 
@@ -1273,7 +1298,7 @@ dev.off()
   attr(df8, "choices") <- choic
   rownames(df8) <- NULL
 plot_rdf_spec_curve(df8, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F)
-png(wdir("spec_curve_Hb.png"))
+png("data/spec_curve_Hb.png")
 print(plot_rdf_spec_curve(df8, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, lower_to_upper = 1.75, est_label = "Marginal Effect", ribbon = F))
 dev.off()
 

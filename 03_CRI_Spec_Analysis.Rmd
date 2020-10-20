@@ -36,24 +36,15 @@ Code Compiled by
 rm(list = ls())
 library(pacman)
 
-# Create a working directory string and a function to call the wd for every code chunk
-wd <- "C:/GitHub/CRI/data" #set your wd here
-wdir <- function(x){
-  paste(wd,x, sep = "/")
-}
 
-pacman::p_load("readstata13","devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","mlogit","knitr","ragg")
+pacman::p_load("devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","mlogit","knitr","ragg")
 
 # Load Researcher Degrees of Freedom Analysis package
 #  
 # devtools::install_github("joachim-gassen/rdfanalysis")
 library(rdfanalysis)
 
-#Column no missing function
-completeFun <- function(data, desiredCols) {
-  completeVec <- complete.cases(data[, desiredCols])
-  return(data[completeVec, ])
-}
+
 ```
 
 
@@ -63,9 +54,9 @@ Datasets worked up from the file CRI_Data_Prep_1.Rmd.
 
 
 ```{r load, warning=F,message=F}
-cri <- read.csv(file = wdir("cri.csv"), header = T)
-cri_str <- read.csv(file = wdir("cri_str.csv"), header = T)
-cri_team <- read.csv(file = wdir("cri_team.csv"), header = T)
+cri <- read.csv(file = "data/cri.csv", header = T)
+cri_str <- read.csv(file = "data/cri_str.csv", header = T)
+cri_team <- read.csv(file = "data/cri_team.csv", header = T)
 
 ```
 
@@ -116,14 +107,15 @@ crispectest1 <- subset(crispectest1, !is.na(crispectest1$belief_cat))
   choices <- 1:4
   attr(crispectest1, "choices") <- choices
   rownames(crispectest1) <- NULL
-
+  
+# one problem with rdfanalysis is that it outputs the categories in the order they appear in the data, therefore we have to reor
 #
-png(file = wdir("Fig1_AME.png"), width = 1200, height = 850, res = 144)
+png(file = "results/Fig1_AME.png", width = 1200, height = 850, res = 144)
 
 plot_rdf_spec_curve(crispectest1, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, pt_size = 0.3, ribbon = T)
 dev.off()
 
-knitr::include_graphics(wdir("Fig1_AME.png"))
+knitr::include_graphics("results/Fig1_AME.png")
 ```
 
 
@@ -173,11 +165,11 @@ hidecolor <- t_col("pink", perc = 100, name = "lt.pink")
   choic <- 1:2
   attr(df1, "choices") <- choic
   rownames(df1) <- NULL
-agg_png(file = wdir("Fig2_pcurve.png"), width = 800, height = 500, res = 144)
+agg_png(file = "results/Fig2_pcurve.png", width = 800, height = 500, res = 144)
   plot_rdf_spec_curve(df1, est = "p", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, ribbon_color = hidecolor, lower_to_upper = 1, est_label = "Confidence Level\n(p<0.05)", ribbon = F)
 dev.off()
 
-knitr::include_graphics(wdir("Fig2_pcurve.png"))
+knitr::include_graphics("results/Fig2_pcurve.png")
 
 ```
 ### Subjective Test Results
@@ -202,11 +194,11 @@ df3 <- subset(df3, !is.na(belief_cat))
   attr(df3, "choices") <- choic
   rownames(df3) <- NULL
 
-  agg_png(file = wdir("Fig3_subj.png"), width = 750, height = 750, res = 144)
+  agg_png(file = "results/Fig3_subj.png", width = 750, height = 750, res = 144)
   plot_rdf_spec_curve(df3, est = "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, ribbon_color = hidecolor, pt_size = .5, lower_to_upper = 2, est_label = "Hypothesis Test", ribbon = F)
 dev.off()
 
-knitr::include_graphics(wdir("Fig3_subj.png"))
+knitr::include_graphics("results/Fig3_subj.png")
   
 ```
 

@@ -23,12 +23,6 @@ Code Compiled by
 rm(list = ls())
 library(pacman)
 
-# Create a working directory string and a function to call the wd for every code chunk
-wd <- "C:/GitHub/CRI/data" #set your wd here
-wdir <- function(x){
-  paste(wd,x, sep = "/")
-}
-
 pacman::p_load("readstata13","dplyr","readr","lattice","tidyr","readxl","knitr","boot","ragg","kableExtra")
 
 #Column no missing function
@@ -52,7 +46,7 @@ We set up two versions here: *cri* and *cri_str*. One is for dichotomous numeric
 
 ```{r load}
 # Data generated from qualitative model specification coding
-cri_str <- read_excel(wdir("CRI Model Specifications and Margins.xlsx"), sheet = "Data")
+cri_str <- read_excel("data/CRI Model Specifications and Margins.xlsx", sheet = "Data")
 
 # replace p values of 0.000000 with 0.00001
 cri_str <- cri_str %>%
@@ -265,7 +259,7 @@ Note that teams are now in wide format, so that each variable has up to three va
 
 
 ```{r combine }
-cri2 <- readstata13::read.dta13(wdir("cri_combined_recoded_long_nolab.dta"))
+cri2 <- readstata13::read.dta13("data/cri_combined_recoded_long_nolab.dta")
 
 cri <- full_join(cri, cri2, by = "u_teamid")
 
@@ -540,6 +534,7 @@ cri <- select(cri, u_teamid, id, everything())
 #                        Total |        157      100.00
 ```
 
+Note we take the MAX for topic & statistics, MEAN for belief and pro-immigrant
 
 
 ```{r recodes, warning=F, message=F}
@@ -566,15 +561,15 @@ cri <- cri %>%
              topic7 = max(v_381, v_382, v_383, na.rm = T), #Higher relevant
              topic8 = max(v_391, v_392, v_393, na.rm = T), #Higher relevant
              topic9 = max(v_401, v_402, v_403, na.rm = T), #Higher relevant
-             belief1 = max(belief_H1_11,belief_H1_12,belief_H1_13, na.rm = T), # higher more belief
-             belief2 = max(belief_agecare_11,belief_agecare_12,belief_agecare_13, na.rm = T), # higher more belief
-             belief3 = max(belief_unempl_11,belief_unempl_12,belief_unempl_13, na.rm = T), # higher more belief
-             belief4 = max(belief_income_11,belief_income_12,belief_income_13, na.rm = T), # higher more belief
-             belief5 = max(belief_housing_11,belief_housing_12,belief_housing_13, na.rm = T), # higher more belief
-             belief6 = max(belief_labour_11,belief_labour_12,belief_labour_13, na.rm = T), # higher more belief
-             belief7 = max(belief_health_11,belief_health_12,belief_health_13, na.rm = T), # higher more belief
+             belief1 = mean(c(belief_H1_11,belief_H1_12,belief_H1_13), na.rm = T), # higher more belief
+             belief2 = mean(c(belief_agecare_11,belief_agecare_12,belief_agecare_13), na.rm = T), # higher more belief
+             belief3 = mean(c(belief_unempl_11,belief_unempl_12,belief_unempl_13), na.rm = T), # higher more belief
+             belief4 = mean(c(belief_income_11,belief_income_12,belief_income_13), na.rm = T), # higher more belief
+             belief5 = mean(c(belief_housing_11,belief_housing_12,belief_housing_13), na.rm = T), # higher more belief
+             belief6 = mean(c(belief_labour_11,belief_labour_12,belief_labour_13), na.rm = T), # higher more belief
+             belief7 = mean(c(belief_health_11,belief_health_12,belief_health_13), na.rm = T), # higher more belief
              belief_strength = max(belief_certainty_11,belief_certainty_12,belief_certainty_13, na.rm = T),
-             pro_immigrant = min(attitude_immigration_11,attitude_immigration_12,attitude_immigration_13, na.rm = T),
+             pro_immigrant = mean(c(attitude_immigration_11,attitude_immigration_12,attitude_immigration_13), na.rm = T),
              changemind_delib = max(delib_changemind1,delib_changemind2,delib_changemind3, na.rm = T),
              topic_interest = max(v_881,v_882,v_883, na.rm=T),
              pub_interest = max(v_901,v_902,v_903, na.rm=T))
@@ -599,7 +594,7 @@ cri <- cri %>%
 
 ```{r teamsize}
 
-teamsize <- read.csv(file = wdir("teamsize.csv"), header = T)
+teamsize <- read.csv(file = "data/teamsize.csv", header = T)
 
 cri <- left_join(cri, teamsize, by = "u_teamid")
 
@@ -671,7 +666,7 @@ The file popdf_out.Rdata is needed for this, see CRI_Subj_Votes.R add link
 
 ```{r votes, message = F, warning=F}
 
-load(file = wdir("popdf_out.Rdata"))
+load(file = "data/popdf_out.Rdata")
 
 cri <- left_join(cri, popdf_out, by = "id")
 
@@ -703,13 +698,19 @@ cri <- cri %>%
 ```
 
 
-#### Team Level Dataset
+#### Team Level Datasets
+
+We create an overall team average dataset, a flow models only team dataset and a stock models only team dataset.
 
 ```{r team_data, message = F, warning=F}
 
 cri_team <- cri
+cri_team_stock <- subset(cri, cri$Stock == 1)
+cri_team_flow <- subset(cri, cri$Flow == 1)
 
 cri_team <- aggregate(cri_team, by = list(cri_team$u_teamid, cri_team$Hresult), FUN = mean, na.rm = T)
+cri_team_stock <- aggregate(cri_team_stock, by = list(cri_team_stock$u_teamid, cri_team_stock$Hresult), FUN = mean, na.rm = T)
+cri_team_flow <- aggregate(cri_team_flow, by = list(cri_team_flow$u_teamid, cri_team_flow$Hresult), FUN = mean, na.rm = T)
 
 # can't aggregate strings so we have to run recodes again
 
@@ -720,7 +721,26 @@ cri_team <- cri_team %>%
          total_score_cat = ifelse(total_score > 0.53, "Highest", ifelse(total_score > 0.41, "High", ifelse(total_score > 0.34, "Low", "Lowest"))),
          Hresult = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse((Hnotest_stock==1 & Stock==1) | (Hnotest_net==1 & Flow==1), "No test", ifelse((Hsupport_stock==1 & Stock ==1) | (Hsupport_net==1 & Flow==1), "Support", ifelse((Hreject_stock==1 & Stock==1) | (Hreject_net==1 & Flow==1), "Reject", NA)))))))
 
+# repeat for stock
+cri_team_stock <- cri_team_stock %>%
+  mutate(stat_cat = ifelse(stat > 0.75, "Highest", ifelse(stat > .25, "High", ifelse(stat > -0.25, "Low", "Lowest"))),
+         belief_cat = ifelse(belief > 0.6, "Highest", ifelse(belief > 0.25, "High", ifelse(belief > -0.25, "Low", "Lowest"))),
+         topic_cat = ifelse(topic > 0.75, "Highest", ifelse(topic > 0.25, "High", ifelse(topic > -0.25, "Low", "Lowest"))),
+         total_score_cat = ifelse(total_score > 0.53, "Highest", ifelse(total_score > 0.41, "High", ifelse(total_score > 0.34, "Low", "Lowest"))),
+         Hresult = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse((Hnotest_stock==1 & Stock==1) | (Hnotest_net==1 & Flow==1), "No test", ifelse((Hsupport_stock==1 & Stock ==1) | (Hsupport_net==1 & Flow==1), "Support", ifelse((Hreject_stock==1 & Stock==1) | (Hreject_net==1 & Flow==1), "Reject", NA)))))))
 
+#repeat for flow
+cri_team_flow <- cri_team_flow %>%
+  mutate(stat_cat = ifelse(stat > 0.75, "Highest", ifelse(stat > .25, "High", ifelse(stat > -0.25, "Low", "Lowest"))),
+         belief_cat = ifelse(belief > 0.6, "Highest", ifelse(belief > 0.25, "High", ifelse(belief > -0.25, "Low", "Lowest"))),
+         topic_cat = ifelse(topic > 0.75, "Highest", ifelse(topic > 0.25, "High", ifelse(topic > -0.25, "Low", "Lowest"))),
+         total_score_cat = ifelse(total_score > 0.53, "Highest", ifelse(total_score > 0.41, "High", ifelse(total_score > 0.34, "Low", "Lowest"))),
+         Hresult = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse((Hnotest_stock==1 & Stock==1) | (Hnotest_net==1 & Flow==1), "No test", ifelse((Hsupport_stock==1 & Stock ==1) | (Hsupport_net==1 & Flow==1), "Support", ifelse((Hreject_stock==1 & Stock==1) | (Hreject_net==1 & Flow==1), "Reject", NA)))))))
+# remove columns that contain all NAs
+ 
+cri_team <- Filter(function(x) !all(is.na(x)), cri_team)
+cri_team_stock <- Filter(function(x) !all(is.na(x)), cri_team_stock)
+cri_team_flow <- Filter(function(x) !all(is.na(x)), cri_team_flow)
 ```
 
 
@@ -733,9 +753,11 @@ Save Point
 ```{r save_out, warning=F,message=F}
 
 # save as csv to ensure no attributes carry over
-write.csv(cri, file = wdir("cri.csv"), row.names = F)
-write.csv(cri_str, file = wdir("cri_str.csv"), row.names = F)
-write.csv(cri_team, file = wdir("cri_team.csv"), row.names = F)
+write.csv(cri, file = "data/cri.csv", row.names = F)
+write.csv(cri_str, file = "data/cri_str.csv", row.names = F)
+write.csv(cri_team, file = "data/cri_team.csv", row.names = F)
+write.csv(cri_team_stock, file = "data/cri_team_stock.csv", row.names = F)
+write.csv(cri_team_flow, file = "data/cri_team_flow.csv", row.names = F)
 ```
 
 
