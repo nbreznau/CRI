@@ -45,21 +45,7 @@ cri_team = team-level data (by conclusion)
 cri <- read.csv(file = "data/cri.csv", header = T)
 cri_str <- read.csv(file = "data/cri_str.csv", header = T)
 cri_team <- read.csv(file = "data/cri_team.csv", header = T)
-cri_team_stock <- read.csv(file = "data/cri_team_stock.csv", header = T)
-cri_team_flow <- read.csv(file = "data/cri_team_flow.csv", header = T)
-
-
-cri_stra <- select(cri_str, dv_type, id)
-df <- left_join(cri, cri_stra, by = "id")
-rm(cri_stra)
-
-# merge flow and stock team-level results for plotting
-
-cri_team_combine <- bind_rows(cri_team_stock, cri_team_flow)
-
-# remove missing
-cri_team_combine <- subset(cri_team_combine, !is.na(AME))
-cri_team_combine <- subset(cri_team_combine, !is.na(stat_cat))
+cri_team_combine <- read.csv(file = "data/cri_team_combine.csv", header = T)
 
 ```
 

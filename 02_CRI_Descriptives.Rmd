@@ -33,13 +33,6 @@ cri_team <- read.csv(file = "data/cri_team.csv", header = T)
 
 ```
 
-#### Merge
-
-```{r merge, warning=F,message=F}
-cri_stra <- select(cri_str, dv_type, id)
-df <- left_join(cri, cri_stra, by = "id")
-```
-
 
 ### Descriptives
 

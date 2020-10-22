@@ -241,6 +241,8 @@ Original work up of individual/team researcher qualities done in Stata
 
 NOTE: These Stata files include identifying information breaking the anonymity of the teams, so we have to clean them before making them public. We may not do this (what do we gain?) so therefore, we have provided a file with the cleaned and merged data "cri_combined_recoded_long_nolab.dta"
 
+This was created from the following:
+
 Required code files:
   master.do
       convert spss.do
@@ -640,7 +642,7 @@ kable_styling(kable(cor1, digits = 2))
 
 pacman::p_load("lavaan")
 
-cfa <- ' stat =~ stat1 + + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
+cfa <- ' stat =~ stat1 + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
          topic =~ topic1 + topic2 + topic3 + topic4 + topic5 + topic6 + topic7 + topic8 + topic9
          belief =~ belief1 + belief2 + belief3 + belief4 + belief5 + belief6 + belief7 '
 fit <- cfa(cfa, data = cor)
@@ -681,7 +683,7 @@ criT <- select(criT, stat_cat, belief_cat, topic_cat, total_score_cat, id)
 
 cri_str <- left_join(cri_str, criT, by = "id")
 
-cri <- select(cri, -c(u_expgroup1:belief7))
+# cri <- select(cri, -c(u_expgroup1:belief7))
 
 rm(cor, cor1, fit, popdf_out, criT)
 
@@ -741,6 +743,11 @@ cri_team_flow <- cri_team_flow %>%
 cri_team <- Filter(function(x) !all(is.na(x)), cri_team)
 cri_team_stock <- Filter(function(x) !all(is.na(x)), cri_team_stock)
 cri_team_flow <- Filter(function(x) !all(is.na(x)), cri_team_flow)
+
+# add missing variable
+cri_stra <- select(cri_str, dv_type, id)
+df <- left_join(cri, cri_stra, by = "id")
+rm(cri_stra)
 ```
 
 
@@ -756,8 +763,16 @@ Save Point
 write.csv(cri, file = "data/cri.csv", row.names = F)
 write.csv(cri_str, file = "data/cri_str.csv", row.names = F)
 write.csv(cri_team, file = "data/cri_team.csv", row.names = F)
-write.csv(cri_team_stock, file = "data/cri_team_stock.csv", row.names = F)
-write.csv(cri_team_flow, file = "data/cri_team_flow.csv", row.names = F)
+
+# merge flow and stock team-level results for plotting
+
+cri_team_combine <- bind_rows(cri_team_stock, cri_team_flow)
+
+# remove missing
+cri_team_combine <- subset(cri_team_combine, !is.na(AME))
+cri_team_combine <- subset(cri_team_combine, !is.na(stat_cat))
+
+write.csv(cri_team, file = "data/cri_team_combine.csv", row.names = F)
 ```
 
 
