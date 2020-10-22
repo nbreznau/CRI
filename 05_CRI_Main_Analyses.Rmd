@@ -3,17 +3,22 @@ title: "Tech 5, Main Analyses"
 output: html_notebook
 ---
 
-   
+This package is needed
+http://www.alexlishinski.com/post/2018-04-13-lavaanplot0.5/
+
    
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, warning=F}
 rm(list = ls())
 library(pacman)
 
+# devtools::install_github("alishinski/lavaanPlot")
 
-pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","readstat13")
+pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot")
 
-#Column no missing function
+
+
+# Column no missing function
 completeFun <- function(data, desiredCols) {
   completeVec <- complete.cases(data[, desiredCols])
   return(data[completeVec, ])
@@ -28,7 +33,7 @@ cri = numerical values
 cri_str = string values
 cri_team = team-level data (by conclusion)
 cri_team_combine = team-level data parsed by type of test variable (stock and flow)
-cri_combined_recoded = participant-level data from our survey, identifying characteristics redacted
+cri_indiv = participant-level data from our survey, identifying characteristics redacted
 
 ### Load Data
 
@@ -36,9 +41,20 @@ cri_combined_recoded = participant-level data from our survey, identifying chara
 cri <- read.csv(file = "data/cri.csv", header = T)
 cri_str <- read.csv(file = "data/cri_str.csv", header = T)
 cri_team <- read.csv(file = "data/cri_team_combine.csv", header = T)
-cri_survey <- read.csv(file = "")
-cri_part <- readstata13::read.dta13("data/cri_combined_recoded.dta")
+cri_indiv <- read.csv(file = "data/cri_indv.csv", header = T)
+
 # cri_team_combine
+```
+
+#### Add Subjective conclusion to Indiv data
+
+```{r subj_merge}
+cri_subj <- select(cri, u_teamid, Hsupport, Hmixed)
+cri_subj$Hsup <- ifelse(cri_subj$Hsupport == 1, 1, ifelse(cri_subj$Hmixed == 1, 0.5, 0))
+cri_subj <- select(cri, u_teamid, Hsup)
+cri_s <- aggregate(cri_subj, by = list(cri_subj$u_teamid), FUN = mean, na.rm = T)
+
+cri_indiv <- left_join(cri_indiv, cri_s, by = "u_teamid")
 ```
 
 
@@ -47,70 +63,15 @@ cri_part <- readstata13::read.dta13("data/cri_combined_recoded.dta")
 Based on our survey before and during the CRI
 
 
-#### Recode individual responses
 
-
-```{r}
-
-# Stata data has labels, have to get original codes instead
-# v_98 lab v_100, v_101
-# v_34 lab v_34
-
-l1 <- get.label(cri_part, "v_98")
-l2 <- get.label(cri_part, "v_34")
-
-cri_part$stat1 <- get.origin.codes(cri_part$v_100, l1)
-cri_part$stat2 <- get.origin.codes(cri_part$v_101, l1)
-cri_part$stat3 <- get.origin.codes(cri_part$v_34, l2)
-cri_part$stat1 <- get.origin.codes(cri_part$v100, l1)
-cri_part$stat1 <- get.origin.codes(cri_part$v100, l1)
-cri_part$stat1 <- get.origin.codes(cri_part$v100, l1)
-cri_part$stat1 <- get.origin.codes(cri_part$v100, l1)
-
-cri_part <- cri_part %>%
-      mutate(stat1 = v_100, #lower is less constrained
-             stat2 = v_101, #lower is less constrained
-             stat3 = v_34, #higher is less dificult
-             stat4 = backgr_exp_teach_stat, #higher more courses taught
-             stat5 = backgr_exp_famil_mlm, #higher more MLM familiarity
-             stat6 = v_18, #higher is more stat publications
-             stat7 = v_21, #higher is more MLM publications
-             topic1 = v_17, #higher is more Imm pubs
-             topic2 = v_19, #higher is more Policy pubs
-             topic3 = v_20, #higher is more Policy/Opinion pubs
-             topic4 = v_88, #higher is more interest in topic
-             topic5 = 1+(-1*v_35), #lower not relevant
-             topic6 = v_37, #Higher relevant
-             topic7 = v_38, #Higher relevant
-             topic8 = v_39, #Higher relevant
-             topic9 = v_40, #Higher relevant
-             belief1 = belief_H1_1, # higher more belief
-             belief2 = belief_agecare_1, # higher more belief
-             belief3 = belief_unempl_1, # higher more belief
-             belief4 = belief_income_1, # higher more belief
-             belief5 = belief_housing_1, # higher more belief
-             belief6 = belief_labour_1, # higher more belief
-             belief7 = belief_health_1, # higher more belief
-             belief_strength = belief_certainty_1
-             )
-```
 
 
 ```{r sem, include=T, warning=F}
 
-# create a non-missing df
 
-sem <- select(cri_part, stat1:stat7, topic1:topic9, belief1:belief7, u_teamid)
+# non-missing df
 
-
-
-# this requires aggregating to the team level
-
-sem <- aggregate(sem, by=list(sem$u_teamid), FUN=mean, na.rm=T)
-sem <- replace(sem, sem =="-Inf",NA)
-
-
-sem <- completeFun(sem, "stat1")
+sem <- completeFun(cri_indiv, "stat1")
 
 # team 27 missing 3 values, fill for consistency
 
@@ -119,13 +80,19 @@ sem <- sem %>%
          stat2 = ifelse(u_teamid == 27,3,stat2),
          topic4 = ifelse(u_teamid == 27,4,topic4))
 
-cor1 <- round(cor(sem, use = "pairwise.complete.obs"),3)
+# correlatinos
+cor1 <- select(sem, -c(u_teamid))
+cor1 <- round(cor(cor1, use = "pairwise.complete.obs"),2)
 
+sem_f <- completeFun(sem, "Hsup")
 
-cfa <- ' stat_skill =~ stat1 + + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
-         topic_knowledge =~ topic1 + topic2 + topic3 + topic4 + topic5 + topic6 + topic7 + topic8 + topic9
-         belief_Htrue =~ belief1 + belief2 + belief3 + belief4 + belief5 + belief6 + belief7 '
-fit <- cfa(cfa, data = sem)
+cfa <- ' stats =~ stat1 + + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
+         topic =~ topic1 + topic2 + topic3 + topic4 + topic5 + topic6 + topic7 + topic8 + topic9
+         belief =~ belief1 + belief2 + belief3 + belief4 + belief5 + belief6 + belief7 
+         immig =~ pro_immigrant
+         concl =~ Hsup         
+'
+fit <- cfa(cfa, data = sem_f)
 
 
 
@@ -133,14 +100,27 @@ fit <- cfa(cfa, data = sem)
 #### Figure X. Correlation Matrix of Researcher Backgrouds, Team-Level
 
 ```{r sem_cor}
-kable(cor1)
+# kable(cor1)
 
+cor1[upper.tri(cor1)] <- ""
+
+kable(cor1)
 ```
 
 
 ```{r sem_fit}
-summary(fit, fit.measures=TRUE)
+fit1 <- summary(fit, fit.measures=TRUE, standardized = T)
+
+labels = list(stats = "Statistics Skill", topic = "Topic Knowledge", belief = "Belief in Hypothesis", immig = "Pro Immigration", concl = "Results Supported")
+
+sem_out <- lavaanPlot(model = fit, labels = labels, coefs = TRUE, covs = TRUE, stand = TRUE)
+
+png(filename = "results/SEM.png", width = 720, height = 620, res = 144)
+sem_out
+dev.off()
 ```
+
+
 
 ### Explaining Results Variance With DV Type
 

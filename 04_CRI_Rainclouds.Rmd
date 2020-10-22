@@ -60,7 +60,7 @@ cri <- cri %>%
          belief_cat = ifelse(is.na(belief), NA, ifelse(belief < -0.5, "Low", ifelse(belief > -0.500000001 & belief < 0.12, "Mid", "High"))),
          topic_cat = ifelse(is.na(topic), NA, ifelse(topic < -0.3, "Low", ifelse(topic > -0.300000001 & topic < 0.02, "Mid", "High"))),
          total_score_cat = ifelse(is.na(total_score), NA, ifelse(total_score < 0.35, "Low", ifelse(total_score > 0.34999999 & total_score < 0.515, "Mid", "High"))),
-         pro_immigrant_cat = ifelse(is.na(pro_immigrant), NA, ifelse(pro_immigrant < 2.001, "High", ifelse(pro_immigrant < 3.01, "Mid", "Low")))
+         pro_immigrant_cat = ifelse(is.na(pro_immigrant), NA, ifelse(pro_immigrant > 4.999, "High", ifelse(pro_immigrant > 3.4999, "Mid", "Low")))
   )
 
 # drop duplicate teams
