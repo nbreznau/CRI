@@ -19,7 +19,7 @@ Allen M, Poggiali D, Whitaker K et al. Raincloud plots: a multi-platform tool fo
 rm(list = ls())
 library(pacman)
 
-pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","jtools","sjPlot","sjmisc","sjlabelled","knitr","cowplot")
+pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","jtools","sjPlot","sjmisc","sjlabelled","knitr","cowplot", "ggpubr")
 
 # set up raincloud function in ggplot, 
 source("data/R_rainclouds.R")
@@ -70,7 +70,7 @@ cri_team_combine <- subset(cri_team_combine, !is.na(stat_cat))
 
 # create categories from aspects of the teams
 cri <- cri %>% 
-  mutate(stat_cat = ifelse(is.na(stat), NA, ifelse(stat < 0, "Low", ifelse(stat > -0.000000001 & stat < 0.45, "Mid", "HIgh"))),
+  mutate(stat_cat = ifelse(is.na(stat), NA, ifelse(stat < 0, "Low", ifelse(stat > -0.000000001 & stat < 0.45, "Mid", "High"))),
          belief_cat = ifelse(is.na(belief), NA, ifelse(belief < -0.5, "Low", ifelse(belief > -0.500000001 & belief < 0.12, "Mid", "High"))),
          topic_cat = ifelse(is.na(topic), NA, ifelse(topic < -0.3, "Low", ifelse(topic > -0.300000001 & topic < 0.02, "Mid", "High"))),
          total_score_cat = ifelse(is.na(total_score), NA, ifelse(total_score < 0.35, "Low", ifelse(total_score > 0.34999999 & total_score < 0.515, "Mid", "High"))),
@@ -172,24 +172,23 @@ fig4 <- ggplot(cri_team_combine, aes(x=belief_cat_factor, y=AME_Zt, fill = iv_ty
   geom_flat_violin(aes(fill = iv_type2), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
   geom_point(aes(x = belief_cat_offset, y = AME_Zt, color = iv_type2), position = position_jitter(width = .15), size = 1, shape = 20)+
   scale_x_discrete(limits = c("Low","Mid","High")) +
-  ylab('Avg. Marginal Effect')+xlab('Belief that H is True by Researcher/Team')+
+  labs(color = "IV Type") +
+  ylab('Average Marginal Effect')+xlab('Belief that H is True by Researcher/Team')+
   ylim(-0.12,0.12)+
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 6. Results Variability by Test Variable\n  and Belief that H is True, Team-Level Average') +
+  ggtitle('Figure 4. Belief that H is True, Team-Level Average') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
-    plot.title=element_text(size=12, hjust=-0.5),
+    plot.title=element_text(size=12),
   )
 png(filename = "results/Fig4_Rain_team.png", height = 720, width = 800, res = 144)
 fig4
 dev.off()
 
 knitr::include_graphics( "results/Fig4_Rain_team.png")
-
-
 
 ```
 
@@ -202,16 +201,17 @@ fig5 <- ggplot(cri_team_combine, aes(x=pro_immigrant_cat_factor, y=AME_Zt, fill 
   geom_flat_violin(aes(fill = iv_type2), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
   geom_point(aes(x = pro_immigrant_cat_offset, y = AME_Zt, color = iv_type2), position = position_jitter(width = .15), size = 1, shape = 20)+
   scale_x_discrete(limits = c("Low","Mid","High")) +
-  ylab('Avg. Marginal Effect')+xlab('Avg. Pro-Immigration Affect by Researcher/Team')+
+  labs(color = "IV Type") +
+  ylab('Average Marginal Effect')+xlab('Average Pro-Immigration Affect by Researcher/Team')+
   ylim(-0.12,0.12)+
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 5. Results Variability by Test Variable\n  and Pro-Immigration Affect, Team-Level Average') +
+  ggtitle('Figure 5. Pro-Immigration Affect, Team-Level Average') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
-    plot.title=element_text(size=12, hjust=-0.5),
+    plot.title=element_text(size=12),
   )
 png(filename = "results/Fig5_Rain_team.png", height = 720, width = 800, res = 144)
 fig5
@@ -231,16 +231,17 @@ fig6 <- ggplot(cri_team_combine, aes(x=topic_cat_factor, y=AME_Zt, fill = iv_typ
   geom_flat_violin(aes(fill = iv_type2), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
   geom_point(aes(x = topic_cat_offset, y = AME_Zt, color = iv_type2), position = position_jitter(width = .15), size = 1, shape = 20)+
   scale_x_discrete(limits = c("Low","Mid","High")) +
-  ylab('Avg. Marginal Effect')+xlab('Topical Knowledge by Researcher/Team')+
+  labs(color = "IV Type") +
+  ylab('Average Marginal Effect')+xlab('Topical Knowledge by Researcher/Team')+
   ylim(-0.12,0.12)+
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 6. Results Variability by Test Variable\n  and Topical Knowledge, Team-Level Average') +
+  ggtitle('Figure 6. Topical Knowledge, Team-Level Average') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
-    plot.title=element_text(size=12, hjust=-0.5),
+    plot.title=element_text(size=12),
   )
 png(filename = "results/Fig6_Rain_team.png", height = 720, width = 800, res = 144)
 fig6
@@ -261,16 +262,17 @@ fig7 <- ggplot(cri_team_combine, aes(x=stat_cat_factor, y=AME_Zt, fill = iv_type
   geom_flat_violin(aes(fill = iv_type2), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
   geom_point(aes(x = stat_cat_offset, y = AME_Zt, color = iv_type2), position = position_jitter(width = .15), size = 1, shape = 20)+
   scale_x_discrete(limits = c("Low","Mid","High")) +
-  ylab('Avg. Marginal Effect')+xlab('Statistical Skills by Researcher/Team')+
+  labs(color = "IV Type") +
+  ylab('Average Marginal Effect')+xlab('Statistical Skills by Researcher/Team')+
   ylim(-0.12,0.12)+
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 7. Results Variability by Test Variable\n  and Statistics Skills, Team-Level Average') +
+  ggtitle('Figure 7. Statistics Skills, Team-Level Average') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
-    plot.title=element_text(size=12, hjust=-0.5),
+    plot.title=element_text(size=12),
   )
 png(filename = "results/Fig7_Rain_team.png", height = 720, width = 800, res = 144)
 fig7
@@ -293,16 +295,17 @@ fig8 <- ggplot(cri_team_combine, aes(total_score_cat_factor, y=AME_Zt, fill = iv
   geom_flat_violin(aes(fill = iv_type2), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
   geom_point(aes(x = total_score_cat_offset, y = AME_Zt, color = iv_type2), position = position_jitter(width = .15), size = 1, shape = 20)+
   scale_x_discrete(limits = c("Low","Mid","High")) +
-  ylab('Avg. Marginal Effect')+xlab('Average Model Score by Researcher/Team')+
+  labs(color = "IV Type") +
+  ylab('Average Marginal Effect')+xlab('Average Model Score by Researcher/Team')+
   ylim(-0.12,0.12)+
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 7. Results Variability by Test Variable\n  and Subjective Ranking, Team-Level Average') +
+  ggtitle('Figure 8. Subjective Ranking, Team-Level Average') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
-    plot.title=element_text(size=12, hjust=-0.5),
+    plot.title=element_text(size=12),
   )
 png(filename = "results/Fig8_Rain_team.png", height = 720, width = 800, res = 144)
 fig8
@@ -327,28 +330,197 @@ Repeat all five figures from above but at the model-level, in the same order.
 
 ```{r figX, warning=F, message=F, echo=T}
 
-
 figX <- ggplot(cri, aes(x=DVn, y=AME_Zt, fill = iv_type2))+
   geom_flat_violin(aes(fill = iv_type2), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
   geom_point(aes(x = DVnn, y = AME_Zt, color = iv_type2), position = position_jitter(width = .15), size = 1, shape = 20)+
   scale_x_discrete(limits = c("Scale","Health", "House","IncDiff","OldAge","Jobs","Unemp")) +
-  ylab('Avg. Marginal Effect')+xlab('Dependent Variable Type')+
+  labs(color = "IV Type") +
+  ylab('Average Marginal Effect')+xlab('Dependent Variable Type')+
   ylim(-0.12,0.12)+
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 4. Results Variability by DV Type and Test Variable, Model-Level N = 1,292') +
+  ggtitle('Figure X. DV Type, Model-Level') +
   theme(
-    axis.text=element_text(size=12),
-    axis.title=element_text(size=14),
-    plot.title=element_text(size=14),
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
   )
-png(filename = "results/FigX_Rain.png", height = 720, width = 800, res = 144)
+png(filename = "results/FigX_Rain.png", height = 720, width = 800, res = 168)
 figX
 dev.off()
 
 knitr::include_graphics( "results/FigX_Rain.png")
 
+```
+
+
+
+
+### Figure 9. Results Variability by Strength of Belief H is True, Model-Level
+
+```{r fig4, warning=F, message=F, echo=T}
+
+fig9 <- ggplot(cri, aes(x=belief_cat_factor, y=AME_Zt, fill = iv_type2))+
+  geom_flat_violin(aes(fill = iv_type2), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  geom_point(aes(x = belief_cat_offset, y = AME_Zt, color = iv_type2), position = position_jitter(width = .15), size = 1, shape = 20)+
+  scale_x_discrete(limits = c("Low","Mid","High")) +
+  labs(color = "IV Type") +
+  ylab('Average Marginal Effect')+xlab('Belief that H is True by Researcher/Model')+
+  ylim(-0.12,0.12)+
+  coord_flip()+guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Figure 9. Belief that H is True, Model-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig9_Rain_model.png", height = 720, width = 800, res = 144)
+fig9
+dev.off()
+
+knitr::include_graphics( "results/Fig9_Rain_model.png")
+
+```
+
+
+### Figure 5. Results Variability by Pro-Immigration Affect, Team-Level
+
+```{r fig5, warning=F, message=F, echo=T}
+
+fig10 <- ggplot(cri, aes(x=pro_immigrant_cat_factor, y=AME_Zt, fill = iv_type2))+
+  geom_flat_violin(aes(fill = iv_type2), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  geom_point(aes(x = pro_immigrant_cat_offset, y = AME_Zt, color = iv_type2), position = position_jitter(width = .15), size = 1, shape = 20)+
+  scale_x_discrete(limits = c("Low","Mid","High")) +
+  labs(color = "IV Type") +
+  ylab('Average Marginal Effect')+xlab('Average Pro-Immigration Affect by Researcher/Team')+
+  ylim(-0.12,0.12)+
+  coord_flip()+guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Figure 10. Pro-Immigration Affect, Model-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig10_Rain_model.png", height = 720, width = 800, res = 144)
+fig10
+dev.off()
+
+knitr::include_graphics( "results/Fig10_Rain_model.png")
+
 
 
 ```
+
+### Figure 6. Results Variability by Topical Knowledge, Team-Level
+
+```{r fig6, warning=F, message=F, echo=T}
+
+fig11 <- ggplot(cri, aes(x=topic_cat_factor, y=AME_Zt, fill = iv_type2))+
+  geom_flat_violin(aes(fill = iv_type2), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  geom_point(aes(x = topic_cat_offset, y = AME_Zt, color = iv_type2), position = position_jitter(width = .15), size = 1, shape = 20)+
+  scale_x_discrete(limits = c("Low","Mid","High")) +
+  labs(color = "IV Type") +
+  ylab('Average Marginal Effect')+xlab('Topical Knowledge by Researcher/Team')+
+  ylim(-0.12,0.12)+
+  coord_flip()+guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Figure 11. Topical Knowledge, Model-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig11_Rain_model.png", height = 720, width = 800, res = 144)
+fig11
+dev.off()
+
+knitr::include_graphics( "results/Fig11_Rain_model.png")
+
+
+
+```
+
+
+### Figure 7. Results Variability by Statistical Skills, Team-Level
+
+```{r fig7, warning=F, message=F, echo=T}
+
+fig12 <- ggplot(cri, aes(x=stat_cat_factor, y=AME_Zt, fill = iv_type2))+
+  geom_flat_violin(aes(fill = iv_type2), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  geom_point(aes(x = stat_cat_offset, y = AME_Zt, color = iv_type2), position = position_jitter(width = .15), size = 1, shape = 20)+
+  scale_x_discrete(limits = c("Low","Mid","High")) +
+  labs(color = "IV Type") +
+  ylab('Average Marginal Effect')+xlab('Statistical Skills by Researcher/Team')+
+  ylim(-0.12,0.12)+
+  coord_flip()+guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Figure 12. Statistics Skills, Model-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig12_Rain_model.png", height = 720, width = 800, res = 144)
+fig12
+dev.off()
+
+knitr::include_graphics( "results/Fig12_Rain_model.png")
+
+
+
+```
+
+
+
+
+### Figure 8. Results Variability by Subjective Ranking, Team-Level
+
+```{r fig8, warning=F, message=F, echo=T}
+
+fig13 <- ggplot(cri, aes(total_score_cat_factor, y=AME_Zt, fill = iv_type2))+
+  geom_flat_violin(aes(fill = iv_type2), position = position_nudge(x = .1, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  geom_point(aes(x = total_score_cat_offset, y = AME_Zt, color = iv_type2), position = position_jitter(width = .15), size = 1, shape = 20)+
+  scale_x_discrete(limits = c("Low","Mid","High")) +
+  labs(color = "IV Type") +
+  ylab('Average Marginal Effect')+xlab('Average Model Score by Researcher/Team')+
+  ylim(-0.12,0.12)+
+  coord_flip()+guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Figure 13. Subjective Ranking, Model-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig13_Rain_model.png", height = 720, width = 800, res = 144)
+fig13
+dev.off()
+
+knitr::include_graphics( "results/Fig13_Rain_model.png")
+
+```
+
+### Now put all 10 plots together
+```{r fig14}
+fig14 <- ggarrange(fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig11, fig12, fig13,
+                   ncol = 5, nrow = 2, common.legend = TRUE, legend = "right")
+
+fig14 <- annotate_figure(p = fig14, bottom =  text_grob("Results Variability by Researcher/Team Characteristics, Team and Model Levels",
+                                                    color = "red", face = "bold", size = 32))
+
+
+png(filename = "results/Fig14.png", height = 3600, width = 4800, res = 144)
+fig14
+dev.off()
+
+knitr::include_graphics( "results/Fig14.png")
+```
+

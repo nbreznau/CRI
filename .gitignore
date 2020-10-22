@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 data/team104workspace.RData
+*.png
+
+
