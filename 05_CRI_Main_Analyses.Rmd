@@ -241,6 +241,12 @@ tab_model(m2, m2_stock, m2_flow, p.style = "stars", show.ci = F, rm.terms = c("(
 
 
 
+
+
+
+
+#########################################################################################
+
 #### Total score explains nothing of variance
 
 ```{r regs, echo=T}
