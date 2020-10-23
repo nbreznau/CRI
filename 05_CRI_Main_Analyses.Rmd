@@ -25,7 +25,7 @@ completeFun <- function(data, desiredCols) {
 }
 ```
 
-### Data Prep
+## Data Prep
 
 These datasets were worked up from the file 01_CRI_Data_Prep.Rmd. 
 
@@ -46,7 +46,7 @@ cri_indiv <- read.csv(file = "data/cri_indv.csv", header = T)
 # cri_team_combine
 ```
 
-#### Add Subjective conclusion to Indiv data
+### Add Subjective conclusion to Indiv data
 
 ```{r subj_merge}
 cri_subj <- select(cri, u_teamid, Hsupport, Hmixed)
@@ -58,12 +58,9 @@ cri_indiv <- left_join(cri_indiv, cri_s, by = "u_teamid")
 ```
 
 
-### Measurement Model
+## Measurement Model
 
-Based on our survey before and during the CRI
-
-
-
+Based on our survey before and during the CRI. We already did a measurement model in chunk 01, but we do it here for presenting in the results.
 
 
 ```{r sem, include=T, warning=F}
@@ -81,10 +78,10 @@ sem <- sem %>%
          topic4 = ifelse(u_teamid == 27,4,topic4))
 
 # correlatinos
-cor1 <- select(sem, -c(u_teamid))
+cor1 <- select(sem, -c(u_teamid,Group.1))
 cor1 <- round(cor(cor1, use = "pairwise.complete.obs"),2)
 
-sem_f <- completeFun(sem, "Hsup")
+sem_f <- completeFun(sem, c("Hsup","belief1"))
 
 cfa <- ' stats =~ stat1 + + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
          topic =~ topic1 + topic2 + topic3 + topic4 + topic5 + topic6 + topic7 + topic8 + topic9
@@ -97,7 +94,9 @@ fit <- cfa(cfa, data = sem_f)
 
 
 ```
-#### Figure X. Correlation Matrix of Researcher Backgrouds, Team-Level
+
+
+### Table X. Correlation Matrix of Researcher Backgrouds, Team-Level
 
 ```{r sem_cor}
 # kable(cor1)
@@ -119,44 +118,128 @@ png(filename = "results/SEM.png", width = 720, height = 620, res = 144)
 sem_out
 dev.off()
 ```
+This chunk essentially proves that it probably doesn't matter whether we take team-level measures or individual-level measures agggregated by team as correlations are very high (0.86-0.95). 
+
+```{r predict_sem}
+# predicted factor scores
+pred <- as.data.frame(lavPredict(fit))
+sem_p <- cbind(sem_f,pred)
+
+# put them back into the main data
+sem_p <- select(sem_p, u_teamid, stats, topic, belief)
+sem_pa <- aggregate(x = sem_p, by = list(sem_p$u_teamid), FUN = "mean", na.rm = T)
+colnames(sem_pa) <- c("", "u_teamid","stats_ipred","topic_ipred","belief_ipred")
+sem_pa <- select(sem_pa, u_teamid, stats_ipred, topic_ipred, belief_ipred)
+cri <- left_join(cri,sem_pa,by = "u_teamid")
+
+
+  
+rm(fit,fit1,pred,sem_f,sem_out,sem_p,sem_pa)
+
+# compare with previous team-level predicted version
+
+cri_test_mean <- select(cri,u_teamid, belief, belief_ipred)
+cri_test_max <- select(cri, u_teamid, stat, topic, stats_ipred, topic_ipred)
+
+cri_team_test1 <- aggregate(cri_test_mean, by = list(cri$u_teamid), FUN = mean, na.rm=T)
+cri_team_test2 <- aggregate(cri_test_max, by = list(cri$u_teamid), FUN = max, na.rm=T)
+cri_team_test <- left_join(cri_team_test1,cri_team_test2, by = "u_teamid")
+cri_team_test <- select(cri_team_test, -c(Group.1.x,Group.1.y))
+cri_team_test$belief_ipred <- ifelse(cri_team_test$belief_ipred == "NaN", NA, cri_team_test$belief_ipred)
+cri_team_test <- completeFun(cri_team_test, "belief_ipred")
+# correlatinos
+cor2 <- select(cri_team_test, -c(u_teamid))
+cor2 <- round(cor(cor2, use = "pairwise.complete.obs"),2)
+
+rm(cor2,cri_team,cri_team_test,cri_team_test1,cri_team_test2)
+```
 
 
 
-### Explaining Results Variance With DV Type
 
+# Regresssion Approach to Explaining Variance
 
-```{r varexp, include = TRUE, warning = F}
+## Explaining Average Marginal Effects
+
+### Model Specifications - DV Type
+
+```{r m1, include = TRUE, warning = F}
 
 
 #DVs only
-m1a <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
+m1a <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
 m1b <- lm(p ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
-m1c <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri)
-
-m2a <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief, data = cri)
-m3a <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief + total_score, data = cri)
+m1c <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri)
 
 tab_model(m1a,m1b,m1c, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
 
 
 ```
 
-#### Variance Explained using Team-Weighting
 
-```{r varexpw, include = TRUE}
+### Model Specifications - Test IV Type - unweighted
 
-#DVs only
-m1aw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri, weight = inv_weight)
-m1bw <- lm(p ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri, weight = inv_weight)
-m1cw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri, weight = inv_weight)
+These results do not take into account the varying number of models per team
 
-m2aw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief, data = cri, weight = inv_weight)
-m3aw <- lm(AME ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + stat + topic + belief + total_score, data = cri, weight = inv_weight)
+```{r m1_ivsplit, include = TRUE, warning = F}
 
-tab_model(m1aw,m1bw,m1cw, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+cri_stock <- subset(cri, cri$Stock == 1)
+cri_flow <- subset(cri, cri$Flow == 1)
+
+#Stock models
+m1a_stock <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_stock)
+m1b_stock <- lm(p ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_stock)
+m1c_stock <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri_stock)
+
+#Flow models
+m1a_flow <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_flow)
+m1b_flow <- lm(p ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_flow)
+m1c_flow <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri_flow)
+
+tab_model(m1a_stock,m1b_stock,m1c_stock,m1a_flow,m1b_flow,m1c_flow, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
 
 
 ```
+
+
+### Model Specifications - Test IV Type - weighted
+
+We abandon estimation of p-values here. They do not seem to be of substantive interest for us... yet.
+
+Weighting does not improve explained variance.
+
+```{r m1_weight, include = TRUE}
+
+m1aw <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri, weight = inv_weight)
+m1aw_stock <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_stock, weights = inv_weight)
+m1aw_flow <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_flow, weights = inv_weight)
+
+
+tab_model(m1aw,m1aw_stock,m1aw_flow, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+
+
+```
+
+
+### Model Specifications - Sample Selection Related IVs
+
+orig13
+orig17
+eeurope
+allavailable
+w2016
+
+
+```{r m2}
+m2 <- lm(AME_Z ~ orig13 + orig17 + eeurope + allavailable + w2016, data = cri)
+m2_stock <- lm(AME_Z ~ orig13 + orig17 + eeurope + allavailable + w2016, data = cri_stock)
+m2_flow <- lm(AME_Z ~ orig13 + orig17 + eeurope + allavailable + w2016, data = cri_flow)
+
+tab_model(m2, m2_stock, m2_flow, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+
+```
+
+
 
 #### Total score explains nothing of variance
 
