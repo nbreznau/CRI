@@ -261,6 +261,11 @@ Note that teams are now in wide format, so that each variable has up to three va
 
 
 ```{r combine }
+# original survey data from Unipark Survey SPSS files
+cri_part <- readstata13::read.dta13("data/cri_combined_recoded.dta")
+
+# datafile merged into within-team wide format
+
 cri2 <- readstata13::read.dta13("data/cri_combined_recoded_long_nolab.dta")
 
 cri <- full_join(cri, cri2, by = "u_teamid")
@@ -536,6 +541,67 @@ cri <- select(cri, u_teamid, id, everything())
 #                        Total |        157      100.00
 ```
 
+### Individual Measurement Method
+
+```{r}
+
+# Stata data has labels, have to get original codes instead
+
+l1 <- get.label(cri_part, "v_98")
+l2 <- get.label(cri_part, "v_34")
+l3 <- get.label(cri_part, "v_17")
+l4 <- get.label(cri_part, "v_31")
+l5 <- get.label(cri_part, "v_88")
+l6 <- get.label(cri_part, "v_35")
+
+# Belief that H1 is true
+cri_part$belief1 <- get.origin.codes(cri_part$belief_H1_1, l4)
+cri_part$belief2 <- get.origin.codes(cri_part$belief_agecare_1, l4)
+cri_part$belief3 <- get.origin.codes(cri_part$belief_unempl_1, l4)
+cri_part$belief4 <- get.origin.codes(cri_part$belief_income_1, l4)
+cri_part$belief5 <- as.numeric(cri_part$belief_housing_1)
+cri_part$belief6 <- get.origin.codes(cri_part$belief_labour_1, l4)
+cri_part$belief7 <- get.origin.codes(cri_part$belief_health_1, l4)
+
+# Topical knowledge/experience
+
+cri_part$topic1 <- as.numeric(cri_part$v_17)
+cri_part$topic2 <- as.numeric(cri_part$v_19)
+cri_part$topic3 <- as.numeric(cri_part$v_20)
+cri_part$topic4 <- get.origin.codes(cri_part$v_88, l5)
+cri_part$topic5 <- get.origin.codes(cri_part$v_35, l6)
+cri_part$topic5 <- 1+(-1*cri_part$topic5)
+cri_part$topic6 <- get.origin.codes(cri_part$v_37, l6)
+cri_part$topic7 <- get.origin.codes(cri_part$v_38, l6)
+cri_part$topic8 <- get.origin.codes(cri_part$v_39, l6)
+cri_part$topic9 <- get.origin.codes(cri_part$v_40, l6)
+
+# Statistics skills/experience
+
+cri_part$stat1 <- get.origin.codes(cri_part$v_100, l1) # higher values = restricted by lack of methods skills, reverse the coding
+cri_part$stat1 <- (cri_part$stat1*-1)+5
+cri_part$stat2 <- get.origin.codes(cri_part$v_101, l1) # higher values = restricted by lack of methods skills, reverse the coding
+cri_part$stat2 <- (cri_part$stat2*-1)+5
+cri_part$stat3 <- get.origin.codes(cri_part$v_34, l2)
+
+cri_part$stat4 <- as.numeric(ifelse(cri_part$backgr_exp_teach_stat == "<NA>", NA, ifelse(cri_part$backgr_exp_teach_stat == "10+", 12, cri_part$backgr_exp_teach_stat)))
+
+cri_part$stat5 <- as.numeric(ifelse(cri_part$backgr_exp_famil_mlm == "<NA>", NA, ifelse(cri_part$backgr_exp_famil_mlm == "_(1)", 1, ifelse(cri_part$backgr_exp_famil_mlm == "_(2)", 2, ifelse(cri_part$backgr_exp_famil_mlm == "_(3)", 3, ifelse(cri_part$backgr_exp_famil_mlm == "_(4)", 4, 5))))))
+
+cri_part$stat6 <- as.numeric(cri_part$v_18)
+cri_part$stat7 <- as.numeric(cri_part$v_21)
+
+# question is wether immigration laws should be made tougher (higher scores) versus laxer (lower), need to reverse code
+cri_part$pro_immigrant <- as.numeric(cri_part$attitude_immigration_1)
+cri_part$pro_immigrant <- (cri_part$pro_immigrant*-1)+7
+
+cri_part <- select(cri_part, u_teamid, belief1:pro_immigrant)
+# cri_indiv.csv
+             
+```
+
+### Team Measurement Method
+
 Note we take the MAX for topic & statistics, MEAN for belief and pro-immigrant
 
 
@@ -572,6 +638,7 @@ cri <- cri %>%
              belief7 = mean(c(belief_health_11,belief_health_12,belief_health_13), na.rm = T), # higher more belief
              belief_strength = max(belief_certainty_11,belief_certainty_12,belief_certainty_13, na.rm = T),
              pro_immigrant = mean(c(attitude_immigration_11,attitude_immigration_12,attitude_immigration_13), na.rm = T),
+             pro_immigrant = (pro_immigrant*-1)+7, # question is wether immigration laws should be made tougher (higher scores) versus laxer (lower), need to reverse code
              changemind_delib = max(delib_changemind1,delib_changemind2,delib_changemind3, na.rm = T),
              topic_interest = max(v_881,v_882,v_883, na.rm=T),
              pub_interest = max(v_901,v_902,v_903, na.rm=T))
@@ -763,6 +830,7 @@ Save Point
 write.csv(cri, file = "data/cri.csv", row.names = F)
 write.csv(cri_str, file = "data/cri_str.csv", row.names = F)
 write.csv(cri_team, file = "data/cri_team.csv", row.names = F)
+write.csv(cri_part, file = "data/cri_indv.csv", row.names = F)
 
 # merge flow and stock team-level results for plotting
 
@@ -773,6 +841,8 @@ cri_team_combine <- subset(cri_team_combine, !is.na(AME))
 cri_team_combine <- subset(cri_team_combine, !is.na(stat_cat))
 
 write.csv(cri_team, file = "data/cri_team_combine.csv", row.names = F)
+
+
 ```
 
 
