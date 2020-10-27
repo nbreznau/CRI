@@ -69,7 +69,7 @@ cri <- cri %>%
          stat_cat_factor = factor(STATISTICS_SKILL, levels = c("Low","Mid","High")),
          belief_cat_factor = factor(BELIEF_HYPOTHESIS, levels = c("Low","Mid","High")),
          topic_cat_factor = factor(TOPIC_KNOWLEDGE, levels = c("Low","Mid","High")),
-         total_score_cat_factor = factor(total_score_cat, levels = c("Low","Mid","High")),
+         total_score_cat_factor = factor(MODEL_SCORE, levels = c("Low","Mid","High")),
          pro_immigrant_cat_factor = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"))
          )
 
@@ -84,7 +84,7 @@ cri_team_combine <- cri_team_combine %>%
          stat_cat_factor = factor(STATISTICS_SKILL, levels = c("Low","Mid","High")),
          belief_cat_factor = factor(BELIEF_HYPOTHESIS, levels = c("Low","Mid","High")),
          topic_cat_factor = factor(TOPIC_KNOWLEDGE, levels = c("Low","Mid","High")),
-         total_score_cat_factor = factor(total_score_cat, levels = c("Low","Mid","High")),
+         total_score_cat_factor = factor(MODEL_SCORE, levels = c("Low","Mid","High")),
          pro_immigrant_cat_factor = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"))
   )
 
@@ -118,7 +118,7 @@ cri_team_combine$pro_immigrant_cat_offset <- as.numeric(as.factor(cri_team_combi
 
 
 ```
-#### Exapmple Plot
+#### Example Plot
 
 ```{r rain1}
 
