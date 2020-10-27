@@ -252,3 +252,8 @@ dev.off()
 
 knitr::include_graphics("results/Fig4_AME.png")
 ```
+
+
+#### Figure 5. (same as Fig 2 at team level)
+
+#### Figure 6. (same as Fig 3 at team level)
