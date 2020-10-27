@@ -23,7 +23,7 @@ Code Compiled by
 rm(list = ls())
 library(pacman)
 
-pacman::p_load("readstata13","dplyr","readr","lattice","tidyr","readxl","knitr","boot","ragg","kableExtra")
+pacman::p_load("readstata13","dplyr","readr","lattice","tidyr","readxl","knitr","boot","ragg","kableExtra","lavaan","lavaanPlot")
 
 #Column no missing function
 completeFun <- function(data, desiredCols) {
@@ -260,7 +260,7 @@ Note that teams are now in wide format, so that each variable has up to three va
 
 
 
-```{r combine }
+```{r combine, warning=F, message=F }
 # original survey data from Unipark Survey SPSS files
 cri_part <- readstata13::read.dta13("data/cri_combined_recoded.dta")
 
@@ -820,6 +820,145 @@ rm(cri_stra)
 
 
 
+
+## Individual Level Data Work
+
+### Add Subjective conclusion to Indiv data
+
+```{r subj_merge}
+# fast way to strip attributes
+write.csv(cri_part, file = "data/cri_indv.csv", row.names = F)
+
+cri_indiv <- read.csv(file = "data/cri_indv.csv", header = T)
+
+
+cri_subj <- select(cri, u_teamid, Hsupport, Hmixed)
+cri_subj$Hsup <- ifelse(cri_subj$Hsupport == 1, 1, ifelse(cri_subj$Hmixed == 1, 0.5, 0))
+cri_subj <- select(cri, u_teamid, Hsup)
+cri_s <- aggregate(cri_subj, by = list(cri_subj$u_teamid), FUN = mean, na.rm = T)
+
+cri_indiv <- left_join(cri_indiv, cri_s, by = "u_teamid")
+```
+
+
+## Measurement Model
+
+Based on our survey before and during the CRI. We already did a measurement model in chunk 01, but we do it here for presenting in the results.
+
+
+```{r sem, include=T, warning=F}
+
+
+# non-missing df
+
+sem <- completeFun(cri_indiv, "stat1")
+
+# team 27 missing 3 values, fill for consistency
+
+sem <- sem %>%
+  mutate(stat1 = ifelse(u_teamid == 27,3,stat1),
+         stat2 = ifelse(u_teamid == 27,3,stat2),
+         topic4 = ifelse(u_teamid == 27,4,topic4))
+
+# correlatinos
+cor1 <- select(sem, -c(u_teamid,Group.1))
+cor1 <- round(cor(cor1, use = "pairwise.complete.obs"),2)
+
+sem_f <- completeFun(sem, c("Hsup","belief1"))
+
+cfa <- ' stats =~ stat1 + + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
+         topic =~ topic1 + topic2 + topic3 + topic4 + topic5 + topic6 + topic7 + topic8 + topic9
+         belief =~ belief1 + belief2 + belief3 + belief4 + belief5 + belief6 + belief7 
+         immig =~ pro_immigrant
+         concl =~ Hsup         
+'
+fit <- cfa(cfa, data = sem_f)
+
+
+
+```
+
+
+### Table X. Correlation Matrix of Researcher Backgrouds, Team-Level
+
+```{r sem_cor}
+# kable(cor1)
+
+cor1[upper.tri(cor1)] <- ""
+
+kable(cor1)
+```
+
+
+```{r sem_fit}
+fit1 <- summary(fit, fit.measures=TRUE, standardized = T)
+
+labels = list(stats = "Statistics Skill", topic = "Topic Knowledge", belief = "Belief in Hypothesis", immig = "Pro Immigration", concl = "Results Supported")
+
+sem_out <- lavaanPlot(model = fit, labels = labels, coefs = TRUE, covs = TRUE, stand = TRUE)
+
+png(filename = "results/SEM.png", width = 720, height = 620, res = 144)
+sem_out
+dev.off()
+```
+
+
+This chunk essentially proves that it probably doesn't matter whether we take team-level measures or individual-level measures aggregated by team as correlations are very high (0.86-0.95). 
+
+```{r predict_sem, warning=F, message=F}
+# predicted factor scores
+pred <- as.data.frame(lavPredict(fit))
+sem_p <- cbind(sem_f,pred)
+
+# put them back into the main data
+sem_p <- select(sem_p, u_teamid, stats, topic, belief)
+sem_pa <- aggregate(x = sem_p, by = list(sem_p$u_teamid), FUN = "mean", na.rm = T)
+colnames(sem_pa) <- c("", "u_teamid","stats_ipred","topic_ipred","belief_ipred")
+sem_pa <- select(sem_pa, u_teamid, stats_ipred, topic_ipred, belief_ipred)
+cri <- left_join(cri,sem_pa,by = "u_teamid")
+
+
+  
+rm(fit,fit1,pred,sem_f,sem_out,sem_p,sem_pa)
+
+# compare with previous team-level predicted version
+
+cri_test_mean <- select(cri,u_teamid, belief, belief_ipred)
+cri_test_max <- select(cri, u_teamid, stat, topic, stats_ipred, topic_ipred)
+
+cri_team_test1 <- aggregate(cri_test_mean, by = list(cri$u_teamid), FUN = mean, na.rm=T)
+cri_team_test2 <- aggregate(cri_test_max, by = list(cri$u_teamid), FUN = max, na.rm=T)
+cri_team_test <- left_join(cri_team_test1,cri_team_test2, by = "u_teamid")
+cri_team_test <- select(cri_team_test, -c(Group.1.x,Group.1.y))
+cri_team_test$belief_ipred <- ifelse(cri_team_test$belief_ipred == "NaN", NA, cri_team_test$belief_ipred)
+cri_team_test <- completeFun(cri_team_test, "belief_ipred")
+# correlatinos
+cor2 <- select(cri_team_test, -c(u_teamid))
+cor2 <- round(cor(cor2, use = "pairwise.complete.obs"),2)
+
+rm(cor2,cri_team_test,cri_team_test1,cri_team_test2)
+```
+
+```{r spec_cats}
+# The team qualities data were originally coded into 4 categories, "Highest, High, Mid and 
+# Low". It is easier to visualize with only three. And, theoretically the individual-level measurment model results are the 'most correct'.
+
+# we allow NAs to be 'mid' to maintain case numbers
+cri <- cri %>%
+  mutate(BELIEF_HYPOTHESIS = ifelse(belief_ipred < -0.37, "Low", ifelse(belief_ipred > 0.37, "High", "Mid")),
+         PRO_IMMIGRANT = ifelse(is.na(pro_immigrant), NA, ifelse(pro_immigrant > 4.5, "High", ifelse(pro_immigrant < 3.2, "Low", "Mid"))),
+         TOPIC_KNOWLEDGE = ifelse(topic_ipred > 0, "High", ifelse(topic_ipred < -0.21, "Low", "Mid")),
+         STATISTICS_SKILL = ifelse(stats_ipred > 0.38, "High", ifelse(stats_ipred < -0.3, "Low", "Mid")),
+         MODEL_SCORE = ifelse(total_score > 0.55, "High", ifelse(total_score < 0.35, "Low", "Mid")))
+        
+cri_stra <- select(cri, id, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
+cri_stra <- subset(cri_stra, !is.na(PRO_IMMIGRANT))
+
+cri_str <- left_join(cri_str, cri_stra, by = "id")
+rm(cri_stra)
+```
+
+
 Save Point
 
 
@@ -830,7 +969,7 @@ Save Point
 write.csv(cri, file = "data/cri.csv", row.names = F)
 write.csv(cri_str, file = "data/cri_str.csv", row.names = F)
 write.csv(cri_team, file = "data/cri_team.csv", row.names = F)
-write.csv(cri_part, file = "data/cri_indv.csv", row.names = F)
+write.csv(cri_indiv, file = "data/cri_indv.csv", row.names = F)
 
 # merge flow and stock team-level results for plotting
 
@@ -844,5 +983,3 @@ write.csv(cri_team, file = "data/cri_team_combine.csv", row.names = F)
 
 
 ```
-
-
