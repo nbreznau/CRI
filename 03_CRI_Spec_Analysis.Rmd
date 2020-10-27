@@ -78,6 +78,13 @@ crispectest$est <- round(crispectest$AME_Z, 6)
 crispectest$lb <- round(crispectest$lower_Z, 6)
 crispectest$ub <- round(crispectest$upper_Z, 6)
 
+# set up subjective conclusions at team level as 1 support, 0 not testable and -1 reject
+
+cri_team <- cri_team %>%
+  mutate(est = ifelse(Hsup == 1, 0.1, ifelse(Hrej == 1, -0.1, ifelse(Hno == 1, 0, NA))),
+         ub = est+0.01,
+         lb = est-0.01)
+
 ```
 
 
@@ -209,89 +216,39 @@ dev.off()
 knitr::include_graphics("results/Fig3_AME.png")
 ```
 
+### Subjective Team Conclusions
 
-### P-Values
+#### Fig 4. By Researcher Qualities and 
 
-
-```{r pvalcrv, echo=T}
-df1 <- as.data.frame(select(crispectest, belief_cat, stat_cat, p, lb, ub))
-
-df1 <- subset(df1, !is.na(df1$belief_cat))
-
-# make negative p-values for negative effects, and make 1-p
-
-df1$p <- 1-df1$p
-df1$p <- ifelse((df1$ub+df1$lb)<0, df1$p*-1, df1$p)
-df1$lb <- df1$p-0.949999
-df1$ub <- df1$p+0.949999
-df1$ub <- ifelse(df1$ub > 1, 1.000001 , df1$ub)
-df1$lb <- ifelse(df1$lb < -1, -1.000001 , df1$lb)
-
-# make the confidence interval transparent for better viz
-
-# THANKS TO:
-## Transparent colors
-## Mark Gardener 2015
-## www.dataanalytics.org.uk
-
-t_col <- function(color, percent = 50, name = NULL) {
-  #      color = color name
-  #    percent = % transparency
-  #       name = an optional name for the color
-
-# Get RGB values for named color
-rgb.val <- col2rgb(color)
-
-# Make new color using input color as base and alpha set by transparency
-t.col <- rgb(rgb.val[1], rgb.val[2], rgb.val[3],
-             max = 255,
-             alpha = (100 - percent) * 255 / 100,
-             names = name)
-# Save the color
-invisible(t.col)
-}
-hidecolor <- t_col("pink", perc = 100, name = "lt.pink")
-
-  # remove/adjust attributes
-  choic <- 1:2
-  attr(df1, "choices") <- choic
-  rownames(df1) <- NULL
-agg_png(file = "results/Fig2_pcurve.png", width = 800, height = 500, res = 144)
-  plot_rdf_spec_curve(df1, est = "p", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, ribbon_color = hidecolor, lower_to_upper = 1, est_label = "Confidence Level\n(p<0.05)", ribbon = F)
-dev.off()
-
-knitr::include_graphics("results/Fig2_pcurve.png")
-
-```
-### Subjective Test Results
-
-Support, Reject, No Test
+```{r fig4_DV2, echo=F}
 
 
-```{r team_hresultspec}
-df_team <- select(cri_team, software, pos_test_pct_p05, pos_test_pct_p10, belief_cat, stat_cat, topic_cat, total_score_cat, Hresult)
+spec_team <- select(cri_team, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE, est, lb, ub)
 
-df_team <- df_team %>%
-  mutate(Test_Results_p05 = ifelse(pos_test_pct_p05 > 0.7, "70%+", ifelse(pos_test_pct_p05 > 0.5, "50-70%", ifelse(pos_test_pct_p05 > 0.25, "25-50%", "25%-"))),
-         est = ifelse(Hresult == "Support", 0.01, ifelse(Hresult == "Reject", -0.01, 0)),
-         lb = ifelse(est == 0.01, 0.009, ifelse(est == -0.01, -0.011, -0.01)),
-         ub = ifelse(est == 0.01, 0.011, ifelse(est == -0.01, -0.009, 0.01)))
-
-df3 <- select(df_team, Test_Results_p05, belief_cat, est, ub, lb)
-
-df3 <- subset(df3, !is.na(belief_cat))
-# remove/adjust attributes
-  choic <- 1:2
-  attr(df3, "choices") <- choic
-  rownames(df3) <- NULL
-
-  agg_png(file = "results/Fig3_subj.png", width = 750, height = 750, res = 144)
-  plot_rdf_spec_curve(df3, est = "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  choice_ind_point = F, ribbon_color = hidecolor, pt_size = .5, lower_to_upper = 2, est_label = "Hypothesis Test", ribbon = F)
-dev.off()
-
-knitr::include_graphics("results/Fig3_subj.png")
+spec_team <- subset(spec_team, !is.na(BELIEF_HYPOTHESIS))
+spec_team <- subset(spec_team, !is.na(MODEL_SCORE))
+# one problem with rdfanalysis is that it outputs the categories in the order they appear in the data, therefore we have to generate 3 rows of fake data to get the order right
   
+fake <- as.data.frame(matrix(nrow = 3, ncol = 8))
+fake[1,] <- c("Low","Low","Low","Low","Low",0,-0.01,0.01)
+fake[2,] <- c("Mid","Mid","Mid","Mid","Mid",0,-0.01,0.01)
+fake[3,] <- c("High","High","High","High","High",0,-0.01,0.01)
+colnames(fake) <- c("BELIEF_HYPOTHESIS", "PRO_IMMIGRANT", "TOPIC_KNOWLEDGE", "STATISTICS_SKILL", "MODEL_SCORE", "est", "lb", "ub")
+fake$est <- as.numeric(fake$est)
+fake$ub <- as.numeric(fake$ub)
+fake$lb <- as.numeric(fake$lb)
+
+spec_team1 <- bind_rows(fake,spec_team)
+
+# remove/adjust attributes
+  spec_team1 <- spec_team1[names(spec_team1)]
+  choices <- 1:5
+  attr(spec_team1, "choices") <- choices
+  rownames(spec_team1) <- NULL
+png(file = "results/Fig4_AME.png", width = 700, height = 700, res = 144)
+
+plot_rdf_spec_curve(spec_team1, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Subjective Conclusion", choice_ind_point = F, pt_size = 0.5, ribbon = T)
+dev.off()
+
+knitr::include_graphics("results/Fig4_AME.png")
 ```
-
-
-

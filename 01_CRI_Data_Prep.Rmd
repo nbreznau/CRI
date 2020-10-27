@@ -917,7 +917,7 @@ colnames(sem_pa) <- c("", "u_teamid","stats_ipred","topic_ipred","belief_ipred")
 sem_pa <- select(sem_pa, u_teamid, stats_ipred, topic_ipred, belief_ipred)
 cri <- left_join(cri,sem_pa,by = "u_teamid")
 
-
+cri_team <- left_join(cri_team, sem_pa, by = "u_teamid")
   
 rm(fit,fit1,pred,sem_f,sem_out,sem_p,sem_pa)
 
@@ -932,6 +932,7 @@ cri_team_test <- left_join(cri_team_test1,cri_team_test2, by = "u_teamid")
 cri_team_test <- select(cri_team_test, -c(Group.1.x,Group.1.y))
 cri_team_test$belief_ipred <- ifelse(cri_team_test$belief_ipred == "NaN", NA, cri_team_test$belief_ipred)
 cri_team_test <- completeFun(cri_team_test, "belief_ipred")
+
 # correlatinos
 cor2 <- select(cri_team_test, -c(u_teamid))
 cor2 <- round(cor(cor2, use = "pairwise.complete.obs"),2)
@@ -956,6 +957,24 @@ cri_stra <- subset(cri_stra, !is.na(PRO_IMMIGRANT))
 
 cri_str <- left_join(cri_str, cri_stra, by = "id")
 rm(cri_stra)
+
+# now repeat for the team level
+cri_stra <- select(cri_team, u_teamid, belief_ipred, pro_immigrant, topic_ipred, stats_ipred, total_score)
+
+cri_stra2 <- aggregate(cri_stra, by = list(cri_stra$u_teamid), FUN = mean, na.rm = T)
+
+cri_stra2 <- cri_stra2 %>%
+  mutate(BELIEF_HYPOTHESIS = ifelse(belief_ipred < -0.2, "Low", ifelse(belief_ipred > 0.2, "High", "Mid")),
+         PRO_IMMIGRANT = ifelse(is.na(pro_immigrant), NA, ifelse(pro_immigrant > 4.5, "High", ifelse(pro_immigrant < 3.2, "Low", "Mid"))),
+         TOPIC_KNOWLEDGE = ifelse(topic_ipred > 0.25, "High", ifelse(topic_ipred < -0.15, "Low", "Mid")),
+         STATISTICS_SKILL = ifelse(stats_ipred > 0.2, "High", ifelse(stats_ipred < -0.2, "Low", "Mid")),
+         MODEL_SCORE = ifelse(total_score > 0.55, "High", ifelse(total_score < 0.35, "Low", "Mid")))
+cri_stra2 <- subset(cri_stra2, !is.na(PRO_IMMIGRANT))
+cri_stra2 <- select(cri_stra2, u_teamid, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
+
+
+cri_team <- left_join(cri_team, cri_stra2, by = "u_teamid")
+rm(cri_stra, cri_stra2)
 ```
 
 
