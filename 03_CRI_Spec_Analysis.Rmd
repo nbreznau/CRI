@@ -38,11 +38,25 @@ cri_team <- read.csv(file = "data/cri_team.csv", header = T)
 ```
 
 
-```{r recode_cats, warning=F, message=F, include=F}
-
+```{r data_prep, warning=F, message=F, include=F}
 
 # prep data
-crispectest <- dplyr::select(cri_str, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe, cluster_any, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_any, Hresult, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
+crispectest <- dplyr::select(cri_str, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe, cluster_any, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_any, Hresult, orig13, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
+
+# create sample variables 
+crispectest <- crispectest %>%
+  mutate(w1985 = ifelse(is.na(w1985), "Other", w1985),
+         w1990 = ifelse(is.na(w1990), "Other", w1990),
+         w1996 = ifelse(is.na(w1996), "Other", w1996),
+         w2006 = ifelse(is.na(w2006), "Other", w2006),
+         w2016 = ifelse(is.na(w2016), "Other", w2016),
+         orig13 = ifelse(is.na(orig13), "Other", orig13),
+         eeurope = ifelse(is.na(eeurope), "Other", eeurope),
+         allavailable = ifelse(is.na(allavailable), "Other", allavailable))
+
+crispectest <- crispectest %>%
+  mutate(SURVEY_WAVES = ifelse(w1985 == "Other" & w1990 == "Other" & w1996 == "w1996" & w2006 == "w2006" & w2016 == "Other", "1996 & 2006", ifelse(w1985 == "Other" & w1990 == "Other" & w1996 == "w1996" & w2006 == "w2006" & w2016 == "w2016", "1996, 2006 & 2016", ifelse(w1985 == "Other" & w1990 == "Other" & w1996 == "Other" & w2006 == "w2006" & w2016 == "w2016", "2006 & 2016", "Other"))),
+         COUNTRIES = ifelse(orig13 == "orig13", "Core Rich Democracies Only", ifelse(allavailable == "allavailable", "All Available (~26)", ifelse(eeurope == "eeurope", "Includes Eastern/CE Europe", "Other"))))
 
 #Remove NAs
 crispectest <- subset(crispectest, !is.na(crispectest$AME_Z))
@@ -58,6 +72,11 @@ crispectest$upper_Z <- ifelse(crispectest$upper_Z > -0.00000001 & crispectest$up
   crispectest$upper_Z <- ifelse(crispectest$upper_Z < -0.75, -0.745, crispectest$upper_Z)
   crispectest$AME_Z <- ifelse(crispectest$AME_Z < -0.75, -0.747, crispectest$AME_Z)
   crispectest$AME_Z <- ifelse(crispectest$AME_Z > 0.75, 0.747, crispectest$AME_Z)
+  
+  #data prep
+crispectest$est <- round(crispectest$AME_Z, 6)
+crispectest$lb <- round(crispectest$lower_Z, 6)
+crispectest$ub <- round(crispectest$upper_Z, 6)
 
 ```
 
@@ -66,19 +85,11 @@ crispectest$upper_Z <- ifelse(crispectest$upper_Z > -0.00000001 & crispectest$up
 
 ### Average Marginal Effects
 
-#### Researcher Qualities and Subjective Model Scoring
-
-Standardized scores
+#### Fig 1. Researcher Qualities and Subjective Model Scoring
 
 ```{r fig1_DV1, echo=F}
 
 
-
-
-#data prep
-crispectest$est <- round(crispectest$AME_Z, 6)
-crispectest$lb <- round(crispectest$lower_Z, 6)
-crispectest$ub <- round(crispectest$upper_Z, 6)
 
 crispectest1 <- select(crispectest, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE, est, lb, ub)
 
@@ -113,7 +124,90 @@ dev.off()
 knitr::include_graphics("results/Fig1_AME.png")
 ```
 
-#### Researcher Qualities and Subjective Model Scoring
+#### Fig 2. Model Features Pooled
+
+```{r}
+crispectest2 <- crispectest %>%
+  mutate(IMMIGRATION_MEASURE = iv_type,
+         DV_MEASURE = dv_type)
+
+crispectest2 <- subset(crispectest2, !is.na(crispectest2$IMMIGRATION_MEASURE))
+crispectest2 <- subset(crispectest2, !is.na(crispectest2$DV_MEASURE))
+
+crispectest2 <- select(crispectest2, IMMIGRATION_MEASURE, DV_MEASURE, est, lb, ub)
+
+# remove/adjust attributes
+  crispectest2 <- crispectest2[names(crispectest2)]
+  choices <- 1:2
+  attr(crispectest2, "choices") <- choices
+  rownames(crispectest2) <- NULL
+png(file = "results/Fig2_AME.png", width = 1200, height = 850, res = 144)
+
+plot_rdf_spec_curve(crispectest2, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, pt_size = 0.3, ribbon = T)
+dev.off()
+
+knitr::include_graphics("results/Fig2_AME.png")
+```
+#### Fig 2_Stock. Model Features Stock Models Only
+
+```{r fig2_stock}
+crispectest3 <- subset(crispectest2, IMMIGRATION_MEASURE == "Stock")
+crispectest3 <- select(crispectest3, -c(IMMIGRATION_MEASURE))
+
+# remove/adjust attributes
+  crispectest3 <- crispectest3[names(crispectest3)]
+  choices <- 1
+  attr(crispectest3, "choices") <- choices
+  rownames(crispectest3) <- NULL
+png(file = "results/Fig2_Stock_AME.png", width = 800, height = 650, res = 144)
+
+plot_rdf_spec_curve(crispectest3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, pt_size = 0.3, ribbon = T)
+dev.off()
+
+knitr::include_graphics("results/Fig2_Stock_AME.png")
+```
+
+
+#### Fig 2_Stock. Model Features Flow Models Only
+
+```{r fig2_flow}
+crispectest4 <- subset(crispectest2, IMMIGRATION_MEASURE == "Flow")
+crispectest4 <- select(crispectest4, -c(IMMIGRATION_MEASURE))
+
+# remove/adjust attributes
+  crispectest4 <- crispectest4[names(crispectest4)]
+  choices <- 1
+  attr(crispectest4, "choices") <- choices
+  rownames(crispectest4) <- NULL
+png(file = "results/Fig2_Flow_AME.png", width = 800, height = 650, res = 144)
+
+plot_rdf_spec_curve(crispectest3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, pt_size = 0.3, ribbon = T)
+dev.off()
+
+knitr::include_graphics("results/Fig2_Flow_AME.png")
+```
+
+#### Fig 3. Sample Features
+
+```{r fig3}
+crispectest5 <- select(crispectest, SURVEY_WAVES, COUNTRIES, est, lb, ub)
+
+crispectest5 <- subset(crispectest5, !is.na(crispectest5$SURVEY_WAVES))
+crispectest5 <- subset(crispectest5, !is.na(crispectest5$COUNTRIES))
+
+
+# remove/adjust attributes
+  crispectest5 <- crispectest5[names(crispectest5)]
+  choices <- 1:2
+  attr(crispectest5, "choices") <- choices
+  rownames(crispectest5) <- NULL
+png(file = "results/Fig3_AME.png", width = 1200, height = 850, res = 144)
+
+plot_rdf_spec_curve(crispectest5, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, pt_size = 0.3, ribbon = T)
+dev.off()
+
+knitr::include_graphics("results/Fig3_AME.png")
+```
 
 
 ### P-Values
