@@ -1,8 +1,6 @@
-library("shiny")
-library("ggplot2")
-library("rdfanalysis")
-library("dplyr")
 
+pacman::p_load(shiny, ggplot2, rdfanalysis, dplyr)
+rm(list = ls())
 # Load files
 
 df <- read.csv("data/cri.csv")
@@ -117,7 +115,16 @@ cri_team_combine <- cri_team_combine %>%
          total_score_cat_factor = factor(total_score_cat, levels = c("Low", "Mid", "High")),
          pro_immigrant_cat = ifelse(is.na(pro_immigrant), NA, ifelse(pro_immigrant < 2.001, "High", ifelse(pro_immigrant < 3.01, "Mid", "Low"))),
          pro_immigrant_cat_factor = factor(pro_immigrant_cat, levels = c("Low","Mid","High"))
-  )
+  ) %>%
+  mutate(
+    Test_Results_p05 = ifelse(pos_test_pct_p05 > 0.7, "70%+", 
+                              ifelse(pos_test_pct_p05 > 0.5, "50-70%", 
+                                     ifelse(pos_test_pct_p05 > 0.25, "25-50%", "25%-"))),
+    est = ifelse(Hresult == "Support", 0.01, ifelse(Hresult == "Reject", -0.01, 0)),
+    lb = ifelse(est == 0.01, 0.009, ifelse(est == -0.01, -0.011, -0.01)),
+    ub = ifelse(est == 0.01, 0.011, ifelse(est == -0.01, -0.009, 0.01))
+  ) 
+  
 
 
 
@@ -203,31 +210,30 @@ server <- function(input, output, session) {
   ### Subjective Conclusion
   output$subject <- renderPlot({
     teamspec <- reactive({
-      filter(cri_team_combine, iv_type2 %in% mspeciv3 & belief_cat_factor %in% input$belief3 & stat_cat_factor %in% input$stat3 & 
+      filter(cri_team_combine, iv_type2 %in% input$mspeciv3 & belief_cat_factor %in% input$belief3 & stat_cat_factor %in% input$stat3 & 
                topic_cat_factor %in% input$topic3 & total_score_cat_factor %in% input$total3 & pro_immigrant_cat_factor %in% input$proimm3)
     })
     teamspec <- ({
-      select(teamspec(), iv_type2, belief_cat_factor, stat_cat_factor, topic_cat_factor,total_score_cat_factor, pro_immigrant_cat_factor,
-             Hresult)
+      select(teamspec(), Test_Results_p05, belief_cat_factor, est, lb, ub)
     })
     teamspec <- ({
-      teamspec[complete.cases(dfspec),]
+      teamspec[complete.cases(teamspec),]
     })
-    attr(teamspec, "choices") <- 1:6
+    attr(teamspec, "choices") <- 1:2
     sumout3 <- reactive({teamspec})
     output$pr3 <- renderText({
       pr3 <- round(
         ((length(which(sumout3()$est < 0 & sumout3()$ub < 0)) ) / (length(sumout3()$est))*100),1)
-      paste(pr3, "% indicate a significant negative effect of immigration", sep="")
+      paste(pr3, "% reject the hypothesis", sep="")
     })
     
     output$teamn3 <- renderText({
       teamn3 <- length(sumout3()$est)
-      paste("displaying", teamn3, "of 1,292 models")
+      paste("displaying", teamn3, "of 88 teams")
     })
-    plot_rdf_spec_curve(teamspec, "est", lb = "lb", ub = "ub", est_color = "grey", pt_size = 2, 
-                        pt_size_highlight = 2, est_color_signeg = "red", lower_to_upper = 1.5, 
-                        est_label = "Marginal Effect", ribbon = F)
+    plot_rdf_spec_curve(teamspec, est = "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  
+                        choice_ind_point = F, pt_size = .5, lower_to_upper = 2, 
+                        est_label = "Hypothesis Test", ribbon = F)
   })
   
 }
