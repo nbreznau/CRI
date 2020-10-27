@@ -54,14 +54,7 @@ cri_team_combine <- read.csv(file = "data/cri_team_combine.csv", header = T)
 
 ```{r rain_prep, warning=F, message=F}
 
-# create categories from aspects of the teams
-cri <- cri %>% 
-  mutate(stat_cat = ifelse(is.na(stat), NA, ifelse(stat < 0, "Low", ifelse(stat > -0.000000001 & stat < 0.45, "Mid", "High"))),
-         belief_cat = ifelse(is.na(belief), NA, ifelse(belief < -0.5, "Low", ifelse(belief > -0.500000001 & belief < 0.12, "Mid", "High"))),
-         topic_cat = ifelse(is.na(topic), NA, ifelse(topic < -0.3, "Low", ifelse(topic > -0.300000001 & topic < 0.02, "Mid", "High"))),
-         total_score_cat = ifelse(is.na(total_score), NA, ifelse(total_score < 0.35, "Low", ifelse(total_score > 0.34999999 & total_score < 0.515, "Mid", "High"))),
-         pro_immigrant_cat = ifelse(is.na(pro_immigrant), NA, ifelse(pro_immigrant > 4.999, "High", ifelse(pro_immigrant > 3.4999, "Mid", "Low")))
-  )
+
 
 # drop duplicate teams
 
@@ -73,11 +66,11 @@ cri <- cri %>%
          iv_type2 = ifelse(main_IV_type=="Change in Flow","Flow",main_IV_type),
          iv_type2 = as.factor(iv_type2),
          DVn = as.factor(DVs),
-         stat_cat_factor = factor(stat_cat, levels = c("Low","Mid","High")),
-         belief_cat_factor = factor(belief_cat, levels = c("Low","Mid","High")),
-         topic_cat_factor = factor(topic_cat, levels = c("Low","Mid","High")),
+         stat_cat_factor = factor(STATISTICS_SKILL, levels = c("Low","Mid","High")),
+         belief_cat_factor = factor(BELIEF_HYPOTHESIS, levels = c("Low","Mid","High")),
+         topic_cat_factor = factor(TOPIC_KNOWLEDGE, levels = c("Low","Mid","High")),
          total_score_cat_factor = factor(total_score_cat, levels = c("Low","Mid","High")),
-         pro_immigrant_cat_factor = factor(pro_immigrant_cat, levels = c("Low","Mid","High"))
+         pro_immigrant_cat_factor = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"))
          )
 
 
@@ -88,16 +81,11 @@ cri_team_combine <- cri_team_combine %>%
          AME_Zt = ifelse(AME_Zt < -1, -1, AME_Zt),
          iv_type2 = ifelse(Stock == 1, "Stock", "Flow"),
          iv_type2 = as.factor(iv_type2),
-         stat_cat = ifelse(stat_cat == "Highest" | stat_cat == "High", "High", ifelse(stat_cat == "Low", "Mid", "Low")), # highest is very rare, combine
-         stat_cat_factor = factor(stat_cat, levels = c("Low", "Mid", "High")),
-         belief_cat = ifelse(belief_cat == "Highest" | belief_cat == "High", "High", ifelse(belief_cat == "Low", "Mid", "Low")), # high and highest are least frequent, combine
-         belief_cat_factor = factor(belief_cat, levels = c("Low", "Mid", "High")),
-         topic_cat = ifelse(topic_cat == "Highest" | topic_cat == "High", "High", ifelse(topic_cat == "Lowest", "Low", "Mid")), # highest is least frequent, combine
-         topic_cat_factor = factor(topic_cat, levels = c("Low", "Mid", "High")),
-         total_score_cat = ifelse(total_score_cat == "Lowest" | total_score_cat == "Low", "Low", ifelse(total_score_cat == "High", "Mid", "High")), # low and lowest are least frequent, combine
-         total_score_cat_factor = factor(total_score_cat, levels = c("Low", "Mid", "High")),
-         pro_immigrant_cat = ifelse(is.na(pro_immigrant), NA, ifelse(pro_immigrant < 2.001, "High", ifelse(pro_immigrant < 3.01, "Mid", "Low"))),
-         pro_immigrant_cat_factor = factor(pro_immigrant_cat, levels = c("Low","Mid","High"))
+         stat_cat_factor = factor(STATISTICS_SKILL, levels = c("Low","Mid","High")),
+         belief_cat_factor = factor(BELIEF_HYPOTHESIS, levels = c("Low","Mid","High")),
+         topic_cat_factor = factor(TOPIC_KNOWLEDGE, levels = c("Low","Mid","High")),
+         total_score_cat_factor = factor(total_score_cat, levels = c("Low","Mid","High")),
+         pro_immigrant_cat_factor = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"))
   )
 
          
@@ -164,7 +152,7 @@ fig4 <- ggplot(cri_team_combine, aes(x=belief_cat_factor, y=AME_Zt, fill = iv_ty
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 4. Belief that H is True, Team-Level Average') +
+  ggtitle('Belief Hypothesis is True, Team-Level Average') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
@@ -193,7 +181,7 @@ fig5 <- ggplot(cri_team_combine, aes(x=pro_immigrant_cat_factor, y=AME_Zt, fill 
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 5. Pro-Immigration Affect, Team-Level Average') +
+  ggtitle('Pro-Immigrant Affect, Team-Level Average') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
@@ -223,7 +211,7 @@ fig6 <- ggplot(cri_team_combine, aes(x=topic_cat_factor, y=AME_Zt, fill = iv_typ
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 6. Topical Knowledge, Team-Level Average') +
+  ggtitle('Topical Knowledge, Team-Level Average') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
@@ -254,7 +242,7 @@ fig7 <- ggplot(cri_team_combine, aes(x=stat_cat_factor, y=AME_Zt, fill = iv_type
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 7. Statistics Skills, Team-Level Average') +
+  ggtitle('Statistics Skills, Team-Level Average') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
@@ -287,7 +275,7 @@ fig8 <- ggplot(cri_team_combine, aes(total_score_cat_factor, y=AME_Zt, fill = iv
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 8. Subjective Ranking, Team-Level Average') +
+  ggtitle('Model Score, Team-Level Average') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
@@ -326,7 +314,7 @@ figX <- ggplot(cri, aes(x=DVn, y=AME_Zt, fill = iv_type2))+
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure X. DV Type, Model-Level') +
+  ggtitle('DV Type, Model-Level') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
@@ -352,12 +340,12 @@ fig9 <- ggplot(cri, aes(x=belief_cat_factor, y=AME_Zt, fill = iv_type2))+
   geom_point(aes(x = belief_cat_offset, y = AME_Zt, color = iv_type2), position = position_jitter(width = .15), size = 1, shape = 20)+
   scale_x_discrete(limits = c("Low","Mid","High")) +
   labs(color = "IV Type") +
-  ylab('Average Marginal Effect')+xlab('Belief that H is True by Researcher/Model')+
+  ylab('Average Marginal Effect')+xlab('Belief H is True by Researcher/Model')+
   ylim(-0.12,0.12)+
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 9. Belief that H is True, Model-Level') +
+  ggtitle('Belief Hypothesis is True, Model-Level') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
@@ -386,7 +374,7 @@ fig10 <- ggplot(cri, aes(x=pro_immigrant_cat_factor, y=AME_Zt, fill = iv_type2))
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 10. Pro-Immigration Affect, Model-Level') +
+  ggtitle('Pro-Immigrant Affect, Model-Level') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
@@ -416,7 +404,7 @@ fig11 <- ggplot(cri, aes(x=topic_cat_factor, y=AME_Zt, fill = iv_type2))+
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 11. Topical Knowledge, Model-Level') +
+  ggtitle('Topical Knowledge, Model-Level') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
@@ -447,7 +435,7 @@ fig12 <- ggplot(cri, aes(x=stat_cat_factor, y=AME_Zt, fill = iv_type2))+
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 12. Statistics Skills, Model-Level') +
+  ggtitle('Statistics Skills, Model-Level') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
@@ -480,7 +468,7 @@ fig13 <- ggplot(cri, aes(total_score_cat_factor, y=AME_Zt, fill = iv_type2))+
   coord_flip()+guides(fill = FALSE)+
   scale_colour_brewer(palette = "Dark2")+
   scale_fill_brewer(palette = "Dark2")+
-  ggtitle('Figure 13. Subjective Ranking, Model-Level') +
+  ggtitle('Subjective Ranking, Model-Level') +
   theme(
     axis.text=element_text(size=10),
     axis.title=element_text(size=12),
