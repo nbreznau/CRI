@@ -1,31 +1,12 @@
 ---
-title: "Tech 2, Specification Curves: THE CROWDSOURCED REPLICATION INITIATIVE (CRI)"
+title: "Tech 3, Specification Curves"
 output:
   html_document:
     df_print: paged
   pdf_document: default
 ---
 
-## THE CROWDSOURCED REPLICATION INITIATIVE (CRI)
-   <a href=https://osf.io/preprints/socarxiv/6j9qb/>"Executive Report"</a> contains details of the project.
 
-Principal Investigators:
-   Nate Breznau
-   
-   Eike Mark Rinke
-   
-   Alexander Wuttke
-
-
-Code Compiled by 
-   Nate Breznau, breznau.nate@gmail.com
-   
-   Hung Nguyen, hunghvnguyen@gmail.com
-
-### Contents
-   1. Data Prep - Merge results, qualitative model specs and research characteristics
-   2. Explain variance of AMEs
-   3. Generate specification curves
 
 ### Special Package
    We load the rdfanalysis package designed by <a href=https://joachim-gassen.github.io/rdfanalysis/>Joachim Gassen</a> to generate specification curves.
@@ -37,7 +18,7 @@ rm(list = ls())
 library(pacman)
 
 
-pacman::p_load("devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","mlogit","knitr","ragg")
+pacman::p_load("devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","mlogit","knitr")
 
 # Load Researcher Degrees of Freedom Analysis package
 #  
@@ -48,12 +29,8 @@ library(rdfanalysis)
 ```
 
 
-### Load Data
+```{r load, warning=F,message=F, include=F}
 
-Datasets worked up from the file CRI_Data_Prep_1.Rmd. 
-
-
-```{r load, warning=F,message=F}
 cri <- read.csv(file = "data/cri.csv", header = T)
 cri_str <- read.csv(file = "data/cri_str.csv", header = T)
 cri_team <- read.csv(file = "data/cri_team.csv", header = T)
@@ -61,16 +38,11 @@ cri_team <- read.csv(file = "data/cri_team.csv", header = T)
 ```
 
 
-## Specification Curves
-
-### Average Marginal Effects
-
-Standardized scores
-
-```{r fig1_DV1, include=F}
+```{r recode_cats, warning=F, message=F, include=F}
 
 
-crispectest <- dplyr::select(cri_str, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe, cluster_any, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_any, Hresult, total_score_cat, belief_cat, stat_cat, topic_cat, u_teamid)
+# prep data
+crispectest <- dplyr::select(cri_str, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe, cluster_any, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_any, Hresult, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
 
 #Remove NAs
 crispectest <- subset(crispectest, !is.na(crispectest$AME_Z))
@@ -87,29 +59,52 @@ crispectest$upper_Z <- ifelse(crispectest$upper_Z > -0.00000001 & crispectest$up
   crispectest$AME_Z <- ifelse(crispectest$AME_Z < -0.75, -0.747, crispectest$AME_Z)
   crispectest$AME_Z <- ifelse(crispectest$AME_Z > 0.75, 0.747, crispectest$AME_Z)
 
+```
+
+
+## Specification Curves
+
+### Average Marginal Effects
+
+#### Researcher Qualities and Subjective Model Scoring
+
+Standardized scores
+
+```{r fig1_DV1, echo=F}
+
+
+
+
 #data prep
 crispectest$est <- round(crispectest$AME_Z, 6)
 crispectest$lb <- round(crispectest$lower_Z, 6)
 crispectest$ub <- round(crispectest$upper_Z, 6)
 
-crispectest1 <- select(crispectest, total_score_cat, belief_cat, stat_cat, topic_cat, indepv, est, lb, ub)
+crispectest1 <- select(crispectest, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE, est, lb, ub)
 
-# crispectest1 <- crispectest1 %>%
-#   mutate(dv_type = ifelse(is.na(dv_type), 0, dv_type),
-#          iv_type = ifelse(is.na(iv_type), 0, iv_type),
-#          software = ifelse(is.na(software), 0, software),
-#          indepv = ifelse(is.na(indepv), 0, indepv))
+crispectest1 <- subset(crispectest1, !is.na(crispectest1$PRO_IMMIGRANT))
+crispectest1 <- subset(crispectest1, !is.na(crispectest1$TOPIC_KNOWLEDGE))
+crispectest1 <- subset(crispectest1, !is.na(crispectest1$BELIEF_HYPOTHESIS))
 
-crispectest1 <- subset(crispectest1, !is.na(crispectest1$total_score_cat))
-crispectest1 <- subset(crispectest1, !is.na(crispectest1$belief_cat))
+  
+# one problem with rdfanalysis is that it outputs the categories in the order they appear in the data, therefore we have to generate 3 rows of fake data to get the order right
+  
+fake <- as.data.frame(matrix(nrow = 3, ncol = 8))
+fake[1,] <- c("Low","Low","Low","Low","Low",0,-0.00001,0.00001)
+fake[2,] <- c("Mid","Mid","Mid","Mid","Mid",0,-0.00001,0.00001)
+fake[3,] <- c("High","High","High","High","High",0,-0.00001,0.00001)
+colnames(fake) <- c("BELIEF_HYPOTHESIS", "PRO_IMMIGRANT", "TOPIC_KNOWLEDGE", "STATISTICS_SKILL", "MODEL_SCORE", "est", "lb", "ub")
+fake$est <- as.numeric(fake$est)
+fake$ub <- as.numeric(fake$ub)
+fake$lb <- as.numeric(fake$lb)
+
+crispectest1 <- bind_rows(fake,crispectest1)
+
 # remove/adjust attributes
   crispectest1 <- crispectest1[names(crispectest1)]
-  choices <- 1:4
+  choices <- 1:5
   attr(crispectest1, "choices") <- choices
   rownames(crispectest1) <- NULL
-  
-# one problem with rdfanalysis is that it outputs the categories in the order they appear in the data, therefore we have to reor
-#
 png(file = "results/Fig1_AME.png", width = 1200, height = 850, res = 144)
 
 plot_rdf_spec_curve(crispectest1, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, pt_size = 0.3, ribbon = T)
@@ -117,6 +112,8 @@ dev.off()
 
 knitr::include_graphics("results/Fig1_AME.png")
 ```
+
+#### Researcher Qualities and Subjective Model Scoring
 
 
 ### P-Values

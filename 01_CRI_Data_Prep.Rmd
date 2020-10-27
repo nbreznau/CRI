@@ -903,7 +903,7 @@ dev.off()
 ```
 
 
-This chunk essentially proves that it probably doesn't matter whether we take team-level measures or individual-level measures agggregated by team as correlations are very high (0.86-0.95). 
+This chunk essentially proves that it probably doesn't matter whether we take team-level measures or individual-level measures aggregated by team as correlations are very high (0.86-0.95). 
 
 ```{r predict_sem, warning=F, message=F}
 # predicted factor scores
@@ -938,6 +938,26 @@ cor2 <- round(cor(cor2, use = "pairwise.complete.obs"),2)
 
 rm(cor2,cri_team_test,cri_team_test1,cri_team_test2)
 ```
+
+```{r spec_cats}
+# The team qualities data were originally coded into 4 categories, "Highest, High, Mid and 
+# Low". It is easier to visualize with only three. And, theoretically the individual-level measurment model results are the 'most correct'.
+
+# we allow NAs to be 'mid' to maintain case numbers
+cri <- cri %>%
+  mutate(BELIEF_HYPOTHESIS = ifelse(belief_ipred < -0.37, "Low", ifelse(belief_ipred > 0.37, "High", "Mid")),
+         PRO_IMMIGRANT = ifelse(is.na(pro_immigrant), NA, ifelse(pro_immigrant > 4.5, "High", ifelse(pro_immigrant < 3.2, "Low", "Mid"))),
+         TOPIC_KNOWLEDGE = ifelse(topic_ipred > 0, "High", ifelse(topic_ipred < -0.21, "Low", "Mid")),
+         STATISTICS_SKILL = ifelse(stats_ipred > 0.38, "High", ifelse(stats_ipred < -0.3, "Low", "Mid")),
+         MODEL_SCORE = ifelse(total_score > 0.55, "High", ifelse(total_score < 0.35, "Low", "Mid")))
+        
+cri_stra <- select(cri, id, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
+cri_stra <- subset(cri_stra, !is.na(PRO_IMMIGRANT))
+
+cri_str <- left_join(cri_str, cri_stra, by = "id")
+rm(cri_stra)
+```
+
 
 Save Point
 
