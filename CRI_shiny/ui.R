@@ -75,6 +75,7 @@ ui <- fluidPage(
                                                           "Health Care" = "Health",
                                                           "*Include scales" = "Scaled"),
                                            selected = c("Jobs", "IncDiff","Unemp","OldAge","House","Health","Scaled"))),
+                          hr(),
                           dropdownButton(label = h5("Immigration Measures"), status = "default", 
                                          checkboxGroupInput(
                                            inputId = "mspeciv",
@@ -84,6 +85,7 @@ ui <- fluidPage(
                                                           "Change in Flow" = "ChangeFlow"),
                                            selected = c("Stock","Flow","ChangeFlow")
                                          )),
+                          hr(),
                           dropdownButton(label = h5("Country-Level Controls"), status = "default", width = 80,
                                          checkboxGroupInput(
                                            inputId = "mspecivx",
@@ -96,7 +98,20 @@ ui <- fluidPage(
                                                           "None" = "None"),
                                            selected = c("Soc_Spending","Unemp_Rate","Emp_Rate","GDP_Per_Capita",
                                                         "None", "Combo")
-                                         ))
+                                         )),
+                          hr(),
+                          dropdownButton(label = h5("Topical Knowledge"), status = "default", width = 80,
+                                         checkboxGroupInput(    
+                                             inputId = "topic",
+                                             label = ("Level of Topical Knowledge"),
+                                             choices = list("Low" = "Low",
+                                                            "Mid" = "Mid",
+                                                            "High" = "High",
+                                                            "No Information" = "No Information"),
+                                             selected = c("Low","Mid","High", "No Information")
+                                         )
+                          ),
+                          hr()
                    ),                 
                    column(3,
                           dropdownButton(label = h5("Countries Included"), status = "default", tags$label("Must include:"),
@@ -132,6 +147,7 @@ ui <- fluidPage(
                                            )
                                          )    
                           ),
+                          hr(),
                           dropdownButton(label = h5("Survey waves"), status = "default", tags$label("Must include:"),
                                          fluidRow(
                                            column(width=12,
@@ -152,19 +168,35 @@ ui <- fluidPage(
                                                                    "2016" = "w2016"),
                                                     selected = wavelist)
                                            ),
-                                         ))),
-                   column(3,
+                                         )),
+                          hr(),
                           dropdownButton(label = h5("Estimator"), status = "default", width = 80,
                                          checkboxGroupInput(    
-                                           inputId = "emator",
-                                           label = ("Choose estimators"),
-                                           choices = list("OLS" = "ols",
-                                                          "Logit" = "logit",
-                                                          "O.Logit" = "ologit",
-                                                          "GLM" = "ml_glm",
-                                                          "Bayes" = "bayes"),
-                                           selected = c("ols","logit","ologit","ml_glm","bayes")
-                                         )),
+                                             inputId = "emator",
+                                             label = ("Choose estimators"),
+                                             choices = list("OLS" = "ols",
+                                                            "Logit" = "logit",
+                                                            "O.Logit" = "ologit",
+                                                            "GLM" = "ml_glm",
+                                                            "Bayes" = "bayes"),
+                                             selected = c("ols","logit","ologit","ml_glm","bayes")
+                                                            )
+                                         ),
+                          hr(),
+                          dropdownButton(label = h5("Total score"), status = "default", width = 80,
+                                         checkboxGroupInput(    
+                                             inputId = "total",
+                                             label = ("Choose total score"),
+                                             choices = list("Low" = "Low",
+                                                            "Mid" = "Mid",
+                                                            "High" = "High",
+                                                            "No Information" = "No Information"),
+                                             selected = c("Low","Mid","High", "No Information")
+                                         )
+                          ),
+                          hr()
+                          ),
+                   column(3,
                           dropdownButton(label = h5("Other"), status = "default", width = 80,
                                          fluidRow(
                                            column(width=12,
@@ -191,11 +223,46 @@ ui <- fluidPage(
                                                                    "No" = "No"),
                                                     selected = c("Yes","No"))
                                            )
-                                           
-                                           
                                          )
-                          )## end of dropdownbutton
-                   ), ## end of third column
+                          ),
+                          hr(),
+                          dropdownButton(label = h5("Belief that H is true"), status = "default", width = 80,
+                                         checkboxGroupInput(    
+                                             inputId = "belief",
+                                             label = ("Level of belief"),
+                                             choices = list("Low" = "Low",
+                                                            "Mid" = "Mid",
+                                                            "High" = "High",
+                                                            "No Information" = "No Information"),
+                                             selected = c("Low","Mid","High", "No Information")
+                                                            )
+                                         ),
+                          hr(),
+                          dropdownButton(label = h5("Statistical Knowledge"), status = "default", width = 80,
+                                         checkboxGroupInput(    
+                                             inputId = "stat",
+                                             label = ("Level of Statistical Knowledge"),
+                                             choices = list("Low" = "Low",
+                                                            "Mid" = "Mid",
+                                                            "High" = "High",
+                                                            "No Information" = "No Information"),
+                                             selected = c("Low","Mid","High", "No Information")
+                                         )
+                          ),
+                          hr(),
+                          dropdownButton(label = h5("Pro-Immigration"), status = "default", width = 80,
+                                         checkboxGroupInput(    
+                                             inputId = "proimm",
+                                             label = ("Level of Pro-Immigration"),
+                                             choices = list("Low" = "Low",
+                                                            "Mid" = "Mid",
+                                                            "High" = "High",
+                                                            "No Information" = "No Information"),
+                                             selected = c("Low","Mid","High", "No Information")
+                                         )
+                          ),
+                          hr()
+                        )
                  ) ## end of second fluid row
         ),## end of first tab panel - spec_curve
         tabPanel("P-values", plotOutput("p_val"),
