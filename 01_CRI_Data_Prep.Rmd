@@ -974,6 +974,12 @@ cri_stra2 <- select(cri_stra2, u_teamid, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC
 
 
 cri_team <- left_join(cri_team, cri_stra2, by = "u_teamid")
+
+# merge flow and stock team-level results for plotting
+
+cri_team_combine <- bind_rows(cri_team_stock, cri_team_flow)
+# now add to cri_team_combine
+cri_team_combine <- left_join(cri_team_combine, cri_stra2, by = "u_teamid")
 rm(cri_stra, cri_stra2)
 ```
 
@@ -990,15 +996,13 @@ write.csv(cri_str, file = "data/cri_str.csv", row.names = F)
 write.csv(cri_team, file = "data/cri_team.csv", row.names = F)
 write.csv(cri_indiv, file = "data/cri_indv.csv", row.names = F)
 
-# merge flow and stock team-level results for plotting
 
-cri_team_combine <- bind_rows(cri_team_stock, cri_team_flow)
 
 # remove missing
 cri_team_combine <- subset(cri_team_combine, !is.na(AME))
 cri_team_combine <- subset(cri_team_combine, !is.na(stat_cat))
 
-write.csv(cri_team, file = "data/cri_team_combine.csv", row.names = F)
+write.csv(cri_team_combine, file = "data/cri_team_combine.csv", row.names = F)
 
 
 ```
