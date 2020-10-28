@@ -1,4 +1,9 @@
-pacman::p_load(shiny, ggplot2, rdfanalysis, dplyr)
+# library(rlang)
+library(shiny)
+library(dplyr)
+library(ggplot2)
+library(rdfanalysis)
+
 # Load files
 
 df <- read.csv("data/cri_shiny.csv")
@@ -23,7 +28,7 @@ server <- function(input, output, session) {
                MODEL_SCORE %in% input$total & PRO_IMMIGRANT %in% input$proimm)
     })
     dfspec <- ({
-      select(dfspec1(), DV, iv_type, software, est, lb, ub)
+      dplyr::select(dfspec1(), DV, iv_type, software, est, lb, ub)
     })
     dfspec <- ({
       dfspec[complete.cases(dfspec),]
