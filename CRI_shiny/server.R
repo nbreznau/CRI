@@ -1,6 +1,4 @@
-
 pacman::p_load(shiny, ggplot2, rdfanalysis, dplyr)
-rm(list = ls())
 # Load files
 
 df <- read.csv("data/cri.csv")
@@ -63,38 +61,27 @@ df <- df %>%
   )
 
 
-# create categories from aspects of the teams
-df <- df %>% 
-    mutate(stat_cat = ifelse(is.na(stat), "No Information", ifelse(stat < 0, "Low", ifelse(stat > -0.000000001 & stat < 0.45, "Mid", "High"))),
-         belief_cat = ifelse(is.na(belief), "No Information", ifelse(belief < -0.5, "Low", ifelse(belief > -0.500000001 & belief < 0.12, "Mid", "High"))),
-         topic_cat = ifelse(is.na(topic), "No Information", ifelse(topic < -0.3, "Low", ifelse(topic > -0.300000001 & topic < 0.02, "Mid", "High"))),
-         total_score_cat = ifelse(is.na(total_score), "No Information", ifelse(total_score < 0.35, "Low", ifelse(total_score > 0.34999999 & total_score < 0.515, "Mid", "High"))),
-         pro_immigrant_cat = ifelse(is.na(pro_immigrant), "No Information", ifelse(pro_immigrant < 2.001, "High", ifelse(pro_immigrant < 3.01, "Mid", "Low")))
-  )
 
-# get clean grouping variable (all scale types in one factor)
+
 df <- df %>%
     mutate(
          iv_type2 = ifelse(main_IV_type=="Change in Flow","Flow",main_IV_type),
          iv_type2 = as.factor(iv_type2),
-         stat_cat_factor = factor(stat_cat, levels = c("Low","Mid","High", "No Information")),
-         belief_cat_factor = factor(belief_cat, levels = c("Low","Mid","High","No Information")),
-         topic_cat_factor = factor(topic_cat, levels = c("Low","Mid","High","No Information")),
-         total_score_cat_factor = factor(total_score_cat, levels = c("Low","Mid","High","No Information")),
-         pro_immigrant_cat_factor = factor(pro_immigrant_cat, levels = c("Low","Mid","High","No Information"))
+         STATISTICS_SKILL = ifelse(is.na(STATISTICS_SKILL), "No Information",STATISTICS_SKILL),
+         BELIEF_HYPOTHESIS = ifelse(is.na(BELIEF_HYPOTHESIS), "No Information",BELIEF_HYPOTHESIS),
+         TOPIC_KNOWLEDGE = ifelse(is.na(TOPIC_KNOWLEDGE), "No Information",TOPIC_KNOWLEDGE),
+         MODEL_SCORE = ifelse(is.na(MODEL_SCORE), "No Information",MODEL_SCORE),
+         PRO_IMMIGRANT = ifelse(is.na(PRO_IMMIGRANT), "No Information",PRO_IMMIGRANT),
+         STATISTICS_SKILL = factor(STATISTICS_SKILL, levels = c("Low", "Mid", "High","No Information")),
+         BELIEF_HYPOTHESIS = factor(BELIEF_HYPOTHESIS, levels = c("Low", "Mid", "High","No Information")),
+         TOPIC_KNOWLEDGE = factor(TOPIC_KNOWLEDGE, levels = c("Low", "Mid", "High","No Information")),
+         MODEL_SCORE = factor(MODEL_SCORE, levels = c("Low", "Mid", "High","No Information")),
+         PRO_IMMIGRANT = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High","No Information"))
   ) 
 
 
 
-
-# cntrlist and wavelist
-
-cntrlista <- c("AU", "AT", "BE", "CA", "CL", "HR", "CZ", "DK", "FI", "FR", "DE")
-cntrlistb <- c("HU", "IE", "IL", "IT", "JP", "KR", "LV", "LT", "NT", "NZ", "NO")
-cntrlistc <- c("PL", "PT","RU", "SK", "SI", "ES", "SE", "CH", "UK", "US", "UY")
-wavelist <- names(select(df, w1985:w2016))  
-
-
+  
 
 # Team-level 
 cri_team_combine <- read.csv(file = "data/cri_team_combine.csv", header = T)
@@ -105,31 +92,18 @@ cri_team_combine <- read.csv(file = "data/cri_team_combine.csv", header = T)
 cri_team_combine <- cri_team_combine %>%
   mutate(iv_type2 = ifelse(Stock == 1, "Stock", "Flow"),
          iv_type2 = as.factor(iv_type2),
-         stat_cat = ifelse(stat_cat == "Highest" | stat_cat == "High", "High", ifelse(stat_cat == "Low", "Mid", "Low")), # highest is very rare, combine
-         stat_cat_factor = factor(stat_cat, levels = c("Low", "Mid", "High")),
-         belief_cat = ifelse(belief_cat == "Highest" | belief_cat == "High", "High", ifelse(belief_cat == "Low", "Mid", "Low")), # high and highest are least frequent, combine
-         belief_cat_factor = factor(belief_cat, levels = c("Low", "Mid", "High")),
-         topic_cat = ifelse(topic_cat == "Highest" | topic_cat == "High", "High", ifelse(topic_cat == "Lowest", "Low", "Mid")), # highest is least frequent, combine
-         topic_cat_factor = factor(topic_cat, levels = c("Low", "Mid", "High")),
-         total_score_cat = ifelse(total_score_cat == "Lowest" | total_score_cat == "Low", "Low", ifelse(total_score_cat == "High", "Mid", "High")), # low and lowest are least frequent, combine
-         total_score_cat_factor = factor(total_score_cat, levels = c("Low", "Mid", "High")),
-         pro_immigrant_cat = ifelse(is.na(pro_immigrant), NA, ifelse(pro_immigrant < 2.001, "High", ifelse(pro_immigrant < 3.01, "Mid", "Low"))),
-         pro_immigrant_cat_factor = factor(pro_immigrant_cat, levels = c("Low","Mid","High"))
+         STATISTICS_SKILL = factor(STATISTICS_SKILL, levels = c("Low", "Mid", "High"), ordered = TRUE),
+         BELIEF_HYPOTHESIS = factor(BELIEF_HYPOTHESIS, levels = c("Low", "Mid", "High"), ordered = TRUE),
+         TOPIC_KNOWLEDGE = factor(TOPIC_KNOWLEDGE, levels = c("Low", "Mid", "High"), ordered = TRUE),
+         MODEL_SCORE = factor(MODEL_SCORE, levels = c("Low", "Mid", "High"), ordered = TRUE),
+         PRO_IMMIGRANT = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"), ordered = TRUE)
   ) %>%
   mutate(
-    Test_Results_p05 = ifelse(pos_test_pct_p05 > 0.7, "70%+", 
-                              ifelse(pos_test_pct_p05 > 0.5, "50-70%", 
-                                     ifelse(pos_test_pct_p05 > 0.25, "25-50%", "25%-"))),
     est = ifelse(Hresult == "Support", 0.01, ifelse(Hresult == "Reject", -0.01, 0)),
-    lb = ifelse(est == 0.01, 0.009, ifelse(est == -0.01, -0.011, -0.01)),
-    ub = ifelse(est == 0.01, 0.011, ifelse(est == -0.01, -0.009, 0.01))
+    lb = est - 0.001,
+    ub = est + 0.001
   ) 
   
-
-
-
-
-
 
 
 
@@ -151,8 +125,8 @@ server <- function(input, output, session) {
       filter(df, DV %in% input$mspecdv & indepv %in% input$mspecivx & mator %in% input$emator & cluster_any %in% input$clust & 
                twowayfe %in% input$twoway & dv_m %in% input$dv_m & iv_type %in% input$mspeciv & cntrlista %in% input$countries1a & 
                cntrlistb %in% input$countries1b & cntrlistc %in% input$countries1c & wavelist %in% input$mwave & 
-                 belief_cat_factor %in% input$belief & stat_cat_factor %in% input$stat & topic_cat_factor %in% input$topic &
-                 total_score_cat_factor %in% input$total & pro_immigrant_cat_factor %in% input$proimm)
+               BELIEF_HYPOTHESIS %in% input$belief & STATISTICS_SKILL %in% input$stat & TOPIC_KNOWLEDGE %in% input$topic &
+               MODEL_SCORE %in% input$total & PRO_IMMIGRANT %in% input$proimm)
     })
     dfspec <- ({
       select(dfspec1(), DV, iv_type, software, est, lb, ub)
@@ -180,46 +154,55 @@ server <- function(input, output, session) {
   
   output$p_val <- renderPlot({
     dfp1 <- reactive({
-      filter(df,DV %in% input$mspecdv2 & indepv %in% input$mspecivx2 & mator %in% input$emator2 & cluster_any %in% input$clust2 & twowayfe %in% input$twoway2 &
-               dv_m %in% input$dv_m2 & iv_type %in% input$mspeciv2)
+      filter(df,DV %in% input$mspecdv2 & indepv %in% input$mspecivx2 & mator %in% input$emator2 & cluster_any %in% input$clust2 & 
+               twowayfe %in% input$twoway2 & dv_m %in% input$dv_m2 & iv_type %in% input$mspeciv2 & cntrlista %in% input$countries2a & 
+               cntrlistb %in% input$countries2b & cntrlistc %in% input$countries2c & wavelist %in% input$mwave2 & 
+               BELIEF_HYPOTHESIS %in% input$belief2 & STATISTICS_SKILL %in% input$stat2 & TOPIC_KNOWLEDGE %in% input$topic2 &
+               MODEL_SCORE %in% input$total2 & PRO_IMMIGRANT %in% input$proimm2)
       
     })
     dfp <- ({
-      select(dfp1(), DV, iv_type, software, AME, lower, upper, p)
+      select(dfp1(), DV, iv_type, software, est, p)
     })
     dfp$pl <- dfp$p -0.05
     dfp$pu <- dfp$p + 0.05
+    dfp <- ({
+      dfp[complete.cases(dfp),]
+    })
+    attr(dfp, "choices") <- 1:3
     sumout2 <- reactive({dfp})
     
     output$pr2 <- renderText({
-      pr <- round(
-        ((length(which(sumout2()$AME < 0 & sumout()$upper < 0)) ) / (length(sumout2()$AME))*100),1)
-      paste(pr, "% indicate a significant negative effect of immigration", sep="")
+      pr2 <- round(
+        ((length(which(sumout2()$est < 0 & sumout2()$p < 0.05)) ) / (length(sumout2()$p))*100),1)
+      paste(pr2, "% indicate a significant negative effect of immigration", sep="")
     })
     
     output$teamn2 <- renderText({
-      teamn <- length(sumout2()$AME)
-      paste("displaying", teamn, "of 1,260 models")
+      teamn2 <- length(sumout2()$est)
+      paste("displaying", teamn2, "of 1,292 models")
     })
     
-    plot_rdf_spec_curve(dfp, "p", lb = "pl", ub = "pu", est_color = "grey", pt_size = 2, pt_size_highlight = 2, est_color_signeg = "red", lower_to_upper = 1.5, est_label = "Marginal Effect", ribbon = F)
-    
-    
+    plot_rdf_spec_curve(dfp, "p", lb = "pl", ub = "pu", est_color = "blue", pt_size = 2, 
+                        pt_size_highlight = 2, est_color_sigpos = "grey", lower_to_upper = 1.5, 
+                        est_label = "P-Values", ribbon = F,)
+
   })
   
   ### Subjective Conclusion
   output$subject <- renderPlot({
-    teamspec <- reactive({
-      filter(cri_team_combine, iv_type2 %in% input$mspeciv3 & belief_cat_factor %in% input$belief3 & stat_cat_factor %in% input$stat3 & 
-               topic_cat_factor %in% input$topic3 & total_score_cat_factor %in% input$total3 & pro_immigrant_cat_factor %in% input$proimm3)
+    teamspec1 <- reactive({
+      filter(cri_team_combine, iv_type2 %in% input$mspeciv3 & BELIEF_HYPOTHESIS %in% input$belief3 & STATISTICS_SKILL %in% input$stat3 & 
+               TOPIC_KNOWLEDGE %in% input$topic3 & MODEL_SCORE %in% input$total3 & PRO_IMMIGRANT %in% input$proimm3)
     })
     teamspec <- ({
-      select(teamspec(), Test_Results_p05, belief_cat_factor, est, lb, ub)
+      select(teamspec1(), BELIEF_HYPOTHESIS, STATISTICS_SKILL, TOPIC_KNOWLEDGE,
+             MODEL_SCORE, PRO_IMMIGRANT, est, lb, ub)
     })
     teamspec <- ({
       teamspec[complete.cases(teamspec),]
     })
-    attr(teamspec, "choices") <- 1:2
+    attr(teamspec, "choices") <- 1:5
     sumout3 <- reactive({teamspec})
     output$pr3 <- renderText({
       pr3 <- round(
@@ -229,18 +212,26 @@ server <- function(input, output, session) {
     
     output$teamn3 <- renderText({
       teamn3 <- length(sumout3()$est)
-      paste("displaying", teamn3, "of 88 teams")
+      paste("displaying", teamn3, "of 128 researchers")
     })
     plot_rdf_spec_curve(teamspec, est = "est", "lb", "ub", est_color = "grey", est_color_signeg = "red",  
-                        choice_ind_point = F, pt_size = .5, lower_to_upper = 2, 
+                        choice_ind_point = F, pt_size = 2, lower_to_upper = 1.5, pt_size_highlight = 2,
                         est_label = "Hypothesis Test", ribbon = F)
   })
-  
+  observeEvent(input$resetAll,{
+    reset("reset")
+  })
+  observeEvent(input$any, {
+    reset("cntry")
+  })
+  observeEvent(input$any2, {
+    reset("cntry2")
+  })
+  observeEvent(input$many, {
+    reset("wave")
+  })
+  observeEvent(input$many2, {
+    reset("wave2")
+  })
 }
-
-
-
-
-
-
 
