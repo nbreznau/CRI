@@ -1,6 +1,6 @@
 # library(rlang)
 library(shiny)
-library(dplyr)
+library(tidyverse)
 library(ggplot2)
 library(rdfanalysis)
 
@@ -8,6 +8,13 @@ library(rdfanalysis)
 
 df <- read.csv("data/cri_shiny.csv")
 cri_team_combine <- read.csv("data/cri_shiny_team.csv")
+
+# cntrlist and wavelist
+cntrlista <- c("AU", "AT", "BE", "CA", "CL", "HR", "CZ", "DK", "FI", "FR", "DE")
+cntrlistb <- c("HU", "IE", "IL", "IT", "JP", "KR", "LV", "LT", "NT", "NZ", "NO")
+cntrlistc <- c("PL", "PT","RU", "SK", "SI", "ES", "SE", "CH", "UK", "US", "UY")
+wavelist <- c("w1985","w1990","w1996","w2006","w2016")
+
 
 ### Server 
 
