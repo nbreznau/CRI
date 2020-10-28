@@ -439,6 +439,13 @@ dev.off()
 knitr::include_graphics( "results/Fig8b_Rain_team.png")
 
 ```
+TO DO:
+
+
+ADD LEVENE or other measures of comparison of variance
+
+SPLIT by Stock and FLOW models
+
 
 
 
