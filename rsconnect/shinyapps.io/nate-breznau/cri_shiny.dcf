@@ -1,0 +1,10 @@
+name: cri_shiny
+title:
+username:
+account: nate-breznau
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1630385
+bundleId: 3791176
+url: https://nate-breznau.shinyapps.io/cri_shiny/
+when: 1603873036.01185
