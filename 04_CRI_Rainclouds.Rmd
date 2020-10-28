@@ -38,6 +38,7 @@ These datasets were worked up from the file 01_CRI_Data_Prep.Rmd.
 cri = numerical values
 cri_str = string values
 cri_team = team-level data (by conclusion)
+cri_team_combine = team-level data with indep observations for stock and flow models
 
 #### Load
 
@@ -73,7 +74,7 @@ cri <- cri %>%
          pro_immigrant_cat_factor = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"))
          )
 
-
+cri <- subset(cri, !is.na(belief_cat_factor))
 
 # team level
 cri_team_combine <- cri_team_combine %>%
@@ -87,8 +88,19 @@ cri_team_combine <- cri_team_combine %>%
          total_score_cat_factor = factor(MODEL_SCORE, levels = c("Low","Mid","High")),
          pro_immigrant_cat_factor = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"))
   )
+# without stock/flow split and recombine
 
-         
+   cri_team <- cri_team %>%
+  mutate(AME_Zt = ifelse(AME_Z > 1, 1, AME_Z),
+         AME_Zt = ifelse(AME_Zt < -1, -1, AME_Zt),
+         iv_type2 = ifelse(Stock == 1, "Stock", "Flow"),
+         iv_type2 = as.factor(iv_type2),
+         stat_cat_factor = factor(STATISTICS_SKILL, levels = c("Low","Mid","High")),
+         belief_cat_factor = factor(BELIEF_HYPOTHESIS, levels = c("Low","Mid","High")),
+         topic_cat_factor = factor(TOPIC_KNOWLEDGE, levels = c("Low","Mid","High")),
+         total_score_cat_factor = factor(MODEL_SCORE, levels = c("Low","Mid","High")),
+         pro_immigrant_cat_factor = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"))
+  )   
 
 # make offset values so that scatterplots appear below the distribution plots
 
@@ -117,6 +129,7 @@ cri_team_combine$total_score_cat_offset <- as.numeric(as.factor(cri_team_combine
 cri_team_combine$pro_immigrant_cat_offset <- as.numeric(as.factor(cri_team_combine$pro_immigrant_cat_factor))-.15
 
 
+
 ```
 #### Example Plot
 
@@ -136,9 +149,304 @@ rain1
 
 ```
 
-## Team-Level Plots
 
-### Figure 4. Results Variability by Strength of Belief H is True, Team-Level
+
+
+
+
+
+## Pooled Models - Category Overlays
+
+### Belief in H
+
+#### Figure 4a. Results Variability by Researcher Qualities, Model-Level
+
+```{r fig4a, warning=F, message=F, echo=T}
+
+fig4a <- ggplot(cri, aes(x=0, y=AME_Zt, fill = belief_cat_factor))+
+  geom_flat_violin(aes(fill = belief_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "Belief in Truth\nof Hypothesis") +
+  ylab('Average Marginal Effect')+xlab('Density')+
+  ylim(-0.21,0.21)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Results by Prior Belief in Hypothesis, Model-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig4a_Rain_team.png", height = 300, width = 800, res = 144)
+fig4a
+dev.off()
+
+knitr::include_graphics( "results/Fig4a_Rain_team.png")
+
+```
+
+#### Figure 4b. Results Variability by Researcher Qualities, Team-Level
+
+```{r fig4b, warning=F, message=F, echo=T}
+
+fig4b <- ggplot(cri_team, aes(x=0, y=AME_Zt, fill = belief_cat_factor))+
+  geom_flat_violin(aes(fill = belief_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "Belief in Truth\nof Hypothesis") +
+  ylab('Average Marginal Effect')+xlab('Density')+
+  ylim(-0.21,0.21)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Results by Prior Belief in Hypothesis, Team-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig4b_Rain_team.png", height = 300, width = 800, res = 144)
+fig4b
+dev.off()
+
+knitr::include_graphics( "results/Fig4b_Rain_team.png")
+
+```
+
+### Pro-Immigrant
+
+#### Figure 5a. Results Variability by Researcher Qualities, Model-Level
+
+```{r fig5a, warning=F, message=F, echo=T}
+
+fig5a <- ggplot(cri, aes(x=0, y=AME_Zt, fill = pro_immigrant_cat_factor))+
+  geom_flat_violin(aes(fill = pro_immigrant_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "Support for more open\nimmigration laws") +
+  ylab('Average Marginal Effect')+xlab('Density')+
+  ylim(-0.21,0.21)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Results by Pro-Immigration, Model-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig5a_Rain_team.png", height = 300, width = 800, res = 144)
+fig5a
+dev.off()
+
+knitr::include_graphics( "results/Fig5a_Rain_team.png")
+
+```
+
+#### Figure 5b. Results Variability by Researcher Qualities, Team-Level
+
+```{r fig5b, warning=F, message=F, echo=T}
+
+fig5b <- ggplot(cri_team, aes(x=0, y=AME_Zt, fill = pro_immigrant_cat_factor))+
+  geom_flat_violin(aes(fill = pro_immigrant_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "Support for more open\nimmigration laws") +
+  ylab('Average Marginal Effect')+xlab('Density')+
+  ylim(-0.21,0.21)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Results by Pro-Immigration, Team-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig5b_Rain_team.png", height = 300, width = 800, res = 144)
+fig5b
+dev.off()
+
+knitr::include_graphics( "results/Fig5b_Rain_team.png")
+
+```
+
+### Topical Knowledge
+
+#### Figure 6a. Results Variability by Researcher Qualities, Model-Level
+
+```{r fig6a, warning=F, message=F, echo=T}
+
+fig6a <- ggplot(cri, aes(x=0, y=AME_Zt, fill = topic_cat_factor))+
+  geom_flat_violin(aes(fill = topic_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "Topical Knowledge") +
+  ylab('Average Marginal Effect')+xlab('Density')+
+  ylim(-0.21,0.21)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Results by Topical Knowledge, Model-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig6a_Rain_team.png", height = 300, width = 800, res = 144)
+fig6a
+dev.off()
+
+knitr::include_graphics( "results/Fig6a_Rain_team.png")
+
+```
+
+#### Figure 6b. Results Variability by Researcher Qualities, Team-Level
+
+```{r fig6b, warning=F, message=F, echo=T}
+
+fig6b <- ggplot(cri_team, aes(x=0, y=AME_Zt, fill = topic_cat_factor))+
+  geom_flat_violin(aes(fill = topic_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "Topical Knowledge") +
+  ylab('Average Marginal Effect')+xlab('Density')+
+  ylim(-0.21,0.21)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Results by Topical Knowledge, Team-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig6b_Rain_team.png", height = 300, width = 800, res = 144)
+fig6b
+dev.off()
+
+knitr::include_graphics( "results/Fig6b_Rain_team.png")
+
+```
+
+
+
+### Statistics Skills
+
+#### Figure 7a. Results Variability by Researcher Qualities, Model-Level
+
+```{r fig7a, warning=F, message=F, echo=T}
+
+fig7a <- ggplot(cri, aes(x=0, y=AME_Zt, fill = stat_cat_factor))+
+  geom_flat_violin(aes(fill = stat_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "Statistical Skills") +
+  ylab('Average Marginal Effect')+xlab('Density')+
+  ylim(-0.21,0.21)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Results by Statistics Skills/Experience, Model-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig7a_Rain_team.png", height = 300, width = 800, res = 144)
+fig7a
+dev.off()
+
+knitr::include_graphics( "results/Fig7a_Rain_team.png")
+
+```
+
+#### Figure 7b. Results Variability by Researcher Qualities, Team-Level
+
+```{r fig7b, warning=F, message=F, echo=T}
+
+fig7b <- ggplot(cri_team, aes(x=0, y=AME_Zt, fill = stat_cat_factor))+
+  geom_flat_violin(aes(fill = stat_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "Statistics Skills") +
+  ylab('Average Marginal Effect')+xlab('Density')+
+  ylim(-0.21,0.21)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Results by Statistical Skills/Experience, Team-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig7b_Rain_team.png", height = 300, width = 800, res = 144)
+fig7b
+dev.off()
+
+knitr::include_graphics( "results/Fig7b_Rain_team.png")
+
+```
+
+
+### Model Ranking
+
+#### Figure 8a. Results Variability by Ranking, Model-Level
+
+```{r fig8a, warning=F, message=F, echo=T}
+
+fig8a <- ggplot(cri, aes(x=0, y=AME_Zt, fill = total_score_cat_factor))+
+  geom_flat_violin(aes(fill = total_score_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "Model Score") +
+  ylab('Average Marginal Effect')+xlab('Density')+
+  ylim(-0.21,0.21)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Results by Participant Model Ranking, Model-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig8a_Rain_team.png", height = 300, width = 800, res = 144)
+fig8a
+dev.off()
+
+knitr::include_graphics( "results/Fig8a_Rain_team.png")
+
+```
+
+#### Figure 8b. Results Variability by Researcher Qualities, Team-Level
+
+```{r fig8b, warning=F, message=F, echo=T}
+
+fig8b <- ggplot(cri_team, aes(x=0, y=AME_Zt, fill = total_score_cat_factor))+
+  geom_flat_violin(aes(fill = total_score_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "Model Score") +
+  ylab('Average Marginal Effect')+xlab('Density')+
+  ylim(-0.21,0.21)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Results by Participant Model Ranking, Team-Level') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+png(filename = "results/Fig8b_Rain_team.png", height = 300, width = 800, res = 144)
+fig8b
+dev.off()
+
+knitr::include_graphics( "results/Fig8b_Rain_team.png")
+
+```
+
+
+
+## Models Splitting by Stock/Flow
+
+### Team-Level Plots Stock/Flow
+
+#### Figure 4. Results Variability by Strength of Belief H is True, Team-Level
 
 ```{r fig4, warning=F, message=F, echo=T}
 
@@ -167,7 +475,7 @@ knitr::include_graphics( "results/Fig4_Rain_team.png")
 ```
 
 
-### Figure 5. Results Variability by Pro-Immigration Affect, Team-Level
+#### Figure 5. Results Variability by Pro-Immigration Affect, Team-Level
 
 ```{r fig5, warning=F, message=F, echo=T}
 
@@ -197,7 +505,7 @@ knitr::include_graphics( "results/Fig5_Rain_team.png")
 
 ```
 
-### Figure 6. Results Variability by Topical Knowledge, Team-Level
+#### Figure 6. Results Variability by Topical Knowledge, Team-Level
 
 ```{r fig6, warning=F, message=F, echo=T}
 
@@ -228,7 +536,7 @@ knitr::include_graphics( "results/Fig6_Rain_team.png")
 ```
 
 
-### Figure 7. Results Variability by Statistical Skills, Team-Level
+#### Figure 7. Results Variability by Statistical Skills, Team-Level
 
 ```{r fig7, warning=F, message=F, echo=T}
 
@@ -261,7 +569,7 @@ knitr::include_graphics( "results/Fig7_Rain_team.png")
 
 
 
-### Figure 8. Results Variability by Subjective Ranking, Team-Level
+#### Figure 8. Results Variability by Subjective Ranking, Team-Level
 
 ```{r fig8, warning=F, message=F, echo=T}
 
@@ -291,7 +599,7 @@ knitr::include_graphics( "results/Fig8_Rain_team.png")
 
 ```
 
-### Model Specification
+#### Model Specification
 
 Choose most important, but probably don't combine
 
@@ -300,7 +608,7 @@ Choose most important, but probably don't combine
 
 Repeat all five figures from above but at the model-level, in the same order.
 
-### Figure X. Results Variability by Model and DV Type
+#### Figure X. Results Variability by Model and DV Type
 
 ```{r figX, warning=F, message=F, echo=T}
 
@@ -331,7 +639,7 @@ knitr::include_graphics( "results/FigX_Rain.png")
 
 
 
-### Figure 9. Results Variability by Strength of Belief H is True, Model-Level
+#### Figure 9. Results Variability by Strength of Belief H is True, Model-Level
 
 ```{r fig4, warning=F, message=F, echo=T}
 
@@ -360,7 +668,7 @@ knitr::include_graphics( "results/Fig9_Rain_model.png")
 ```
 
 
-### Figure 5. Results Variability by Pro-Immigration Affect, Team-Level
+#### Figure 5. Results Variability by Pro-Immigration Affect, Team-Level
 
 ```{r fig5, warning=F, message=F, echo=T}
 
@@ -390,7 +698,7 @@ knitr::include_graphics( "results/Fig10_Rain_model.png")
 
 ```
 
-### Figure 6. Results Variability by Topical Knowledge, Team-Level
+#### Figure 6. Results Variability by Topical Knowledge, Team-Level
 
 ```{r fig6, warning=F, message=F, echo=T}
 
@@ -421,7 +729,7 @@ knitr::include_graphics( "results/Fig11_Rain_model.png")
 ```
 
 
-### Figure 7. Results Variability by Statistical Skills, Team-Level
+#### Figure 7. Results Variability by Statistical Skills, Team-Level
 
 ```{r fig7, warning=F, message=F, echo=T}
 
@@ -454,7 +762,7 @@ knitr::include_graphics( "results/Fig12_Rain_model.png")
 
 
 
-### Figure 8. Results Variability by Subjective Ranking, Team-Level
+#### Figure 8. Results Variability by Subjective Ranking, Team-Level
 
 ```{r fig8, warning=F, message=F, echo=T}
 
@@ -482,7 +790,7 @@ knitr::include_graphics( "results/Fig13_Rain_model.png")
 
 ```
 
-### Now put all 10 plots together
+#### Now put all 10 plots together
 ```{r fig14}
 fig14 <- ggarrange(fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig11, fig12, fig13,
                    ncol = 5, nrow = 2, common.legend = TRUE, legend = "right")
