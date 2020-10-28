@@ -1,11 +1,16 @@
-pacman::p_load(shiny, ggplot2, rdfanalysis, dplyr, shinyjs)
+
+library(shiny)
+library(ggplot2)
+library(rdfanalysis)
+library(dplyr)
+library(shinyjs)
 
 # cntrlist and wavelist
 
 cntrlista <- c("AU", "AT", "BE", "CA", "CL", "HR", "CZ", "DK", "FI", "FR", "DE")
 cntrlistb <- c("HU", "IE", "IL", "IT", "JP", "KR", "LV", "LT", "NT", "NZ", "NO")
 cntrlistc <- c("PL", "PT","RU", "SK", "SI", "ES", "SE", "CH", "UK", "US", "UY")
-wavelist <- names(select(df, w1985:w2016))  
+wavelist <- names(dplyr::select(df, w1985:w2016))
 
 
 dropdownButton <- function(label = "", status = c("default", "primary", "success", "info", "warning", "danger"), ..., width = "100%") {
@@ -597,10 +602,12 @@ ui <- fluidPage(
              h6(strong("Notes for Users"), style={'margin:10px 0;'}),
              h6("1> Interactive Appendix for", style={'margin:1.5px 0;'}),
              h6(uiOutput("exec"), style={'margin:1.5px 0;'}),
-             h6("2> Select model specifications using dropdown menus", style={'margin:1.5px 0;'}),
-             h6("3> Design: Nate Breznau & Hung Nguyen, ", style={'margin:1.5px 0;'}),
-             h6("University of Bremen, breznau.nate@gmail.com", style={'margin:1.5px 0;'})),
-      actionButton("resetAll", "Reset All")
+             h6("2> Select specifications using dropdown menus", style={'margin:1.5px 0;'}),
+             h6("3> Design: Nate Breznau & Hung H.V. Nguyen, ", style={'margin:1.5px 0;'}),
+             h6("University of Bremen, breznau.nate@gmail.com", style={'margin:1.5px 0;'}),
+             h6("_______________________", style={'margin:10px 0;'}),
+             actionButton("resetAll", "Reset All")
+             )
     )
   )
 )
