@@ -1,4 +1,3 @@
-
 library(shiny)
 library(ggplot2)
 library(rdfanalysis)
@@ -10,7 +9,7 @@ library(shinyjs)
 cntrlista <- c("AU", "AT", "BE", "CA", "CL", "HR", "CZ", "DK", "FI", "FR", "DE")
 cntrlistb <- c("HU", "IE", "IL", "IT", "JP", "KR", "LV", "LT", "NT", "NZ", "NO")
 cntrlistc <- c("PL", "PT","RU", "SK", "SI", "ES", "SE", "CH", "UK", "US", "UY")
-wavelist <- names(dplyr::select(df, w1985:w2016))
+wavelist <- c("w1985","w1990","w1996","w2006","w2016")
 
 
 dropdownButton <- function(label = "", status = c("default", "primary", "success", "info", "warning", "danger"), ..., width = "100%") {
@@ -282,14 +281,11 @@ ui <- fluidPage(
                    column(3,
                           h6(em("In the figure above:"))),
                    column(3,
-                          tags$style(HTML("#ret {font-size: 11px; line-height: 11px; color: #e60000}")),
-                          h6(id = "ret", strong("Red = significant negative"))),
-                   column(3,
                           tags$style(HTML("#grr {font-size: 11px; line-height: 11px; color: #808080}")),
                           h6(id = "grr", strong("Gray = non-significant"))),
                    column(3,
                           tags$style(HTML("#blu {font-size: 11px; line-height: 11px; color: #0000ff}")),
-                          h6(id = "blu", strong("Blue = significant positive")))), ## end of first fluid row   
+                          h6(id = "blu", strong("Blue = significant")))), ## end of first fluid row   
                  hr(),
                  fluidRow( #second fluid row
                    column(3, 
@@ -612,4 +608,4 @@ ui <- fluidPage(
   )
 )
 
-
+# deployApp(appDir = paste(getwd(),"/CRI_shiny",sep=""))
