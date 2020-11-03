@@ -441,6 +441,28 @@ knitr::include_graphics( "results/Fig8b_Rain_team.png")
 ```
 TO DO:
 
+```{r}
+# levene test
+library(car)
+
+leveneTest(AME_Zt ~ topic_cat_factor, data= cri)
+a <- sd(cri$AME_Zt, na.rm= T)
+b <- sd(cri$AME_Zt[cri$topic_cat_factor == "Low"], na.rm = T)
+c <- sd(cri$AME_Zt[cri$topic_cat_factor == "Mid"], na.rm = T)
+d <- sd(cri$AME_Zt[cri$topic_cat_factor == "High"], na.rm = T)
+
+sd_topic <- matrix(nrow = 4, ncol = 2)
+colnames(sd_topic) <- c("Group", "SD")
+sd_topic[,1] <- c("Pooled Results","Low Topical Knowledge", "Mid Topical Knowledge", "High Topical Knowledge")
+sd_topic[1,2] <- round(a,2)
+sd_topic[2,2] <- round(b,2)
+sd_topic[3,2] <- round(c,2)
+sd_topic[4,2] <- round(d,2)
+
+kable(sd_topic)
+
+t.test(AME_Zt ~ topic_cat_factor, data= cri[cri$topic_cat_factor != "High",])
+```
 
 ADD LEVENE or other measures of comparison of variance
 
