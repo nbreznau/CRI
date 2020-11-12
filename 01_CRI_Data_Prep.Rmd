@@ -179,7 +179,7 @@ cri_str[c(1:161)][cri_str[c(1:161)] == 0] <- NA
 
 We take the dichotomous variables and merge them into categorical variables for each type of model component.
 
-```{r cat_vars}
+```{r cat_vars, message = F, warning = F}
 
 cri_str <- cri_str %>%
   mutate(iv_type = coalesce(Stock,Flow,ChangeFlow), # main test var
@@ -239,7 +239,7 @@ cri_str$software <- car::recode(cri_str$software,
 
 Original work up of individual/team researcher qualities done in Stata
 
-NOTE: These Stata files include identifying information breaking the anonymity of the teams, so we have to clean them before making them public. We may not do this (what do we gain?) so therefore, we have provided a file with the cleaned and merged data "cri_combined_recoded_long_nolab.dta"
+NOTE: These Stata files include identifying information breaking the anonymity of the teams, so we have to clean them before making them public. We have provided a file with the cleaned and merged data "cri_survey_wide_public.dta" and its raw data (without labels) version with "cri_survey_wide_public_nolabs.dta"
 
 This was created from the following:
 
@@ -250,11 +250,13 @@ Required code files:
       recode.do
   Cri_spec.do
 
-Required data files:
-  W1_export.sps
-  W2_export.sps
-  W3_export.sps
-  W4_export.sps
+Required SPSS data files:
+  W1_export.sav
+  W2_export.sav
+  W3_export.sav
+  W4_export.sav
+  
+The above files contain personal identifiers and are therefore not allowed for public use. 
   
 Note that teams are now in wide format, so that each variable has up to three values, one for each team member. Also, each result is attached to each team member, thus there are N-results repeated observations of team members.
 
@@ -266,7 +268,7 @@ cri_part <- readstata13::read.dta13("data/cri_combined_recoded.dta")
 
 # datafile merged into within-team wide format
 
-cri2 <- readstata13::read.dta13("data/cri_combined_recoded_long_nolab.dta")
+cri2 <- readstata13::read.dta13("data/cri_survey_wide_public_nolabs.dta")
 
 cri <- full_join(cri, cri2, by = "u_teamid")
 
@@ -758,7 +760,7 @@ rm(cor, cor1, fit, popdf_out, criT)
 
 ### Number of positive test results per team
 
-```{r postest}
+```{r postest, warning = F}
 cri <- cri %>%
   group_by(u_teamid,Hresult) %>%
   mutate(pos_test_pct_p05 = sum(AME_sup_p05, na.rm = T)/inv_weight,
@@ -864,7 +866,10 @@ sem <- sem %>%
 cor1 <- select(sem, -c(u_teamid,Group.1))
 cor1 <- round(cor(cor1, use = "pairwise.complete.obs"),2)
 
-sem_f <- completeFun(sem, c("Hsup","belief1"))
+sem_f <- completeFun(sem, c("Hsup","belief1","topic2"))
+# to preserve cases put mean in pro_immigrant and belief5
+sem_f$pro_immigrant <- ifelse(is.na(sem_f$pro_immigrant), mean(sem_f$pro_immigrant, na.rm=T), sem_f$pro_immigrant)
+sem_f$belief5 <- ifelse(is.na(sem_f$belief5), mean(sem_f$belief5, na.rm=T), sem_f$belief5)
 
 cfa <- ' stats =~ stat1 + + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
          topic =~ topic1 + topic2 + topic3 + topic4 + topic5 + topic6 + topic7 + topic8 + topic9
@@ -1010,7 +1015,7 @@ write.csv(cri_team_combine, file = "data/cri_team_combine.csv", row.names = F)
 
 #### Prep Data for Shiny App
 
-```{r shiny}
+```{r shiny, warning= F, message = F}
 ### Transform values from 1 to column names for all countries 
 
 cri_shiny <- read.csv("data/cri.csv", header = T)

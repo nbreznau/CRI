@@ -28,13 +28,7 @@ The participants voted on model specifications fo the other teams. Due to some e
 rm(list = ls())
 library(pacman)
 
-# Create a working directory string and a function to call the wd for every code chunk
-wd <- "C:/data" #set your wd here
-wdir <- function(x){
-  paste(wd,x, sep = "/")
-}
-
-pacman::p_load("readstata13","xlsx","dplyr","tidyr","ggplot2","kableExtra","GLMMadaptive","jtools","sjPlot","sjmisc","sjlabelled","margins","fastDummies","xlsx")
+pacman::p_load("readstata13","xlsx","dplyr","tidyr","ggplot2","kableExtra","GLMMadaptive","jtools","sjPlot","sjmisc","sjlabelled","margins","fastDummies","xlsx","ragg")
 
 #Column no missing function
 completeFun <- function(data, desiredCols) {
@@ -45,16 +39,20 @@ completeFun <- function(data, desiredCols) {
 
 ## Load Data
 
+```{r load}
+model_desc <- read.xlsx("data/Research Design Votes.xlsx", sheetName = "RD Paragraph Output", header = T, stringsAsFactors = F)
+crispec <- read.xlsx("data/CRI Model Specifications and Margins.xlsx", sheetName = "Data")
+votes <- read.dta13("data/votes.dta")
+```
+
 ### Unipark Survey
 
 The first file "Research Design Votes.xlsx" is the file we used to generate the model descriptions in the Unipark survey. 
+The second file "CRI Model Spec...xlsx" is the main file with team model coding
 
-The second file "votes.dta" was generated in the CRI work-up. See CRI_Spec_Analysis.Rmd.
+The third file "votes.dta" was generated in the CRI work-up. See CRI_Spec_Analysis.Rmd.
 
 ```{r merge}
-model_desc <- read.xlsx(wdir("Research Design Votes.xlsx"), sheetName = "RD Paragraph Output", header = T, stringsAsFactors = F)
-
-
 # Concatenate all strings from each variable
 # This takes care of variables that are not discrete
 
@@ -88,7 +86,7 @@ model_desc <- model_desc %>%
          model_spec = as.factor(gsub("\\.", "", model_spec)),
          i = vote_id)
 
-votes <- read.dta13(wdir("votes.dta"))
+
 model_desc <- left_join(model_desc,votes, by = "i")
 
 model_desc <- select(model_desc, i, vote_id, d, everything())
@@ -125,7 +123,7 @@ colnames(cord) <- c("model_BF","model_BFc","model_basic","MLM_fe","MLM_re", "MLM
 
 cord1 <- cord[,1:25]
 cord2 <- cord[,26:51]
-# write.xlsx(cord, wdir("cord.xlsx"))
+
 cor1 <- cor(cord1, use = "pairwise.complete.obs")
 corrplot::corrplot(cor1)
 ```
@@ -208,7 +206,8 @@ popdf$label_x = popdf$xaxis+0.14
 ```
 
 ```{r fig1, warning=F, message=F, echo=T}
-png(file = "Fig1_meta.png", width = 750)
+
+agg_png(file = "results/Fig1_meta.png", width = 750)
 ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
 
   geom_bar(stat = "identity", aes(fill = group)) +
@@ -228,35 +227,7 @@ ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
         axis.title.x = element_text(size = 14),
         legend.key.size = unit(1,"line"))
 dev.off()
-        # plot.margin = margin(0, 0, 0, 2, "cm"))
-```
-
-
-```{r predictingvotes}
-
-# Variables to use:
-model_desca <- model_desc
-# only two cases of country-year, year, combine with country-year, country
-model_desca$level = ifelse(model_desca$level=="country-yearyear", "country-yearcountry", model_desca$level)
-# same with level = None, combine with year
-model_desca$level = ifelse(model_desca$level=="None", "year", model_desca$level)
-
-m1 <- lm(vote_subj ~ model_form , data= model_desca) # alone this explains nothing, also adds nothing to later models
-m2 <- lm(vote_subj ~ model_x, data=model_desca) 
-m3 <- lm(vote_subj ~ model_x + level, data=model_desca)
-m4 <- lm(vote_subj ~ model_x + level + mator, data=model_desca)
-m5 <- lm(vote_subj ~ model_x + level + mator + model_spec, data=model_desca)
-m6 <- lm(vote_subj ~ model_x + level + mator + model_spec + year, data=model_desca)
-m7 <- lm(vote_subj ~ model_x + level + mator + model_spec + year + dv_dichot, data=model_desca)
-
-m2 <- lm(vote_subj ~ model_x + level + mator + model_spec + year + dv_dichot + dv_linear + dv_extra + dv_cat + rich13 + rich17 + eeurope, data=model_desca)
-m2 <- lm(vote_subj ~ model_x + level + mator + model_spec + year + dv_dichot + dv_linear + dv_extra + dv_cat + rich13 + rich17 + eeurope, data=model_desca)
-m2 <- lm(vote_subj ~ model_x + level + mator + model_spec + year + dv_dichot + dv_linear + dv_extra + dv_cat + rich13 + rich17 + eeurope, data=model_desca)
-m2 <- lm(vote_subj ~ model_x + level + mator + model_spec + year + dv_dichot + dv_linear + dv_extra + dv_cat + rich13 + rich17 + eeurope, data=model_desca)
-
-
-tab_model(m2, m3,m4,m5,m6,m7,p.style = "stars", show.ci = F)
-
+knitr::include_graphics("results/Fig1_meta.png")
 ```
 
 
@@ -350,7 +321,7 @@ popdf_outL <- as.list(popdf$Feature)
 colnames(popdf_out) <- popdf_outL
 popdf_out <- popdf_out[2,]
 
-d2 <- data.frame(matrix(nrow = 1312, ncol = 33))
+d2 <- data.frame(matrix(nrow = (length(crispec$id) - 1), ncol = 33))
 colnames(d2) <- popdf_outL
 popdf_out <- rbind(popdf_out, d2)
 
@@ -388,7 +359,7 @@ popdf_out <- popdf_out %>%
 
 ```{r output2, message = F, warning = F}
 
-crispec <- read.xlsx(wdir("CRI Model Specifications and Margins.xlsx"), sheetName = "Data")
+
 crispec <- subset(crispec, !is.na(id))
 popdf_out <- cbind(crispec, popdf_out)
 
@@ -412,7 +383,7 @@ popdf_out <- popdf_out %>%
   rowwise() %>%
   mutate(total_score = mean(c(score_waves, score_cases, score_levels, score_mlm, score_mator, score_weight), na.rm = T))
 
-save(popdf_out, file = wdir("popdf_out.Rdata"))
+save(popdf_out, file = "data/popdf_out.Rdata")
 
 
 ```
