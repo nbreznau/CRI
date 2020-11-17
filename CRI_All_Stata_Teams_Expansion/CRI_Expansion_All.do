@@ -103,7 +103,7 @@ ssc install gologit2
 clear
 
 *Set working directory
-cd "C:/data/"
+cd "C:/GitHub/CRI/data"
 
 set more off
 
@@ -11212,7 +11212,7 @@ capture confirm file "team30.dta"
     display "Team 30 already exists, skipping to next code chunk"
   }
   else {
-version 15
+version 14.2
 * wave 1 (ISSP 1996)
 use "ZA2900.dta", clear
 keep v1 v2 v3 v36 v39 v41 v42 v200 v201 v205 v206 v325 v218
@@ -11441,10 +11441,6 @@ save "t30.issp.2016.dta", replace
 //	#4
 //	append data
 
-use "t30.issp.1996.dta", clear
-append using "t30.issp.2006.dta"
-append using "t30.issp.2016.dta"
-
 * value lables for iso3n
 labvalcombine V3A COUNTRY, lblname(country)
 lab def country 275 "275. PS-Palestine" 380 "380. IT-Italy", modify
@@ -11463,7 +11459,8 @@ replace iso3n_year=iso3n_year+year
 save "t30.issp.1996-2016.dta", replace
 
 
-import excel "cri_macro.xlsx", firstrow clear 					// deleted "." in xlsx-file to pr
+
+import excel "${data}/cri_macro.xlsx", firstrow clear 					// deleted "." in xlsx-file to pr
 
 * country
 rename country country_b
@@ -11567,6 +11564,11 @@ global dv2	unemp
 global dv3	redist
 global dv4	jobs
 
+global c1 c.c_L1foreignpct
+global c2 c.c_L1mignet
+global c3 c.c_herf
+global c4 c.c_L1foreignpct##c.c_herf
+global c5 c.c_L1mignet##c.c_herf
 
 global ind	age age2 i.gender i.edu i.emp
 global wave	b1996.year
@@ -11653,7 +11655,7 @@ foreach model in $dv1 $dv2 $dv3 $dv4 {
 			logit3l_m3`model' ///
 			logit3l_m4`model' ///
 			logit3l_m5`model' ///
-			using "${results}logit.table_$S_DATE.rtf", eform 											///
+			using "logit.table_$S_DATE.rtf", eform 											///
 				stats(N3 N2 N, fmt(%18.0g) label("N countries" "N country-years" "N persons" ))			/// 
 				c(b(fmt(3) star label(OR)) z(fmt(3))) stardetach											///
 				order(c_L1foreignpct c_L1mignet c_herf c_c_L1foreignpct_c_c_herf c_c_L1mignet_c_c_herf c_socx c_emprate )	///
@@ -11686,7 +11688,7 @@ foreach model in $dv1 $dv2 $dv3 $dv4 {
 			logit3l_m3`model' ///
 			logit3l_m4`model' ///
 			logit3l_m5`model' ///
-			using "${results}logit.table_$S_DATE.rtf", eform 											///
+			using "logit.table_$S_DATE.rtf", eform 											///
 				stats(N3 N2 N, fmt(%18.0g) label("N countries" "N country-years" "N persons" ))			/// 
 				c(b(fmt(3) star label(OR)) z(fmt(3))) stardetach											///
 				order(c_L1foreignpct c_L1mignet c_herf c_c_L1foreignpct_c_c_herf c_c_L1mignet_c_c_herf c_socx c_emprate )	///
@@ -11716,6 +11718,8 @@ foreach model in $dv1 $dv2 $dv3 $dv4 {
 	local counter=`counter'+1
 }
 	
+
+
 erase "t30.issp.analysis.1996-2016.dta"
 erase "t30.issp.1996.dta"
 erase "t30.issp.2006.dta"
@@ -11724,145 +11728,46 @@ erase "t30.issp.1996-2016.dta"
 
 /* PIs do not have MLwin therefore we simply derive their results here. They are
 in odds-ratios and accoring to the team, MLwin cannot output average marginal effects. 
-Therefore we apply the following 'work around'. 
-
-This team argued for effects being different by response. Therefore,
-we allow their margins to be categorical as well. We consider the 
-cutpoints in recreating a single linear effect
-Treat four ordered logits as 1, 2, 3 and 4 and then estimate the 
-difference between the population mean with this coding scheme and 
-the predicted population mean based on the likelihood of being in each
-category given a 1 point higher value of the indep. variable. This gives 
-an approximation of what the overall population mean would be given 
-unequal effect intervals.
-
-The alternative to this would be to predict(xb) and have a linear effect,
-but our coding here allows the sampled values in the data to change
-differently for each parameter given a 1 point change in the 
-independent variable */
+Therefore we apply the following 'work around'. */
 
 
+* PIs take their OR tables and convert them to margins
+/*
+calculate margins based on odds ratios under the assumption 
+that individuals were 0.5 on an agree(=1)/disagree(=0) 
+scale on the DV, thus the OR is a change in their position 
+from 0.5 (formula is (OR*0.5)-0.5 for marginal change), and 
+that a significant odds-ratio means that the change in 
+odds does not cross zero (very rough). WE thus calculate 
+the confidence interval (CI) with the percentage difference 
+in the z value from 1.96 (as the critical ‘t’) and the 
+CI = margin + (z/1.96) */
 
+
+import excel using "team30_mlwin_ors.xlsx", firstrow clear
+
+drop id
 gen id = [_n]
-gen id2 = id-72
-replace id = id2 if id>72
-
-recode id (1/4 25/28 49/52 =1)(5/8 29/32 53/56 =2) ///
-(9/12 33/36 57/60 =3)(13/16 37/40 61/64 =4) ///
-(17/20 41/44 65/68 =5)(21/24 45/48 69/72 =6), gen(dv)
-
-*This finds the number of respondents in each category of
-*the ologit for each model (4 per model)
-recode id ///
-( 1 25 49 73  97 121 = 6714)  /// 
-( 2 26 50 74  98 122 = 13513) ///
-( 3 27 51 75  99 123 = 19720) ///
-( 4 28 52 76 100 124 = 17065) /// /* jobs */
-( 5 29 53 77 101 125 = 424)   ///
-( 6 30 54 78 102 126 = 2397)  ///
-( 7 31 55 79 103 127 = 19804) ///
-( 8 32 56 80 104 128 = 35703) /// /* old */
-( 9 33 57 81 105 129 = 4036)  ///
-(10 34 58 82 106 130 = 11847) ///
-(11 35 59 83 107 131 = 26381) ///
-(12 36 60 84 108 132 = 14121) /// /* unemp */
-(13 37 61 85 109 133 = 4595)  /// 
-(14 38 62 86 110 134 = 9839)  ///
-(15 39 63 87 111 135 = 18850) ///
-(16 40 64 88 112 136 = 23452) /// /* incdif */
-(17 41 65 89 113 137 = 2497)  ///
-(18 42 66 90 114 138 = 8912)  ///
-(19 43 67 91 115 139 = 27272) ///
-(20 44 68 92 116 140 = 18050) /// /* house */
-(21 45 69 93 117 141 = 494)   /// 
-(22 46 70 94 118 142 = 2073)  ///
-(23 47 71 95 119 143 = 16940) ///
-(24 48 72 96 120 144 = 38820) /// /* health */
-, gen(pop)
-
-*This takes the total number of respondents listwise
-recode id ///
-( 1 25 49 73  97 121 = 57012)  /// 
-( 5 29 53 77 101 125 = 58328)  ///
-( 9 33 57 81 105 129 = 56385)  ///
-(13 37 61 85 109 133 = 56736)  /// 
-(17 41 65 89 113 137 = 56731)  ///
-(21 45 69 93 117 141 = 58327)  /// 
-(*=.), gen(tpop)
-
-*This assigns 1,2,3&4 as values to each category
-recode id ///
-( 1 25 49 73  97 121 = 1) /// 
-( 2 26 50 74  98 122 = 2) ///
-( 3 27 51 75  99 123 = 3) ///
-( 4 28 52 76 100 124 = 4) /// /* jobs */
-( 5 29 53 77 101 125 = 1) ///
-( 6 30 54 78 102 126 = 2) ///
-( 7 31 55 79 103 127 = 3) ///
-( 8 32 56 80 104 128 = 4) /// /* old */
-( 9 33 57 81 105 129 = 1) ///
-(10 34 58 82 106 130 = 2) ///
-(11 35 59 83 107 131 = 3) ///
-(12 36 60 84 108 132 = 4) /// /* unemp */
-(13 37 61 85 109 133 = 1) /// 
-(14 38 62 86 110 134 = 2) ///
-(15 39 63 87 111 135 = 3) ///
-(16 40 64 88 112 136 = 4) /// /* incdif */
-(17 41 65 89 113 137 = 1) ///
-(18 42 66 90 114 138 = 2) ///
-(19 43 67 91 115 139 = 3) ///
-(20 44 68 92 116 140 = 4) /// /* house */
-(21 45 69 93 117 141 = 1) /// 
-(22 46 70 94 118 142 = 2) ///
-(23 47 71 95 119 143 = 3) ///
-(24 48 72 96 120 144 = 4) /// /* health */
-, gen(score)
+gen id2 = id-4
+replace id = id2 if id>4
+gen _margin = (or*0.5)-0.5
+gen _ci_ub = _margin+((1.96/z)*_margin)
+gen _ci_lb = _margin-((1.96/z)*_margin)
 
 
-gen mean = ((score*pop)+(score[_n+1]*pop[_n+1]) ///
-+(score[_n+2]*pop[_n+2])+(score[_n+3]*pop[_n+3]))/tpop
-
-gen margmean = ( ///
-score*(pop+(pop*_margin)) + ///
-score[_n+1]*(pop[_n+1]+(pop[_n+1]*_margin[_n+1])) + ///
-score[_n+2]*(pop[_n+2]+(pop[_n+2]*_margin[_n+2])) + ///
-score[_n+3]*(pop[_n+3]+(pop[_n+3]*_margin[_n+3])) ///
-)/tpop
-
-gen margmean_lb = ( ///
-score*(pop+(pop*(_ci_lb))) + ///
-score[_n+1]*(pop[_n+1]+(pop[_n+1]*(_ci_lb[_n+1]))) + ///
-score[_n+2]*(pop[_n+2]+(pop[_n+2]*(_ci_lb[_n+2]))) + ///
-score[_n+3]*(pop[_n+3]+(pop[_n+3]*(_ci_lb[_n+3]))) ///
-)/tpop
-
-gen margmean_ub = ( ///
-score*(pop+(pop*(_ci_ub))) + ///
-score[_n+1]*(pop[_n+1]+(pop[_n+1]*(_ci_ub[_n+1]))) + ///
-score[_n+2]*(pop[_n+2]+(pop[_n+2]*(_ci_ub[_n+2]))) + ///
-score[_n+3]*(pop[_n+3]+(pop[_n+3]*(_ci_ub[_n+3]))) ///
-)/tpop
-
-gen AME = margmean - mean
-gen lower = margmean_lb - mean
-gen upper = margmean_ub - mean
-drop if AME == .
+gen AME = _margin
+gen lower = _ci_lb
+gen upper = _ci_ub
 gen factor = .
 gen n = [_n]
 drop id
-gen id = "t58m1"
-foreach n of numlist 2/36 {
-replace id = "t58m`n'" if `n'==n
+gen id = "t30m1"
+foreach n of numlist 1/8 {
+replace id = "t30m`n'" if `n'==n
 }
 order factor AME lower upper id
 keep factor AME lower upper id
-save "team58.dta", replace
-
-foreach n of numlist 1/36 {
-erase "t58m`n'.dta"
-}
-
-
+save "team30.dta", replace
 
 }
 *==============================================================================*
@@ -27546,6 +27451,9 @@ erase L2datav3.dta
 *==============================================================================*
 *==============================================================================*
 version 15
+
+*
+cd "C:/GitHub/CRI/data"
 
 // AMEs
 use team0.dta, clear
