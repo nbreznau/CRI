@@ -59,7 +59,7 @@ We face a problem that a one percent change in net migration (within-country) is
 
 Standardization will produce some extreme outliers, so a 'better' strategy is to adjust the sd of Flow to be equal to that of Stock. However, there are some wide outliers in stock that bunches up the dispersion of flow, therefore we need the sd without these extreme outliers
 
-```{r standardizeDV}
+```{r standardizeDV, warning = F, message = F}
 # Team 104 is massive outlier, we have to rescale the estimates
 cri_str <- cri_str %>%
   mutate(AME = ifelse(id == "t104m2" | id == "t104m4", AME/10, AME),
@@ -83,22 +83,21 @@ cri_str <- select(cri_str, -c(AMEssd,AMEfsd))
 ```
 
 
-```{r recodes}
+```{r recodes, warning = F, message = F}
 cri_str <- cri_str %>%
   mutate(Hresult = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hnotest_stock==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hsupport_stock==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hreject_stock==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hreject_net==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hreject_net==1, "Reject", NA)))))))))))),
          Hsup = ifelse(Hresult=="Support",1,0),
          Hrej = ifelse(Hresult=="Reject",1,0),
          Hno = ifelse((Hresult == "Support" | Hresult == "Reject"), 0, 1),
          HresultF = as.factor(Hresult),
-         AME_sup_p05 = ifelse(AME < 0 & p < 0.05, 1, 0),
-         AME_sup_p10 = ifelse(AME < 0 & p < 0.1, 1, 0),
-         countries = as.numeric(num_countries)
+         countries = as.numeric(num_countries),
+         AME_sup_p05 = ifelse(u_teamid != 0, ifelse(AME < 0 & p < 0.05, 1, 0), NA),
+         AME_sup_p10 = ifelse(u_teamid != 0, ifelse(AME < 0 & p < 0.1, 1, 0), NA),
+         AME_neg_p05 = ifelse(u_teamid != 0, ifelse(AME > 0 & p < 0.05, 1, 0), NA),
+         AME_ns_p05 = ifelse(u_teamid != 0, ifelse(p > 0.04999999, 1, 0), NA)
          )
 
-cri_str <- select(cri_str, -c(num_countries))
-
-
-
+# remove team 0 from results
 
 # easier country names (for string version)
 cri_str <- cri_str %>%
@@ -154,7 +153,7 @@ cri_str <- cri_str[order(cri_str$count),]
 cri <- cri_str
 ```
 
-```{r string_encode}
+```{r string_encode, warning = F, message = F}
 #replace all 1's with the column name for all variable
 w <- select(cri_str, Jobs:anynonlin, id)
 
@@ -281,267 +280,6 @@ cri <- select(cri, u_teamid, id, everything())
 
 ```
 
-
-```{r codebook, include=F, warning=F, message=F}
-# Note that at the end of each variable we add a 1, 2 and 3 for up to three team member's responses
-
-# These are the labels for the unipark variables
-
-#Statistical knowledge and experience
-
-# v_100 #Not enough methods skills, 1-did not constrain me
-# v_101 #Not enough software programming skills, 1-did not constrain me
-# v_34 #Difficulty of replication, 1-most difficult
-# backgr_exp_teach_stat #"1 How many stats/quant methods courses taught?"
-# backgr_exp_famil_mlm #"1 Familiarity with multilevel modeling (5=very familiar)"
-# v_18 #"1 Published on statistics/methods?"
-# v_21 #"1 Published using multilevel regression?"
-# 
-# #Topical knowledge and experience
-# 
-# v_17 #"1 Published on immigration?"
-# v_19 #"1 Published on public policy/welf state?"
-# v_20 #"1 Published on policy prefs/public opinion?"
-# v_88  #I was very interested in the substantive topic.
-# v_35 #"1 Not at all familiar with the lilterature on immigration/policy"
-# v_36 #"1 Read some of the literature on imm/policy" (vague in-between category, drop)
-# v_37 #"1 Read much of the literature on imm/policy"
-# v_38 #"1 Published articles or books on imm/policy"
-# v_39 #"1 Taught courses on imm/policy"
-# v_40 #"1 Often discuss imm/policy with colleagues"
-# 
-# belief_H1_1 #Belief in hypothesis
-# belief_agecare_1
-# belief_unempl_1
-# belief_income_1
-# belief_housing_1
-# belief_labour_1
-# belief_health_1
-# 
-# 
-# label var v_171 "1 Published on immigration?"
-# label var v_181 "1 Published on statistics/methods?"
-# label var v_191 "1 Published on public policy/welf state?"
-# label var v_201 "1 Published on policy prefs/public opinion?"
-# label var v_211 "1 Published using multilevel regression?"
-# label var v_172 "2 Published on immigration?"
-# label var v_182 "2 Published on statistics/methods?"
-# label var v_192 "2 Published on public policy/welf state?"
-# label var v_202 "2 Published on policy prefs/public opinion?"
-# label var v_212 "2 Published using multilevel regression?"
-# label var v_173 "3 Published on immigration?"
-# label var v_183 "3 Published on statistics/methods?"
-# label var v_193 "3 Published on public policy/welf state?"
-# label var v_203 "3 Published on policy prefs/public opinion?"
-# label var v_213 "3 Published using multilevel regression?"
-# 
-# label var backgr_exp_teach_stat1 "1 How many stats/quant methods courses taught?"
-# label var backgr_exp_famil_mlm1 "1 Familiarity with multilevel modeling (5=very familiar)"
-# label var belief_H1_11 "1 Immigration reduces/increase support for social policy (1=strongly reduces)"
-# label var backgr_exp_teach_stat2 "2 How many stats/quant methods courses taught?"
-# label var backgr_exp_famil_mlm2 "2 Familiarity with multilevel modeling (5=very familiar)"
-# label var belief_H1_12 "2 Immigration reduces/increase support for social policy (1=strongly reduces)"
-# label var backgr_exp_teach_stat3 "3 How many stats/quant methods courses taught?"
-# label var backgr_exp_famil_mlm3 "3 Familiarity with multilevel modeling (5=very familiar)"
-# label var belief_H1_13 "3 Immigration reduces/increase support for social policy (1=strongly reduces)"
-# 
-# label var v_331 "1 Individual time spent on replication"
-# label var v_341 "1 Difficulty of replication (1=most difficult)"
-# label var v_351 "1 Not at all familiar with the lilterature on immigration/policy"
-# label var v_361 "1 Read some of the literature on imm/policy"
-# label var v_371 "1 Read much of the literature on imm/policy"
-# label var v_381 "1 Published articles or books on imm/policy"
-# label var v_391 "1 Taught courses on imm/policy"
-# label var v_401 "1 Often discuss imm/policy with colleagues"
-# label var v_411 "1 Enjoyment of replication (1=extremely fun)"
-# label var v_431 "1 Convincingness of Brady & Finnigan tests(1=most convincing)"
-# label var v_332 "2 Individual time spent on replication"
-# label var v_342 "2 Difficulty of replication (1=most difficult)"
-# label var v_352 "2 Not at all familiar with the lilterature on immigration/policy"
-# label var v_362 "2 Read some of the literature on imm/policy"
-# label var v_372 "2 Read much of the literature on imm/policy"
-# label var v_382 "2 Published articles or books on imm/policy"
-# label var v_392 "2 Taught courses on imm/policy"
-# label var v_402 "2 Often discuss imm/policy with colleagues"
-# label var v_412 "2 Enjoyment of replication (1=extremely fun)"
-# label var v_432 "2 Convincingness of Brady & Finnigan tests(1=most convincing)"
-# label var v_333 "3 Individual time spent on replication"
-# label var v_343 "3 Difficulty of replication (1=most difficult)"
-# label var v_353 "3 Not at all familiar with the lilterature on immigration/policy"
-# label var v_363 "3 Read some of the literature on imm/policy"
-# label var v_373 "3 Read much of the literature on imm/policy"
-# label var v_383 "3 Published articles or books on imm/policy"
-# label var v_393 "3 Taught courses on imm/policy"
-# label var v_403 "3 Often discuss imm/policy with colleagues"
-# label var v_413 "3 Enjoyment of replication (1=extremely fun)"
-# label var v_433 "3 Convincingness of Brady & Finnigan tests(1=most convincing)"
-# 
-# -> tabulation of v_88  
-# 
-#            I was very interested in the |
-#                      substantive topic. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-# Reason does not apply to me apply at al |         10        6.33        6.33
-#           Reason applies to me a little |         30       18.99       25.32
-#                             Neither nor |         22       13.92       39.24
-#           Reason somewhat applies to me |         51       32.28       71.52
-#              Reason applies to me a lot |         45       28.48      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        158      100.00
-# 
-# -> tabulation of v_89  
-# 
-# Colleagues asked me to join their team. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-#                                       0 |          2        1.27        1.27
-# Reason does not apply to me apply at al |         63       39.87       41.14
-#           Reason applies to me a little |         15        9.49       50.63
-#                             Neither nor |          4        2.53       53.16
-#           Reason somewhat applies to me |         33       20.89       74.05
-#              Reason applies to me a lot |         41       25.95      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        158      100.00
-# 
-# -> tabulation of v_90  
-# 
-#            The prospect of a scientific |
-#              publication was appealing. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-#                                       0 |          1        0.63        0.63
-# Reason does not apply to me apply at al |         10        6.33        6.96
-#           Reason applies to me a little |         19       12.03       18.99
-#                             Neither nor |         24       15.19       34.18
-#           Reason somewhat applies to me |         66       41.77       75.95
-#              Reason applies to me a lot |         38       24.05      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        158      100.00
-# 
-# -> tabulation of v_91  
-# 
-#         I expected the project to be an |
-#                   enjoyable experience. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-#                                       0 |          1        0.63        0.63
-# Reason does not apply to me apply at al |          2        1.27        1.90
-#           Reason applies to me a little |          4        2.53        4.43
-#                             Neither nor |         15        9.49       13.92
-#           Reason somewhat applies to me |         76       48.10       62.03
-#              Reason applies to me a lot |         60       37.97      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        158      100.00
-# 
-# -> tabulation of v_93  
-# 
-#            I was very interested in the |
-#      replication aspect of the project. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-#                                       0 |          1        0.64        0.64
-# Reason does not apply to me apply at al |          2        1.27        1.91
-#           Reason applies to me a little |          3        1.91        3.82
-#                             Neither nor |          4        2.55        6.37
-#           Reason somewhat applies to me |         61       38.85       45.22
-#              Reason applies to me a lot |         86       54.78      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        157      100.00
-# 
-# -> tabulation of v_94  
-# 
-# I expected to learn and to develop as a |
-#                             researcher. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-#                                       0 |          2        1.27        1.27
-# Reason does not apply to me apply at al |          2        1.27        2.55
-#           Reason applies to me a little |         14        8.92       11.46
-#                             Neither nor |         19       12.10       23.57
-#           Reason somewhat applies to me |         74       47.13       70.70
-#              Reason applies to me a lot |         46       29.30      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        157      100.00
-# 
-# -> tabulation of v_95  
-# 
-# The CRI seemed like a valuable addition |
-#                               to my CV. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-# Reason does not apply to me apply at al |         31       19.75       19.75
-#           Reason applies to me a little |         43       27.39       47.13
-#                             Neither nor |         43       27.39       74.52
-#           Reason somewhat applies to me |         32       20.38       94.90
-#              Reason applies to me a lot |          8        5.10      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        157      100.00
-# 
-# -> tabulation of v_96  
-# 
-#  I joined because I know one or more of |
-#                         the organizers. |      Freq.     Percent        Cum.
-# ----------------------------------------+-----------------------------------
-# Reason does not apply to me apply at al |        108       68.79       68.79
-#           Reason applies to me a little |          9        5.73       74.52
-#                             Neither nor |         13        8.28       82.80
-#           Reason somewhat applies to me |         19       12.10       94.90
-#              Reason applies to me a lot |          8        5.10      100.00
-# ----------------------------------------+-----------------------------------
-#                                   Total |        157      100.00
-# 
-# -> tabulation of v_98  
-# 
-#              Not enough time |      Freq.     Percent        Cum.
-# -----------------------------+-----------------------------------
-#                            0 |          1        0.64        0.64
-#         Did not constrain me |          8        5.10        5.73
-# Constrained me only a little |         26       16.56       22.29
-#      Constrained me somewhat |         51       32.48       54.78
-#  Constrained me considerably |         71       45.22      100.00
-# -----------------------------+-----------------------------------
-#                        Total |        157      100.00
-# 
-# -> tabulation of v_99  
-# 
-#  Inadequate materials (e.g., |
-# software or computing power) |      Freq.     Percent        Cum.
-# -----------------------------+-----------------------------------
-#         Did not constrain me |        110       70.06       70.06
-# Constrained me only a little |         27       17.20       87.26
-#      Constrained me somewhat |         13        8.28       95.54
-#  Constrained me considerably |          7        4.46      100.00
-# -----------------------------+-----------------------------------
-#                        Total |        157      100.00
-# 
-# -> tabulation of v_100  
-# 
-#    Not enough methods skills |      Freq.     Percent        Cum.
-# -----------------------------+-----------------------------------
-#         Did not constrain me |         65       41.40       41.40
-# Constrained me only a little |         53       33.76       75.16
-#      Constrained me somewhat |         30       19.11       94.27
-#  Constrained me considerably |          9        5.73      100.00
-# -----------------------------+-----------------------------------
-#                        Total |        157      100.00
-# 
-# -> tabulation of v_101  
-# 
-#          Not enough software |
-#           programming skills |      Freq.     Percent        Cum.
-# -----------------------------+-----------------------------------
-#         Did not constrain me |        110       70.06       70.06
-# Constrained me only a little |         35       22.29       92.36
-#      Constrained me somewhat |         12        7.64      100.00
-# -----------------------------+-----------------------------------
-#                        Total |        157      100.00
-# 
-# -> tabulation of v_102  
-# 
-#  Having strict deadlines was |
-#             a problem for me |      Freq.     Percent        Cum.
-# -----------------------------+-----------------------------------
-#         Did not constrain me |         40       25.48       25.48
-# Constrained me only a little |         49       31.21       56.69
-#      Constrained me somewhat |         48       30.57       87.26
-#  Constrained me considerably |         20       12.74      100.00
-# -----------------------------+-----------------------------------
-#                        Total |        157      100.00
-```
 
 ### Individual Measurement Method
 
@@ -758,14 +496,61 @@ rm(cor, cor1, fit, popdf_out, criT)
 
 ```
 
-### Number of positive test results per team
+### Test results per team
+
+Here we need to divide the inv_weight (number of models per team) in half for all teams who considered stock and flow independently.
 
 ```{r postest, warning = F}
+# fix weight for 89 independent team-level tests
+
 cri <- cri %>%
   group_by(u_teamid,Hresult) %>%
-  mutate(pos_test_pct_p05 = sum(AME_sup_p05, na.rm = T)/inv_weight,
-         pos_test_pct_p10 = sum(AME_sup_p10, na.rm = T)/inv_weight) %>%
+  mutate(inv_weight_H = ifelse(length(Hresult)!=inv_weight,inv_weight/2, inv_weight) # this does not perfectly capture all teams, see below
+         ) %>%
   ungroup()
+
+# team 17 had 1 test of stock and 2 tests of flow, 
+# team 37 has 2 tests of stock and 1 of flow
+# team 58 & 65 have 24 flow models and 12 stock
+# team 75 is 12 stock and 6 flow
+
+cri$inv_weight_H <- ifelse(cri$id == "t17m1", 1, ifelse(cri$id == "t17m2" | cri$id == "t17m3", 2, cri$inv_weight_H))
+
+cri$inv_weight_H <- ifelse(cri$id == "t37m3", 1, ifelse(cri$id == "t37m1" | cri$id == "t37m2", 2, cri$inv_weight_H))
+
+cri$inv_weight_H <- ifelse(cri$u_teamid == 58 & cri$main_IV_type == "Flow", 24, ifelse(cri$u_teamid == 58 & cri$main_IV_type == "Stock", 12, cri$inv_weight_H))
+
+cri$inv_weight_H <- ifelse(cri$u_teamid == 65 & cri$main_IV_type == "Flow", 24, ifelse(cri$u_teamid == 65 & cri$main_IV_type == "Stock", 12, cri$inv_weight_H))
+
+cri$inv_weight_H <- ifelse(cri$u_teamid == 75 & cri$main_IV_type == "Flow", 6, ifelse(cri$u_teamid == 75 & cri$main_IV_type == "Stock", 12, cri$inv_weight_H))
+
+# temporarily add back in team 105 to make these calculations correct
+
+t105 <- as.data.frame(matrix(nrow = 1, ncol = 5))
+colnames(t105) <- c("u_teamid","Hresult","AME_sup_p05","AME_neg_p05","AME_ns_p05")
+t105[1,1] <- as.numeric(105)
+t105[1,2] <- "No test"
+t105[1,3] <- as.numeric(0)
+t105[1,4] <- as.numeric(0)
+t105[1,5] <- as.numeric(0)
+
+cri <- bind_rows(cri, t105)
+
+
+cri <- cri %>%
+  group_by(u_teamid,Hresult) %>%
+  mutate(pos_test_team_p05 = sum(AME_sup_p05, na.rm = T),
+         neg_test_team_p05 = sum(AME_neg_p05, na.rm = T),
+         ns_test_team_p05 = sum(AME_ns_p05, na.rm = T),
+         pos_test_pct_p05 = sum(AME_sup_p05, na.rm = T)/inv_weight_H,
+         pos_test_pct_p10 = sum(AME_sup_p10, na.rm = T)/inv_weight_H,
+         neg_test_pct_p05 = sum(AME_neg_p05, na.rm = T)/inv_weight_H,
+         ns_test_pct_p05 = sum(AME_ns_p05, na.rm = T)/inv_weight_H) %>%
+  ungroup()
+
+# now remove t105 again
+
+cri <- subset(cri, u_teamid != 105)
 ```
 
 
