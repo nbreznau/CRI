@@ -87,6 +87,9 @@ pacman::p_load("magrittr","tidyverse","margins")
 
 
 # Create a working directory string and a function to call the wd for every code chunk
+
+### Now that we have an R project, we can call simply "data/" because everything is in that folder. Change when we have time.
+
 wd <- "C:/Github/CRI/data" #set your wd here
 pfunc <- function(x){
   paste(wd,x, sep = "/")
@@ -9651,8 +9654,7 @@ cri_margins <- read.csv(pfunc("criteamframe.csv"))
 team33 <- read.csv(pfunc("team33.csv"))
 colnames(team33)[1] <- "AME"
 #If all code has run then all of these are pre-loaded. If the code has not run then these need to be loaded.
-teamrs <- c(3,12,16,18,20,28,35,40,41,48,56,59,61,62,69,70,77,82,84,87,93,94,98,104)
-            #106
+teamrs <- c(3,12,16,18,20,28,35,40,41,48,56,59,61,62,69,70,77,82,84,87,93,94,98,104,106)
             
 for (i in teamrs){
   load(pfunc(paste("team",i,".Rdata",sep="")))
@@ -9691,7 +9693,7 @@ cri_margins$p <- round(2*pnorm(-abs(cri_margins$z)),5)
 cri_margins <- dplyr::select(cri_margins, -c("se"))
 
 write.xlsx(cri_margins, file = pfunc("cri_margins.xlsx"))
-#merge into Excel master file by hand for now
+#copy and paste into Excel master file by hand for now
 
 
 
