@@ -12,11 +12,12 @@ http://www.alexlishinski.com/post/2018-04-13-lavaanplot0.5/
 rm(list = ls())
 library(pacman)
 
-# devtools::install_github("alishinski/lavaanPlot")
 
 pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools","rvest")
 
-
+# add in variance estimates (more than 2-digits)
+# disable scientific notation
+options(scipen = 999)
 
 # Column no missing function
 completeFun <- function(data, desiredCols) {
@@ -105,11 +106,17 @@ Here we consider that the design of the CRI has an influence on the findings of 
 
 We consider random assignment to the opaque or transparent replication group (variable = u_expgroup1) and the deliberation group (variable = u_delibtreatmentgroup1) as objectively imposed conditions (not a choice by the teams).
 
+The problem we face is that there is only an average of roughly 13 models per team, and 87 teams. This means we start to lose the ability to explain variance. A degrees of freedom problem. Therefore, in this process we have to reduce complexity. 
+
+
 
 ```{r obj_mlms}
 m00 <- lmer(AME_Z ~ (1 | team), data = cri_ml)
-m01 <- lmer(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + (1 | team), data = cri_ml)
-m02 <- lmer(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + u_expgroup1 + u_delibtreatmentgroup1 + (1 | team), data = cri_ml)
+#m01a <- lmer(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + (1 | team), data = cri_ml)
+
+# these variables do all the work, so we reduce complexity
+m01 <- lmer(AME_Z ~ Jobs + IncDiff + House + (1 | team), data = cri_ml)
+m02 <- lmer(AME_Z ~ Jobs + IncDiff + House + u_expgroup1 + u_delibtreatmentgroup1 + (1 | team), data = cri_ml)
 
 tab_model(m00,m01,m02, digits = 3, p.style = "stars", show.ci = F, file = "results/reg1.htm")
 
@@ -121,24 +128,19 @@ colnames(reg1) <- c("Effect","m00","m01","m02")
 m00v <- as.data.frame(VarCorr(m00))
 m01v <- as.data.frame(VarCorr(m01))
 m02v <- as.data.frame(VarCorr(m02))
-m00v$vcov <- as.numeric(round(m00v$vcov, 7))
-m01v$vcov <- as.numeric(round(m01v$vcov, 7))
-m02v$vcov <- as.numeric(round(m02v$vcov, 7))
 
-# add in variance estimates (more than 2-digits)
-# disable scientific notation
-options(scipen = 999)
+
 
 # NOTE! This will not run properly if the number of variables in m02 changes above
 
-reg1[12,2] <- m00v[1,4]
-reg1[13,2] <- m00v[nrow(m00v),4]
-reg1[12,3] <- m01v[1,4]
-reg1[13,3] <- m01v[nrow(m01v),4]
-reg1[12,4] <- m02v[1,4]
-reg1[13,4] <- m02v[nrow(m02v),4]
+reg1[9,2] <- m00v[1,4]
+reg1[10,2] <- m00v[nrow(m00v),4]
+reg1[9,3] <- m01v[1,4]
+reg1[10,3] <- m01v[nrow(m01v),4]
+reg1[9,4] <- m02v[1,4]
+reg1[10,4] <- m02v[nrow(m02v),4]
 
-# 'Marginal R2' is the overall r2
+m01vars <- "AME_Z ~ Jobs + IncDiff + House"
 
 ```
 
@@ -148,13 +150,17 @@ reg1[13,4] <- m02v[nrow(m02v),4]
 
 The teams had several possibilities to measure the DV (or DVs) including linear, logit or multinomial. Also, immigration could be stock or flow and some teams elected for change in flow. A few teams used measures like refugee or non-western instead of simply foreign-born. These decisions are reflected here.
 
+note that logit is the only one that seems to matter, surprisingly the 'type' of measure does not matter (foreign-born, non-western, refugee, etc.; although there are far fewer models that do not simply use foreign-born)
+
 ```{r subj_measurement_mlms}
 
-m03 <- lmer(AME_Z ~ logit + ologit + lpm + mlogit + ols + (1 | team), data = cri_ml)
+m03 <- lmer(paste0(m01vars, "+ logit + ologit + lpm + mlogit + ols + (1 | team)"), data = cri_ml)
 
-#note that ChangeFlow is the omitted category
+#note that Flow is the omitted category (ChangeFlow is too rare to make a good omitted category)
 
-m04 <- lmer(AME_Z ~ logit + ologit + lpm + mlogit + ols + Stock + Flow + main_IV_factor + (1 | team), data = cri_ml)
+# m04 <- lmer(paste0(m01vars, "+ logit + ologit + lpm + mlogit + ols + Stock + Flow + main_IV_factor + (1 | team)"), data = cri_ml)
+
+m04 <- lmer(paste0(m01vars, "+ logit + ols + Stock + ChangeFlow + (1 | team)"), data = cri_ml)
 
 tab_model(m00,m03,m04, digits = 3, p.style = "stars", show.ci = F, file = "results/reg2.htm")
 
@@ -168,14 +174,14 @@ m04v <- as.data.frame(VarCorr(m04))
 
 # NOTE! This will not run properly if the number of variables in m02 changes above
 
-reg2[16,2] <- m00v[1,4]
-reg2[17,2] <- m00v[nrow(m00v),4]
-reg2[16,3] <- m03v[1,4]
-reg2[17,3] <- m03v[nrow(m03v),4]
-reg2[16,4] <- m04v[1,4]
-reg2[17,4] <- m04v[nrow(m04v),4]
+reg2[14,2] <- m00v[1,4]
+reg2[15,2] <- m00v[nrow(m00v),4]
+reg2[14,3] <- m03v[1,4]
+reg2[15,3] <- m03v[nrow(m03v),4]
+reg2[14,4] <- m04v[1,4]
+reg2[15,4] <- m04v[nrow(m04v),4]
 
-m04vars <- "AME_Z ~ logit + ologit + lpm + mlogit + ols + Stock + Flow + main_IV_factor"
+m04vars <- "+ logit + ols + Stock + ChangeFlow"
 
 ```
 
@@ -184,8 +190,11 @@ m04vars <- "AME_Z ~ logit + ologit + lpm + mlogit + ols + Stock + Flow + main_IV
 
 ```{r subj_datasamp_mlms, warning = F}
 
-m05 <- lmer(paste0(m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + (1 | team)"), data = cri_ml)
-m06 <- lmer(paste0(m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable + w2016*eeurope + w2016*allavailable + (1 | team)"), data = cri_ml)
+m05 <- lmer(paste0(m01vars, m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + (1 | team)"), data = cri_ml)
+
+# several interactions were tried here that seemed useful in the single-level equation, but they just wash out the results, many making the variance worse
+
+m06 <- lmer(paste0(m01vars, m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable +  (1 | team)"), data = cri_ml)
 
 m05v <- as.data.frame(VarCorr(m05))
 m06v <- as.data.frame(VarCorr(m06))
@@ -199,26 +208,30 @@ colnames(reg3) <- c("Effect","m00","m05","m06")
 
 # NOTE! This will not run properly if the number of variables change above
 
-reg3[25,2] <- m00v[1,4]
-reg3[26,2] <- m00v[nrow(m00v),4]
-reg3[25,3] <- m05v[1,4]
-reg3[26,3] <- m05v[nrow(m05v),4]
-reg3[25,4] <- m06v[1,4]
-reg3[26,4] <- m06v[nrow(m06v),4]
+reg3[18,2] <- m00v[1,4]
+reg3[19,2] <- m00v[nrow(m00v),4]
+reg3[18,3] <- m05v[1,4]
+reg3[19,3] <- m05v[nrow(m05v),4]
+reg3[18,4] <- m06v[1,4]
+reg3[19,4] <- m06v[nrow(m06v),4]
 
-m06vars <- "+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable + w2016*eeurope + w2016*allavailable"
+m06vars <- "+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable"
 ```
 
 
 #### Model Design
 
-m07 estimator, mlm structure, main IVs in same model or not (this causes one team to get dropped so we don't use it, didn't add anything when added anyways)
+m07 estimator, mlm structure
+
+main IVs in same model or not (this causes one team to get dropped so we don't use it, didn't add anything when added anyways)
+
 m08 independent vars l2 selection
 
 ```{r subj_model_mlms}
 
-m07 <- lmer(paste0(m04vars, m06vars, " + twowayfe + w2016*twowayfe + mlm_fe + level_cyear + ml_glm  + mlm_re + bayes + (1 | team)"), data = cri_ml)
-m08 <- lmer(paste0(m04vars, m06vars, " + twowayfe + w2016*twowayfe + mlm_fe + level_cyear + ml_glm + mlm_re + bayes + un_emp_rate_ivC + gdp_ivC + anynonlin + (1 | team) "), data = cri_ml) 
+m07 <- lmer(paste0(m01vars, m04vars, m06vars, " + twowayfe + level_cyear + mlm_fe + mlm_re  + (1 | team)"), data = cri_ml)
+m08 <- lmer(paste0(m01vars, m04vars, m06vars, " + twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin + (1 | team) "), data = cri_ml)
+# tried ml_glm, w2016*twowayfe, bayes, un_emp_rate_ivC 
 
 m07v <- as.data.frame(VarCorr(m07))
 m08v <- as.data.frame(VarCorr(m08))
@@ -234,15 +247,18 @@ colnames(reg4) <- c("Effect","m00","m07","m08")
   
 # NOTE! This will not run properly if the number of variables change above
 
-reg4[35,2] <- m00v[1,4]
-reg4[36,2] <- m00v[nrow(m00v),4]
-reg4[35,3] <- m07v[1,4]
-reg4[36,3] <- m07v[nrow(m07v),4]
-reg4[35,4] <- m08v[1,4]
-reg4[36,4] <- m08v[nrow(m08v),4]
+reg4[24,2] <- m00v[1,4]
+reg4[25,2] <- m00v[nrow(m00v),4]
+reg4[24,3] <- m07v[1,4]
+reg4[25,3] <- m07v[nrow(m07v),4]
+reg4[24,4] <- m08v[1,4]
+reg4[25,4] <- m08v[nrow(m08v),4]
 
-m08vars <- " + twowayfe + w2016*twowayfe + mlm_fe + level_cyear + ml_glm + mlm_re + bayes + un_emp_rate_ivC + gdp_ivC + anynonlin"
+m07vars <- " + twowayfe + level_cyear + mlm_fe + mlm_re"
+m08vars <- "+ twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin"
 
+# mlm_fe + mlm_re doesn't help
+m07adj_vars <- " + twowayfe + level_cyear"
 ```
 
 
@@ -256,51 +272,119 @@ m08vars <- " + twowayfe + w2016*twowayfe + mlm_fe + level_cyear + ml_glm + mlm_r
 
 Maximum variance explained
 
+It becomes clear that models 7 and 8 are detrimental to the variance explained,
+therefore the following results combine only with m06
+
 Using the R^2 'hacking' tool we found some combinations of these variables that maximized r^2 (m11)
 
+These probably need to be run independently, so that we see the reduction for each one.
+
 ```{r res_aspects_mlms}
-m09 <- lmer(paste0(m04vars, m06vars, m08vars, "+ stats_ipred + topic_ipred + belief_ipred + (1 | team)"), data = cri_ml)
-m10 <- lmer(paste0(m04vars, m06vars, m08vars, "+ stats_ipred + topic_ipred + belief_ipred + pro_immigrant + total_score + (1 | team)"), data = cri_ml) 
-# Max variance
-m11 <- lmer(paste0(m04vars, m06vars, m08vars, "+ stats_ipred + topic_ipred + belief_ipred + pro_immigrant + total_score + belief_ipred*topic_ipred	+ belief_ipred*stats_ipred + pro_immigrant*stats_ipred	+ topic_ipred*stats_ipred + (1 | team)"), data = cri_ml) 
+m09 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ belief_ipred + (1 | team)"), data = cri_ml)
+m10 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ pro_immigrant +  (1 | team)"), data = cri_ml) 
+
+m11 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ topic_ipred + (1 | team)"), data = cri_ml) 
+
+m12 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ stats_ipred + (1 | team)"), data = cri_ml) 
+
+m13 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ total_score + (1 | team)"), data = cri_ml)
+
+m14 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ pro_immigrant + stats_ipred + (1 | team)"), data = cri_ml) 
+# even a cor of 0.19 is probably causing problems at the team-level with so few degrees of freedom
+#> cor(cri_ml$pro_immigrant,cri_ml$stats_ipred, use = "complete.obs")
+#[1] 0.1914521
+
+# m15 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ pro_immigrant + stats_ipred + (1 | team)"), data = cri_ml) 
 
 m09v <- as.data.frame(VarCorr(m09))
 m10v <- as.data.frame(VarCorr(m10))
 m11v <- as.data.frame(VarCorr(m11))
+m12v <- as.data.frame(VarCorr(m12))
+m13v <- as.data.frame(VarCorr(m13))
+m14v <- as.data.frame(VarCorr(m14))
+# m15v <- as.data.frame(VarCorr(m15))
 
-
-tab_model(m00,m09,m10,m11, digits = 3, p.style = "stars", show.ci = F, file = "results/reg5.htm")
+tab_model(m00,m09,m10,m11,m12,m13,m14, digits = 3, p.style = "stars", show.ci = F, file = "results/reg5.htm")
 
 knitr::include_graphics("results/reg5.htm")
 
 reg5 <- as.data.frame(read_html("results/reg5.htm") %>% html_table(fill=TRUE))
-colnames(reg5) <- c("Effect","m00","m09","m10","m11")
+colnames(reg5) <- c("Effect","m00","m09","m10","m11","m12","m13","m14","m15")
 
 
   
 # NOTE! This will not run properly if the number of variables change above
 
-reg5[44,2] <- m00v[1,4]
-reg5[45,2] <- m00v[nrow(m00v),4]
-reg5[44,3] <- m09v[1,4]
-reg5[45,3] <- m09v[nrow(m09v),4]
-reg5[44,4] <- m10v[1,4]
-reg5[45,4] <- m10v[nrow(m10v),4]
-reg5[44,4] <- m11v[1,4]
-reg5[45,4] <- m11v[nrow(m11v),4]
+reg5[25,2] <- m00v[1,4]
+reg5[26,2] <- m00v[nrow(m00v),4]
+reg5[25,3] <- m09v[1,4]
+reg5[26,3] <- m09v[nrow(m09v),4]
+reg5[25,4] <- m10v[1,4]
+reg5[26,4] <- m10v[nrow(m10v),4]
+reg5[25,5] <- m11v[1,4]
+reg5[26,5] <- m11v[nrow(m11v),4]
+reg5[25,6] <- m12v[1,4]
+reg5[26,6] <- m12v[nrow(m12v),4]
+reg5[25,7] <- m13v[1,4]
+reg5[26,7] <- m13v[nrow(m13v),4]
+reg5[25,8] <- m14v[1,4]
+reg5[26,8] <- m14v[nrow(m14v),4]
+#reg5[25,9] <- m15v[1,4]
+#reg5[26,9] <- m15v[nrow(m15v),4]
 ```
 
 
 ```{r variance_explained_table}
-tbl2 <- as.data.frame(matrix(nrow = 19, ncol = 4))
 
-tbl2[1,2:4] <- c("Team-Levela (n=87)","Model-Levela (n=1,253)","Total")
-tbl2[2:19,1] <- c("Baseline Variance","","Objective Conditions","Structure of Materials","Group Assignment","Subjective Decisions","Measurement","Data and Sample","Model Design","Researcher Attributes","Pro-Immigration Attitude","Knowledge of Topic","Statistical Skills","Peer Model Ranking", "Statistical Skills","","Unexplained Variance","aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems")
 
-var_table <- matrix(nrow = 11, ncol = 3)
-var_table[1,] <- c("m00",reg1[12,2],reg1[13,2])
-var_table[2,] <- c("m01",reg1[12,3],reg1[13,3])
-var_table[3,] <- c("m02",reg1[12,4],reg1[13,4])
+var_table <- as.data.frame(matrix(nrow = 17, ncol = 3))
+colnames(var_table) <- c("model","team_level","model_level")
+
+# These are not data scientist ready, they need to be hand re-coded incase models above change!!!
+var_table[2,] <- c("m00",reg1[9,2],reg1[10,2])
+var_table[3,] <- c("m01",reg1[9,3],reg1[10,3])
+var_table[3,] <- c("m02",reg1[9,4],reg1[10,4])
+
+var_table[5,] <- c("m03",reg2[14,3],reg2[15,3])
+var_table[6,] <- c("m04",reg2[14,4],reg2[15,4])
+var_table[6,] <- c("m05",reg3[18,3],reg3[19,3])
+
+var_table[8,] <- c("m06",reg3[18,3],reg3[19,4])
+var_table[9,] <- c("m07",reg4[24,3],reg4[25,3])
+var_table[10,] <- c("m08",reg4[24,4],reg4[25,4])
+
+var_table[11,] <- c("m09",reg5[25,3],reg5[26,3])
+var_table[12,] <- c("m10",reg5[25,4],reg5[26,4])
+var_table[13,] <- c("m11",reg5[25,5],reg5[26,5])
+
+var_table[14,] <- c("m12",reg5[25,6],reg5[26,6])
+var_table[15,] <- c("m13",reg5[25,7],reg5[26,7])
+var_table[16,] <- c("m14",reg5[25,8],reg5[26,8])
+# var_table[16,] <- c("m15",reg5[25,9],reg5[26,9])
+
+
+
+##### Stopped here, need to fit the labels into the table
+
+
+
+
+
+var_table[1,2:4] <- c("Team-Levela (n=87)","Model-Levela (n=1,253)","Total")
+var_table[2:19,1] <- c("Baseline Variance","","Objective Conditions","Structure of Materials","Group Assignment","Subjective Decisions","Measurement","Data and Sample","Model Design","Researcher Attributes","Pro-Immigration Attitude","Knowledge of Topic","Statistical Skills","Peer Model Ranking", "Statistical Skills","","Unexplained Variance","aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems")
+
+
+
+
+var_table <- var_table %>%
+  mutate(team_level = as.numeric(team_level),
+         model_level = as.numeric(model_level),
+         total = team_level + model_level)
+
+var_table$team_var_reduc <- (var_table[1,2] - var_table$team_level)/var_table[1,2]
+var_table$model_var_reduc <- (var_table[1,3] - var_table$model_level)/var_table[1,3]
+var_table$total_var_reduc <- ((var_table[1,2] + var_table[1,3]) - (var_table$total)) / (var_table[1,2] + var_table[1,3])
+
 ```
 
 
