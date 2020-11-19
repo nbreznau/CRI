@@ -14,7 +14,7 @@ library(pacman)
 
 # devtools::install_github("alishinski/lavaanPlot")
 
-pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps")
+pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools")
 
 
 
@@ -43,34 +43,228 @@ cri_str <- read.csv(file = "data/cri_str.csv", header = T)
 cri_team <- read.csv(file = "data/cri_team_combine.csv", header = T)
 cri_indiv <- read.csv(file = "data/cri_indv.csv", header = T)
 
-# cri_team_combine
+# setup multilevel dataset
+
+cri_ml <- select(cri,u_teamid, id, u_delibtreatmentgroup1, AME:main_IV_source, main_IV_measurement:package, countries, Jobs:anynonlin,AME_Z,lower_Z,upper_Z,Hsup,Hrej,Hno,AME_sup_p05:AME_ns_p05,u_expgroup1,belief_strength:belief_ipred, HresultF)
+
+# create a team ID variable to identify the independent tests by team. Again, 16 of 71 teams had independent conclusions - seeing stock v flow immigration measures as representative of independent tests of the hypothesis. Therefore, we have a team-test level that replaces the team level.
+
+cri_ml$team <- cri_ml %>% group_indices(u_teamid, HresultF)
+
+cri_ml <- select(cri_ml, u_teamid, id, team, AME_Z, upper_Z, lower_Z, everything())
+
+# remove team 0
+cri_ml <- subset(cri_ml, u_teamid != 0)
+
 ```
 
+### Within and Between Variables
 
+```{r wandb}
+cri_ml <- cri_ml %>%
+  group_by(team) %>%
+  mutate(AME_Z_b = mean(AME_Z, na.rm = T),
+         AME_Z_w =AME_Z-AME_Z_b,
+         jobs_b = mean(Jobs, na.rm = T),
+         unemp_b = mean(Unemp, na.rm = T),
+         incdiff_b = mean(IncDiff, na.rm = T),
+         oldage_b = mean(OldAge, na.rm = T),
+         house_b = mean(House, na.rm = T),
+         health_b = mean(Health, na.rm = T),
+         jobs_w = Jobs-jobs_b,
+         unemp_w = Unemp-unemp_b,
+         incdiff_w = IncDiff-incdiff_b,
+         oldage_w = OldAge-oldage_b,
+         house_w = House-house_b,
+         health_w = Health-health_b,
+         scale_b = mean(Scale, na.rm = T),
+         scale_w = Scale-scale_b,
+         un_emp_rate_ivC = ifelse(emplrate_ivC == 1 | unemprate_ivC == 1, 1, 0)) %>%
+  ungroup()
 
-
+# create factors for measurement
+cri_ml <- cri_ml %>%
+  mutate(main_IV_factor = as.factor(main_IV_measurement))
+```
 
 
 # Regresssion Approach to Explaining Variance
 
 ## Explaining Average Marginal Effects
 
-### Model Specifications 
+### Objective Conditions
 
-#### DV Type
+Here we consider that the design of the CRI has an influence on the findings of the researchers. This includes the 6 variables to potentially use for the DV and the experimental conditions. We do not include the variable 'Scale' here because this required a conscious choice by the teams to deviate from the observed DVs that were provided.
 
-```{r m1, include = TRUE, warning = F}
+We consider random assignment to the opaque or transparent replication group (variable = u_expgroup1) and the deliberation group (variable = u_delibtreatmentgroup1) as objectively imposed conditions (not a choice by the teams).
 
 
-#DVs only
-m1a <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
-m1b <- lm(p ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
-m1c <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri)
+```{r obj_mlms}
+m00 <- lmer(AME_Z ~ (1 | team), data = cri_ml)
+m01 <- lmer(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + (1 | team), data = cri_ml)
+m02 <- lmer(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + u_expgroup1 + u_delibtreatmentgroup1 + (1 | team), data = cri_ml)
 
-tab_model(m1a,m1b,m1c, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
+tab_model(m00,m01,m02, digits = 3, p.style = "stars", show.ci = F, file = "results/reg1.htm")
 
+# read html file into a data.frame, essentially a work around for tab_model, one of the greatest packages except it can't output in formats that normal scholars use, like Excel, or any tabular format
+
+reg1 <- as.data.frame(read_html("results/reg1.htm") %>% html_table(fill=TRUE))
+colnames(reg1) <- c("Effect","m00","m01","m02")
+
+m00v <- as.data.frame(VarCorr(m00))
+m01v <- as.data.frame(VarCorr(m01))
+m02v <- as.data.frame(VarCorr(m02))
+m00v$vcov <- as.numeric(round(m00v$vcov, 7))
+m01v$vcov <- as.numeric(round(m01v$vcov, 7))
+m02v$vcov <- as.numeric(round(m02v$vcov, 7))
+
+# add in variance estimates (more than 2-digits)
+# disable scientific notation
+options(scipen = 999)
+
+# NOTE! This will not run properly if the number of variables in m02 changes above
+
+reg1[12,2] <- m00v[1,4]
+reg1[13,2] <- m00v[nrow(m00v),4]
+reg1[12,3] <- m01v[1,4]
+reg1[13,3] <- m01v[nrow(m01v),4]
+reg1[12,4] <- m02v[1,4]
+reg1[13,4] <- m02v[nrow(m02v),4]
+
+# 'Marginal R2' is the overall r2
 
 ```
+
+### Subjective Decisions
+
+#### Measurement
+
+The teams had several possibilities to measure the DV (or DVs) including linear, logit or multinomial. Also, immigration could be stock or flow and some teams elected for change in flow. A few teams used measures like refugee or non-western instead of simply foreign-born. These decisions are reflected here.
+
+```{r subj_measurement_mlms}
+
+m03 <- lmer(AME_Z ~ logit + ologit + lpm + mlogit + ols + (1 | team), data = cri_ml)
+
+#note that ChangeFlow is the omitted category
+
+m04 <- lmer(AME_Z ~ logit + ologit + lpm + mlogit + ols + Stock + Flow + main_IV_factor + (1 | team), data = cri_ml)
+
+tab_model(m00,m03,m04, digits = 3, p.style = "stars", show.ci = F, file = "results/reg2.htm")
+
+knitr::include_graphics("results/reg2.htm")
+
+reg2 <- as.data.frame(read_html("results/reg2.htm") %>% html_table(fill=TRUE))
+colnames(reg2) <- c("Effect","m00","m03","m04")
+
+m03v <- as.data.frame(VarCorr(m03))
+m04v <- as.data.frame(VarCorr(m04))
+
+# NOTE! This will not run properly if the number of variables in m02 changes above
+
+reg2[16,2] <- m00v[1,4]
+reg2[17,2] <- m00v[nrow(m00v),4]
+reg2[16,3] <- m03v[1,4]
+reg2[17,3] <- m03v[nrow(m03v),4]
+reg2[16,4] <- m04v[1,4]
+reg2[17,4] <- m04v[nrow(m04v),4]
+
+m04vars <- "AME_Z ~ logit + ologit + lpm + mlogit + ols + Stock + Flow + main_IV_factor"
+
+```
+
+
+#### Data and Sample
+
+```{r subj_datasamp_mlms, warning = F}
+
+m05 <- lmer(paste0(m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + (1 | team)"), data = cri_ml)
+m06 <- lmer(paste0(m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable + w2016*eeurope + w2016*allavailable + (1 | team)"), data = cri_ml)
+
+m05v <- as.data.frame(VarCorr(m05))
+m06v <- as.data.frame(VarCorr(m06))
+
+tab_model(m00,m05,m06, digits = 3, p.style = "stars", show.ci = F, file = "results/reg3.htm")
+
+knitr::include_graphics("results/reg3.htm")
+
+reg3 <- as.data.frame(read_html("results/reg3.htm") %>% html_table(fill=TRUE))
+colnames(reg3) <- c("Effect","m00","m05","m06")
+
+# NOTE! This will not run properly if the number of variables change above
+
+reg3[25,2] <- m00v[1,4]
+reg3[26,2] <- m00v[nrow(m00v),4]
+reg3[25,3] <- m05v[1,4]
+reg3[26,3] <- m05v[nrow(m05v),4]
+reg3[25,4] <- m06v[1,4]
+reg3[26,4] <- m06v[nrow(m06v),4]
+
+m06vars <- "+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable + w2016*eeurope + w2016*allavailable"
+```
+
+
+#### Model Design
+
+m07 estimator, mlm structure, main IVs in same model or not (this causes one team to get dropped so we don't use it, didn't add anything when added anyways)
+m08 independent vars l2 selection
+
+```{r subj_model_mlms}
+
+m07 <- lmer(paste0(m04vars, m06vars, " + twowayfe + w2016*twowayfe + mlm_fe + level_cyear + ml_glm  + mlm_re + bayes + (1 | team)"), data = cri_ml)
+m08 <- lmer(paste0(m04vars, m06vars, " + twowayfe + w2016*twowayfe + mlm_fe + level_cyear + ml_glm + mlm_re + bayes + un_emp_rate_ivC + gdp_ivC + anynonlin + (1 | team) "), data = cri_ml) 
+
+m07v <- as.data.frame(VarCorr(m07))
+m08v <- as.data.frame(VarCorr(m08))
+
+tab_model(m00,m07,m08, digits = 3, p.style = "stars", show.ci = F, file = "results/reg4.htm")
+
+knitr::include_graphics("results/reg4.htm")
+
+reg4 <- as.data.frame(read_html("results/reg4.htm") %>% html_table(fill=TRUE))
+colnames(reg4) <- c("Effect","m00","m07","m08")
+
+
+  
+# NOTE! This will not run properly if the number of variables change above
+
+reg4[35,2] <- m00v[1,4]
+reg4[36,2] <- m00v[nrow(m00v),4]
+reg4[35,3] <- m07v[1,4]
+reg4[36,3] <- m07v[nrow(m07v),4]
+reg4[35,4] <- m08v[1,4]
+reg4[36,4] <- m08v[nrow(m08v),4]
+
+```
+
+
+### Researcher Aspects
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #### Test IV Type - unweighted
 
