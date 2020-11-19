@@ -118,27 +118,9 @@ m00 <- lmer(AME_Z ~ (1 | team), data = cri_ml)
 m01 <- lmer(AME_Z ~ Jobs + IncDiff + House + (1 | team), data = cri_ml)
 m02 <- lmer(AME_Z ~ Jobs + IncDiff + House + u_expgroup1 + u_delibtreatmentgroup1 + (1 | team), data = cri_ml)
 
-tab_model(m00,m01,m02, digits = 3, p.style = "stars", show.ci = F, file = "results/reg1.htm")
-
-# read html file into a data.frame, essentially a work around for tab_model, one of the greatest packages except it can't output in formats that normal scholars use, like Excel, or any tabular format
-
-reg1 <- as.data.frame(read_html("results/reg1.htm") %>% html_table(fill=TRUE))
-colnames(reg1) <- c("Effect","m00","m01","m02")
-
 m00v <- as.data.frame(VarCorr(m00))
 m01v <- as.data.frame(VarCorr(m01))
 m02v <- as.data.frame(VarCorr(m02))
-
-
-
-# NOTE! This will not run properly if the number of variables in m02 changes above
-
-reg1[9,2] <- m00v[1,4]
-reg1[10,2] <- m00v[nrow(m00v),4]
-reg1[9,3] <- m01v[1,4]
-reg1[10,3] <- m01v[nrow(m01v),4]
-reg1[9,4] <- m02v[1,4]
-reg1[10,4] <- m02v[nrow(m02v),4]
 
 m01vars <- "AME_Z ~ Jobs + IncDiff + House"
 
@@ -162,24 +144,8 @@ m03 <- lmer(paste0(m01vars, "+ logit + ologit + lpm + mlogit + ols + (1 | team)"
 
 m04 <- lmer(paste0(m01vars, "+ logit + ols + Stock + ChangeFlow + (1 | team)"), data = cri_ml)
 
-tab_model(m00,m03,m04, digits = 3, p.style = "stars", show.ci = F, file = "results/reg2.htm")
-
-knitr::include_graphics("results/reg2.htm")
-
-reg2 <- as.data.frame(read_html("results/reg2.htm") %>% html_table(fill=TRUE))
-colnames(reg2) <- c("Effect","m00","m03","m04")
-
 m03v <- as.data.frame(VarCorr(m03))
 m04v <- as.data.frame(VarCorr(m04))
-
-# NOTE! This will not run properly if the number of variables in m02 changes above
-
-reg2[14,2] <- m00v[1,4]
-reg2[15,2] <- m00v[nrow(m00v),4]
-reg2[14,3] <- m03v[1,4]
-reg2[15,3] <- m03v[nrow(m03v),4]
-reg2[14,4] <- m04v[1,4]
-reg2[15,4] <- m04v[nrow(m04v),4]
 
 m04vars <- "+ logit + ols + Stock + ChangeFlow"
 
@@ -199,21 +165,6 @@ m06 <- lmer(paste0(m01vars, m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + or
 m05v <- as.data.frame(VarCorr(m05))
 m06v <- as.data.frame(VarCorr(m06))
 
-tab_model(m00,m05,m06, digits = 3, p.style = "stars", show.ci = F, file = "results/reg3.htm")
-
-knitr::include_graphics("results/reg3.htm")
-
-reg3 <- as.data.frame(read_html("results/reg3.htm") %>% html_table(fill=TRUE))
-colnames(reg3) <- c("Effect","m00","m05","m06")
-
-# NOTE! This will not run properly if the number of variables change above
-
-reg3[18,2] <- m00v[1,4]
-reg3[19,2] <- m00v[nrow(m00v),4]
-reg3[18,3] <- m05v[1,4]
-reg3[19,3] <- m05v[nrow(m05v),4]
-reg3[18,4] <- m06v[1,4]
-reg3[19,4] <- m06v[nrow(m06v),4]
 
 m06vars <- "+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable"
 ```
@@ -235,24 +186,6 @@ m08 <- lmer(paste0(m01vars, m04vars, m06vars, " + twowayfe + mlm_fe + level_cyea
 
 m07v <- as.data.frame(VarCorr(m07))
 m08v <- as.data.frame(VarCorr(m08))
-
-tab_model(m00,m07,m08, digits = 3, p.style = "stars", show.ci = F, file = "results/reg4.htm")
-
-knitr::include_graphics("results/reg4.htm")
-
-reg4 <- as.data.frame(read_html("results/reg4.htm") %>% html_table(fill=TRUE))
-colnames(reg4) <- c("Effect","m00","m07","m08")
-
-
-  
-# NOTE! This will not run properly if the number of variables change above
-
-reg4[24,2] <- m00v[1,4]
-reg4[25,2] <- m00v[nrow(m00v),4]
-reg4[24,3] <- m07v[1,4]
-reg4[25,3] <- m07v[nrow(m07v),4]
-reg4[24,4] <- m08v[1,4]
-reg4[25,4] <- m08v[nrow(m08v),4]
 
 m07vars <- " + twowayfe + level_cyear + mlm_fe + mlm_re"
 m08vars <- "+ twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin"
@@ -304,74 +237,65 @@ m13v <- as.data.frame(VarCorr(m13))
 m14v <- as.data.frame(VarCorr(m14))
 # m15v <- as.data.frame(VarCorr(m15))
 
-tab_model(m00,m09,m10,m11,m12,m13,m14, digits = 3, p.style = "stars", show.ci = F, file = "results/reg5.htm")
 
-knitr::include_graphics("results/reg5.htm")
+```
 
-reg5 <- as.data.frame(read_html("results/reg5.htm") %>% html_table(fill=TRUE))
-colnames(reg5) <- c("Effect","m00","m09","m10","m11","m12","m13","m14","m15")
+### Combine All
+
+```{r comb_tbl}
+tab_model(m00,m01,m02,m04,m06,m07,m09,m10,m11,m12,m13, digits = 3, p.style = "stars", show.ci = F, file = "results/reg11.htm")
+
+reg11 <- as.data.frame(read_html("results/reg11.htm") %>% html_table(fill=TRUE))
+
+colnames(reg11) <- c("Effect", "m00","m01", "m02","m04", "m06","m07","m09","m10", "m11","m12","m13")
 
 
-  
-# NOTE! This will not run properly if the number of variables change above
+# Add residual variance by level to model (extracted from VarCorr calls)
+# NOTE! This will not run properly if the number of variables changes above
 
-reg5[25,2] <- m00v[1,4]
-reg5[26,2] <- m00v[nrow(m00v),4]
-reg5[25,3] <- m09v[1,4]
-reg5[26,3] <- m09v[nrow(m09v),4]
-reg5[25,4] <- m10v[1,4]
-reg5[26,4] <- m10v[nrow(m10v),4]
-reg5[25,5] <- m11v[1,4]
-reg5[26,5] <- m11v[nrow(m11v),4]
-reg5[25,6] <- m12v[1,4]
-reg5[26,6] <- m12v[nrow(m12v),4]
-reg5[25,7] <- m13v[1,4]
-reg5[26,7] <- m13v[nrow(m13v),4]
-reg5[25,8] <- m14v[1,4]
-reg5[26,8] <- m14v[nrow(m14v),4]
-#reg5[25,9] <- m15v[1,4]
-#reg5[26,9] <- m15v[nrow(m15v),4]
+reg11[28,1] <- "Residual Variance"
+reg11[28,2:12] <- ""
+reg11[29,1] <- "Team-Level"
+reg11[29,2:12] <- round(as.numeric(c(m00v[1,4],m01v[1,4],m02v[1,4],m04v[1,4],
+                    m06v[1,4],m07v[1,4],m09v[1,4],m10v[1,4],
+                    m11v[1,4],m12v[1,4],m13v[1,4])),6)
+
+reg11[30,1] <- "Model-Level"
+reg11[30,2:12] <- round(as.numeric(c(m00v[nrow(m00v),4],m01v[nrow(m00v),4],m02v[nrow(m00v),4],
+                    m04v[nrow(m00v),4],m06v[nrow(m00v),4],m07v[nrow(m00v),4],
+                    m09v[nrow(m00v),4],m10v[nrow(m00v),4],m11v[nrow(m00v),4],
+                    m12v[nrow(m00v),4],m13v[nrow(m00v),4])),6
+                    )
+
+# calculate var reduction by level
+
+reg11[31,1] <- c("Total")
+
+reg11[31,2:12] <- round(as.numeric(reg11[29,2:12]) + as.numeric(reg11[30,2:12]),6)
+
+reg11[32,1] <- "Variance Explained"
+reg11[32,2:12] <- ""
+
+# capture p-value expression
+p <- reg11[35,1]
+
+reg11[33,1] <- "Team-Level"
+reg11[34,1] <- "Model-Level"
+reg11[35,1] <- "Total"
+
+reg11[33,2:12] <- round(1 - (as.numeric(reg11[29,2:12]) / as.numeric(reg11[29,2])),6)
+reg11[34,2:12] <- round(1 - (as.numeric(reg11[30,2:12]) / as.numeric(reg11[30,2])),6)
+reg11[35,2:12] <- round(1 - (as.numeric(reg11[31,2:12]) / as.numeric(reg11[31,2])),6)
+
+reg11[36,1] <- p
+reg11[36,2:12] <- ""
+
+kable_styling(kable(reg11))
 ```
 
 
 ```{r variance_explained_table}
 
-
-var_table <- as.data.frame(matrix(nrow = 17, ncol = 3))
-colnames(var_table) <- c("model","team_level","model_level")
-
-# These are not data scientist ready, they need to be hand re-coded incase models above change!!!
-var_table[2,] <- c("m00",reg1[9,2],reg1[10,2])
-var_table[3,] <- c("m01",reg1[9,3],reg1[10,3])
-var_table[3,] <- c("m02",reg1[9,4],reg1[10,4])
-
-var_table[5,] <- c("m03",reg2[14,3],reg2[15,3])
-var_table[6,] <- c("m04",reg2[14,4],reg2[15,4])
-var_table[6,] <- c("m05",reg3[18,3],reg3[19,3])
-
-var_table[8,] <- c("m06",reg3[18,3],reg3[19,4])
-var_table[9,] <- c("m07",reg4[24,3],reg4[25,3])
-var_table[10,] <- c("m08",reg4[24,4],reg4[25,4])
-
-var_table[11,] <- c("m09",reg5[25,3],reg5[26,3])
-var_table[12,] <- c("m10",reg5[25,4],reg5[26,4])
-var_table[13,] <- c("m11",reg5[25,5],reg5[26,5])
-
-var_table[14,] <- c("m12",reg5[25,6],reg5[26,6])
-var_table[15,] <- c("m13",reg5[25,7],reg5[26,7])
-var_table[16,] <- c("m14",reg5[25,8],reg5[26,8])
-# var_table[16,] <- c("m15",reg5[25,9],reg5[26,9])
-
-
-
-##### Stopped here, need to fit the labels into the table
-
-
-
-
-
-var_table[1,2:4] <- c("Team-Levela (n=87)","Model-Levela (n=1,253)","Total")
-var_table[2:19,1] <- c("Baseline Variance","","Objective Conditions","Structure of Materials","Group Assignment","Subjective Decisions","Measurement","Data and Sample","Model Design","Researcher Attributes","Pro-Immigration Attitude","Knowledge of Topic","Statistical Skills","Peer Model Ranking", "Statistical Skills","","Unexplained Variance","aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems")
 
 
 
@@ -381,9 +305,24 @@ var_table <- var_table %>%
          model_level = as.numeric(model_level),
          total = team_level + model_level)
 
-var_table$team_var_reduc <- (var_table[1,2] - var_table$team_level)/var_table[1,2]
-var_table$model_var_reduc <- (var_table[1,3] - var_table$model_level)/var_table[1,3]
-var_table$total_var_reduc <- ((var_table[1,2] + var_table[1,3]) - (var_table$total)) / (var_table[1,2] + var_table[1,3])
+var_table$team_var_reduc <- (var_table[2,2] - var_table$team_level)/var_table[2,2]
+var_table$model_var_reduc <- (var_table[2,3] - var_table$model_level)/var_table[2,3]
+var_table$total_var_reduc <- ((var_table[2,2] + var_table[2,3]) - (var_table$total)) / (var_table[2,2] + var_table[2,3])
+
+
+tbl2  <- var_table
+tbl2[2,5:7] <- tbl2[2,2:4]
+
+
+tbl2 <- select(tbl2, model, team_var_reduc, model_var_reduc, total_var_reduc)
+
+tbl2[1,2:4] <- c("Team-Levela (n=87)","Model-Levela (n=1,253)","Total")
+tbl2[2:19,1] <- c("Observed Outcome Variance","","Objective Conditions","Structure of Materials Provided","Group Assignment","Researcher Decisions", "Measurement","Data and Sample","Model Specification","Researcher Attributes","Prior Belief in Hypothesis", "Pro-Immigration Attitude","Knowledge of Topic","Statistical Skills","Peer Model Ranking","","Unexplained Variance","aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems")
+
+
+
+
+
 
 ```
 
