@@ -14,7 +14,7 @@ library(pacman)
 
 # devtools::install_github("alishinski/lavaanPlot")
 
-pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools")
+pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools","rvest")
 
 
 
@@ -85,6 +85,13 @@ cri_ml <- cri_ml %>%
 # create factors for measurement
 cri_ml <- cri_ml %>%
   mutate(main_IV_factor = as.factor(main_IV_measurement))
+
+# team 27 is missing the survey variables
+# as it is just one team, mean replacement should be fine
+cri_ml <- cri_ml %>%
+  mutate(stats_ipred = ifelse(is.na(stats_ipred), mean(stats_ipred, na.rm=T), stats_ipred),
+         belief_ipred = ifelse(is.na(belief_ipred), mean(belief_ipred, na.rm =T), belief_ipred),
+         topic_ipred = ifelse(is.na(topic_ipred), mean(topic_ipred, na.rm =T), topic_ipred))
 ```
 
 
@@ -234,16 +241,67 @@ reg4[36,3] <- m07v[nrow(m07v),4]
 reg4[35,4] <- m08v[1,4]
 reg4[36,4] <- m08v[nrow(m08v),4]
 
+m08vars <- " + twowayfe + w2016*twowayfe + mlm_fe + level_cyear + ml_glm + mlm_re + bayes + un_emp_rate_ivC + gdp_ivC + anynonlin"
+
 ```
 
 
 ### Researcher Aspects
 
-```{r}
+*belief_ipred* - Belief that Hypothesis is true (that immigration reduces support), team average of predicted factor scores
+*pro_immigrant* - Support laws to better integrate immigrants, team average, single question
+*topic_ipred* - Knowledge and experience with the topic of immigration and welfare state preferences, team average of predicted factor scores
+*stats_ipred* - Knowledge and experience with quantiative statistical analysis, team average of predicted factor scores
+*total_score* - Average score of each model from subjective voting amongst participants, each participant reviewed 3 to 4 models
 
+Maximum variance explained
+
+Using the R^2 'hacking' tool we found some combinations of these variables that maximized r^2 (m11)
+
+```{r res_aspects_mlms}
+m09 <- lmer(paste0(m04vars, m06vars, m08vars, "+ stats_ipred + topic_ipred + belief_ipred + (1 | team)"), data = cri_ml)
+m10 <- lmer(paste0(m04vars, m06vars, m08vars, "+ stats_ipred + topic_ipred + belief_ipred + pro_immigrant + total_score + (1 | team)"), data = cri_ml) 
+# Max variance
+m11 <- lmer(paste0(m04vars, m06vars, m08vars, "+ stats_ipred + topic_ipred + belief_ipred + pro_immigrant + total_score + belief_ipred*topic_ipred	+ belief_ipred*stats_ipred + pro_immigrant*stats_ipred	+ topic_ipred*stats_ipred + (1 | team)"), data = cri_ml) 
+
+m09v <- as.data.frame(VarCorr(m09))
+m10v <- as.data.frame(VarCorr(m10))
+m11v <- as.data.frame(VarCorr(m11))
+
+
+tab_model(m00,m09,m10,m11, digits = 3, p.style = "stars", show.ci = F, file = "results/reg5.htm")
+
+knitr::include_graphics("results/reg5.htm")
+
+reg5 <- as.data.frame(read_html("results/reg5.htm") %>% html_table(fill=TRUE))
+colnames(reg5) <- c("Effect","m00","m09","m10","m11")
+
+
+  
+# NOTE! This will not run properly if the number of variables change above
+
+reg5[44,2] <- m00v[1,4]
+reg5[45,2] <- m00v[nrow(m00v),4]
+reg5[44,3] <- m09v[1,4]
+reg5[45,3] <- m09v[nrow(m09v),4]
+reg5[44,4] <- m10v[1,4]
+reg5[45,4] <- m10v[nrow(m10v),4]
+reg5[44,4] <- m11v[1,4]
+reg5[45,4] <- m11v[nrow(m11v),4]
 ```
 
 
+```{r variance_explained_table}
+tbl2 <- as.data.frame(matrix(nrow = 19, ncol = 4))
+
+tbl2[1,2:4] <- c("Team-Levela (n=87)","Model-Levela (n=1,253)","Total")
+tbl2[2:19,1] <- c("Baseline Variance","","Objective Conditions","Structure of Materials","Group Assignment","Subjective Decisions","Measurement","Data and Sample","Model Design","Researcher Attributes","Pro-Immigration Attitude","Knowledge of Topic","Statistical Skills","Peer Model Ranking", "Statistical Skills","","Unexplained Variance","aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems")
+
+var_table <- matrix(nrow = 11, ncol = 3)
+var_table[1,] <- c("m00",reg1[12,2],reg1[13,2])
+var_table[2,] <- c("m01",reg1[12,3],reg1[13,3])
+var_table[3,] <- c("m02",reg1[12,4],reg1[13,4])
+```
 
 
 
@@ -393,11 +451,7 @@ tab_model(m4, m4_stock, m4_flow, p.style = "stars", show.ci = F, rm.terms = c("(
 ### Team Qualities
 
 
-*belief_ipred* - Belief that Hypothesis is true (that immigration reduces support), team average of predicted factor scores
-*pro_immigrant* - Support laws to better integrate immigrants, team average, single question
-*topic_ipred* - Knowledge and experience with the topic of immigration and welfare state preferences, team average of predicted factor scores
-*stats_ipred* - Knowledge and experience with quantiative statistical analysis, team average of predicted factor scores
-*total_score* - Average score of each model from subjective voting amongst participants, each participant reviewed 3 to 4 models
+
 
 #### Correlations
 
