@@ -3,17 +3,21 @@ title: "Tech 5, Main Analyses"
 output: html_notebook
 ---
 
-This package is needed
-http://www.alexlishinski.com/post/2018-04-13-lavaanplot0.5/
 
    
 
 ```{r setup, include=FALSE, warning=F}
+
 rm(list = ls())
 library(pacman)
 
+#necessayr for nnet::multinom and tab_model to work together
+# install.packages("devtools")
+# devtools::install_github("easystats/insight")
+# devtools::install_github("easystats/effectsize")
 
-pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools","rvest")
+
+pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools","rvest","nnet","parameters","insight","effectsize")
 
 # add in variance estimates (more than 2-digits)
 # disable scientific notation
@@ -41,7 +45,7 @@ cri_indiv = participant-level data from our survey, identifying characteristics 
 ```{r load, warning=F,message=F}
 cri <- read.csv(file = "data/cri.csv", header = T)
 cri_str <- read.csv(file = "data/cri_str.csv", header = T)
-cri_team <- read.csv(file = "data/cri_team_combine.csv", header = T)
+cri_team <- read.csv(file = "data/cri_team.csv", header = T)
 cri_indiv <- read.csv(file = "data/cri_indv.csv", header = T)
 
 # setup multilevel dataset
@@ -93,6 +97,12 @@ cri_ml <- cri_ml %>%
   mutate(stats_ipred = ifelse(is.na(stats_ipred), mean(stats_ipred, na.rm=T), stats_ipred),
          belief_ipred = ifelse(is.na(belief_ipred), mean(belief_ipred, na.rm =T), belief_ipred),
          topic_ipred = ifelse(is.na(topic_ipred), mean(topic_ipred, na.rm =T), topic_ipred))
+
+# u_expgroup missing from team-level data
+t1 <- aggregate(cri_ml, FUN = mean, by = list(cri_ml$u_teamid), na.rm =T)
+t1 <- select(t1, u_teamid, u_expgroup1)
+
+cri_team <- left_join(cri_team, t1, by = "u_teamid")
 ```
 
 
@@ -296,40 +306,232 @@ kable_styling(kable(reg11))
 
 ```{r variance_explained_table}
 
+tbl2_m <- as.data.frame(t(reg11))
+
+tbl2 <- as.data.frame((matrix(nrow = 22, ncol = 7)))
+
+tbl2[1,2:7] <- c("Average Marginal Effect, or equivalent","","","Subjective Conclusion about Hypothesis, team-level only (n=88)a","","")
+tbl2[2,2:7] <- c("Team-Levela (n=87)","Model-Level (n=1,253)a","Total","Supportb","Not Testableb","")
+tbl2[3:22,1] <- c("Observed Outcome Variance","% Variance Explained By:c","Objective Conditions","Structure of Materials Provided","Group Assignment","Researcher Decisions", "Measurement","Data and Sample","Model Specification","Researcher Attributes","Prior Belief in Hypothesis", "Pro-Immigration Attitude","Knowledge of Topic","Statistical Skills","Peer Model Ranking","","Unexplained Variance","aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems","bA team conclusion of 'Reject' is the reference category","cIn the case of team-level subjective hypothesis conclusion, the outcome is multinomial therefore the 'variance explained' is technically residual deviance")
 
 
+tbl2[3,2:4] <- as.numeric(tbl2_m[2,29:31])
+tbl2[6:7,2:4] <- tbl2_m[3:4,33:35]
+tbl2[9:11,2:4] <- tbl2_m[5:7,33:35]
+tbl2[13:17,2:4] <- tbl2_m[8:12,33:35]
+
+# Max variance by category
+tbl2[5,2] <- max(as.numeric(tbl2[6:7,2]))
+tbl2[5,3] <- max(as.numeric(tbl2[6:7,3]))
+tbl2[5,4] <- max(as.numeric(tbl2[6:7,4]))
+
+tbl2[8,2] <- max(as.numeric(tbl2[9:11,2]))
+tbl2[8,3] <- max(as.numeric(tbl2[9:11,3]))
+tbl2[8,4] <- max(as.numeric(tbl2[9:11,4]))
+
+tbl2[12,2] <- max(as.numeric(tbl2[13:17,2]))
+tbl2[12,3] <- max(as.numeric(tbl2[13:17,3]))
+tbl2[12,4] <- max(as.numeric(tbl2[13:17,4]))
+
+# unexplained variance as total - max
+tbl2[19,2] <- 1 - max(as.numeric(tbl2[6:17,2]))
+tbl2[19,3] <- 1 - max(as.numeric(tbl2[6:17,3]))
+tbl2[19,4] <- 1 - max(as.numeric(tbl2[6:17,4]))
+
+tbl2[18,] <- ""
+
+```
 
 
-var_table <- var_table %>%
-  mutate(team_level = as.numeric(team_level),
-         model_level = as.numeric(model_level),
-         total = team_level + model_level)
+## Explaining Subjective Hypothesis Conclusions
 
-var_table$team_var_reduc <- (var_table[2,2] - var_table$team_level)/var_table[2,2]
-var_table$model_var_reduc <- (var_table[2,3] - var_table$model_level)/var_table[2,3]
-var_table$total_var_reduc <- ((var_table[2,2] + var_table[2,3]) - (var_table$total)) / (var_table[2,2] + var_table[2,3])
+Only at the team level.
 
+Multinomial: support, not testable, reject
 
-tbl2  <- var_table
-tbl2[2,5:7] <- tbl2[2,2:4]
+```{r obj_mlmsm}
+cri_team$Hresult <- relevel(as.factor(cri_team$Hresult), ref = "Support")
 
+m00m <- multinom(Hresult ~ 1 , data = cri_team)
+m01m <- multinom(Hresult ~ Jobs + IncDiff + House , data = cri_team)
+m02m <- multinom(Hresult ~ Jobs + IncDiff + House + u_expgroup1 + u_delibtreatmentgroup1, data = cri_team)
 
-tbl2 <- select(tbl2, model, team_var_reduc, model_var_reduc, total_var_reduc)
+m00d <- summary(m00)
+m01d <- summary(m01)
+m02d <- summary(m02)
 
-tbl2[1,2:4] <- c("Team-Levela (n=87)","Model-Levela (n=1,253)","Total")
-tbl2[2:19,1] <- c("Observed Outcome Variance","","Objective Conditions","Structure of Materials Provided","Group Assignment","Researcher Decisions", "Measurement","Data and Sample","Model Specification","Researcher Attributes","Prior Belief in Hypothesis", "Pro-Immigration Attitude","Knowledge of Topic","Statistical Skills","Peer Model Ranking","","Unexplained Variance","aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems")
-
-
+m01vars <- "Hresult ~ Jobs + IncDiff + House"
 
 
+```
+
+```{r subj_measurement_mlmsm}
+
+m03m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols, data = cri_team)
+
+m04m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols + Stock + ChangeFlow, data = cri_team)
+
+m03d <- summary(m03m)
+m04d <- summary(m04m)
+
+# tab_model(m03m, show.dev = T, show.aic = T)
+
+```
+
+
+#### Data and Sample
+
+```{r subj_datasamp_mlmsm, warning = F}
+
+m05m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols + Stock + ChangeFlow + w2006 + w2016, data = cri_team)
+
+m06m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable, data = cri_team)
+
+m05d <- summary(m05m)
+m06d <- summary(m06m)
 
 
 ```
 
 
+#### Model Design
+
+m07 estimator, mlm structure
+
+main IVs in same model or not (this causes one team to get dropped so we don't use it, didn't add anything when added anyways)
+
+m08 independent vars l2 selection
+
+had to remove mlm_fe, it uniquely identifes team in the multinomial removed mlm_re and House, we are pushing the limit with variables and these were harming AIC fit
+
+```{r subj_model_mlmsm}
 
 
+m07m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe , data = cri_team)
+m08m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin , data = cri_team)
 
+
+m07d <- summary(m07m)
+m08d <- summary(m08m)
+
+```
+
+
+### Researcher Aspects
+
+*belief_ipred* - Belief that Hypothesis is true (that immigration reduces support), team average of predicted factor scores
+*pro_immigrant* - Support laws to better integrate immigrants, team average, single question
+*topic_ipred* - Knowledge and experience with the topic of immigration and welfare state preferences, team average of predicted factor scores
+*stats_ipred* - Knowledge and experience with quantiative statistical analysis, team average of predicted factor scores
+*total_score* - Average score of each model from subjective voting amongst participants, each participant reviewed 3 to 4 models
+
+Maximum variance explained
+
+It becomes clear that models 7 and 8 are detrimental to the variance explained,
+therefore the following results combine only with m06
+
+Using the R^2 'hacking' tool we found some combinations of these variables that maximized r^2 (m11)
+
+These probably need to be run independently, so that we see the reduction for each one.
+
+```{r res_aspects_mlmsm}
+m09m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + belief_ipred  , data = cri_team)
+
+m10m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + pro_immigrant , data = cri_team) 
+
+m11m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + topic_ipred , data = cri_team) 
+
+m12m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + stats_ipred, data = cri_team) 
+
+m13m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + total_score , data = cri_team)
+
+m14m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + belief_ipred + pro_immigrant + topic_ipred + stats_ipred , data = cri_team)
+
+m09d <- summary(m09m)
+m10d <- summary(m10m)
+m11d <- summary(m11m)
+m12d <- summary(m12m)
+m13d <- summary(m13m)
+m14d <- summary(m14m)
+
+```
+
+### Combine All
+
+```{r comb_tblm}
+tab_model(m00m,m01m,m02m,m04m,m06m,m08m, digits = 3, p.style = "stars", show.ci = F, show.dev = T, show.aic = T, transform = NULL, file = "results/reg22.htm")
+
+tab_model(m09m,m10m,m11m,m12m,m13m,m14m, digits = 3, p.style = "stars", show.ci = F, show.dev = T, show.aic = T, transform = NULL, file = "results/reg23.htm")
+
+reg22 <- as.data.frame(read_html("results/reg22.htm") %>% html_table(fill=TRUE))
+
+reg23 <- as.data.frame(read_html("results/reg23.htm") %>% html_table(fill=TRUE))
+
+# problem with tab_model, opened a claim on GitHub, for now remove duplicate rows
+
+reg22 <- reg22 %>%
+  distinct(Hresult, Hresult.1,Hresult.3,Hresult.8,Hresult.9, .keep_all = T)
+
+reg23 <- reg23 %>%
+  distinct(Hresult, Hresult.1,Hresult.10,Hresult.11, .keep_all = T)
+
+colnames(reg22) <- c("Effect", "m00m_coef","m00m_chc","m01m_coef","m01m_chc","m02m_coef","m02m_chc","m04m_coef","m04m_chc","m06m_coef","m06m_chc","m08m_coef","m08m_chc")
+
+colnames(reg23) <- c("Effect","m09m_coef","m09m_chc","m10m_coef","m10m_chc","m11m_coef","m11m_chc","m12m_coef","m12m_chc","m13m_coef","m13m_chc","m14m_coef","m14m_chc")
+
+
+# Add change in deviance to table
+
+reg22[nrow(reg22)+1,1] <- "Pct Dev Reduction"
+reg23[nrow(reg23)+1,1] <- "Pct Dev Reduction"
+
+reg22[nrow(reg22),c(2,4,6,8,10,12)] <- 1 - round((as.numeric(reg22[nrow(reg22)-3,c(2,4,6,8,10,12)]) / as.numeric(reg22[nrow(reg22)-3,2])),6)
+
+reg23[nrow(reg23),c(2,4,6,8,10,12)] <- 1 - round((as.numeric(reg23[nrow(reg23)-3,c(2,4,6,8,10,12)]) / as.numeric(reg23[nrow(reg23)-3,2])),6)
+
+kable_styling(kable())
+```
+
+### Adjusted Deviance Reduction
+
+We have 20 variables and 89 cases, this means that some of the explained deviance is simply a product of an intercept effect. Chopping up the data; reducing sample degrees of freedom. Therefore, the deviance should be adjusted by the number of variables, as in how much deviance would be explained with an equal number of random variables.
+
+
+```{r dev_adj}
+
+cri_team_sim <- select(cri_team, Hresult)
+
+set.seed(90210)
+seed <- 90210
+
+for(i in 1:200) {
+  assign(paste0("a",i), as.data.frame(round(runif(89, min = 0, max = 1),0)))
+  seed <- seed+1
+  set.seed(seed)
+}
+
+# not working, do by hand
+# avarl <- sprintf("a%s",seq(1:200))
+# avar <- lapply(avarl, data.frame) %>% bind_cols()
+
+avar <- do.call("cbind", list(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32,a33, a34, a35, a36, a37, a38, a39, a40,a41, a42, a43, a44, a45, a46, a47, a48, a49, a50, a51, a52, a53, a54, a55, a56, a57, a58, a59, a60, a61, a62, a63, a64, a65, a66, a67, a68, a69, a70, a71, a72, a73, a74, a75, a76, a77, a78, a79, a80,  a81, a82, a83, a84, a85, a86, a87, a88, a89, a90, a91, a92, a93, a94, a95, a96,  a97, a98, a99, a100, a101, a102, a103, a104, a105, a106, a107, a108, a109, a110, a111, a112, a113, a114, a115, a116, a117, a118, a119, a120, a121, a122, a123, a124, a125, a126, a127, a128, a129, a130, a131, a132, a133, a134, a135, a136, a137, a138, a139, a140, a141, a142, a143, a144, a145, a146, a147, a148, a149, a150, a151, a152, a153, a154, a155, a156, a157, a158, a159, a160, a161, a162, a163, a164, a165, a166, a167, a168, a169, a170, a171, a172, a173, a174, a175, a176, a177, a178, a179, a180, a181, a182, a183, a184, a185, a186, a187, a188, a189, a190, a191, a192, a193, a194, a195, a196, a197, a198, a199, a200))
+
+rm(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32,a33, a34, a35, a36, a37, a38, a39, a40,a41, a42, a43, a44, a45, a46, a47, a48, a49, a50, a51, a52, a53, a54, a55, a56, a57, a58, a59, a60, a61, a62, a63, a64, a65, a66, a67, a68, a69, a70, a71, a72, a73, a74, a75, a76, a77, a78, a79, a80,  a81, a82, a83, a84, a85, a86, a87, a88, a89, a90, a91, a92, a93, a94, a95, a96,  a97, a98, a99, a100, a101, a102, a103, a104, a105, a106, a107, a108, a109, a110, a111, a112, a113, a114, a115, a116, a117, a118, a119, a120, a121, a122, a123, a124, a125, a126, a127, a128, a129, a130, a131, a132, a133, a134, a135, a136, a137, a138, a139, a140, a141, a142, a143, a144, a145, a146, a147, a148, a149, a150, a151, a152, a153, a154, a155, a156, a157, a158, a159, a160, a161, a162, a163, a164, a165, a166, a167, a168, a169, a170, a171, a172, a173, a174, a175, a176, a177, a178, a179, a180, a181, a182, a183, a184, a185, a186, a187, a188, a189, a190, a191, a192, a193, a194, a195, a196, a197, a198, a199, a200)
+
+f <- c("Hresult",paste0("a",as.character(1:200)))
+
+
+cri_team_sim <- cbind(cri_team_sim,avar)
+colnames(cri_team_sim) <- f
+
+
+for(i in 1:12) {
+  res <- multinom(paste0("Hresult ~ a",i," + a",i+12," + a",i+24,", data = cri_team_sim"))
+  res1 <- summary(res)
+  assign(paste0(m))
+}
+
+```
 
 
 
