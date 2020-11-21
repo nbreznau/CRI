@@ -1,8 +1,6 @@
 ---
-title: 'Tech 4, Rainclouds: THE CROWDSOURCED REPLICATION INITIATIVE (CRI)'
-output:
-  html_document:
-    df_print: paged
+title: 'Tech 5, Rainclouds'
+output: html_notebook
 ---
 
 ### Notes
@@ -40,14 +38,26 @@ cri_str = string values
 cri_team = team-level data (by conclusion)
 cri_team_combine = team-level data with indep observations for stock and flow models
 
-#### Load
+cri_ml_in = data created in the 04_CRI_Main_Analyses file, for merging in unexp variance
+
 
 ```{r load, warning=F,message=F}
 cri <- read.csv(file = "data/cri.csv", header = T)
 cri_str <- read.csv(file = "data/cri_str.csv", header = T)
 cri_team <- read.csv(file = "data/cri_team.csv", header = T)
 cri_team_combine <- read.csv(file = "data/cri_team_combine.csv", header = T)
+cri_ml_in <- readRDS(file = "data/cri_ml_in.Rda")
 
+# merge unexp var
+
+
+cri_ml_v <- as.data.frame(cri_ml_in[["m13_e"]])
+cri_ml_in <- select(cri_ml_in, id)
+cri_ml_in <- cbind(cri_ml_in, cri_ml_v)
+colnames(cri_ml_in) <- c("id","m13_e")
+cri <- left_join(cri, cri_ml_in, by = "id")
+
+rm(cri_ml_in, cri_ml_v)
 ```
 
 
@@ -128,34 +138,113 @@ cri_team_combine$total_score_cat_offset <- as.numeric(as.factor(cri_team_combine
 
 cri_team_combine$pro_immigrant_cat_offset <- as.numeric(as.factor(cri_team_combine$pro_immigrant_cat_factor))-.15
 
-
-
-```
-#### Example Plot
-
-```{r rain1}
-
-
-rain1 <- ggplot(cri,aes(x=DVs,y=AME_Zt,fill = DVs))+
-  geom_flat_violin(position = position_nudge(x = .2, y = 0),adjust =2)+
-  geom_point(position = position_jitter(width = .15), size = .25)+
-  ylab('Avg. Marginal Effect of Immigration')+xlab('DVs: Type of Policy Preference')+
-  coord_flip()+theme_cowplot()+guides(fill = FALSE)+
-  ylim(-0.1,0.1)+
-  scale_x_discrete(limits = c("Scale","Health", "House","IncDiff","OldAge","Jobs","Unemp")) +
-  ggtitle('Research Variability by Outcome Measument Type')
-rain1
-
+# create a version of m13_e with outliers trimmed
+cri$m13_e_trim <- ifelse(cri$m13_e > 0.3, NA, ifelse(cri$m13_e < -0.3, NA, cri$m13_e))
 
 ```
-
-
 
 
 
 
 
 ## Pooled Models - Category Overlays
+
+### Table 2 Fig
+
+```{r tbl2fig}
+t2f_belief <- ggplot(cri, aes(x=0, y=m13_e_trim, fill = belief_cat_factor))+
+  geom_flat_violin(aes(fill = belief_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "") +
+  xlab('Density')+
+  ylim(-0.05,0.05)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Prior Belief in Hypothesis') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+
+t2f_belief
+
+t2f_proimm <- ggplot(cri, aes(x=0, y=m13_e, fill = pro_immigrant_cat_factor))+
+  geom_flat_violin(aes(fill = pro_immigrant_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "") +
+  xlab('Density')+
+  ylim(-0.05,0.05)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Pro Immigration') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+
+t2f_proimm
+
+t2f_topic <- ggplot(cri, aes(x=0, y=m13_e, fill = topic_cat_factor))+
+  geom_flat_violin(aes(fill = topic_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "") +
+  xlab('Density')+
+  ylim(-0.05,0.05)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Topical Knowledge') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+
+t2f_topic
+
+t2f_stat <- ggplot(cri, aes(x=0, y=m13_e, fill = stat_cat_factor))+
+  geom_flat_violin(aes(fill = stat_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "") +
+  xlab('Density')+
+  ylim(-0.05,0.05)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Statistical Skills') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+
+t2f_stat
+
+t2f_score <- ggplot(cri, aes(x=0, y=m13_e, fill = total_score_cat_factor))+
+  geom_flat_violin(aes(fill = total_score_cat_factor), position = position_nudge(x = 0, y = 0),adjust = 1.5, trim = F, alpha = .5, color = NA)+
+  labs(fill = "") +
+  xlab('Density')+
+  ylim(-0.05,0.05)+
+  coord_flip()+
+  #guides(fill = FALSE)+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  ggtitle('Statistical Skills') +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=12),
+    plot.title=element_text(size=12),
+  )
+
+t2f_score
+
+
+```
+
 
 ### Belief in H
 
@@ -834,4 +923,24 @@ dev.off()
 
 knitr::include_graphics( "results/Fig14.png")
 ```
+
+#### Example Plot
+
+```{r rain1}
+
+
+rain1 <- ggplot(cri,aes(x=DVs,y=AME_Zt,fill = DVs))+
+  geom_flat_violin(position = position_nudge(x = .2, y = 0),adjust =2)+
+  geom_point(position = position_jitter(width = .15), size = .25)+
+  ylab('Avg. Marginal Effect of Immigration')+xlab('DVs: Type of Policy Preference')+
+  coord_flip()+theme_cowplot()+guides(fill = FALSE)+
+  ylim(-0.1,0.1)+
+  scale_x_discrete(limits = c("Scale","Health", "House","IncDiff","OldAge","Jobs","Unemp")) +
+  ggtitle('Research Variability by Outcome Measument Type')
+rain1
+
+
+```
+
+
 

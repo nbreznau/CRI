@@ -1,5 +1,5 @@
 ---
-title: "Tech 5, Main Analyses"
+title: "Tech 4, Main Analyses"
 output: html_notebook
 ---
 
@@ -50,7 +50,7 @@ cri_indiv <- read.csv(file = "data/cri_indv.csv", header = T)
 
 # setup multilevel dataset
 
-cri_ml <- select(cri,u_teamid, id, u_delibtreatmentgroup1, AME:main_IV_source, main_IV_measurement:package, countries, Jobs:anynonlin,AME_Z,lower_Z,upper_Z,Hsup,Hrej,Hno,AME_sup_p05:AME_ns_p05,u_expgroup1,belief_strength:belief_ipred, HresultF)
+cri_ml <- select(cri,u_teamid, id, u_delibtreatmentgroup1, AME:main_IV_source, main_IV_measurement:package, countries, Jobs:anynonlin,AME_Z,lower_Z,upper_Z,Hsup,Hrej,Hno,AME_sup_p05:AME_ns_p05,u_expgroup1,belief_strength:belief_ipred, HresultF, STATISTICS_SKILL, BELIEF_HYPOTHESIS, TOPIC_KNOWLEDGE, MODEL_SCORE, PRO_IMMIGRANT)
 
 # create a team ID variable to identify the independent tests by team. Again, 16 of 71 teams had independent conclusions - seeing stock v flow immigration measures as representative of independent tests of the hypothesis. Therefore, we have a team-test level that replaces the team level.
 
@@ -66,7 +66,7 @@ cri_team <- subset(cri_team, u_teamid != 0)
 
 ### Within and Between Variables
 
-```{r wandb}
+```{r wandb, warning = F, message = F}
 cri_ml <- cri_ml %>%
   group_by(team) %>%
   mutate(AME_Z_b = mean(AME_Z, na.rm = T),
@@ -304,15 +304,29 @@ reg11[36,2:12] <- ""
 kable_styling(kable(reg11))
 ```
 
+```{r residual_var}
+
+# identify cases used in m13
+cri_ml$in_m13 <- TRUE
+cri_ml$in_m13[na.action(m13)] <- FALSE
+
+cri_ml_in <- subset(cri_ml, cri_ml$in_m13 == T)
+
+# predicted values with country-level intercepts, exclude RE?
+cri_ml_in$m13_p <- as.data.frame(predict(m13), newdata = cri_ml_in)
+
+
+```
+
 
 ```{r variance_explained_table}
 
 tbl2_m <- as.data.frame(t(reg11))
 
-tbl2 <- as.data.frame((matrix(nrow = 22, ncol = 7)))
+tbl2 <- as.data.frame((matrix(nrow = 22, ncol = 5)))
 
-tbl2[1,2:7] <- c("Average Marginal Effect, or equivalent","","","Subjective Conclusion about Hypothesis, team-level only (n=88)a","","")
-tbl2[2,2:7] <- c("Team-Levela (n=87)","Model-Level (n=1,253)a","Total","Supportb","Not Testableb","")
+tbl2[1,2:5] <- c("Average Marginal Effect, or equivalent","","","Subjective Conclusion about Hypothesis")
+tbl2[2,2:5] <- c("Team-Levela (n=87)","Model-Level (n=1,253)a","Total","Team-Levelb")
 tbl2[3:22,1] <- c("Observed Outcome Variance","% Variance Explained By:c","Objective Conditions","Structure of Materials Provided","Group Assignment","Researcher Decisions", "Measurement","Data and Sample","Model Specification","Researcher Attributes","Prior Belief in Hypothesis", "Pro-Immigration Attitude","Knowledge of Topic","Statistical Skills","Peer Model Ranking","","Unexplained Variance","aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems","bA team conclusion of 'Reject' is the reference category","cIn the case of team-level subjective hypothesis conclusion, the outcome is multinomial therefore the 'variance explained' is technically residual deviance")
 
 
@@ -341,12 +355,14 @@ tbl2[19,4] <- 1 - max(as.numeric(tbl2[6:17,4]))
 
 tbl2[18,] <- ""
 
+rm(tbl2_m)
+
 ```
 
 
 ## Explaining Subjective Hypothesis Conclusions
 
-Only at the team level.
+Only at the team level, n = 88
 
 Multinomial: support, not testable, reject
 
@@ -646,6 +662,8 @@ for(i in 1:20){
 
 20 runs of randomly distributed dichotomous variables determines how much deviance reduction on average is possible due to the number of variables. We subtract this from the deviance reduction
 
+#### Add simulation results
+
 ```{r tbl2}
 # add adjusted deviance
 
@@ -689,14 +707,47 @@ reg22[nrow(reg22) + 1,c(2,4,6,8,10,12)] <- round((as.numeric(reg22[nrow(reg22),c
 
 
 reg23[nrow(reg23) + 1,c(2,4,6,8,10,12,14)] <- round((as.numeric(reg23[nrow(reg23),c(2,4,6,8,10,12,14)]) - (as.numeric(reg23[nrow(reg23) - 4,c(2,4,6,8,10,12,14)]))) / as.numeric(reg23[nrow(reg23)-4,2]),6)
+
+rm(sim_3_vars,sim_7_vars,sim_13_vars,sim_16_vars,sims,rr,t1,avar,avg_dev_sim)
 ```
 
-# Add adjusted deviance to Table 2
+#### Add adjusted deviance 
 
 ```{r devto2}
+tbl2_m22 <- as.data.frame(t(reg22))
+tbl2_m23 <- as.data.frame(t(reg23))
+
+# remove the choice rows
+tbl2_m22 <- completeFun(tbl2_m22, "47")
+tbl2_m23 <- completeFun(tbl2_m23, "47")
+
+tbl2[3,5] <- tbl2_m22[2,47]
+tbl2[c(6,7,9,10,11),5] <- tbl2_m22[c(3:7),48]
+
+tbl2[c(13:17),5] <- tbl2_m23[c(3:7),48]
+tbl2[c(12),5] <- tbl2_m23[8,48]
+
+tbl2[c(5,8),5] <- tbl2[c(7,11),5]
+
+# calculate unexplained dev
+tbl2[19,5] <- 1 - as.numeric(tbl2[12,5])
 
 ```
 
+
+
+```{r prep_rain_plots}
+cri_ml_in <- cri_ml_in %>%
+  mutate(m13_e = AME_Z - m13_p,
+         stat_cat_factor = factor(STATISTICS_SKILL, levels = c("Low","Mid","High")),
+         belief_cat_factor = factor(BELIEF_HYPOTHESIS, levels = c("Low","Mid","High")),
+         topic_cat_factor = factor(TOPIC_KNOWLEDGE, levels = c("Low","Mid","High")),
+         total_score_cat_factor = factor(MODEL_SCORE, levels = c("Low","Mid","High")),
+         pro_immigrant_cat_factor = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"))
+  )
+
+write_rds(cri_ml_in, file = "data/cri_ml_in.Rda")
+```
 
 
 
