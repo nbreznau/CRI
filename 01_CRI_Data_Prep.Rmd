@@ -263,7 +263,8 @@ Note that teams are now in wide format, so that each variable has up to three va
 
 ```{r combine, warning=F, message=F }
 # original survey data from Unipark Survey SPSS files
-cri_part <- readstata13::read.dta13("data/cri_combined_recoded.dta")
+cri_part <- readstata13::read.dta13("data/cri_survey_long_public.dta")
+
 
 # datafile merged into within-team wide format
 
