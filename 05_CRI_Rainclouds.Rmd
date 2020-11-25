@@ -144,6 +144,134 @@ cri$m13_e_trim <- ifelse(cri$m13_e > 0.3, NA, ifelse(cri$m13_e < -0.3, NA, cri$m
 ```
 
 
+### Main figure 5 qualities by 3 levels
+
+```{r geom_F_V}
+# first we need to stack the data
+cri_stack_a <- select(cri, AME_Zt, stat_cat_factor, u_teamid)
+cri_stack_b <- select(cri, AME_Zt, belief_cat_factor, u_teamid)
+cri_stack_c <- select(cri, AME_Zt, topic_cat_factor, u_teamid)
+cri_stack_d <- select(cri, AME_Zt, total_score_cat_factor, u_teamid)
+cri_stack_e <- select(cri, AME_Zt, pro_immigrant_cat_factor, u_teamid)
+
+cnm <- c("AME","Level","u_teamid")
+
+colnames(cri_stack_a) <- cnm
+colnames(cri_stack_b) <- cnm
+colnames(cri_stack_c) <- cnm
+colnames(cri_stack_d) <- cnm
+colnames(cri_stack_e) <- cnm
+
+cri_stack_a$Aspect <- "Stats"
+cri_stack_b$Aspect <- "Belief"
+cri_stack_c$Aspect <- "Topic"
+cri_stack_d$Aspect <- "Score"
+cri_stack_e$Aspect <- "Immigrant"
+
+# combine in desired order
+
+cri_stack <- rbind(cri_stack_b, cri_stack_e, cri_stack_c, cri_stack_a, cri_stack_d)
+
+cri_stack <- completeFun(cri_stack, "AME")
+cri_stack$Aspect <- as.factor(cri_stack$Aspect)
+
+# get descriptive statistics
+
+counts <- cri_stack %>%
+  count(Aspect, Level, u_teamid)
+
+counts <- counts %>%
+  group_by(Aspect,Level) %>%
+  mutate(teamn = length(u_teamid))
+
+counts2 <- cri_stack %>%
+  count(Aspect, Level)
+
+counts <- select(counts, Aspect, Level, teamn)
+counts <- aggregate(counts, by = list(counts$Aspect, counts$Level), FUN = "mean")
+colnames(counts) <- c("Aspect","Level","x","v","teamn")
+counts <- select(counts, Aspect, Level, teamn)
+
+# descriptive statistics for the violin plots
+counts2 <- left_join(counts2, counts, by = c("Aspect","Level"))
+
+#means
+counts2[1,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Belief" & cri_stack$Level == "Low"])
+counts2[2,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Belief" & cri_stack$Level == "Mid"])
+counts2[3,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Belief" & cri_stack$Level == "High"])
+counts2[4,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Immigrant" & cri_stack$Level == "Low"])
+counts2[5,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Immigrant" & cri_stack$Level == "Mid"])
+counts2[6,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Immigrant" & cri_stack$Level == "High"])
+counts2[7,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Score" & cri_stack$Level == "Low"])
+counts2[8,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Score" & cri_stack$Level == "Mid"])
+counts2[9,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Score" & cri_stack$Level == "High"])
+counts2[10,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Stats" & cri_stack$Level == "Low"])
+counts2[11,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Stats" & cri_stack$Level == "Mid"])
+counts2[12,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Stats" & cri_stack$Level == "High"])
+counts2[13,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Topic" & cri_stack$Level == "Low"])
+counts2[14,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Topic" & cri_stack$Level == "Mid"])
+counts2[15,5] <- mean(cri_stack$AME[cri_stack$Aspect == "Topic" & cri_stack$Level == "High"])
+
+#sd
+counts2[1,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Belief" & cri_stack$Level == "Low"])
+counts2[2,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Belief" & cri_stack$Level == "Mid"])
+counts2[3,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Belief" & cri_stack$Level == "High"])
+counts2[4,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Immigrant" & cri_stack$Level == "Low"])
+counts2[5,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Immigrant" & cri_stack$Level == "Mid"])
+counts2[6,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Immigrant" & cri_stack$Level == "High"])
+counts2[7,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Score" & cri_stack$Level == "Low"])
+counts2[8,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Score" & cri_stack$Level == "Mid"])
+counts2[9,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Score" & cri_stack$Level == "High"])
+counts2[10,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Stats" & cri_stack$Level == "Low"])
+counts2[11,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Stats" & cri_stack$Level == "Mid"])
+counts2[12,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Stats" & cri_stack$Level == "High"])
+counts2[13,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Topic" & cri_stack$Level == "Low"])
+counts2[14,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Topic" & cri_stack$Level == "Mid"])
+counts2[15,6] <- sd(cri_stack$AME[cri_stack$Aspect == "Topic" & cri_stack$Level == "High"])
+
+colnames(counts2) <- c("Aspect","Level","N","TeamN","mean","sd")
+counts2$mean <- round(counts2$mean, 3)
+counts2$sd <- round(counts2$sd, 3)
+
+b1 <- paste(counts2[1,3],counts2[1,4],counts2[1,5],counts2[1,6], sep = ", ")
+b2 <- paste(counts2[2,3],counts2[2,4],counts2[2,5],counts2[2,6], sep = ", ")
+b3 <- paste(counts2[3,3],counts2[3,4],counts2[3,5],counts2[3,6], sep = ", ")
+i1 <- paste(counts2[4,3],counts2[4,4],counts2[4,5],counts2[4,6], sep = ", ")
+i2 <- paste(counts2[5,3],counts2[5,4],counts2[5,5],counts2[5,6], sep = ", ")
+i3 <- paste(counts2[6,3],counts2[6,4],counts2[6,5],counts2[6,6], sep = ", ")
+sc1 <- paste(counts2[7,3],counts2[7,4],counts2[7,5],counts2[7,6], sep = ", ")
+sc2 <- paste(counts2[8,3],counts2[8,4],counts2[8,5],counts2[8,6], sep = ", ")
+sc3 <- paste(counts2[9,3],counts2[9,4],counts2[9,5],counts2[9,6], sep = ", ")
+st1 <- paste(counts2[10,3],counts2[10,4],counts2[10,5],counts2[10,6], sep = ", ")
+st2 <- paste(counts2[11,3],counts2[11,4],counts2[11,5],counts2[11,6], sep = ", ")
+st3 <- paste(counts2[12,3],counts2[12,4],counts2[12,5],counts2[12,6], sep = ", ")
+t1 <- paste(counts2[13,3],counts2[13,4],counts2[13,5],counts2[13,6], sep = ", ")
+t2 <- paste(counts2[14,3],counts2[14,4],counts2[14,5],counts2[14,6], sep = ", ")
+t3 <- paste(counts2[15,3],counts2[15,4],counts2[15,5],counts2[15,6], sep = ", ")
+
+# reset limits to 0.5
+
+cri_stack$AMEc <- ifelse(cri_stack$AME > 0.5, NA, ifelse(cri_stack$AME < -0.5, NA, cri_stack$AME))
+```
+
+
+```{r geom_F_V2}
+ggplot(cri_stack, aes(x=Aspect, y=AMEc, fill = Level)) +
+  geom_flat_violin() +
+  coord_flip(ylim = c(-0.5,0.5), clip = 'off') +
+  scale_fill_brewer(palette = "Paired") +
+  annotate("text", x = 0.9, y = 0.55, label = paste0("(",b1,")"), size = 2, hjust = 0) +
+  annotate("text", x = 1.05, y = 0.55, label = paste0("(",b2,")"), size = 2, hjust = 0) +
+  annotate("text", x = 1.2, y = 0.55, label = paste0("(",b3,")"), size = 2, hjust = 0) +
+  theme_classic() +
+  guides(fill = guide_legend(reverse=T)) +
+  theme(axis.ticks.y = element_blank(),
+        legend.box.margin=margin(1,1,1,60))
+  
+#
++
+  coord_cartesian(ylim = c(-0.5,0.5))
+```
 
 
 

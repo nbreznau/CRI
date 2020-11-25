@@ -1,0 +1,23 @@
+Table 1. Explaining Deviation in Outcomes and Conclusions,,,,,
+,"Average Marginal Effect,                             or equivalent",,,,Subjective Conclusion about Hypothesisb
+,Team-Levela (n=87),"Model-Levela (n=1,253)",Total,,Team-Level
+Observed Outcome Variance,0.0006,0.0049,0.0055,,160.22
+% Cumulative Variance Explained:c,,,,,
+Objective Conditions,2.3%,0.8%,0.9%,,1.1%
+Structure of Materials Provided,2.3%,0.8%,0.9%,,0.4%
+Group Assignment,-1.1%,0.8%,0.5%,,1.1%
+Researcher Decisions,13.8%,2.3%,3.6%,,11.3%
+Measurement,11.2%,1.7%,2.8%,,3.2%
+Data and Sample,13.8%,2.0%,3.4%,,6.9%
+Model Specification,13.5%,2.3%,3.6%,,11.3%
+Researcher Attributes,15.3%,2.4%,3.9%,,18.2%
+Prior Belief in Hypothesis,14.1%,2.4%,3.7%,,12.9%
+Pro-Immigration Attitude,14.3%,2.4%,3.7%,,13.7%
+Knowledge of Topic,14.1%,2.4%,3.7%,,14.8%
+Statistical Skills,15.3%,2.4%,3.9%,,12.8%
+Peer Model Ranking,15.1%,2.3%,3.8%,,12.4%
+,,,,,
+Unexplained Variance,84.7%,97.6%,96.1%,,81.8%
+"aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems",,,,,
+"bConclusion can be support, reject or not testable.",,,,,
+"cCumulative explained variance. In the case of team-level subjective hypothesis conclusion, the outcome is multinomial therefore the 'variance explained' is technically residual deviance",,,,,

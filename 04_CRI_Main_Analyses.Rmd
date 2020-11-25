@@ -366,7 +366,7 @@ Only at the team level, n = 88
 
 Multinomial: support, not testable, reject
 
-```{r obj_mlmsm}
+```{r obj_mlmsm, results = F}
 cri_team$Hresult <- relevel(as.factor(cri_team$Hresult), ref = "Support")
 
 m00m <- multinom(Hresult ~ 1 , data = cri_team)
@@ -382,7 +382,7 @@ m01vars <- "Hresult ~ Jobs + IncDiff + House"
 
 ```
 
-```{r subj_measurement_mlmsm}
+```{r subj_measurement_mlmsm, results = F}
 
 m03m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols, data = cri_team)
 
@@ -398,7 +398,7 @@ m04d <- summary(m04m)
 
 #### Data and Sample
 
-```{r subj_datasamp_mlmsm, warning = F}
+```{r subj_datasamp_mlmsm, warning = F, results = F}
 
 m05m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols + Stock + ChangeFlow + w2006 + w2016, data = cri_team)
 
@@ -421,7 +421,7 @@ m08 independent vars l2 selection
 
 had to remove mlm_fe, it uniquely identifes team in the multinomial removed mlm_re and House, we are pushing the limit with variables and these were harming AIC fit
 
-```{r subj_model_mlmsm}
+```{r subj_model_mlmsm, results = F}
 
 
 m07m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe , data = cri_team)
@@ -451,7 +451,7 @@ Using the R^2 'hacking' tool we found some combinations of these variables that 
 
 These probably need to be run independently, so that we see the reduction for each one.
 
-```{r res_aspects_mlmsm}
+```{r res_aspects_mlmsm,  results=F}
 m09m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + belief_ipred  , data = cri_team)
 
 m10m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + pro_immigrant , data = cri_team) 
@@ -514,7 +514,7 @@ We have 20 variables and 89 cases, this means that some of the explained devianc
 We always take one less than the number of variables.
 
 
-```{r dev_adj}
+```{r dev_adj, results = F}
 
 cri_team_sim <- select(cri_team, Hresult)
 
@@ -735,6 +735,10 @@ tbl2[19,5] <- 1 - as.numeric(tbl2[12,5])
 ```
 
 
+
+```{r write_tbl2}
+write.csv(tbl2, file = "results/Tbl2.csv")
+```
 
 ```{r prep_rain_plots}
 cri_ml_in <- cri_ml_in %>%
