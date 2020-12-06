@@ -18,7 +18,7 @@ rm(list = ls())
 library(pacman)
 
 
-pacman::p_load("devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","mlogit","knitr")
+pacman::p_load("devtools","ggplot2","dplyr","readr","ExPanDaR","plotscale","lattice","tidyr","mlogit","knitr","grid","zoo","ggpubr","ragg")
 
 # Load Researcher Degrees of Freedom Analysis package
 #  
@@ -41,7 +41,7 @@ cri_team <- read.csv(file = "data/cri_team.csv", header = T)
 ```{r data_prep, warning=F, message=F, include=F}
 
 # prep data
-crispectest <- dplyr::select(cri_str, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe, cluster_any, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_any, Hresult, orig13, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
+crispectest <- dplyr::select(cri_str, id, u_teamid, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe, cluster_any, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_any, Hresult, orig13, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
 
 # create sample variables 
 crispectest <- crispectest %>%
@@ -84,6 +84,11 @@ cri_team <- cri_team %>%
   mutate(est = ifelse(Hsup == 1, 0.1, ifelse(Hrej == 1, -0.1, ifelse(Hno == 1, 0, NA))),
          ub = est+0.01,
          lb = est-0.01)
+
+# import researcher aspects to crispectest
+cri_merge <- select(cri, id, belief_ipred, pro_immigrant, topic_ipred, stats_ipred, total_score)
+
+crispectest <- left_join(crispectest, cri_merge, by = "id")
 
 ```
 
@@ -130,6 +135,165 @@ dev.off()
 
 knitr::include_graphics("results/Fig1_AME.png")
 ```
+
+#### Fig 1. Alternative
+
+Generate spec curves by hand, one ordered by effect size, the other by confidence.
+
+```{r fig1_alt}
+# remove original study
+crispectest <- subset(crispectest, u_teamid != 0)
+
+# order rows to make counter
+crispectest <- crispectest[order(crispectest$est),]
+crispectest$count <- 1:nrow(crispectest)
+
+# create identifier of neg, ns, pos
+crispectest <- crispectest %>%
+  mutate(sig_group = as.factor(ifelse(est < 0 & ub > 0, NA, ifelse(est > 0 & lb < 0, NA, ifelse(est < 0 & ub < 0, 1, ifelse(est > 0 & lb > 0, 3, 2))))),
+         est_sig = ifelse(!is.na(sig_group), est, NA),
+         est_ns = ifelse(is.na(sig_group), est, NA),
+         sig_group2 = as.factor(ifelse(is.na(sig_group), 2, sig_group)))
+
+g1 <- ggplot(crispectest) +
+  #geom_errorbar(aes(ymin = lb, ymax = ub), color = "thistle1") +
+  geom_point(aes(x = count, y = est_ns), color = "grey55", shape = "|", size = 2, show.legend =F) + 
+  geom_point(aes(x = count, y = est_sig, color = sig_group), shape = "|", size = 3) +
+  scale_color_manual(values = c("chartreuse4","NA", "firebrick"), labels = c("Negative","Not sig.","Positive"," ")) +
+  ylim(-0.21, 0.21) +
+  labs(color = "Effect at 95%CI", x = "Model", y = " \n \nStandardized\nEffect Size") +
+  theme_classic() +
+  guides(color = guide_legend(override.aes = list(size=7, color=c("chartreuse4","grey55", "firebrick","NA")))) +
+  theme(
+    legend.key.size = unit(2,"line"),
+    legend.position = "none")
+
+```
+
+```{r fig1_alt2}
+
+
+
+# create identifier of neg, ns, pos
+crispectest <- crispectest %>%
+  mutate(ci = ifelse(sig_group2 == 1, ub, ifelse(sig_group2 == 3, lb, ifelse(est <= 0 & sig_group2 == 2, ub, ifelse(est > 0 & sig_group2 == 2, lb, NA)))),
+         ub_order = ifelse(est <= 0 & sig_group2 == 1, 0, ifelse(est <= 0 & sig_group2==2, 1, ifelse(est > 0 & sig_group2==2, 2, ifelse(est > 0 & sig_group2 == 3, 3, NA)))),
+         )
+
+# order rows to make counter
+
+crispectest <- crispectest[order(crispectest$ub_order, crispectest$ci),]
+crispectest$count2 <- 1:nrow(crispectest)
+
+# make an estimate where error bars show only for significant at 95% results
+crispectest <- crispectest %>%
+  mutate(est2 = ifelse(sig_group2 == 2, 0, est))
+
+g2 <- ggplot(crispectest) +
+  geom_errorbar(aes(x = count2, ymin = lb, ymax = ub), color = "grey55") +
+  geom_point(aes(x = count2, y = est, color = sig_group2), size = 1) +
+  scale_color_manual(values = c("chartreuse4","grey45", "firebrick"), labels = c("Negative","Not sig.","Positive")) +
+  coord_cartesian(ylim = c(-0.21,0.21)) +
+  labs(color = "Effect\nat 95%CI", x = "Model", y = "Effect Range", size = 2) +
+  annotate("text", x = 150, y = 0.05,label = "Point Est. < 0\nOrdered by\nUpper CI", size = 2.5, color = "chartreuse4") +
+  annotate("text", x = 1200, y = -0.05,label = "Point Est. > 0\nOrdered by\nLower CI", size = 2.5, color = "firebrick") +
+  geom_vline(xintercept = 688) +
+  theme_classic() +
+  theme(
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8)
+  )
+  
+
+```
+#### Fig 1. Heatmap Concept
+
+```{r rolling_average}
+# create rolling average for effect ordering
+crispectest <- crispectest[order(crispectest$count),]
+
+# mean replacement, then rolling average, replace ends of rolling average w/ reg scores
+crispectest <- crispectest %>%
+  mutate(belief_ipredm = scale(ifelse(is.na(belief_ipred), mean(belief_ipred, na.rm=T), belief_ipred)),
+         pro_immigrantm = scale(ifelse(is.na(pro_immigrant), mean(pro_immigrant, na.rm=T), pro_immigrant)),
+         topic_ipredm = scale(ifelse(is.na(topic_ipred), mean(topic_ipred, na.rm=T), topic_ipred)),
+         stats_ipredm = scale(ifelse(is.na(stats_ipred), mean(stats_ipred, na.rm=T), stats_ipred)),
+         total_scorem = scale(ifelse(is.na(total_score), mean(total_score, na.rm=T), total_score)),
+         belief_roll = zoo::rollmean(belief_ipredm, k = 30, fill = NA),
+         pro_roll = zoo::rollmean(pro_immigrantm, k = 30, fill = NA),
+         topic_roll = zoo::rollmean(topic_ipredm, k = 30, fill = NA),
+         stats_roll = zoo::rollmean(stats_ipredm, k = 30, fill = NA),
+         total_roll = zoo::rollmean(total_scorem, k = 30, fill = NA),
+         belief_roll = ifelse(is.na(belief_roll), mean(belief_ipredm[count>1230,]), ifelse(is.na(belief_roll) & count < 30, mean(belief_ipredm[count<40,]), belief_roll)),
+         pro_roll = ifelse(is.na(pro_roll) & count > 1230, mean(pro_immigrantm[count>1230,]), ifelse(is.na(pro_roll) & count < 30, mean(pro_immigrantm[count < 40,]), pro_roll)),
+         topic_roll = ifelse(is.na(topic_roll) & count > 1230, mean(topic_ipredm[count>1230,]), ifelse(is.na(topic_roll) & count < 30, mean(topic_ipredm[count<30,]), topic_roll)),
+         stats_roll = ifelse(is.na(stats_roll) & count > 1230, mean(stats_ipredm[count>1215,]), ifelse(is.na(stats_roll) & count < 30, mean(stats_ipredm[count<30,]), stats_roll)),
+         total_roll = ifelse(is.na(total_roll) & count > 1230, mean(total_scorem[count>1230,]), ifelse(is.na(total_roll) & count < 30, mean(total_scorem[count<30,]), total_roll))
+                              )
+
+# create rolling average for effect CI order
+crispectest <- crispectest[order(crispectest$count2),]
+
+# mean replacement, then rolling average then replace tails w/ mean
+crispectest <- crispectest %>%
+  mutate(belief_roll2 = zoo::rollmean(belief_ipredm, k = 30, fill = NA),
+         pro_roll2 = zoo::rollmean(pro_immigrantm, k = 30, fill = NA),
+         topic_roll2 = zoo::rollmean(topic_ipredm, k = 30, fill = NA),
+         stats_roll2 = zoo::rollmean(stats_ipredm, k = 30, fill = NA),
+         total_roll2 = zoo::rollmean(total_scorem, k = 30, fill = NA),         
+         belief_roll2 = ifelse(is.na(belief_roll2), mean(belief_ipredm[count2>1230,]), ifelse(is.na(belief_roll2) & count2 < 30, mean(belief_ipredm[count2<30,]), belief_roll2)),
+         pro_roll2 = ifelse(is.na(pro_roll2) & count2 > 1230, mean(pro_immigrantm[count2>1230,]), ifelse(is.na(pro_roll2) & count2 < 30, mean(pro_immigrantm[count2 < 30,]), pro_roll2)),
+         topic_roll2 = ifelse(is.na(topic_roll2) & count2 > 1230, mean(topic_ipredm[count2>1230,]), ifelse(is.na(topic_roll2) & count2 < 30, mean(topic_ipredm[count2<30,]), topic_roll2)),
+         stats_roll2 = ifelse(is.na(stats_roll2) & count2 > 1230, mean(stats_ipredm[count2>1215,]), ifelse(is.na(stats_roll2) & count2 < 30, mean(stats_ipredm[count2<30,]), stats_roll2)),
+         total_roll2 = ifelse(is.na(total_roll2) & count2 > 1230, mean(total_scorem[count2>1230,]), ifelse(is.na(total_roll2) & count2 < 30, mean(total_scorem[count2<30,]), total_roll2))
+                              )
+labs_y <- c("Model Score","Stats-Skill","Topic\nKnowledge","Pro Immigrant","Belief Hyp. True")
+
+g3 <- ggplot(crispectest) +
+  geom_tile(aes(x = count, y = 5, fill = belief_roll), height = 0.5) +
+  geom_tile(aes(x = count, y = 4, fill = pro_roll), height = 0.5) +
+  geom_tile(aes(x = count, y = 3, fill = topic_roll), height = 0.5) +
+  geom_tile(aes(x = count, y = 2, fill = stats_roll), height = 0.5) +
+  geom_tile(aes(x = count, y = 1, fill = total_roll), height = 0.5) +
+  scale_y_continuous(breaks = c(1,2,3,4,5), labels=labs_y) +
+    theme_classic() +
+  xlab("Model") +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_blank()
+  )
+labs_y2 <- c("Model","l","e","t","e")
+
+
+g4 <- ggplot(crispectest) +
+  geom_tile(aes(x = count2, y = 5, fill = belief_roll2), height = 0.5) +
+  geom_tile(aes(x = count2, y = 4, fill = pro_roll2), height = 0.5) +
+  geom_tile(aes(x = count2, y = 3, fill = topic_roll2), height = 0.5) +
+  geom_tile(aes(x = count2, y = 2, fill = stats_roll2), height = 0.5) +
+  geom_tile(aes(x = count2, y = 1, fill = total_roll2), height = 0.5) +
+  labs(fill = "Score") +
+  scale_y_continuous(breaks = c(1,2,3,4,5), labels=labs_y2) +
+  xlab("Model") +
+    theme_classic() +
+  theme(
+    axis.text.y = element_text(color = "NA"),
+    axis.title.y = element_blank(),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8)
+  )
+```
+
+### Fig 1. Combined New
+
+```{r ggplot}
+agg_png(filename = "results/Fig1_new.png", res = 144, height = 900, width = 1700)
+ggarrange(g1,g2,g3,g4)
+dev.off()
+
+knitr::include_graphics("results/Fig1_new.png")
+```
+
+
 
 
 
