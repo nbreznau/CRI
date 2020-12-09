@@ -1,11 +1,11 @@
 ---
 title: "Tech 2, Descriptives"
 output:
-  word_document: default
-  html_notebook: default
   html_document:
     df_print: paged
     always_allow_html: true
+  html_notebook: default
+  word_document: default
 ---
 
 
@@ -33,14 +33,16 @@ The datasets in thie file were worked up in the project file [01_CRI_Data_Prep.R
 cri <- read.csv(file = "data/cri.csv", header = T)
 cri_team <- read.csv(file = "data/cri_team.csv", header = T)
 
+# team stats
+cri_count <- aggregate(cri_team, by = list(cri_team$u_teamid), FUN = "mean", na.rm = T)
 ```
 
 
 ### Descriptives
 
-There were `r sum(cri_team$team_size)-2` participants in `r length(unique(cri$u_teamid))` teams that produced `r length(cri$u_teamid[cri$u_teamid > 0])` models. 
+There were `r sum(cri_count$team_size)-2` participants in `r length(unique(cri$u_teamid))` teams that produced `r length(cri$u_teamid[cri$u_teamid > 0])` models. 
 
-There were `r sum(duplicated(cri_team$u_teamid))` teams that came to more than one conclusion. For example, finding support of the hypothesis for immigration stock models, but finding rejection of the hypothesis for immigration flow models. Therefore, we have `r length(cri_team$u_teamid)` observations ('results') in the team-level data that derive from `r length(unique(cri_team$u_teamid))-1` teams plus we include the conclusion from the study by Brooks and Manza ([2006](https://doi.org/10.1177/000312240607100306)) that provides an example of a state of the art study for testing this hypothesis.
+There were `r sum(duplicated(cri_team$u_teamid))` teams that came to more than one conclusion. For example, finding support of the hypothesis for immigration stock models, but finding rejection of the hypothesis for immigration flow models. Therefore, we have `r length(cri_team$u_teamid)` observations ('results') in the team-level data that derive from `r length(unique(cri_team$u_teamid))-1` teams. We also have the conclusion from the study by Brady and Finnigan ([2014](https://doi.org/10.1177/000312240607100306)) that provides an example of a state of the art study for testing this hypothesis to use as an additional 'data point' in additional analyses.
 
 
 

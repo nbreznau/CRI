@@ -1,23 +1,23 @@
-Table 1. Explaining Deviation in Outcomes and Conclusions,,,,,
-,"Average Marginal Effect,                             or equivalent",,,,Subjective Conclusion about Hypothesisb
-,Team-Levela (n=87),"Model-Levela (n=1,253)",Total,,Team-Level
-Observed Outcome Variance,0.0006,0.0049,0.0055,,160.22
-% Cumulative Variance Explained:c,,,,,
-Objective Conditions,2.3%,0.8%,0.9%,,1.1%
-Structure of Materials Provided,2.3%,0.8%,0.9%,,0.4%
-Group Assignment,-1.1%,0.8%,0.5%,,1.1%
-Researcher Decisions,13.8%,2.3%,3.6%,,11.3%
-Measurement,11.2%,1.7%,2.8%,,3.2%
-Data and Sample,13.8%,2.0%,3.4%,,6.9%
-Model Specification,13.5%,2.3%,3.6%,,11.3%
-Researcher Attributes,15.3%,2.4%,3.9%,,18.2%
-Prior Belief in Hypothesis,14.1%,2.4%,3.7%,,12.9%
-Pro-Immigration Attitude,14.3%,2.4%,3.7%,,13.7%
-Knowledge of Topic,14.1%,2.4%,3.7%,,14.8%
-Statistical Skills,15.3%,2.4%,3.9%,,12.8%
-Peer Model Ranking,15.1%,2.3%,3.8%,,12.4%
-,,,,,
-Unexplained Variance,84.7%,97.6%,96.1%,,81.8%
-"aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems",,,,,
-"bConclusion can be support, reject or not testable.",,,,,
-"cCumulative explained variance. In the case of team-level subjective hypothesis conclusion, the outcome is multinomial therefore the 'variance explained' is technically residual deviance",,,,,
+"","V1","V2","V3","V4","V5"
+"1",NA,"Average Marginal Effect, or equivalent","","","Subjective Conclusion about Hypothesis"
+"2",NA,"Team-Levela (n=87)","Model-Level (n=1,253)a","Total","Team-Levelb"
+"3","Observed Outcome Variance","0.000615","0.004882","0.005497","160.215"
+"4","% Variance Explained By:c",NA,NA,NA,NA
+"5","Objective Conditions","0.022764","0.007784","0.00946","0.010539"
+"6","Structure of Materials Provided","0.022764","0.007784","0.00946","0.004225"
+"7","Group Assignment","-0.011382","0.007579","0.005458","0.010539"
+"8","Researcher Decisions","0.138211","0.023351","0.035838","0.112545"
+"9","Measurement","0.112195","0.017001","0.027651","0.032413"
+"10","Data and Sample","0.138211","0.020483","0.033655","0.068514"
+"11","Model Specification","0.134959","0.023351","0.035838","0.112545"
+"12","Researcher Attributes","0.152846","0.02417","0.038566","0.182464"
+"13","Prior Belief in Hypothesis","0.141463","0.023556","0.036747","0.128673"
+"14","Pro-Immigration Attitude","0.143089","0.023556","0.036929","0.137056"
+"15","Knowledge of Topic","0.141463","0.023556","0.036747","0.148141"
+"16","Statistical Skills","0.152846","0.02417","0.038566","0.128236"
+"17","Peer Model Ranking","0.15122","0.023351","0.037657","0.123686"
+"18","","","","",""
+"19","Unexplained Variance","0.847154","0.97583","0.961434","0.817536"
+"20","aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems",NA,NA,NA,NA
+"21","bA team conclusion of 'Reject' is the reference category",NA,NA,NA,NA
+"22","cIn the case of team-level subjective hypothesis conclusion, the outcome is multinomial therefore the 'variance explained' is technically residual deviance",NA,NA,NA,NA

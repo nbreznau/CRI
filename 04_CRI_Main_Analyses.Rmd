@@ -17,7 +17,7 @@ library(pacman)
 # devtools::install_github("easystats/effectsize")
 
 
-pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools","rvest","nnet","parameters","insight","effectsize")
+pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools","rvest","nnet","parameters","insight","effectsize","ggtext")
 
 # add in variance estimates (more than 2-digits)
 # disable scientific notation
@@ -737,8 +737,87 @@ tbl2[19,5] <- 1 - as.numeric(tbl2[12,5])
 
 
 ```{r write_tbl2}
+#make a version for plotting
+fig2 <- as.data.frame(matrix(nrow = 16, ncol = 3))
+colnames(fig2) <- c("level","type","percent")
+#Level
+fig2[1:4,1] <- "Avg. Marginal Effects\nBetween-team variance"
+fig2[5:8,1] <- "Avg. Marginal Effects\nWithin-team variance"
+fig2[9:12,1] <- "Avg. Marginal Effects\nTotal variance"
+fig2[13:16,1] <- "Subjective conclusion\nBetween-team deviance"
+#Type
+fig2[c(1,5,9,13),2] <- "Objective conditions"
+fig2[c(2,6,10,14),2] <- "Research design"
+fig2[c(3,7,11,15),2] <- "Researcher attributes"
+fig2[c(4,8,12,16),2] <- "Unexplained variance"
+#percentage
+fig2[,3] <- c(tbl2[c(5,8,12,19),2],tbl2[c(5,8,12,19),3],tbl2[c(5,8,12,19),4],tbl2[c(5,8,12,19),5])
+fig2$percent <- as.numeric(fig2$percent)
+fig2[2,3] <- (fig2[2,3] - fig2[1,3])
+fig2[3,3] <- (fig2[3,3] - fig2[2,3])
+fig2[4,3] <- 1 - (fig2[1,3] + fig2[2,3] + fig2[3,3])
+
+fig2[6,3] <- (fig2[6,3] - fig2[5,3])
+fig2[7,3] <- (fig2[7,3] - fig2[6,3])
+fig2[8,3] <- 1 - (fig2[7,3] + fig2[6,3] + fig2[5,3])
+
+fig2[10,3] <- (fig2[10,3] - fig2[9,3])
+fig2[11,3] <- (fig2[11,3] - fig2[10,3])
+fig2[12,3] <- 1 - (fig2[11,3] + fig2[10,3] + fig2[9,3])
+
+fig2[14,3] <- (fig2[14,3] - fig2[13,3])
+fig2[15,3] <- (fig2[15,3] - fig2[14,3])
+fig2[16,3] <- 1 - (fig2[15,3] + fig2[14,3] + fig2[13,3])
+
+
 write.csv(tbl2, file = "results/Tbl2.csv")
 ```
+
+
+## Table 2. As a Stacked Bar
+
+```{r tbl2_asgraph}
+fig2$level <- factor(fig2$level, levels = c(" ","  ","   ","     ","Avg. Marginal Effects\nBetween-team variance","Avg. Marginal Effects\nWithin-team variance","Avg. Marginal Effects\nTotal variance","Subjective conclusion\nBetween-team deviance"))
+
+
+
+ggplot(fig2, aes(x = level, y = percent, fill = type)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(x = "", y = "", fill = "Percent\nexplained by") +
+  theme_classic() +
+  labs(title = "Factors Explaining Variance in Results") +
+  scale_x_discrete(drop = F) +
+  geom_rect(aes(xmin = 1.3, xmax = 4.1, ymin = 0.005, ymax = 0.24), color = "darkorchid2", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 1.3, xmax = 4.1, ymin = 0.26, ymax = 0.49), color = "chartreuse3", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 1.3, xmax = 4.1, ymin = 0.51, ymax = 0.74), color = "royalblue2", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 1.3, xmax = 4.1, ymin = 0.76, ymax = 0.995), color = "darksalmon", size = 1.5, fill = "transparent") +
+  annotate("text", x = 3.78, y = 0.124, label = "UNEXPLAINED\nVARIANCE", color = "black", size = 2.5) +
+  annotate("text", x = 3.78, y = 0.375, label = "RESEARCHER\nATTRIBUTES", color = "black",  size = 2.5) +
+  annotate("text", x = 3.78, y = 0.624, label = "RESEARCH\nDESIGN", color = "black",  size = 2.5) +
+  annotate("text", x = 3.78, y = 0.876, label = "OBJECTIVE\nCONDITIONS", color = "black",  size = 2.5) +
+  annotate("text", x = 2.4, y = 0.011, label = "(unique features of\neach team's research\ndesign)", size = 2.5, color = "grey12", hjust = -0.03, vjust = 0) +
+  annotate("text", x = 1.7, y = 0.268, label = "- Belief in hypothesis\n- Pro-immigration\n- Topic knowledge\n- Stats skills\n- Model ranking", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
+  annotate("text", x = 2.42, y = 0.516, label = "- Measurement\n- Sample selection\n- Model specification", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
+  annotate("text", x = 2.73, y = 0.766, label = "- Materials\n- Group assignment", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
+  geom_segment(aes(x = 4.15, y = 0.123, xend = 4.7, yend = 0.45), color = "grey15") +
+  geom_segment(aes(x = 4.15, y = 0.376, xend = 4.7, yend = 0.85), color = "grey15") +
+  geom_segment(aes(x = 4.15, y = 0.626, xend = 4.7, yend = 0.96), color = "grey15") +
+  geom_segment(aes(x = 4.15, y = 0.876, xend = 4.7, yend = 0.99), color = "grey15") +
+  scale_fill_manual(values = c("Objective conditions" = "darksalmon",
+                                "Research design" = "royalblue2",
+                                "Researcher attributes" = "chartreuse3",
+                                "Unexplained variance" = "darkorchid2")) +
+  theme(axis.line = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = "none")
+
+
+```
+
+
+
 
 ```{r prep_rain_plots}
 cri_ml_in <- cri_ml_in %>%
