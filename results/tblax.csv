@@ -1,0 +1,21 @@
+"","Specifications by Sub-Domain","AME (mean)","AME (sd)","Identical Models","No. of Teams","Support Hypothesis (mean)"
+"1","Sample Specifications",NA,NA,NA,NA,NA
+"2","13 Richest Democracies, 1996 & 2006 Waves",0.018,0.174,9,0.167,189
+"3","11 of 13 Richest Democracies, 1996, 2006 & 2016 Waves",-0.026,0.098,8,0.375,102
+"4","13 Richest Democracies, 1996, 2006 & 2016 Waves",-0.002,0.056,10,0.05,96
+"5","Variable Specifications",NA,NA,NA,NA,NA
+"6","No country-level, and 5 socio-demographic individual-level indep. variables",-0.001,0.012,53,6,0.509
+"7","No country-level, and 5 socio-demographic individual-level indep. variables + income",-0.002,0.039,38,7,0.135
+"8","Estimation/Equation Specifications",NA,NA,NA,NA,NA
+"9","DV: Jobs, Test var: Stock of immigrants, logistic regression, 'two-way fixed effects'",0.005,0.004,18,8,0
+"10","DV: Unemployment, Test var: Stock of immigrants, logistic regression, 'two-way fixed effects'",-0.003,0.007,18,8,0
+"11","DV: Income Differences, Test var: Stock of immigrants, logistic regression, 'two-way fixed effects'",0,0.013,18,8,0
+"12","DV: Old-age Care, Test var: Stock of immigrants, logistic regression, 'two-way fixed effects'",0.006,0.011,18,8,0
+"13","DV: House, Test var: Stock of immigrants, logistic regression, 'two-way fixed effects'",0.004,0.003,17,10,0.244
+"14","DV: Health, Test var: Stock of immigrants, logistic regression, 'two-way fixed effects'",-0.008,0.015,17,10,0.244
+"15","DV: Jobs, Test var: Net migration, logistic regression, 'two-way fixed effects'",0.006,0.016,17,10,0.244
+"16","DV: Unemployment, Test var: Net migration, logistic regression, 'two-way fixed effects'",-0.009,0.005,17,10,0.244
+"17","DV: Income Differences, Test var: Net migration, logistic regression, 'two-way fixed effects'",-0.002,0.003,11,8,0.043
+"18","DV: Old-age Care, Test var: Net migration, logistic regression, 'two-way fixed effects'",0.006,0.008,11,8,0.043
+"19","DV: House, Test var: Net migration, logistic regression, 'two-way fixed effects'",0.007,0.007,9,6,0
+"20","DV: Health, Test var: Net migration, logistic regression, 'two-way fixed effects'",0.007,0.012,9,6,0

@@ -388,12 +388,23 @@ summary {
 <div id="model-specification-count" class="section level3">
 <h3>Model Specification Count</h3>
 <p>The problem is that many of these model specifications were dropped because they were not the team’s preferred models, or because in the margins extraction phase the PIs decided that the models were not preferable (only when the team provided them as ‘extra’ models). Therefore, some columns of the database have zero variance. These columns need to be removed.</p>
-<pre class="r"><code># Get data with only model specs
-cri_spec_only &lt;- cri
+<p>We also need variables to distinguish:</p>
+<ol style="list-style-type: upper-alpha">
+<li><p>‘net migration’ based measures from ‘stock’ based measures, even when both are used to reflect a change over time, the variable definitions are slightly different.</p></li>
+<li><p>‘west’ form ‘non-western’ immigration &amp; ‘muslim’ from ‘non-muslim’ &amp; ‘refugee’</p></li>
+</ol>
+<pre class="r"><code># Add &#39;net migration&#39; dummy for measurement
+cri &lt;- cri %&gt;%
+    mutate(netmig = ifelse(main_IV_measurement == &quot;Net Migration&quot;, 1, 0),
+           west = ifelse(main_IV_measurement == &quot;Western Immigrant&quot;, 1, 0),
+           nonwest = ifelse(main_IV_measurement == &quot;Non-Western Immigrant&quot;, 1, 0),
+           muslim = ifelse(main_IV_measurement == &quot;Muslim-country Immigrant&quot;, 1, 0),
+           refugee = ifelse(main_IV_measurement == &quot;Refugee&quot;, 1, 0))
 
+# Get data with only model specs
+cri_spec_only &lt;- cri
          
 cri_spec_only &lt;- select(cri_spec_only, -c(count:main_IV_measurement, num_countries, inv_weight, additionalinfo, Hsupport:HresultF, AME_sup_p05:MODEL_SCORE))
-
 
 
 # convert character to numeric
@@ -417,7 +428,7 @@ cri_sums_uncommon &lt;- subset(cri_sums, cri_sums[,1] &lt; 3)
 # remove zero variance columns
 cri_spec_only &lt;- cri_spec_only[ - as.numeric(which(apply(cri_spec_only, 2, var) == 0))]
 cri_spec_only2 &lt;- cri_spec_only2[ - as.numeric(which(apply(cri_spec_only2, 2, var) == 0))]</code></pre>
-<p>We identified 167 model specifications in our qualitative coding of the team’s submitted code. Of these, 106 were <em>common</em> across teams (occurred in three or more) and 61 were <em>idiosyncratic</em> specifications (occurred in two or less teams). Of these model specifications, 1309 have variance (the remainder refer to specifications in models that were dropped before the final preferred models; usually those that were seen as sensitivity models rather than main models, or those that the team in the end decided against through correspondence and error checking - remember teams could change their models at any point if they desired or had new information although this was rare).</p>
+<p>We identified 172 model specifications in our qualitative coding of the team’s submitted code. Of these, 107 were <em>common</em> across teams (occurred in three or more) and 65 were <em>idiosyncratic</em> specifications (occurred in two or less teams). Of these model specifications, 1261 have variance (the remainder refer to specifications in models that were dropped before the final preferred models; usually those that were seen as sensitivity models rather than main models, or those that the team in the end decided against through correspondence and error checking - remember teams could change their models at any point if they desired or had new information although this was rare).</p>
 </div>
 <div id="dissimilarity-in-decision-realms" class="section level3">
 <h3>Dissimilarity in Decision Realms</h3>
@@ -426,8 +437,8 @@ cri_spec_only2 &lt;- cri_spec_only2[ - as.numeric(which(apply(cri_spec_only2, 2,
 cri_spec_only01 &lt;- select(cri_spec_only, w1985:TR)
 # variables in the model
 cri_spec_only02 &lt;- select(cri_spec_only, main_IV_as_control, emigration_ivC:fbXleftright)
-# est &amp; measurement (we exclude the 6 DVs here as they were asked to use them)
-cri_spec_only03 &lt;- select(cri_spec_only, main_IV_time, main_IV_effect, Stock:ChangeFlow, twowayfe:pseudo_pnl, dichotomize)
+# est &amp; measurement (we provide two versions, one with DVs, one without)
+cri_spec_only03 &lt;- select(cri_spec_only, netmig, west, nonwest, muslim, refugee, main_IV_time, main_IV_effect, Jobs:ChangeFlow, twowayfe:pseudo_pnl, dichotomize)
 cri_spec_only03 &lt;- cri_spec_only03 %&gt;%
   mutate(main_IV_time_1year = car::recode(main_IV_time, &quot;1 = 1; c(2,3,4,5,6) = 0&quot;),
          main_IV_time_10year = car::recode(main_IV_time, &quot;2 = 1; c(1,3,4,5,6) = 0&quot;),
@@ -440,15 +451,19 @@ cri_spec_only03 &lt;- cri_spec_only03 %&gt;%
          main_IV_effect_unclear = car::recode(main_IV_effect, &quot;3 = 1; c(1,2,4) = 0&quot;),
          main_IV_effect_within = car::recode(main_IV_effect, &quot;4 = 1; c(1,2,3) = 0&quot;))
 cri_spec_only03 &lt;- select(cri_spec_only03, -c(main_IV_time, main_IV_effect))
+cri_spec_only03_noDV &lt;- select(cri_spec_only03, -c(Jobs:Health))
 #make a test for all three at once
-cri_spec_only04 &lt;- select(cri_spec_only, w1985:TR, main_IV_as_control, emigration_ivC:fbXleftright)
+cri_spec_only04 &lt;- select(cri_spec_only, w1985:TR, main_IV_as_control, emigration_ivC:fbXleftright, anynonlin)
 cri_spec_only04 &lt;- cbind(cri_spec_only04, cri_spec_only03)
+cri_spec_only04_noDV &lt;- cbind(cri_spec_only04, cri_spec_only03_noDV)
 # find and merge identical cases
 
 cri$identical_samples &lt;- wcAggregateCases(cri_spec_only01)[[&quot;disaggIndex&quot;]]
 cri$identical_variables &lt;- wcAggregateCases(cri_spec_only02)[[&quot;disaggIndex&quot;]]
 cri$identical_estmodel &lt;- wcAggregateCases(cri_spec_only03)[[&quot;disaggIndex&quot;]]
+cri$identical_estmodel_noDV &lt;- wcAggregateCases(cri_spec_only03_noDV)[[&quot;disaggIndex&quot;]]
 cri$identical_all &lt;- wcAggregateCases(cri_spec_only04)[[&quot;disaggIndex&quot;]]
+cri$identical_all_noDV &lt;- wcAggregateCases(cri_spec_only04_noDV)[[&quot;disaggIndex&quot;]]
 
 # need a function to mark all duplicates, not just the subsequent instances
 allDuplicated &lt;- function(vec){
@@ -462,8 +477,81 @@ cri &lt;- cri %&gt;%
   mutate(identical_samples = ifelse(allDuplicated(identical_samples) == FALSE, 0, identical_samples),
          identical_variables = ifelse(allDuplicated(identical_variables) == FALSE, 0, identical_variables),
          identical_estmodel = ifelse(allDuplicated(identical_estmodel) == FALSE, 0, identical_estmodel),
-         identical_all = ifelse(allDuplicated(identical_all) == FALSE, 0, identical_all))</code></pre>
-<p>In our coding of model specifications, 135 of 1309 models are unique; and of the remaining 1174 models, all are identical with only one other model and each pair was created by the same team. So across teams there are no identical models when considering our identified 167 model specifications.</p>
+         identical_estmodel_noDV = ifelse(allDuplicated(identical_estmodel_noDV) == FALSE, 0, identical_estmodel_noDV),
+         identical_all = ifelse(allDuplicated(identical_all) == FALSE, 0, identical_all),
+         identical_all_noDV = ifelse(allDuplicated(identical_all_noDV) == FALSE, 0, identical_all))</code></pre>
+<p>In our coding of model specifications, 1261 of 1261 models are unique. Most teams chose to analyze these variables separately, therefore when we exclude these six variables from the model specifications there are only 1261 unique models, but all repeated models were produced within individual teams; i.e., no identical models across teams were identified.</p>
+<p>We investigated model specification as three different domains: sample selection (which countries and waves), independent variables included in the model and finally estimation, measurement strategy and equation format.</p>
+<p>When considering three sub-domains of specification:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Sample</strong> specifications only produces 8 unique models</li>
+<li><strong>Variable</strong> specifications only produces 3 unique models</li>
+<li><strong>Measurement, Estimation &amp; Equation</strong> specifications only produces 303</li>
+</ol>
+<pre class="r"><code>cri_samples &lt;- cri %&gt;%
+    # select(AME_Z, Hsup, identical_samples) %&gt;%
+    group_by(identical_samples) %&gt;%
+    summarize(AME_Zm = round(mean(AME_Z, na.rm = T),3),
+              AME_Zsd = round(sd(AME_Z, na.rm = T),3),
+              cases = n(),
+              teams = length(unique(u_teamid)),
+              Hsupm = round(mean(Hsup, na.rm = T),3),
+              Hsupsd = round(sd(Hsup, na.rm = T),3)) </code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<pre class="r"><code>cri_samples &lt;- cri_samples[order(cri_samples$cases, decreasing = T),]
+head(cri_samples)</code></pre>
+<pre><code>## # A tibble: 6 x 7
+##   identical_samples AME_Zm AME_Zsd cases teams Hsupm Hsupsd
+##               &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1                33  0.018   0.17    197    10 0.193  0.396
+## 2                27 -0.002   0.009   112     1 0      0    
+## 3                44 -0.006   0.041   102     8 0.569  0.498
+## 4                48 -0.001   0.035    96    10 0.021  0.144
+## 5                49  0.001   0.006    48     1 0      0    
+## 6                26 -0.013   0.013    36     1 0.667  0.478</code></pre>
+<p>We observed three somewhat common sample selections that accounted for 245, 102 and 96 models respectively that were used across 11, 8 and 10 teams respectively. However, when looking at the average of the resulting effects we see no pattern (in none of the three identical sample selection groups was the average significantly different from zero).</p>
+<pre class="r"><code>cri_variables &lt;- cri %&gt;%
+    # select(AME_Z, Hsup, identical_samples) %&gt;%
+    group_by(identical_variables) %&gt;%
+    summarize(AME_Zm = round(mean(AME_Z, na.rm = T),3),
+              AME_Zsd = round(sd(AME_Z, na.rm = T),3),
+              cases = n(),
+              teams = length(unique(u_teamid)),
+              Hsupm = round(mean(Hsup, na.rm = T),3),
+              Hsupsd = round(sd(Hsup, na.rm = T),3)) </code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<pre class="r"><code>cri_variables &lt;- cri_variables[order(cri_variables$cases, decreasing = T),]
+head(cri_variables)</code></pre>
+<pre><code>## # A tibble: 6 x 7
+##   identical_variables AME_Zm AME_Zsd cases teams Hsupm Hsupsd
+##                 &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1                  11 -0.001   0.012    53     6 0.377  0.489
+## 2                  62  0.061   0.333    48     4 0.021  0.144
+## 3                   5 -0.007   0.039    38     7 0.132  0.343
+## 4                  54  0       0.015    36     3 0.667  0.478
+## 5                 110 -0.011   0.037    36     3 0      0    
+## 6                  38 -0.005   0.019    33     4 0.606  0.496</code></pre>
+<pre class="r"><code>cri_estmodel &lt;- cri %&gt;%
+    # select(AME_Z, Hsup, identical_samples) %&gt;%
+    group_by(identical_estmodel) %&gt;%
+    summarize(AME_Zm = round(mean(AME_Z, na.rm = T),3),
+              AME_Zsd = round(sd(AME_Z, na.rm = T),3),
+              cases = n(),
+              teams = length(unique(u_teamid)),
+              Hsupm = round(mean(Hsup, na.rm = T),3),
+              Hsupsd = round(sd(Hsup, na.rm = T),3)) </code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<pre class="r"><code>cri_estmodel &lt;- cri_estmodel[order(cri_estmodel$cases, decreasing = T),]
+head(cri_estmodel)</code></pre>
+<pre><code>## # A tibble: 6 x 7
+##   identical_estmodel AME_Zm AME_Zsd cases teams Hsupm Hsupsd
+##                &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1                  0  0.003   0.141   303    40 0.195  0.397
+## 2                384  0.003   0.004    18     8 0      0    
+## 3                416 -0.004   0.007    18     8 0      0    
+## 4                444 -0.001   0.013    18     8 0      0    
+## 5                473  0.006   0.011    18     8 0      0    
+## 6                 96  0.004   0.003    17    10 0.235  0.437</code></pre>
 </div>
 </div>
 

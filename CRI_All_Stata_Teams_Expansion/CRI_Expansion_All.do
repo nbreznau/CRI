@@ -4337,8 +4337,8 @@ replace unempl= unemp_CPDS if year==1990
 ************************************************************************
 
 gen msample=.
-reg jobs oldage unemp redincd  marital wrkst  size age educat sex /// attend
-	unemprr sickrr pensionrr gov_party AvgS_ImmPol migstock  unempl
+reg jobs oldage unemp redincd  marital wrkst  size age educat sex /// 
+attend unemprr sickrr pensionrr gov_party AvgS_ImmPol migstock  unempl
 replace msample=1 if e(sample)
 
 cap drop socpol
@@ -4361,7 +4361,9 @@ gen socpol3=.
 replace socpol3= (jobs+oldage+unemp+redincd)
 replace socpol3=socpol3-4
 
-reg socpol2 socpol3 jobs oldage unemp redincd marital wrkst  size age educat sex unemprr sickrr pensionrr  migstock gov_party AvgS_ImmPol pc5_gdp_oecd net_mig_un_5y unempl iso year
+reg socpol2 socpol3 jobs oldage unemp redincd marital wrkst  size age educat ///
+sex unemprr sickrr pensionrr  migstock gov_party AvgS_ImmPol pc5_gdp_oecd net_mig_un_5y unempl iso year
+
 gen sample=.
 replace sample=1 if e(sample)
 
@@ -5739,8 +5741,9 @@ saveold "t13.isspreplication.dta"
 erase "t13.issp1996.dta"
 erase "t13.issp2006.dta"
 
-*This is a file in case anyone wants to check their work in MLwiN
+
 *The team provided screenshots of the MLwiN results
+*MLwin is otherwise not reproducible, and we do not have the software
 *We import them here
 
 gen n = _n

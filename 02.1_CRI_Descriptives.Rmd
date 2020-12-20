@@ -17,7 +17,7 @@ output:
 rm(list = ls())
 library(pacman)
 
-pacman::p_load("dplyr","knitr","kableExtra","reshape","ggplot2","ragg")
+pacman::p_load("dplyr","knitr","kableExtra","reshape","ggplot2","ragg","summarytools")
 
 ```
 
@@ -32,9 +32,61 @@ The datasets in thie file were worked up in the project file [01_CRI_Data_Prep.R
 ```{r load, warning=F,message=F, include =F}
 cri <- read.csv(file = "data/cri.csv", header = T)
 cri_team <- read.csv(file = "data/cri_team.csv", header = T)
+cri_str <- read.csv(file = "data/cri_str.csv", header = T)
 
 # team stats
 cri_count <- aggregate(cri_team, by = list(cri_team$u_teamid), FUN = "mean", na.rm = T)
+```
+
+### Model Specification Codebook
+
+```{r codebook}
+codebook <- subset(cri_str, u_teamid != 0)
+codebook$DV[grepl("Scale",codebook$DV)] <- "Scale"
+codebook <- select(codebook, DV, main_IV_type, main_IV_measurement, main_IV_time, num_countries, main_IV_as_control, software, mator, indepv) %>%
+    mutate(num_countries = factor(num_countries),
+           main_IV_as_control = factor(main_IV_as_control))
+
+# summarytools::freq(codebook, order = "freq", style = "grid")
+
+codebook1 <- gather(codebook, "var", "value") %>%
+  count(var, value) %>%
+  group_by(var) %>%             
+  mutate(prop = prop.table(n)) %>%
+  ungroup()
+
+percent <- function(x, digits = 2, format = "f", ...) {      # Create user-defined function
+  paste0(formatC(x * 100, format = format, digits = digits, ...), "%")
+}
+
+
+# add a single row to each group
+codebook1 <- codebook1 %>%
+  split(.$var) %>% 
+  map(~add_row(., var=unique(.$var), value=NA, n=1000, prop=NA)) %>%
+  bind_rows()
+
+
+codebook1$prop <- percent(codebook1$prop)
+
+# add a total row to each group
+codebook1 <- codebook1 %>%
+  split(.$var) %>% 
+  map(~add_row(., var=unique(.$var), value=NA, n=0, prop="100.00%")) %>%
+  bind_rows()
+
+#reorder decreasing
+codebook1 <- codebook1[order(codebook1$var, codebook1$n, decreasing = T),]
+
+# add labels
+codebook1 <- codebook1 %>%
+    mutate(value = ifelse(n == 1000, var, ifelse(n == 0, "total", value)))
+
+codebook1 <- select(codebook1, -var)
+
+write.csv(codebook1, file = "results/codebook1.csv")
+
+
 ```
 
 
@@ -43,8 +95,6 @@ cri_count <- aggregate(cri_team, by = list(cri_team$u_teamid), FUN = "mean", na.
 There were `r sum(cri_count$team_size)-2` participants in `r length(unique(cri$u_teamid))` teams that produced `r length(cri$u_teamid[cri$u_teamid > 0])` models. 
 
 There were `r sum(duplicated(cri_team$u_teamid))` teams that came to more than one conclusion. For example, finding support of the hypothesis for immigration stock models, but finding rejection of the hypothesis for immigration flow models. Therefore, we have `r length(cri_team$u_teamid)` observations ('results') in the team-level data that derive from `r length(unique(cri_team$u_teamid))-1` teams. We also have the conclusion from the study by Brady and Finnigan ([2014](https://doi.org/10.1177/000312240607100306)) that provides an example of a state of the art study for testing this hypothesis to use as an additional 'data point' in additional analyses.
-
-
 
 ```{r descriptive, warning = F, message = F, include = F}
 sum1 <- summarise_at(cri, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(mean), na.rm = T)

@@ -125,16 +125,18 @@ keep <- c("keep", "team1", "team3", "team12", "team16", "team18", "team20", "tea
 if(file.exists(pfunc("team1.RData"))){
       load(pfunc("team1.RData"))
 } else {
-  library(brms)
-  #this came from their Stata code
-  read_dta(pfunc("cri1pooled.dta")) %>%
 
+
+  pacman::p_load("brms","haven","dplyr")
+  #this came from their Stata code
+  DAT <- read_dta(pfunc("cri1pooled.dta"))
+  DAT <- DAT %>%
   mutate(educ.f = relevel(factor(educ), ref = "1"),
          employment.f = relevel(factor(employment), ref = "3"),
          female.f = relevel(factor(female), ref = "0"),
          country.f = factor(country),
-         year.f = factor(year)) ->
-  DAT
+         year.f = factor(year))
+  
 
 oldagecare.fm <- 
   bf(oldagecare  ~ female +  s(age) + employment + educ + 
@@ -442,7 +444,7 @@ tomodel$netmigpctLag <- tomodel$netmigpctLag/10
 # list of dependent variables used for the analysis
 depvars <- c("dgovjobs", "dgovunemp", "dgovincdiff", "dgovretire", "dgovhous", "dhcare")
 
-# replicate original table
+
 m.dgovjobs5 <- glm(dgovjobs ~ netmigpctLag + age + agesq + female + lesshs + univ + ptemp + unemp + nolabor + selfemp + inczscore + as.factor(cntry) + as.factor(year)
                    , data   =  tomodel
                    , family=binomial(link="logit")) 
@@ -7065,7 +7067,7 @@ data.2016$widowed[data.2016$MARITAL == "7" | data.2016$MARITAL == "9"] = NA
 data.2016$widowed <- ifelse(data.2016$widowed == "5", "1", "0")
 
 #household size
-#NB: unclear how to code this variable
+#unclear how to code this variable
 names(data.2016)[names(data.2016) == 'HOMPOP'] <- 'household_size'
 data.2016$household_size[data.2016$household_size == "99"] <- NA 
 
@@ -8553,32 +8555,32 @@ m3b <- lmer(unemployed ~ foreignpct +  emprate +female + age + age2 + edufactor 
 m3c <- lmer(reduceincomediff ~ foreignpct +  emprate +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 m3d <- lmer(oldagecare ~ foreignpct +  emprate +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 
-# models 13 to 16: Change in Immigrant Stock 
+# models 17 to 20: Change in Immigrant Stock 
 m4a <- lmer(jobs ~ netmigpct +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 m4b <- lmer(unemployed ~ netmigpct +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 m4c <- lmer(reduceincomediff ~ netmigpct +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 m4d <- lmer(oldagecare ~ netmigpct +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 
-# models 17 to 20: Change in Immigrant Stock and Social Welfare Expenditures
+# models 21 to 24: Change in Immigrant Stock and Social Welfare Expenditures
 m5a <- lmer(jobs ~ netmigpct +  socx +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 m5b <- lmer(unemployed ~ netmigpct +  socx +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 m5c <- lmer(reduceincomediff ~ netmigpct +  socx +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 m5d <- lmer(oldagecare ~ netmigpct +  socx +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 
-# models 21 to 24: Change in Immigrant Stock and Employment rate
+# models 25  to 28: Change in Immigrant Stock and Employment rate
 m6a <- lmer(jobs ~ netmigpct +  emprate +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 m6b <- lmer(unemployed ~ netmigpct +  emprate +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 m6c <- lmer(reduceincomediff ~ netmigpct +  emprate +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 m6d <- lmer(oldagecare ~ netmigpct +  emprate +female + age + age2 + edufactor + employmentfactor + votefactor + year + (1 | cyear) + (1 | country), data=cri.full)
 
-# models 25 to 28: Immigrant Stock with Interaction
+# models 13 to 16: Immigrant Stock with Interaction
 
 m7a <- lmer(jobs ~ foreignpct:votefactor + factor(country) + year +  socx  + female + age + age2 + edufactor + employmentfactor + votefactor + (1 | cyear) + (1 | country), data=cri.full)
 m7b <- lmer(unemployed ~ foreignpct:votefactor +  factor(country) + year +  socx + female + age + age2 + edufactor + employmentfactor + votefactor  + (1 | cyear) + (1 | country), data=cri.full)
 m7c <- lmer(reduceincomediff ~ foreignpct:votefactor +  factor(country) + year +  socx + female + age + age2 + edufactor + employmentfactor + votefactor +year + (1 | cyear) + (1 | country), data=cri.full)
 m7d <- lmer(oldagecare ~ foreignpct:votefactor +  factor(country) + year +  socx + female + age + age2 + edufactor + employmentfactor + votefactor +year + (1 | cyear) + (1 | country), data=cri.full)
 
-# models 29 to 32: Change in Immigrant Stock with Interaction
+# models 29 to 32: Net Migration with Interaction
 
 m8a <- lmer(jobs ~ netmigpct:votefactor +  socx  + female + age + age2 + edufactor + employmentfactor + votefactor+ year + (1 | cyear) + (1 | country), data=cri.full)
 m8b <- lmer(unemployed ~ netmigpct:votefactor+  socx + female + age + age2 + edufactor + employmentfactor + votefactor +year + (1 | cyear) + (1 | country), data=cri.full)
