@@ -50,7 +50,7 @@ votes <- read.dta13("data/votes.dta")
 The first file "Research Design Votes.xlsx" is the file we used to generate the model descriptions in the Unipark survey. 
 The second file "CRI Model Spec...xlsx" is the main file with team model coding
 
-The third file "votes.dta" was generated in the CRI work-up. See CRI_Spec_Analysis.Rmd.
+The third file "votes.dta" is the average of participants' votes by research design presented in the survey. Note that these designs do not perfectly match the final research designs, therefore we cannot apply them directly to the models but must identify the ranking of models based on certain components. 
 
 ```{r merge}
 # Concatenate all strings from each variable
@@ -207,14 +207,14 @@ popdf$label_x = popdf$xaxis+0.14
 
 ```{r fig1, warning=F, message=F, echo=T}
 
-agg_png(file = "results/Fig1_meta.png", width = 750)
+agg_png(file = "results/FigX_modelrank.png", width = 750)
 ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
 
   geom_bar(stat = "identity", aes(fill = group)) +
   geom_text(aes(y = label_y, x = label_x, fill = group, hjust = hjust), size = 4) +
   labs(fill = "MODEL FEATURES", title = "") +
     geom_hline(yintercept=0) +
-  coord_flip() + labs(y = "Average Relative Support, (OLS = 0, negative values trimmed)", x = "") +
+  coord_flip() + labs(y = "Average Relative Support\n(centered at OLS = 0, negative values trimmed)", x = "") +
      scale_x_discrete(breaks = NULL) +
   ylim(-0.4, 0.85)   +
       theme(panel.background = element_rect(fill = "white"),
@@ -227,7 +227,7 @@ ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
         axis.title.x = element_text(size = 14),
         legend.key.size = unit(1,"line"))
 dev.off()
-knitr::include_graphics("results/Fig1_meta.png")
+knitr::include_graphics("results/FigX_modelrank.png")
 ```
 
 

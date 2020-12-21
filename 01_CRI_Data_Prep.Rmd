@@ -437,10 +437,69 @@ cor <- cor %>%
 # drop Brady and Finnigan's original analysis
 cor <- completeFun(cor, "stat1")
 
-cor1 <- cor(cor, use = "pairwise.complete.obs")
+cor1 <- round(cor(cor, use = "pairwise.complete.obs"),3)
+
+#get lower triangle
+cor1[upper.tri(cor1,diag=TRUE)] <- ""
+cor1 <- cor1[-1,-1]
+cor1 <- cor1[-26,-26]
+cor1 <- as.data.frame(cor1)
 
 kable_styling(kable(cor1, digits = 2))
 
+# label and export csv
+rownames(cor1) <- c("Method Skill, Constraint",
+                    "Software Skill, Constraint",
+                    "First Phase Difficulty",
+                    "Stats Teaching Experience",
+                    "Multilevel Modelling Experience",
+                    "Stats-Related Publications",
+                    "Multilevel Publications",
+                    "Immigration-topic Publications",
+                    "Policy-related Publications",
+                    "Opinion-Policy Publications",
+                    "Interest in Topic",
+                    "Not Familiar with Topic",
+                    "Very Familiar with Topic",
+                    "Topic-related Publications",
+                    "Topical Teaching Experience",
+                    "Topic-related Dicussions",
+                    "Belief in Hypothesis General",
+                    "Belief in H, Old-age",
+                    "Belief in H, Unemployment",
+                    "Belief in H, Income Gap",
+                    "Belief in H, Housing",
+                    "Belief in H, Job Provision",
+                    "Belief in H, Health Care",
+                    "Strength of Belief in H", 
+                    "Should Restrict Immigration")
+cor1$label <- c("(stat1)",
+                    "(stat2)",
+                    "(stat3)",
+                    "(stat4)",
+                    "(stat5)",
+                    "(stat6)",
+                    "(stat7)",
+                    "(topic1)",
+                    "(topic2)",
+                    "(topic3)",
+                    "(topic4)",
+                    "(topic5)",
+                    "(topic6)",
+                    "(topic7)",
+                    "(topic8)",
+                    "(topic9)",
+                    "(belief1)",
+                    "(belief2)",
+                    "(belief3)",
+                    "(belief4)",
+                    "(belief5)",
+                    "(belief6)",
+                    "(belief7)",
+                    "(belief_strength)", 
+                    "(pro_immigrant)")
+cor1 <- select(cor1, label, everything())
+write.csv(cor1, file = "results/TblS3_measrement.csv")
 
 ```
 
@@ -452,27 +511,39 @@ pacman::p_load("lavaan")
 
 cfa <- ' stat =~ stat1 + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
          topic =~ topic1 + topic2 + topic3 + topic4 + topic5 + topic6 + topic7 + topic8 + topic9
-         belief =~ belief1 + belief2 + belief3 + belief4 + belief5 + belief6 + belief7 '
+         belief =~ belief1 + belief2 + belief3 + belief4 + belief5 + belief6 + belief7 
+         topic6 ~~ belief1
+         topic8 ~~ belief4
+         '
+         
 fit <- cfa(cfa, data = cor)
-summary(fit, fit.measures=TRUE)
+fitsi <- summary(fit, fit.measures=TRUE)
 
 # predicted factor scores
-cor1 <- as.data.frame(lavPredict(fit))
-cor <- cbind(cor,cor1)
+cor2 <- as.data.frame(lavPredict(fit))
+cor <- cbind(cor,cor2)
 
 # put them back into the main data
-cor1 <- select(cor, u_teamid, stat, topic, belief)
+cor2 <- select(cor, u_teamid, stat, topic, belief)
 
-cri <- left_join(cri,cor1,by = "u_teamid")
+cri <- left_join(cri,cor2,by = "u_teamid")
 
+# modindices, allow ourselves 2
+# modindices(fit, minimum.value = 6)
 
+fit_fig <- matrix(nrow = 4, ncol = 2)
+colnames(fit_fig) <- c("Index/Test","Score") 
+fit_fig[1:4,1] <- c("CLI","TFI","RMSEA","chi-test p")
+fit_fig[1:4,2] <- round(c(fitsi[["FIT"]][["cfi"]],fitsi[["FIT"]][["tli"]],fitsi[["FIT"]][["rmsea"]],fitsi[["FIT"]][["pvalue"]]),3)
 
+write.csv(fit_fig, file = "results/fit_measurement.csv")
 
 ```
 
+
 ### Merge in Subjective Voting
 
-The file popdf_out.Rdata is needed for this, see CRI_Subj_Votes.R add link
+The file popdf_out.Rdata is needed for this, see 001_CRI_Prep_Subj_Votes.Rmd add link
 
 ```{r votes, message = F, warning=F}
 
@@ -493,7 +564,7 @@ cri_str <- left_join(cri_str, criT, by = "id")
 
 # cri <- select(cri, -c(u_expgroup1:belief7))
 
-rm(cor, cor1, fit, popdf_out, criT)
+rm(fit, popdf_out, criT)
 
 ```
 
@@ -649,8 +720,8 @@ sem <- sem %>%
          topic4 = ifelse(u_teamid == 27,4,topic4))
 
 # correlatinos
-cor1 <- select(sem, -c(u_teamid,Group.1))
-cor1 <- round(cor(cor1, use = "pairwise.complete.obs"),2)
+cor3 <- select(sem, -c(u_teamid,Group.1))
+cor3 <- round(cor(cor3, use = "pairwise.complete.obs"),2)
 
 sem_f <- completeFun(sem, c("Hsup","belief1","topic2"))
 # to preserve cases put mean in pro_immigrant and belief5
@@ -663,30 +734,31 @@ cfa <- ' stats =~ stat1 + + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
          immig =~ pro_immigrant
          concl =~ Hsup         
 '
-fit <- cfa(cfa, data = sem_f)
+fit2 <- cfa(cfa, data = sem_f)
 
 
 
 ```
 
 
-### Table X. Correlation Matrix of Researcher Backgrouds, Team-Level
+### Table X. Correlation Matrix of Researcher Backgrouds, Individual-Level
 
 ```{r sem_cor}
 # kable(cor1)
 
-cor1[upper.tri(cor1)] <- ""
+cor3[upper.tri(cor3)] <- ""
 
-kable(cor1)
+kable(cor3)
 ```
 
 
 ```{r sem_fit}
-fit1 <- summary(fit, fit.measures=TRUE, standardized = T)
+fit_out <- summary(fit2, fit.measures=TRUE, standardized = T)
 
 labels = list(stats = "Statistics Skill", topic = "Topic Knowledge", belief = "Belief in Hypothesis", immig = "Pro Immigration", concl = "Results Supported")
 
-sem_out <- lavaanPlot(model = fit, labels = labels, coefs = TRUE, covs = TRUE, stand = TRUE)
+sem_out <- lavaanPlot(model = fit2, labels = labels, coefs = TRUE, covs = TRUE, stand = TRUE)
+pacman::p_load("DiagrammeR")
 
 png(filename = "results/SEM.png", width = 720, height = 620, res = 144)
 sem_out
@@ -698,7 +770,7 @@ This chunk essentially proves that it probably doesn't matter whether we take te
 
 ```{r predict_sem, warning=F, message=F}
 # predicted factor scores
-pred <- as.data.frame(lavPredict(fit))
+pred <- as.data.frame(lavPredict(fit2))
 sem_p <- cbind(sem_f,pred)
 
 # put them back into the main data
@@ -725,10 +797,12 @@ cri_team_test$belief_ipred <- ifelse(cri_team_test$belief_ipred == "NaN", NA, cr
 cri_team_test <- completeFun(cri_team_test, "belief_ipred")
 
 # correlatinos
-cor2 <- select(cri_team_test, -c(u_teamid))
-cor2 <- round(cor(cor2, use = "pairwise.complete.obs"),2)
+cor4 <- select(cri_team_test, -c(u_teamid))
+cor4 <- round(cor(cor4, use = "pairwise.complete.obs"),2)
 
-rm(cor2,cri_team_test,cri_team_test1,cri_team_test2)
+kable(cor4)
+
+rm(cor,cor1,cor2,cri_team_test,cri_team_test1,cri_team_test2)
 ```
 
 ```{r spec_cats}
