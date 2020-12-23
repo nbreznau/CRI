@@ -17,7 +17,7 @@ output:
 rm(list = ls())
 library(pacman)
 
-pacman::p_load("dplyr","knitr","kableExtra","reshape","ggplot2","ragg","summarytools")
+pacman::p_load("tidyverse","knitr","kableExtra","reshape","ggplot2","ragg","summarytools")
 
 ```
 
@@ -43,17 +43,29 @@ cri_count <- aggregate(cri_team, by = list(cri_team$u_teamid), FUN = "mean", na.
 ```{r codebook}
 codebook <- subset(cri_str, u_teamid != 0)
 codebook$DV[grepl("Scale",codebook$DV)] <- "Scale"
-codebook <- select(codebook, DV, main_IV_type, main_IV_measurement, main_IV_time, num_countries, main_IV_as_control, software, mator, indepv) %>%
+codebook <- select(codebook, DV, main_IV_type, main_IV_measurement, main_IV_time, num_countries, main_IV_as_control, software, mator, indepv, inv_weight) %>%
     mutate(num_countries = factor(num_countries),
-           main_IV_as_control = factor(main_IV_as_control))
+           main_IV_as_control = factor(main_IV_as_control),
+           inv_weight = 1/inv_weight)
 
 # summarytools::freq(codebook, order = "freq", style = "grid")
 
-codebook1 <- gather(codebook, "var", "value") %>%
+# Get weighted proportions
+codebook1 <- gather(codebook, "var", "value", DV:indepv) %>%
+  count(var, value, wt = inv_weight) %>%
+  group_by(var) %>%    
+  mutate(propw = prop.table(n)) %>%
+  ungroup() %>%
+  select(., propw)
+
+# Get unweighted proportions plus n cases
+codebook2 <- gather(codebook, "var", "value", DV:indepv) %>%
   count(var, value) %>%
   group_by(var) %>%             
   mutate(prop = prop.table(n)) %>%
   ungroup()
+
+codebook1 <- cbind(codebook2, codebook1)
 
 percent <- function(x, digits = 2, format = "f", ...) {      # Create user-defined function
   paste0(formatC(x * 100, format = format, digits = digits, ...), "%")
@@ -63,16 +75,17 @@ percent <- function(x, digits = 2, format = "f", ...) {      # Create user-defin
 # add a single row to each group
 codebook1 <- codebook1 %>%
   split(.$var) %>% 
-  map(~add_row(., var=unique(.$var), value=NA, n=1000, prop=NA)) %>%
+  map(~add_row(., var=unique(.$var), value=NA, n=1000, prop=NA, propw=NA)) %>%
   bind_rows()
 
 
 codebook1$prop <- percent(codebook1$prop)
+codebook1$propw <- percent(codebook1$propw)
 
 # add a total row to each group
 codebook1 <- codebook1 %>%
   split(.$var) %>% 
-  map(~add_row(., var=unique(.$var), value=NA, n=0, prop="100.00%")) %>%
+  map(~add_row(., var=unique(.$var), value=NA, n=0, prop="100.00%", propw="100.00%")) %>%
   bind_rows()
 
 #reorder decreasing
