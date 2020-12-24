@@ -139,23 +139,31 @@ m04_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, 
 
 # extract variance
 # make frame
-dv_var_table <- matrix(nrow = 30, ncol = 6)
+dv_var_table <- as.data.frame(matrix(nrow = 31, ncol = 6))
 
-sum_adjr <- function(x) round(summary(m03_dv[[x]])[["adj.r.squared"]],3)
-sum_r <- function(x) round(summary(m03_dv[[x]])[["r.squared"]],3)
-sum_cases <- function(x) nobs(m03_dv[[x]])
+sum_adjr <- function(x,y) round(summary(x[[y]])[["adj.r.squared"]],3)
+sum_r <- function(x,y) round(summary(x[[y]])[["r.squared"]],3)
+sum_cases <- function(x,y) nobs(x[[y]])
 
+# m03 - same naming convention as main analyses
 dv_var_table[1,1:6] <- c("Model","DV","Specs","r2","adj_r2","Cases")
+dv_var_table[2:7,1] <- "m03"
 dv_var_table[2:7,2] <- dvs
 dv_var_table[2:7,3] <- rep("~ logit + ologit + lpm + mlogit + ols",6)
-dv_var_table[2:7,4] <- c(sum_r(1),sum_r(2),sum_r(3),sum_r(4),sum_r(5),sum_r(6))
-dv_var_table[2:7,5] <- c(sum_adjr(1),sum_adjr(2),sum_adjr(3),sum_adjr(4),sum_adjr(5),sum_adjr(6))
-dv_var_table[2:7,6] <- c(sum_cases(1),sum_cases(2),sum_cases(3),sum_cases(4),sum_cases(5),sum_cases(6))
+dv_var_table[2:7,4] <- c(sum_r(m03_dv,1),sum_r(m03_dv,2),sum_r(m03_dv,3),sum_r(m03_dv,4),sum_r(m03_dv,5),sum_r(m03_dv,6))
+dv_var_table[2:7,5] <- c(sum_adjr(m03_dv,1),sum_adjr(m03_dv,2),sum_adjr(m03_dv,3),sum_adjr(m03_dv,4),sum_adjr(m03_dv,5),sum_adjr(m03_dv,6))
+dv_var_table[2:7,6] <- c(sum_cases(m03_dv,1),sum_cases(m03_dv,2),sum_cases(m03_dv,3),sum_cases(m03_dv,4),sum_cases(m03_dv,5),sum_cases(m03_dv,6))
+
+# m04 
+
+dv_var_table[8:13,1] <- "m04"
+dv_var_table[8:13,2] <- dvs
+dv_var_table[8:13,3] <- rep("~ logit + ols + Stock + ChangeFlow",6)
+dv_var_table[8:13,4] <- c(sum_r(m04_dv,1),sum_r(m04_dv,2),sum_r(m04_dv,3),sum_r(m04_dv,4),sum_r(m04_dv,5),sum_r(m04_dv,6))
+dv_var_table[8:13,5] <- c(sum_adjr(m04_dv,1),sum_adjr(m04_dv,2),sum_adjr(m04_dv,3),sum_adjr(m04_dv,4),sum_adjr(m04_dv,5),sum_adjr(m04_dv,6))
+dv_var_table[8:13,6] <- c(sum_cases(m04_dv,1),sum_cases(m04_dv,2),sum_cases(m04_dv,3),sum_cases(m04_dv,4),sum_cases(m04_dv,5),sum_cases(m04_dv,6))
 
 
-
-
-m04vars <- "+ logit + ols + Stock + ChangeFlow"
 
 ```
 
@@ -163,43 +171,36 @@ m04vars <- "+ logit + ols + Stock + ChangeFlow"
 #### Data and Sample
 
 ```{r subj_datasamp_mlms, warning = F}
+# m05_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow)
 
-m05 <- lmer(paste0(m01vars, m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + (1 | team)"), data = cri_ml)
+m06_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow + w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable)
 
-# several interactions were tried here that seemed useful in the single-level equation, but they just wash out the results, many making the variance worse
+dv_var_table[14:19,1] <- "m06"
+dv_var_table[14:19,2] <- dvs
+dv_var_table[14:19,3] <- rep("~ logit + ols + Stock + ChangeFlow + w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable",6)
+dv_var_table[14:19,4] <- c(sum_r(m06_dv,1),sum_r(m06_dv,2),sum_r(m06_dv,3),sum_r(m06_dv,4),sum_r(m06_dv,5),sum_r(m06_dv,6))
+dv_var_table[14:19,5] <- c(sum_adjr(m06_dv,1),sum_adjr(m06_dv,2),sum_adjr(m06_dv,3),sum_adjr(m06_dv,4),sum_adjr(m06_dv,5),sum_adjr(m06_dv,6))
+dv_var_table[14:19,6] <- c(sum_cases(m06_dv,1),sum_cases(m06_dv,2),sum_cases(m06_dv,3),sum_cases(m06_dv,4),sum_cases(m06_dv,5),sum_cases(m06_dv,6))
 
-m06 <- lmer(paste0(m01vars, m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable +  (1 | team)"), data = cri_ml)
 
-m05v <- as.data.frame(VarCorr(m05))
-m06v <- as.data.frame(VarCorr(m06))
-
-
-m06vars <- "+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable"
 ```
 
 
 #### Model Design
 
-m07 estimator, mlm structure
-
-main IVs in same model or not (this causes one team to get dropped so we don't use it, didn't add anything when added anyways)
-
-m08 independent vars l2 selection
+Given such fewer cases we adjust the numbmer of variables
 
 ```{r subj_model_mlms}
+m08_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow + twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin)
 
-m07 <- lmer(paste0(m01vars, m04vars, m06vars, " + twowayfe + level_cyear + mlm_fe + mlm_re  + (1 | team)"), data = cri_ml)
-m08 <- lmer(paste0(m01vars, m04vars, m06vars, " + twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin + (1 | team) "), data = cri_ml)
-# tried ml_glm, w2016*twowayfe, bayes, un_emp_rate_ivC 
+dv_var_table[20:25,1] <- "m08x"
+dv_var_table[20:25,2] <- dvs
+dv_var_table[20:25,3] <- rep("~ logit + ols + Stock + ChangeFlow + twowayfe + mlm_fe + mlm_re  + gdp_ivC + anynonlin",6)
+dv_var_table[20:25,4] <- c(sum_r(m08_dv,1),sum_r(m08_dv,2),sum_r(m08_dv,3),sum_r(m08_dv,4),sum_r(m08_dv,5),sum_r(m08_dv,6))
+dv_var_table[20:25,5] <- c(sum_adjr(m08_dv,1),sum_adjr(m08_dv,2),sum_adjr(m08_dv,3),sum_adjr(m08_dv,4),sum_adjr(m08_dv,5),sum_adjr(m08_dv,6))
+dv_var_table[20:25,6] <- c(sum_cases(m08_dv,1),sum_cases(m08_dv,2),sum_cases(m08_dv,3),sum_cases(m08_dv,4),sum_cases(m08_dv,5),sum_cases(m08_dv,6))
 
-m07v <- as.data.frame(VarCorr(m07))
-m08v <- as.data.frame(VarCorr(m08))
 
-m07vars <- " + twowayfe + level_cyear + mlm_fe + mlm_re"
-m08vars <- "+ twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin"
-
-# mlm_fe + mlm_re doesn't help
-m07adj_vars <- " + twowayfe + level_cyear"
 ```
 
 
@@ -213,146 +214,24 @@ m07adj_vars <- " + twowayfe + level_cyear"
 
 Maximum variance explained
 
-It becomes clear that models 7 and 8 are detrimental to the variance explained,
-therefore the following results combine only with m06
-
-Using the R^2 'hacking' tool we found some combinations of these variables that maximized r^2 (m11)
-
-These probably need to be run independently, so that we see the reduction for each one.
+Again we use a modified version, dropping many variables from m08x
 
 ```{r res_aspects_mlms}
-m09 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ belief_ipred + (1 | team)"), data = cri_ml)
-m10 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ pro_immigrant +  (1 | team)"), data = cri_ml) 
+m12_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow + twowayfe + mlm_fe + belief_ipred + pro_immigrant + stats_ipred + topic_ipred + total_score)
 
-m11 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ topic_ipred + (1 | team)"), data = cri_ml) 
-
-m12 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ stats_ipred + (1 | team)"), data = cri_ml) 
-
-m13 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ total_score + (1 | team)"), data = cri_ml)
-
-m14 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ pro_immigrant + stats_ipred + (1 | team)"), data = cri_ml) 
-# even a cor of 0.19 is probably causing problems at the team-level with so few degrees of freedom
-#> cor(cri_ml$pro_immigrant,cri_ml$stats_ipred, use = "complete.obs")
-#[1] 0.1914521
-
-# m15 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ pro_immigrant + stats_ipred + (1 | team)"), data = cri_ml) 
-
-m09v <- as.data.frame(VarCorr(m09))
-m10v <- as.data.frame(VarCorr(m10))
-m11v <- as.data.frame(VarCorr(m11))
-m12v <- as.data.frame(VarCorr(m12))
-m13v <- as.data.frame(VarCorr(m13))
-m14v <- as.data.frame(VarCorr(m14))
-# m15v <- as.data.frame(VarCorr(m15))
+dv_var_table[26:31,1] <- "m12x"
+dv_var_table[26:31,2] <- dvs
+dv_var_table[26:31,3] <- rep("~ logit + ols + Stock + ChangeFlow + twowayfe + mlm_fe + belief_ipred + pro_immigrant + stats_ipred + topic_ipred + total_score",6)
+dv_var_table[26:31,4] <- c(sum_r(m12_dv,1),sum_r(m12_dv,2),sum_r(m12_dv,3),sum_r(m12_dv,4),sum_r(m12_dv,5),sum_r(m12_dv,6))
+dv_var_table[26:31,5] <- c(sum_adjr(m12_dv,1),sum_adjr(m12_dv,2),sum_adjr(m12_dv,3),sum_adjr(m12_dv,4),sum_adjr(m12_dv,5),sum_adjr(m12_dv,6))
+dv_var_table[26:31,6] <- c(sum_cases(m12_dv,1),sum_cases(m12_dv,2),sum_cases(m12_dv,3),sum_cases(m12_dv,4),sum_cases(m12_dv,5),sum_cases(m12_dv,6))
 
 
 ```
 
-### Combine All
+Save as table
 
-```{r comb_tbl}
-tab_model(m00,m01,m02,m04,m06,m07,m09,m10,m11,m12,m13, digits = 3, p.style = "stars", show.ci = F, file = "results/reg11.htm")
-
-reg11 <- as.data.frame(read_html("results/reg11.htm") %>% html_table(fill=TRUE))
-
-colnames(reg11) <- c("Effect", "m00","m01", "m02","m04", "m06","m07","m09","m10", "m11","m12","m13")
-
-
-# Add residual variance by level to model (extracted from VarCorr calls)
-# NOTE! This will not run properly if the number of variables changes above
-
-reg11[28,1] <- "Residual Variance"
-reg11[28,2:12] <- ""
-reg11[29,1] <- "Team-Level"
-reg11[29,2:12] <- round(as.numeric(c(m00v[1,4],m01v[1,4],m02v[1,4],m04v[1,4],
-                    m06v[1,4],m07v[1,4],m09v[1,4],m10v[1,4],
-                    m11v[1,4],m12v[1,4],m13v[1,4])),6)
-
-reg11[30,1] <- "Model-Level"
-reg11[30,2:12] <- round(as.numeric(c(m00v[nrow(m00v),4],m01v[nrow(m00v),4],m02v[nrow(m00v),4],
-                    m04v[nrow(m00v),4],m06v[nrow(m00v),4],m07v[nrow(m00v),4],
-                    m09v[nrow(m00v),4],m10v[nrow(m00v),4],m11v[nrow(m00v),4],
-                    m12v[nrow(m00v),4],m13v[nrow(m00v),4])),6
-                    )
-
-# calculate var reduction by level
-
-reg11[31,1] <- c("Total")
-
-reg11[31,2:12] <- round(as.numeric(reg11[29,2:12]) + as.numeric(reg11[30,2:12]),6)
-
-reg11[32,1] <- "Variance Explained"
-reg11[32,2:12] <- ""
-
-# capture p-value expression
-p <- reg11[35,1]
-
-reg11[33,1] <- "Team-Level"
-reg11[34,1] <- "Model-Level"
-reg11[35,1] <- "Total"
-
-reg11[33,2:12] <- round(1 - (as.numeric(reg11[29,2:12]) / as.numeric(reg11[29,2])),6)
-reg11[34,2:12] <- round(1 - (as.numeric(reg11[30,2:12]) / as.numeric(reg11[30,2])),6)
-reg11[35,2:12] <- round(1 - (as.numeric(reg11[31,2:12]) / as.numeric(reg11[31,2])),6)
-
-reg11[36,1] <- p
-reg11[36,2:12] <- ""
-
-kable_styling(kable(reg11))
-```
-
-```{r residual_var}
-
-# identify cases used in m13
-cri_ml$in_m13 <- TRUE
-cri_ml$in_m13[na.action(m13)] <- FALSE
-
-cri_ml_in <- subset(cri_ml, cri_ml$in_m13 == T)
-
-# predicted values with country-level intercepts, exclude RE?
-cri_ml_in$m13_p <- as.data.frame(predict(m13), newdata = cri_ml_in)
-
-
-```
-
-
-```{r variance_explained_table}
-
-tbl2_m <- as.data.frame(t(reg11))
-
-tbl2 <- as.data.frame((matrix(nrow = 22, ncol = 5)))
-
-tbl2[1,2:5] <- c("Average Marginal Effect, or equivalent","","","Subjective Conclusion about Hypothesis")
-tbl2[2,2:5] <- c("Team-Levela (n=87)","Model-Level (n=1,253)a","Total","Team-Levelb")
-tbl2[3:22,1] <- c("Observed Outcome Variance","% Variance Explained By:c","Objective Conditions","Structure of Materials Provided","Group Assignment","Researcher Decisions", "Measurement","Data and Sample","Model Specification","Researcher Attributes","Prior Belief in Hypothesis", "Pro-Immigration Attitude","Knowledge of Topic","Statistical Skills","Peer Model Ranking","","Unexplained Variance","aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems","bA team conclusion of 'Reject' is the reference category","cIn the case of team-level subjective hypothesis conclusion, the outcome is multinomial therefore the 'variance explained' is technically residual deviance")
-
-
-tbl2[3,2:4] <- as.numeric(tbl2_m[2,29:31])
-tbl2[6:7,2:4] <- tbl2_m[3:4,33:35]
-tbl2[9:11,2:4] <- tbl2_m[5:7,33:35]
-tbl2[13:17,2:4] <- tbl2_m[8:12,33:35]
-
-# Max variance by category
-tbl2[5,2] <- max(as.numeric(tbl2[6:7,2]))
-tbl2[5,3] <- max(as.numeric(tbl2[6:7,3]))
-tbl2[5,4] <- max(as.numeric(tbl2[6:7,4]))
-
-tbl2[8,2] <- max(as.numeric(tbl2[9:11,2]))
-tbl2[8,3] <- max(as.numeric(tbl2[9:11,3]))
-tbl2[8,4] <- max(as.numeric(tbl2[9:11,4]))
-
-tbl2[12,2] <- max(as.numeric(tbl2[13:17,2]))
-tbl2[12,3] <- max(as.numeric(tbl2[13:17,3]))
-tbl2[12,4] <- max(as.numeric(tbl2[13:17,4]))
-
-# unexplained variance as total - max
-tbl2[19,2] <- 1 - max(as.numeric(tbl2[6:17,2]))
-tbl2[19,3] <- 1 - max(as.numeric(tbl2[6:17,3]))
-tbl2[19,4] <- 1 - max(as.numeric(tbl2[6:17,4]))
-
-tbl2[18,] <- ""
-
-rm(tbl2_m)
-
+```{r output}
+write.csv(dv_var_table, file = "results/Tbl_DVspecific_variance_explained.csv")
 ```
 
