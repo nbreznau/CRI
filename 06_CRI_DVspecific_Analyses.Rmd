@@ -1,0 +1,358 @@
+---
+title: "Tech 6, DV-Specific Analyses"
+output: html_notebook
+---
+
+
+   
+
+```{r setup, include=FALSE, warning=F}
+
+rm(list = ls())
+library(pacman)
+
+#necessayr for nnet::multinom and tab_model to work together
+# install.packages("devtools")
+# devtools::install_github("easystats/insight")
+# devtools::install_github("easystats/effectsize")
+
+
+pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools","rvest","nnet","parameters","insight","effectsize","ggtext","mdthemes","ragg")
+
+# add in variance estimates (more than 2-digits)
+# disable scientific notation
+options(scipen = 999)
+
+# Column no missing function
+completeFun <- function(data, desiredCols) {
+  completeVec <- complete.cases(data[, desiredCols])
+  return(data[completeVec, ])
+}
+```
+
+## Data Prep
+
+These datasets were worked up from the file 01_CRI_Data_Prep.Rmd. 
+
+cri = numerical values
+cri_str = string values
+cri_team = team-level data (by conclusion)
+cri_team_combine = team-level data parsed by type of test variable (stock and flow)
+cri_indiv = participant-level data from our survey, identifying characteristics redacted
+
+### Load Data
+
+```{r load, warning=F,message=F}
+cri <- read.csv(file = "data/cri.csv", header = T)
+cri_str <- read.csv(file = "data/cri_str.csv", header = T)
+cri_indiv <- read.csv(file = "data/cri_indv.csv", header = T)
+
+# setup multilevel dataset
+
+cri_ml <- select(cri,u_teamid, id, u_delibtreatmentgroup1, AME:main_IV_source, main_IV_measurement:package, countries, Jobs:anynonlin,AME_Z,lower_Z,upper_Z,Hsup,Hrej,Hno,AME_sup_p05:AME_ns_p05,u_expgroup1,belief_strength:belief_ipred, HresultF, STATISTICS_SKILL, BELIEF_HYPOTHESIS, TOPIC_KNOWLEDGE, MODEL_SCORE, PRO_IMMIGRANT)
+
+# create a team ID variable to identify the independent tests by team. Again, 16 of 71 teams had independent conclusions - seeing stock v flow immigration measures as representative of independent tests of the hypothesis. Therefore, we have a team-test level that replaces the team level.
+
+cri_ml$team <- cri_ml %>% group_indices(u_teamid, HresultF)
+
+cri_ml <- select(cri_ml, u_teamid, id, team, AME_Z, upper_Z, lower_Z, everything())
+
+# remove team 0
+cri_ml <- subset(cri_ml, u_teamid != 0)
+
+
+```
+
+### Within and Between Variables
+
+```{r wandb, warning = F, message = F}
+cri_ml <- cri_ml %>%
+  group_by(team) %>%
+  mutate(AME_Z_b = mean(AME_Z, na.rm = T),
+         AME_Z_w =AME_Z-AME_Z_b,
+         jobs_b = mean(Jobs, na.rm = T),
+         unemp_b = mean(Unemp, na.rm = T),
+         incdiff_b = mean(IncDiff, na.rm = T),
+         oldage_b = mean(OldAge, na.rm = T),
+         house_b = mean(House, na.rm = T),
+         health_b = mean(Health, na.rm = T),
+         jobs_w = Jobs-jobs_b,
+         unemp_w = Unemp-unemp_b,
+         incdiff_w = IncDiff-incdiff_b,
+         oldage_w = OldAge-oldage_b,
+         house_w = House-house_b,
+         health_w = Health-health_b,
+         scale_b = mean(Scale, na.rm = T),
+         scale_w = Scale-scale_b,
+         un_emp_rate_ivC = ifelse(emplrate_ivC == 1 | unemprate_ivC == 1, 1, 0)) %>%
+  ungroup()
+
+# create factors for measurement
+cri_ml <- cri_ml %>%
+  mutate(main_IV_factor = as.factor(main_IV_measurement))
+
+# team 27 is missing the survey variables
+# as it is just one team, mean replacement should be fine
+cri_ml <- cri_ml %>%
+  mutate(stats_ipred = ifelse(is.na(stats_ipred), mean(stats_ipred, na.rm=T), stats_ipred),
+         belief_ipred = ifelse(is.na(belief_ipred), mean(belief_ipred, na.rm =T), belief_ipred),
+         topic_ipred = ifelse(is.na(topic_ipred), mean(topic_ipred, na.rm =T), topic_ipred))
+
+# split data by DV
+cri_ml_jobs <- subset(cri_ml, Jobs == 1 & Scale != 1)
+cri_ml_oldage <- subset(cri_ml, OldAge == 1 & Scale != 1)
+cri_ml_incdiff <- subset(cri_ml, IncDiff == 1 & Scale != 1)
+cri_ml_unemp <- subset(cri_ml, Unemp == 1 & Scale != 1)
+cri_ml_house <- subset(cri_ml, House == 1 & Scale != 1)
+cri_ml_health <- subset(cri_ml, Health == 1 & Scale != 1)
+
+```
+
+
+# Regresssion Approach to Explaining Variance by DV
+
+## Explaining Average Marginal Effects
+
+### Objective Conditions
+
+Here we consider re-run our main analyses independently by DV
+
+
+### Subjective Decisions
+
+#### Measurement
+
+The teams had several possibilities to measure the DV (or DVs) including linear, logit or multinomial. Also, immigration could be stock or flow and some teams elected for change in flow. A few teams used measures like refugee or non-western instead of simply foreign-born. These decisions are reflected here.
+
+note that logit is the only one that seems to matter, surprisingly the 'type' of measure does not matter (foreign-born, non-western, refugee, etc.; although there are far fewer models that do not simply use foreign-born)
+
+In the DV specific case there is often only one model per team, thus the multilevel structure is not helpful (mostly singular identification as a result). Therefore we switch to an lm (results are nearly identical because the random-intercepts at the team-level were zero)
+
+```{r subj_measurement_mlms}
+
+dvs <- c("Jobs","Unemp","IncDiff","OldAge","House","Health")
+#run regressions across all datasets
+
+m03_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ologit + lpm + mlogit + ols)
+
+m04_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow)
+
+# extract variance
+# make frame
+dv_var_table <- matrix(nrow = 30, ncol = 6)
+
+sum_adjr <- function(x) round(summary(m03_dv[[x]])[["adj.r.squared"]],3)
+sum_r <- function(x) round(summary(m03_dv[[x]])[["r.squared"]],3)
+sum_cases <- function(x) nobs(m03_dv[[x]])
+
+dv_var_table[1,1:6] <- c("Model","DV","Specs","r2","adj_r2","Cases")
+dv_var_table[2:7,2] <- dvs
+dv_var_table[2:7,3] <- rep("~ logit + ologit + lpm + mlogit + ols",6)
+dv_var_table[2:7,4] <- c(sum_r(1),sum_r(2),sum_r(3),sum_r(4),sum_r(5),sum_r(6))
+dv_var_table[2:7,5] <- c(sum_adjr(1),sum_adjr(2),sum_adjr(3),sum_adjr(4),sum_adjr(5),sum_adjr(6))
+dv_var_table[2:7,6] <- c(sum_cases(1),sum_cases(2),sum_cases(3),sum_cases(4),sum_cases(5),sum_cases(6))
+
+
+
+
+m04vars <- "+ logit + ols + Stock + ChangeFlow"
+
+```
+
+
+#### Data and Sample
+
+```{r subj_datasamp_mlms, warning = F}
+
+m05 <- lmer(paste0(m01vars, m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + (1 | team)"), data = cri_ml)
+
+# several interactions were tried here that seemed useful in the single-level equation, but they just wash out the results, many making the variance worse
+
+m06 <- lmer(paste0(m01vars, m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable +  (1 | team)"), data = cri_ml)
+
+m05v <- as.data.frame(VarCorr(m05))
+m06v <- as.data.frame(VarCorr(m06))
+
+
+m06vars <- "+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable"
+```
+
+
+#### Model Design
+
+m07 estimator, mlm structure
+
+main IVs in same model or not (this causes one team to get dropped so we don't use it, didn't add anything when added anyways)
+
+m08 independent vars l2 selection
+
+```{r subj_model_mlms}
+
+m07 <- lmer(paste0(m01vars, m04vars, m06vars, " + twowayfe + level_cyear + mlm_fe + mlm_re  + (1 | team)"), data = cri_ml)
+m08 <- lmer(paste0(m01vars, m04vars, m06vars, " + twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin + (1 | team) "), data = cri_ml)
+# tried ml_glm, w2016*twowayfe, bayes, un_emp_rate_ivC 
+
+m07v <- as.data.frame(VarCorr(m07))
+m08v <- as.data.frame(VarCorr(m08))
+
+m07vars <- " + twowayfe + level_cyear + mlm_fe + mlm_re"
+m08vars <- "+ twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin"
+
+# mlm_fe + mlm_re doesn't help
+m07adj_vars <- " + twowayfe + level_cyear"
+```
+
+
+### Researcher Aspects
+
+*belief_ipred* - Belief that Hypothesis is true (that immigration reduces support), team average of predicted factor scores
+*pro_immigrant* - Support laws to better integrate immigrants, team average, single question
+*topic_ipred* - Knowledge and experience with the topic of immigration and welfare state preferences, team average of predicted factor scores
+*stats_ipred* - Knowledge and experience with quantiative statistical analysis, team average of predicted factor scores
+*total_score* - Average score of each model from subjective voting amongst participants, each participant reviewed 3 to 4 models
+
+Maximum variance explained
+
+It becomes clear that models 7 and 8 are detrimental to the variance explained,
+therefore the following results combine only with m06
+
+Using the R^2 'hacking' tool we found some combinations of these variables that maximized r^2 (m11)
+
+These probably need to be run independently, so that we see the reduction for each one.
+
+```{r res_aspects_mlms}
+m09 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ belief_ipred + (1 | team)"), data = cri_ml)
+m10 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ pro_immigrant +  (1 | team)"), data = cri_ml) 
+
+m11 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ topic_ipred + (1 | team)"), data = cri_ml) 
+
+m12 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ stats_ipred + (1 | team)"), data = cri_ml) 
+
+m13 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ total_score + (1 | team)"), data = cri_ml)
+
+m14 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ pro_immigrant + stats_ipred + (1 | team)"), data = cri_ml) 
+# even a cor of 0.19 is probably causing problems at the team-level with so few degrees of freedom
+#> cor(cri_ml$pro_immigrant,cri_ml$stats_ipred, use = "complete.obs")
+#[1] 0.1914521
+
+# m15 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ pro_immigrant + stats_ipred + (1 | team)"), data = cri_ml) 
+
+m09v <- as.data.frame(VarCorr(m09))
+m10v <- as.data.frame(VarCorr(m10))
+m11v <- as.data.frame(VarCorr(m11))
+m12v <- as.data.frame(VarCorr(m12))
+m13v <- as.data.frame(VarCorr(m13))
+m14v <- as.data.frame(VarCorr(m14))
+# m15v <- as.data.frame(VarCorr(m15))
+
+
+```
+
+### Combine All
+
+```{r comb_tbl}
+tab_model(m00,m01,m02,m04,m06,m07,m09,m10,m11,m12,m13, digits = 3, p.style = "stars", show.ci = F, file = "results/reg11.htm")
+
+reg11 <- as.data.frame(read_html("results/reg11.htm") %>% html_table(fill=TRUE))
+
+colnames(reg11) <- c("Effect", "m00","m01", "m02","m04", "m06","m07","m09","m10", "m11","m12","m13")
+
+
+# Add residual variance by level to model (extracted from VarCorr calls)
+# NOTE! This will not run properly if the number of variables changes above
+
+reg11[28,1] <- "Residual Variance"
+reg11[28,2:12] <- ""
+reg11[29,1] <- "Team-Level"
+reg11[29,2:12] <- round(as.numeric(c(m00v[1,4],m01v[1,4],m02v[1,4],m04v[1,4],
+                    m06v[1,4],m07v[1,4],m09v[1,4],m10v[1,4],
+                    m11v[1,4],m12v[1,4],m13v[1,4])),6)
+
+reg11[30,1] <- "Model-Level"
+reg11[30,2:12] <- round(as.numeric(c(m00v[nrow(m00v),4],m01v[nrow(m00v),4],m02v[nrow(m00v),4],
+                    m04v[nrow(m00v),4],m06v[nrow(m00v),4],m07v[nrow(m00v),4],
+                    m09v[nrow(m00v),4],m10v[nrow(m00v),4],m11v[nrow(m00v),4],
+                    m12v[nrow(m00v),4],m13v[nrow(m00v),4])),6
+                    )
+
+# calculate var reduction by level
+
+reg11[31,1] <- c("Total")
+
+reg11[31,2:12] <- round(as.numeric(reg11[29,2:12]) + as.numeric(reg11[30,2:12]),6)
+
+reg11[32,1] <- "Variance Explained"
+reg11[32,2:12] <- ""
+
+# capture p-value expression
+p <- reg11[35,1]
+
+reg11[33,1] <- "Team-Level"
+reg11[34,1] <- "Model-Level"
+reg11[35,1] <- "Total"
+
+reg11[33,2:12] <- round(1 - (as.numeric(reg11[29,2:12]) / as.numeric(reg11[29,2])),6)
+reg11[34,2:12] <- round(1 - (as.numeric(reg11[30,2:12]) / as.numeric(reg11[30,2])),6)
+reg11[35,2:12] <- round(1 - (as.numeric(reg11[31,2:12]) / as.numeric(reg11[31,2])),6)
+
+reg11[36,1] <- p
+reg11[36,2:12] <- ""
+
+kable_styling(kable(reg11))
+```
+
+```{r residual_var}
+
+# identify cases used in m13
+cri_ml$in_m13 <- TRUE
+cri_ml$in_m13[na.action(m13)] <- FALSE
+
+cri_ml_in <- subset(cri_ml, cri_ml$in_m13 == T)
+
+# predicted values with country-level intercepts, exclude RE?
+cri_ml_in$m13_p <- as.data.frame(predict(m13), newdata = cri_ml_in)
+
+
+```
+
+
+```{r variance_explained_table}
+
+tbl2_m <- as.data.frame(t(reg11))
+
+tbl2 <- as.data.frame((matrix(nrow = 22, ncol = 5)))
+
+tbl2[1,2:5] <- c("Average Marginal Effect, or equivalent","","","Subjective Conclusion about Hypothesis")
+tbl2[2,2:5] <- c("Team-Levela (n=87)","Model-Level (n=1,253)a","Total","Team-Levelb")
+tbl2[3:22,1] <- c("Observed Outcome Variance","% Variance Explained By:c","Objective Conditions","Structure of Materials Provided","Group Assignment","Researcher Decisions", "Measurement","Data and Sample","Model Specification","Researcher Attributes","Prior Belief in Hypothesis", "Pro-Immigration Attitude","Knowledge of Topic","Statistical Skills","Peer Model Ranking","","Unexplained Variance","aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems","bA team conclusion of 'Reject' is the reference category","cIn the case of team-level subjective hypothesis conclusion, the outcome is multinomial therefore the 'variance explained' is technically residual deviance")
+
+
+tbl2[3,2:4] <- as.numeric(tbl2_m[2,29:31])
+tbl2[6:7,2:4] <- tbl2_m[3:4,33:35]
+tbl2[9:11,2:4] <- tbl2_m[5:7,33:35]
+tbl2[13:17,2:4] <- tbl2_m[8:12,33:35]
+
+# Max variance by category
+tbl2[5,2] <- max(as.numeric(tbl2[6:7,2]))
+tbl2[5,3] <- max(as.numeric(tbl2[6:7,3]))
+tbl2[5,4] <- max(as.numeric(tbl2[6:7,4]))
+
+tbl2[8,2] <- max(as.numeric(tbl2[9:11,2]))
+tbl2[8,3] <- max(as.numeric(tbl2[9:11,3]))
+tbl2[8,4] <- max(as.numeric(tbl2[9:11,4]))
+
+tbl2[12,2] <- max(as.numeric(tbl2[13:17,2]))
+tbl2[12,3] <- max(as.numeric(tbl2[13:17,3]))
+tbl2[12,4] <- max(as.numeric(tbl2[13:17,4]))
+
+# unexplained variance as total - max
+tbl2[19,2] <- 1 - max(as.numeric(tbl2[6:17,2]))
+tbl2[19,3] <- 1 - max(as.numeric(tbl2[6:17,3]))
+tbl2[19,4] <- 1 - max(as.numeric(tbl2[6:17,4]))
+
+tbl2[18,] <- ""
+
+rm(tbl2_m)
+
+```
+
