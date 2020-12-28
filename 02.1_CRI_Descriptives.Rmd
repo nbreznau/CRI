@@ -289,3 +289,34 @@ knitr::include_graphics("results/Tbl1_cor.png")
 
 ```
 
+#### Basic Descriptive Visualization of Outcomes
+
+```{r hist_results_basic}
+cri0 <- subset(cri, u_teamid != 0) %>%
+  # recode outliers to make better histogram
+  mutate(AME_Zc = ifelse(AME_Z > 0.125, 0.15, ifelse(AME_Z < -0.125, -0.15, AME_Z)))
+
+  
+g1 <-  ggplot(data = cri0) +
+  #geom_density(aes(x = AME)) +
+  geom_histogram(aes(x = AME_Zc), breaks = c(-0.15,-0.125,-0.0625,-0.03125,-0.015625,-0.0078125,-0.00390625,0,0.00390625,0.0078125,0.015625,0.03125,0.0625,0.125,0.15)) +
+  labs(x = "Model Results as Average Marginal Effects") +
+  annotate("text", x = -0.15, y = 55, label = "AME < -0.15\ncombined", size = 2.5, hjust = 0) +
+  geom_segment(aes(x = -0.14, y = 40, xend = -0.14, yend = 15), arrow = arrow(length = unit(0.3, "cm"))) +
+  annotate("text", x = 0.15, y = 55, label = "AME > 0.15\ncombined", size = 2.5, hjust = 1) +
+  geom_segment(aes(x = 0.14, y = 40, xend = 0.14, yend = 22), arrow = arrow(length = unit(0.3, "cm"))) +
+  theme_classic()
+  
+g2 <- ggplot(data = cri_team0) +
+  geom_bar(aes(x = Hresult)) +
+  labs(x = "Team Conclusion about Hypothesis Test", y = "") +
+  scale_x_discrete(labels=c("Not testable","Reject","Support")) +
+  theme_classic()
+
+agg_png(filename = "results/FigS5.png", res = 144, width = 1000)
+ggpubr::ggarrange(g1,g2, labels = c("A","B"))
+dev.off()
+
+knitr::include_graphics("results/FigS5.png")
+```
+
