@@ -62,6 +62,12 @@ cri_ml <- select(cri_ml, u_teamid, id, team, AME_Z, upper_Z, lower_Z, everything
 cri_ml <- subset(cri_ml, u_teamid != 0)
 cri_team <- subset(cri_team, u_teamid != 0)
 
+#mean replace team 27
+cri_team <- cri_team %>%
+  mutate(belief_ipred = ifelse(is.na(belief_ipred), mean(belief_ipred, na.rm = T), belief_ipred),
+         topic_ipred = ifelse(is.na(topic_ipred), mean(topic_ipred, na.rm = T), topic_ipred),
+         stats_ipred = ifelse(is.na(stats_ipred), mean(stats_ipred, na.rm = T), stats_ipred),)
+
 ```
 
 ### Within and Between Variables
@@ -254,13 +260,14 @@ m14v <- as.data.frame(VarCorr(m14))
 ### Combine All
 
 ```{r comb_tbl}
-tab_model(m00,m01,m02,m04,m06,m07,m09,m10,m11,m12,m13, digits = 3, p.style = "stars", show.ci = F, file = "results/reg11.htm")
+tab_model(m00,m01,m02,m04,m06,m07,m09,m10,m11,m12,m13, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = "results/reg11.htm")
 
 reg11 <- as.data.frame(read_html("results/reg11.htm") %>% html_table(fill=TRUE))
 
 colnames(reg11) <- c("Effect", "m00","m01", "m02","m04", "m06","m07","m09","m10", "m11","m12","m13")
 
-
+aiclog <- reg11[35:36,]
+reg11 <- reg11[-c(35,36),]
 # Add residual variance by level to model (extracted from VarCorr calls)
 # NOTE! This will not run properly if the number of variables changes above
 
@@ -302,6 +309,12 @@ reg11[36,1] <- p
 reg11[36,2:12] <- ""
 
 kable_styling(kable(reg11))
+
+# Added AIC,LL later = separate file
+write.csv(aiclog, file = "results/Tbl_AME_Spec_Reg_LL.csv")
+
+
+write.csv(reg11, file = "results/Tbl_AME_Specification_Regressions.csv")
 ```
 
 ```{r residual_var}
@@ -373,9 +386,9 @@ m00m <- multinom(Hresult ~ 1 , data = cri_team)
 m01m <- multinom(Hresult ~ Jobs + IncDiff + House , data = cri_team)
 m02m <- multinom(Hresult ~ Jobs + IncDiff + House + u_expgroup1 + u_delibtreatmentgroup1, data = cri_team)
 
-m00d <- summary(m00)
-m01d <- summary(m01)
-m02d <- summary(m02)
+m00d <- summary(m00m)
+m01d <- summary(m01m)
+m02d <- summary(m02m)
 
 m01vars <- "Hresult ~ Jobs + IncDiff + House"
 
@@ -451,6 +464,8 @@ Using the R^2 'hacking' tool we found some combinations of these variables that 
 
 These probably need to be run independently, so that we see the reduction for each one.
 
+Mean replacement for team 27
+
 ```{r res_aspects_mlmsm,  results=F}
 m09m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + belief_ipred  , data = cri_team)
 
@@ -476,23 +491,60 @@ m14d <- summary(m14m)
 ### Combine All
 
 ```{r comb_tblm}
-tab_model(m00m,m01m,m02m,m04m,m06m,m08m, digits = 3, p.style = "stars", show.ci = F, show.dev = T, show.aic = T, transform = NULL, file = "results/reg22.htm")
+tab_model(m00m,m01m,m02m,m04m,m06m,m08m, digits = 3, p.style = "stars", show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = "results/reg22.htm")
 
-tab_model(m00m,m09m,m10m,m11m,m12m,m13m,m14m, digits = 3, p.style = "stars", show.ci = F, show.dev = T, show.aic = T, transform = NULL, file = "results/reg23.htm")
+tab_model(m00m,m09m,m10m,m11m,m12m,m13m,m14m, digits = 3, p.style = "stars", show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = "results/reg23.htm")
 
+# First part of table (table too big to be in one)
 reg22 <- as.data.frame(read_html("results/reg22.htm") %>% html_table(fill=TRUE))
-
-reg23 <- as.data.frame(read_html("results/reg23.htm") %>% html_table(fill=TRUE))
 
 # problem with tab_model, opened a claim on GitHub, for now remove duplicate rows
 
-reg22 <- reg22 %>%
-  distinct(Hresult, Hresult.1,Hresult.3,Hresult.8,Hresult.9, .keep_all = T)
+# set aside model stats
+reg22s <- reg22[(length(reg22$Var.1)-4):(length(reg22$Var.1)),]
+reg22a <- reg22[-c((length(reg22$Var.1)-4):(length(reg22$Var.1))),]
 
-reg23 <- reg23 %>%
-  distinct(Hresult, Hresult.1,Hresult.10,Hresult.11, .keep_all = T)
+# drop extra rows, this is horribly ineefficient but gets it done for now
+reg22a <- reg22a %>%
+  mutate(drop = ifelse(Var.1 == "(Intercept)" & Hresult.1 == "No test" & Hresult.3 == "No test" & Hresult.5 == "No test" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "(Intercept)" & Hresult.1 == "Reject" & Hresult.3 == "Reject" & Hresult.5 == "Reject" & Hresult.7 == "Reject" & Hresult.9 == "Reject" & Hresult.11 == "Reject", 1, ifelse(Var.1 == "Jobs" & Hresult.3 == "No test" & Hresult.5 == "No test" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "Jobs" & Hresult.3 == "Reject" & Hresult.5 == "Reject" & Hresult.7 == "Reject" & Hresult.9 == "Reject" & Hresult.11 == "Reject", 1,  ifelse(Var.1 == "House" & Hresult.3 == "No test" & Hresult.5 == "No test" & Hresult.7 == "No test" & Hresult.9 == "No test", 1, ifelse(Var.1 == "House" & Hresult.3 == "Reject" & Hresult.5 == "Reject" & Hresult.7 == "Reject" & Hresult.9 == "Reject", 1, ifelse(Var.1 == "IncDiff" & Hresult.3 == "No test" & Hresult.5 == "No test" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "IncDiff" & Hresult.3 == "Reject" & Hresult.5 == "Reject" & Hresult.7 == "Reject" & Hresult.9 == "Reject" & Hresult.11 == "Reject", 1, ifelse(Var.1 == "Stock" & Hresult.7 == "Reject" & Hresult.9 == "Reject" & Hresult.11 == "Reject", 1, ifelse(Var.1 == "Stock" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "ChangeFlow" & Hresult.7 == "Reject" & Hresult.9 == "Reject" & Hresult.11 == "Reject", 1, ifelse(Var.1 == "ChangeFlow" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "logit" & Hresult.7 == "Reject" & Hresult.9 == "Reject" & Hresult.11 == "Reject", 1, ifelse(Var.1 == "logit" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "ols" & Hresult.7 == "Reject" & Hresult.9 == "Reject" & Hresult.11 == "Reject", 1, ifelse(Var.1 == "ols" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "eeurope" & Hresult.9 == "Reject" & Hresult.11 == "Reject", 1, ifelse(Var.1 == "eeurope" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "ols" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "orig13" & Hresult.9 == "Reject" & Hresult.11 == "Reject", 1,  ifelse(Var.1 == "orig13" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "w2006" & Hresult.9 == "Reject" & Hresult.11 == "Reject", 1, ifelse(Var.1 == "w2006" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "w2016" & Hresult.9 == "Reject" & Hresult.11 == "Reject", 1, ifelse(Var.1 == "w2016" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "allavailable" & Hresult.9 == "Reject" & Hresult.11 == "Reject", 1, ifelse(Var.1 == "allavailable" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "mlm_fe" | Var.1 == "level_cyear" | Var.1 == "twowayfe" | Var.1 == "u_expgroup1" | Var.1 == "u_delibtreatmentgroup1" | Var.1 == "anynonlin", 1, 0)))))))))))))))))))))))))))))
+
+reg22a <- subset(reg22a, drop == 1)
+
+reg22a <- reg22a %>%
+  mutate(Hresult.11 = ifelse(Var.1 == "House" & Hresult.3 == "Reject", "Reject", 
+                             ifelse(Var.1 == "House" & Hresult.3 == "No test", "No test", 
+                                    ifelse(Var.1 == "u_expgroup1" & Hresult.5 == "Reject", "Reject", 
+                                           ifelse(Var.1 == "u_expgroup1" & Hresult.5 == "No test", "No test", 
+                                                  ifelse(Var.1 == "u_delibtreatmentgroup1" & Hresult.5 == "Reject", "Reject", 
+                                                         ifelse(Var.1 == "u_delibtreatmentgroup1" & Hresult.5 == "No test", "No test", Hresult.11)))))))
+
+reg22a <- reg22a[order(reg22a$Hresult.11), -c(ncol(reg22a))]
+
+# add statistic back in
+reg22a <- rbind(reg22a, reg22s)
+reg22a[nrow(reg22a),2:(ncol(reg22a))] <- ""
 
 colnames(reg22) <- c("Effect", "m00m_coef","m00m_chc","m01m_coef","m01m_chc","m02m_coef","m02m_chc","m04m_coef","m04m_chc","m06m_coef","m06m_chc","m08m_coef","m08m_chc")
+
+write.csv(reg22a, file = "results/Tbl_Multinom1.csv")
+
+# Second part of table
+reg23 <- as.data.frame(read_html("results/reg23.htm") %>% html_table(fill=TRUE))
+
+reg23s <- reg23[(length(reg23$Var.1)-4):(length(reg23$Var.1)),]
+reg23a <- reg23[-c((length(reg23$Var.1)-4):(length(reg23$Var.1))),]
+
+reg23a <- reg23a %>%
+  mutate(drop = ifelse(Hresult.1 != "" & Hresult.1 == "Reject" & Hresult.3 == "Reject" & Hresult.5 == "Reject" & Hresult.7 == "Reject" & Hresult.9 == "Reject" & Hresult.11 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Hresult.1 != "" & Hresult.1 == "No test" & Hresult.3 == "No test" & Hresult.5 == "No test" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test" & Hresult.13 == "No test", 1, ifelse(Hresult.1 == "" & Hresult.3 == "Reject" & Hresult.5 == "Reject" & Hresult.7 == "Reject" & Hresult.9 == "Reject" & Hresult.11 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Hresult.1 == "" & Hresult.3 == "No test" & Hresult.5 == "No test" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "belief_ipred" & Hresult.3 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Var.1 == "belief_ipred" & Hresult.3 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "pro_immigrant" & Hresult.5 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Var.1 == "pro_immigrant" & Hresult.5 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "topic_ipred" & Hresult.7 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Var.1 == "topic_ipred" & Hresult.7 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "stats_ipred" & Hresult.9 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Var.1 == "stats_ipred" & Hresult.9 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "total_score", 1, 0))))))))))))))
+
+reg23a <- reg23a %>%
+  mutate(Hresult.13 = ifelse(Var.1 == "total_score" & Hresult.11 == "Reject", "Reject", ifelse(Var.1 == "total_score" & Hresult.11 == "No test", "No test", Hresult.13)))
+
+reg23a <- subset(reg23a, drop == 1)
+
+reg23a <- reg23a[order(reg23a$Hresult.13), -c(ncol(reg23a))]
+reg23a <- rbind(reg23a, reg23s)
+reg23a[nrow(reg23a),2:(ncol(reg23a))] <- ""
 
 colnames(reg23) <- c("Effect","m00m_coef","m01m_chc", "m09m_coef","m09m_chc","m10m_coef","m10m_chc","m11m_coef","m11m_chc","m12m_coef","m12m_chc","m13m_coef","m13m_chc","m14m_coef","m14m_chc")
 
@@ -502,7 +554,7 @@ colnames(reg23) <- c("Effect","m00m_coef","m01m_chc", "m09m_coef","m09m_chc","m1
 reg22[nrow(reg22)+1,1] <- "Pct Dev Reduction"
 reg23[nrow(reg23)+1,1] <- "Pct Dev Reduction"
 
-
+write.csv(reg23a, file = "results/Tbl_Multinom2.csv")
 
 #kable_styling(kable())
 ```
@@ -731,6 +783,12 @@ tbl2[c(5,8),5] <- tbl2[c(7,11),5]
 
 # calculate unexplained dev
 tbl2[19,5] <- 1 - as.numeric(tbl2[12,5])
+
+#save versions for Supplementary Materials
+
+write.csv(reg22, file = "results/Tbl_Multinom1.csv")
+write.csv(reg23, file = "results/Tbl_Multinom2.csv")
+
 
 ```
 

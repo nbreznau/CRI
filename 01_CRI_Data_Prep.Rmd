@@ -44,14 +44,23 @@ We set up two versions here: *cri* and *cri_str*. One is for dichotomous numeric
 
 
 
-```{r load}
+```{r load, warning = F}
 # Data generated from qualitative model specification coding
 cri_str <- read_excel("data/CRI Model Specifications and Margins.xlsx", sheet = "Data")
+# Merge in team size variable
+
+teamsize <- read.csv(file = "data/teamsize.csv", header = T)
+
+cri_str <- left_join(cri_str, teamsize, by = "u_teamid")
 
 # replace p values of 0.000000 with 0.00001
 cri_str <- cri_str %>%
   mutate(p = ifelse(p < 0.00001, 0.00001,p))
 ```
+### Sample Note
+
+Our final sample includes `r length(unique(cri_str$u_teamid))` teams that submitted `r length(cri_str$u_teamid[cri_str$u_teamid != 0]) + 1` models. Of those teams, one did not conduct the hypothesis test based on a failed measurement invariance test, another had all their `r length(cri_str$u_teamid[cri_str$u_teamid == 1])` models fail to converge and one other had one model out of several fail to converge. The result was `r length(unique(cri_str$u_teamid)) - 2` teams with numeric results of their hypothesis tests out of `r length(cri_str$u_teamid[!is.na(cri_str$AME) & cri_str$u_teamid != 0])` models generated from `r sum(teamsize$team_size[teamsize$u_teamid != 0])` researchers with an average of `r round(sum(cri_str$team_size[cri_str$u_teamid != 0])/length(cri_str$id[cri_str$u_teamid != 0]),3)` researchers per team.
+
 
 ### Standardization
 
@@ -60,6 +69,8 @@ We face a problem that a one percent change in net migration (within-country) is
 Standardization will produce some extreme outliers, so a 'better' strategy is to adjust the sd of Flow to be equal to that of Stock. However, there are some wide outliers in stock that bunches up the dispersion of flow, therefore we need the sd without these extreme outliers
 
 ```{r standardizeDV, warning = F, message = F}
+rm(teamsize)
+
 # Team 104 is massive outlier, we have to rescale the estimates
 cri_str <- cri_str %>%
   mutate(AME = ifelse(id == "t104m2" | id == "t104m4", AME/10, AME),
@@ -346,7 +357,7 @@ cri_part <- select(cri_part, u_teamid, belief1:pro_immigrant)
 Note we take the MAX for topic & statistics, MEAN for belief and pro-immigrant
 
 
-```{r recodes, warning=F, message=F}
+```{r recodes1, warning=F, message=F}
 
 #Generate team-specific qualities
 
@@ -400,19 +411,83 @@ cri <- cri %>%
 ```
 
 
-### Merge in team size variable
 
-```{r teamsize}
 
-teamsize <- read.csv(file = "data/teamsize.csv", header = T)
+## Researcher Characteristics
 
-cri <- left_join(cri, teamsize, by = "u_teamid")
+### Overview
 
-rm(teamsize, cri2)
+We create a table of selected characteristics to allow the readers to familiarize themselves with the researcher Participants. 
 
+```{r aspect_overview}
+cri <- cri %>%
+  mutate(belief_1_avg = mean(c(belief_H1_11,belief_H1_12,belief_H1_13), na.rm = T),
+         belief_2_avg = mean(c(belief_H1_21,belief_H1_22,belief_H1_23), na.rm = T),
+         belief_1_avg = ifelse(belief_1_avg == "NaN", NA, belief_1_avg),
+         belief_2_avg = ifelse(belief_2_avg == "NaN", NA, belief_2_avg),
+         topic4 = ifelse(topic4 == "-Inf", NA, topic4))
+
+
+cri_r_aspects1 <- cri %>%
+  subset(., u_teamid != 0) %>%
+  ungroup() %>%
+  summarize(belief_1 = round(mean(belief_1_avg, na.rm = T),1),
+          belief_2 = round(mean(belief_2_avg, na.rm = T),1),
+          pro_immigrant_mean = round(mean(pro_immigrant, na.rm = T),1),
+          taught_stat_courses = round(mean(stat4, na.rm = T),1),
+          mlm_familiarity = round(mean(stat5, na.rm = T),1),
+          stat_pubs = round(mean(stat6, na.rm = T),1),
+          topic_interest = round(mean(topic4, na.rm = T),1),
+          topic_imm_pubs = round(mean(topic1, na.rm = T),1),
+          topic_policy_pubs = round(mean(topic2, na.rm = T),1))
+
+cri_r_aspects2 <- cri %>%
+  subset(., u_teamid != 0) %>%
+  ungroup() %>%
+  summarize(belief_1_sd = round(sd(belief_1_avg, na.rm = T),1),
+          belief_2_sd = round(sd(belief_2_avg, na.rm = T),1),
+          pro_immigrant_sd = round(sd(pro_immigrant, na.rm = T),1),
+          taught_stat_courses_sd = round(sd(stat4, na.rm = T),1),
+          mlm_familiarity_sd = round(sd(stat5, na.rm = T),1),
+          stat_pubs_sd = round(sd(stat6, na.rm = T),1),
+          topic_interest_sd = round(sd(topic4, na.rm = T),1),
+          topic_imm_pubs_sd = round(sd(topic1, na.rm = T),1),
+          topic_policy_pubs_sd = round(sd(topic2, na.rm = T),1))
+
+cri_r_aspects3 <- cri %>%
+  subset(., u_teamid != 0) %>%
+  ungroup() %>%
+  summarize(belief_1_min = 1,
+          belief_2_min = 1,
+          pro_immigrant_min = min(pro_immigrant, na.rm = T),
+          taught_stat_courses_min = min(stat4, na.rm = T),
+          mlm_familiarity_min = min(stat5, na.rm = T),
+          stat_pubs_min = min(stat6, na.rm = T),
+          topic_interest_min = min(topic4, na.rm = T),
+          topic_imm_pubs_min = min(topic1, na.rm = T),
+          topic_policy_pubs_min = min(topic2, na.rm = T))
+
+cri_r_aspects4 <- cri %>%
+  subset(., u_teamid != 0) %>%
+  ungroup() %>%
+  summarize(belief_1_max = 5,
+          belief_2_max = 5,
+          pro_immigrant_max = max(pro_immigrant, na.rm = T),
+          taught_stat_courses_max = max(stat4, na.rm = T),
+          mlm_familiarity_max = max(stat5, na.rm = T),
+          stat_pubs_max = max(stat6, na.rm = T),
+          topic_interest_max = max(topic4, na.rm = T),
+          topic_imm_pubs_max = max(topic1, na.rm = T),
+          topic_policy_pubs_max = max(topic2, na.rm = T))
+
+cri_r_aspects <- cbind(t(cri_r_aspects1), t(cri_r_aspects2), t(cri_r_aspects3), t(cri_r_aspects4))
+
+kable(cri_r_aspects)
+
+write.csv(cri_r_aspects, file = "results/tbl_rcharacteristics_small.csv")
+          
 ```
 
-### Make Scales of Team Qualities
 
 ### Mesaurement of Participant Team Qualities
 
