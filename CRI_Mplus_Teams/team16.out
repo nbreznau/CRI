@@ -1,0 +1,1222 @@
+Mplus VERSION 8.2
+MUTHEN & MUTHEN
+12/31/2019   9:41 AM
+
+INPUT INSTRUCTIONS
+
+    TITLE:
+    Team 16;
+
+    DATA:
+    FILE = C:/data/t16.csv;
+    LISTWISE = ON;
+
+    VARIABLE:
+    NAMES = country wave
+    old unemp inc jobs
+    female age age2
+    eduP eduS eduT      !tertiary as reference
+    gdp_o gdp_wb
+    stock_wb stock_un
+    stock_o
+    net_un
+    employ
+    socx;
+
+    USEVARIABLES = old unemp inc jobs
+    female age age2
+    eduP eduS
+    gdp_o
+    stock_un
+    !net_un
+    employ
+    socx
+    cw;
+
+    MISSING = all (-99);
+
+    !CATEGORICAL = old unemp inc jobs;
+
+    WITHIN = female age age2
+    eduP eduS;
+
+    BETWEEN = gdp_o
+    stock_un
+    !net_un
+    employ
+    socx;
+
+    CLUSTER = cw;
+
+    DEFINE:
+    if (old > 4) then old = 3;
+    age2 = age2/100;
+    gdp_o = gdp_o/1000;
+    cw = country * wave;
+    unemp = (-1*unemp)+5;
+    old = (-1*old)+5;
+    inc = (-1*inc)+5;
+    jobs = (-1*jobs)+5;
+
+    ANALYSIS:
+    TYPE = TWOLEVEL;
+    ESTIMATOR = BAYES;
+    PROCESSORS = 2;
+    !BITERATIONS=(10000);
+    !PARAMETERIZATION = THETA;
+
+    MODEL:
+    %WITHIN%
+    attw by unemp old inc jobs;
+
+    attw on female age age2
+    eduP eduS;
+
+    %BETWEEN%
+    attb by unemp old inc jobs;
+
+    attb on gdp_o stock_un
+    !net_un
+    employ socx;
+
+    OUTPUT:
+    RESIDUAL STDYX TECH1 TECH4;
+
+
+
+INPUT READING TERMINATED NORMALLY
+
+
+
+
+Team 16;
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                       51265
+
+Number of dependent variables                                    4
+Number of independent variables                                  9
+Number of continuous latent variables                            2
+
+Observed dependent variables
+
+  Continuous
+   OLD         UNEMP       INC         JOBS
+
+Observed independent variables
+   FEMALE      AGE         AGE2        EDUP        EDUS        GDP_O
+   STOCK_UN    EMPLOY      SOCX
+
+Continuous latent variables
+   ATTW        ATTB
+
+Variables with special functions
+
+  Cluster variable      CW
+
+  Within variables
+   FEMALE      AGE         AGE2        EDUP        EDUS
+
+  Between variables
+   GDP_O       STOCK_UN    EMPLOY      SOCX
+
+
+Estimator                                                    BAYES
+Specifications for Bayesian Estimation
+  Point estimate                                            MEDIAN
+  Number of Markov chain Monte Carlo (MCMC) chains               2
+  Random seed for the first chain                                0
+  Starting value information                           UNPERTURBED
+  Algorithm used for Markov chain Monte Carlo           GIBBS(PX1)
+  Convergence criterion                                  0.500D-01
+  Maximum number of iterations                               50000
+  K-th iteration used for thinning                               1
+
+Input data file(s)
+  C:/data/t16.csv
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of clusters                         40
+
+       Size (s)    Cluster ID with Size s
+
+        717        248744
+        727        782432
+        785        1656956
+        834        1648696 1059168
+        879        746232
+        898        1516536
+        922        247504
+        933        742512
+        943        1524096
+        952        1105784
+        954        786352
+        992        493476
+       1002        72576
+       1019        1516032
+       1035        1111324
+       1038        1500992
+       1043        1508512
+       1048        1676640
+       1049        495936
+       1109        499000
+       1134        1165248
+       1151        417248
+       1171        1153688
+       1224        1159468
+       1291        1693440
+       1297        1665216
+       1327        504000
+       1407        553656
+       1422        1685040
+       1493        556416
+       1577        501500
+       1693        1459584
+       1736        1243720
+       1768        71856
+       2125        1508976
+       2165        1445104
+       2286        72216
+       2307        1452344
+       2978        550896
+
+
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     OLD                   3.247      -0.683       1.000    1.81%       3.000      3.000      3.000
+           51265.000       0.647      -0.527       4.000   45.92%       4.000      4.000
+     UNEMP                 2.946      -0.523       1.000    5.90%       2.000      3.000      3.000
+           51265.000       0.685      -0.189       4.000   25.80%       3.000      4.000
+     INC                   2.973      -0.568       1.000    9.89%       2.000      3.000      3.000
+           51265.000       0.970      -0.772       4.000   37.29%       3.000      4.000
+     JOBS                  2.753      -0.286       1.000   13.22%       2.000      3.000      3.000
+           51265.000       0.999      -1.000       4.000   27.44%       3.000      4.000
+     FEMALE                0.507      -0.030       0.000   49.25%       0.000      0.000      1.000
+           51265.000       0.250      -1.999       1.000   50.75%       1.000      1.000
+     AGE                  48.189       0.153      15.000    0.04%      32.000     42.000     48.000
+           51265.000     283.709      -0.833      97.000    0.01%      53.000     64.000
+     AGE2                 26.059       0.740       2.250    0.04%      10.240     17.640     23.040
+           51265.000     287.005      -0.110      94.090    0.01%      28.090     40.960
+     EDUP                  0.195       1.540       0.000   80.51%       0.000      0.000      0.000
+           51265.000       0.157       0.372       1.000   19.49%       0.000      0.000
+     EDUS                  0.420       0.323       0.000   57.97%       0.000      0.000      0.000
+           51265.000       0.244      -1.896       1.000   42.03%       1.000      1.000
+     GDP_O                35.752       0.456      16.915    2.50%      23.955     30.844     34.662
+              40.000     137.117      -0.525      63.889    2.50%      37.468     44.865
+     STOCK_UN             12.957       0.570       1.139    2.50%       7.271     10.683     11.930
+              40.000      46.396      -0.080      29.307    2.50%      13.111     17.024
+     EMPLOY               57.917      -1.101      39.832    2.50%      52.850     57.898     59.225
+              40.000      32.162       0.953      65.382    2.50%      60.506     62.259
+     SOCX                 21.587       0.464      14.500    2.50%      16.700     19.100     20.600
+              40.000      21.834      -0.904      31.500    2.50%      21.500     25.900
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+     USE THE FBITERATIONS OPTION TO INCREASE THE NUMBER OF ITERATIONS BY A FACTOR
+     OF AT LEAST TWO TO CHECK CONVERGENCE AND THAT THE PSR VALUE DOES NOT INCREASE.
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                              29
+
+Bayesian Posterior Predictive Checking using Chi-Square
+
+          95% Confidence Interval for the Difference Between
+          the Observed and the Replicated Chi-Square Values
+
+                               1190.996          1293.798
+
+          Posterior Predictive P-Value              0.000
+
+Information Criteria
+
+          Deviance (DIC)                       463653.063
+          Estimated Number of Parameters (pD)     165.894
+
+
+
+MODEL RESULTS
+
+                                Posterior  One-Tailed         95% C.I.
+                    Estimate       S.D.      P-Value   Lower 2.5%  Upper 2.5%  Significance
+
+Within Level
+
+ ATTW     BY
+    UNEMP              1.000       0.000      0.000       1.000       1.000
+    OLD                0.618       0.008      0.000       0.602       0.634      *
+    INC                1.320       0.015      0.000       1.291       1.350      *
+    JOBS               1.228       0.014      0.000       1.201       1.258      *
+
+ ATTW       ON
+    FEMALE             0.120       0.005      0.000       0.110       0.130      *
+    AGE               -0.002       0.001      0.000      -0.004      -0.001      *
+    AGE2               0.003       0.001      0.000       0.002       0.005      *
+    EDUP               0.280       0.008      0.000       0.265       0.296      *
+    EDUS               0.154       0.006      0.000       0.143       0.166      *
+
+ Residual Variances
+    OLD                0.330       0.002      0.000       0.325       0.335      *
+    UNEMP              0.363       0.003      0.000       0.357       0.369      *
+    INC                0.505       0.005      0.000       0.496       0.515      *
+    JOBS               0.535       0.005      0.000       0.525       0.544      *
+    ATTW               0.203       0.003      0.000       0.196       0.210      *
+
+Between Level
+
+ ATTB     BY
+    UNEMP              1.000       0.000      0.000       1.000       1.000
+    OLD                0.407       0.338      0.104      -0.240       1.115
+    INC                0.856       0.138      0.000       0.622       1.168      *
+    JOBS               1.075       0.149      0.000       0.804       1.394      *
+
+ ATTB       ON
+    GDP_O              0.004       0.004      0.130      -0.003       0.012
+    STOCK_UN          -0.013       0.006      0.022      -0.025       0.000      *
+    EMPLOY            -0.020       0.007      0.002      -0.032      -0.005      *
+    SOCX               0.013       0.008      0.051      -0.002       0.030
+
+ Intercepts
+    OLD                3.459       0.373      0.000       2.947       4.387      *
+    UNEMP              3.666       0.448      0.000       2.741       4.345      *
+    INC                3.513       0.399      0.000       2.732       4.224      *
+    JOBS               3.469       0.492      0.000       2.486       4.303      *
+
+ Residual Variances
+    OLD                0.234       0.062      0.000       0.149       0.395      *
+    UNEMP              0.018       0.009      0.000       0.005       0.039      *
+    INC                0.021       0.009      0.000       0.006       0.041      *
+    JOBS               0.023       0.011      0.000       0.008       0.053      *
+    ATTB               0.040       0.015      0.000       0.019       0.078      *
+
+
+STANDARDIZED MODEL RESULTS
+
+
+STDYX Standardization
+
+                                Posterior  One-Tailed         95% C.I.
+                    Estimate       S.D.      P-Value   Lower 2.5%  Upper 2.5%  Significance
+Within Level
+
+ ATTW     BY
+    UNEMP              0.614       0.004      0.000       0.605       0.622      *
+    OLD                0.450       0.005      0.000       0.441       0.459      *
+    INC                0.656       0.004      0.000       0.648       0.664      *
+    JOBS               0.618       0.004      0.000       0.610       0.626      *
+
+ ATTW       ON
+    FEMALE             0.128       0.005      0.000       0.118       0.138      *
+    AGE               -0.083       0.027      0.000      -0.135      -0.034      *
+    AGE2               0.121       0.027      0.000       0.070       0.174      *
+    EDUP               0.237       0.006      0.000       0.225       0.250      *
+    EDUS               0.163       0.006      0.000       0.151       0.174      *
+
+ Residual Variances
+    OLD                0.798       0.004      0.000       0.789       0.806      *
+    UNEMP              0.623       0.005      0.000       0.614       0.634      *
+    INC                0.570       0.005      0.000       0.559       0.580      *
+    JOBS               0.618       0.005      0.000       0.608       0.628      *
+    ATTW               0.926       0.003      0.000       0.920       0.931      *
+
+Between Level
+
+ ATTB     BY
+    UNEMP              0.906       0.051      0.000       0.775       0.974      *
+    OLD                0.234       0.173      0.104      -0.134       0.545
+    INC                0.860       0.065      0.000       0.702       0.961      *
+    JOBS               0.897       0.059      0.000       0.737       0.968      *
+
+ ATTB       ON
+    GDP_O              0.179       0.159      0.130      -0.143       0.485
+    STOCK_UN          -0.304       0.138      0.022      -0.549      -0.009      *
+    EMPLOY            -0.400       0.142      0.002      -0.642      -0.100      *
+    SOCX               0.221       0.130      0.051      -0.042       0.465
+
+ Intercepts
+    OLD                6.933       0.976      0.000       5.121       8.950      *
+    UNEMP             11.465       1.718      0.000       8.084      14.640      *
+    INC               12.231       1.731      0.000       8.786      15.505      *
+    JOBS              10.022       1.605      0.000       6.749      12.881      *
+
+ Residual Variances
+    OLD                0.944       0.082      0.000       0.703       1.000      *
+    UNEMP              0.179       0.089      0.000       0.051       0.400      *
+    INC                0.261       0.108      0.000       0.077       0.507      *
+    JOBS               0.195       0.100      0.000       0.064       0.456      *
+    ATTB               0.499       0.112      0.000       0.310       0.749      *
+
+
+R-SQUARE
+
+Within Level
+
+                                Posterior  One-Tailed         95% C.I.
+    Variable        Estimate       S.D.      P-Value   Lower 2.5%  Upper 2.5%
+
+    OLD                0.202       0.004      0.000       0.194       0.211
+    UNEMP              0.377       0.005      0.000       0.366       0.386
+    INC                0.430       0.005      0.000       0.420       0.441
+    JOBS               0.382       0.005      0.000       0.372       0.392
+
+                                Posterior  One-Tailed         95% C.I.
+    Variable        Estimate       S.D.      P-Value   Lower 2.5%  Upper 2.5%
+
+    ATTW               0.074       0.003      0.000       0.069       0.080
+
+Between Level
+
+                                Posterior  One-Tailed         95% C.I.
+    Variable        Estimate       S.D.      P-Value   Lower 2.5%  Upper 2.5%
+
+    OLD                0.056       0.082      0.000       0.000       0.297
+    UNEMP              0.821       0.089      0.000       0.600       0.949
+    INC                0.739       0.108      0.000       0.493       0.923
+    JOBS               0.805       0.100      0.000       0.544       0.936
+
+                                Posterior  One-Tailed         95% C.I.
+    Variable        Estimate       S.D.      P-Value   Lower 2.5%  Upper 2.5%
+
+    ATTB               0.501       0.112      0.000       0.251       0.690
+
+
+RESIDUAL OUTPUT
+
+
+     ESTIMATED MODEL
+
+
+     WITHIN LEVEL
+
+
+           Means
+              OLD           UNEMP         INC           JOBS          FEMALE
+              ________      ________      ________      ________      ________
+                0.096         0.156         0.206         0.192         0.507
+
+
+           Means
+              AGE           AGE2          EDUP          EDUS          GDP_O
+              ________      ________      ________      ________      ________
+               48.189        26.059         0.195         0.420         0.000
+
+
+           Means
+              STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________
+                0.000         0.000         0.000
+
+
+           Covariances
+              OLD           UNEMP         INC           JOBS          FEMALE
+              ________      ________      ________      ________      ________
+ OLD            0.414
+ UNEMP          0.135         0.582
+ INC            0.179         0.289         0.887
+ JOBS           0.166         0.269         0.355         0.865
+ FEMALE         0.019         0.031         0.041         0.038         0.250
+ AGE            0.358         0.579         0.764         0.711        -0.180
+ AGE2           0.398         0.644         0.850         0.791        -0.160
+ EDUP           0.021         0.034         0.045         0.042         0.003
+ EDUS           0.009         0.014         0.019         0.017         0.003
+ GDP_O          0.000         0.000         0.000         0.000         0.000
+ STOCK_UN       0.000         0.000         0.000         0.000         0.000
+ EMPLOY         0.000         0.000         0.000         0.000         0.000
+ SOCX           0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              AGE           AGE2          EDUP          EDUS          GDP_O
+              ________      ________      ________      ________      ________
+ AGE          283.709
+ AGE2         280.739       287.005
+ EDUP           1.708         1.806         0.157
+ EDUS          -1.042        -0.993        -0.082         0.244
+ GDP_O          0.000         0.000         0.000         0.000         0.000
+ STOCK_UN       0.000         0.000         0.000         0.000         0.000
+ EMPLOY         0.000         0.000         0.000         0.000         0.000
+ SOCX           0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________
+ STOCK_UN       0.000
+ EMPLOY         0.000         0.000
+ SOCX           0.000         0.000         0.000
+
+
+           Correlations
+              OLD           UNEMP         INC           JOBS          FEMALE
+              ________      ________      ________      ________      ________
+ OLD            1.000
+ UNEMP          0.276         1.000
+ INC            0.295         0.403         1.000
+ JOBS           0.278         0.379         0.405         1.000
+ FEMALE         0.060         0.082         0.088         0.083         1.000
+ AGE            0.033         0.045         0.048         0.045        -0.021
+ AGE2           0.037         0.050         0.053         0.050        -0.019
+ EDUP           0.082         0.112         0.120         0.113         0.016
+ EDUS           0.027         0.037         0.040         0.038         0.014
+ GDP_O          0.000         0.000         0.000         0.000         0.000
+ STOCK_UN       0.000         0.000         0.000         0.000         0.000
+ EMPLOY         0.000         0.000         0.000         0.000         0.000
+ SOCX           0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              AGE           AGE2          EDUP          EDUS          GDP_O
+              ________      ________      ________      ________      ________
+ AGE            1.000
+ AGE2           0.984         1.000
+ EDUP           0.256         0.269         1.000
+ EDUS          -0.125        -0.119        -0.419         1.000
+ GDP_O          0.000         0.000         0.000         0.000         0.000
+ STOCK_UN       0.000         0.000         0.000         0.000         0.000
+ EMPLOY         0.000         0.000         0.000         0.000         0.000
+ SOCX           0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________
+ STOCK_UN       0.000
+ EMPLOY         0.000         0.000
+ SOCX           0.000         0.000         0.000
+
+
+     BETWEEN LEVEL
+
+
+           Means
+              OLD           UNEMP         INC           JOBS          FEMALE
+              ________      ________      ________      ________      ________
+                3.100         2.784         2.758         2.520         0.000
+
+
+           Means
+              AGE           AGE2          EDUP          EDUS          GDP_O
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000        35.752
+
+
+           Means
+              STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________
+               12.957        57.917        21.587
+
+
+           Covariances
+              OLD           UNEMP         INC           JOBS          FEMALE
+              ________      ________      ________      ________      ________
+ OLD            0.247
+ UNEMP          0.031         0.095
+ INC            0.027         0.066         0.078
+ JOBS           0.034         0.083         0.071         0.113
+ FEMALE         0.000         0.000         0.000         0.000         0.000
+ AGE            0.000         0.000         0.000         0.000         0.000
+ AGE2           0.000         0.000         0.000         0.000         0.000
+ EDUP           0.000         0.000         0.000         0.000         0.000
+ EDUS           0.000         0.000         0.000         0.000         0.000
+ GDP_O         -0.111        -0.273        -0.233        -0.293         0.000
+ STOCK_UN      -0.371        -0.910        -0.779        -0.978         0.000
+ EMPLOY        -0.369        -0.906        -0.775        -0.974         0.000
+ SOCX           0.265         0.650         0.557         0.699         0.000
+
+
+           Covariances
+              AGE           AGE2          EDUP          EDUS          GDP_O
+              ________      ________      ________      ________      ________
+ AGE            0.000
+ AGE2           0.000         0.000
+ EDUP           0.000         0.000         0.000
+ EDUS           0.000         0.000         0.000         0.000
+ GDP_O          0.000         0.000         0.000         0.000       137.117
+ STOCK_UN       0.000         0.000         0.000         0.000        32.162
+ EMPLOY         0.000         0.000         0.000         0.000        27.368
+ SOCX           0.000         0.000         0.000         0.000         6.279
+
+
+           Covariances
+              STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________
+ STOCK_UN      46.396
+ EMPLOY        17.992        32.162
+ SOCX          -8.053       -11.518        21.834
+
+
+           Correlations
+              OLD           UNEMP         INC           JOBS          FEMALE
+              ________      ________      ________      ________      ________
+ OLD            1.000
+ UNEMP          0.205         1.000
+ INC            0.194         0.770         1.000
+ JOBS           0.203         0.804         0.760         1.000
+ FEMALE         0.000         0.000         0.000         0.000         0.000
+ AGE            0.000         0.000         0.000         0.000         0.000
+ AGE2           0.000         0.000         0.000         0.000         0.000
+ EDUP           0.000         0.000         0.000         0.000         0.000
+ EDUS           0.000         0.000         0.000         0.000         0.000
+ GDP_O         -0.019        -0.076        -0.072        -0.075         0.000
+ STOCK_UN      -0.109        -0.434        -0.410        -0.428         0.000
+ EMPLOY        -0.131        -0.518        -0.490        -0.512         0.000
+ SOCX           0.114         0.452         0.427         0.446         0.000
+
+
+           Correlations
+              AGE           AGE2          EDUP          EDUS          GDP_O
+              ________      ________      ________      ________      ________
+ AGE            0.000
+ AGE2           0.000         0.000
+ EDUP           0.000         0.000         0.000
+ EDUS           0.000         0.000         0.000         0.000
+ GDP_O          0.000         0.000         0.000         0.000         1.000
+ STOCK_UN       0.000         0.000         0.000         0.000         0.403
+ EMPLOY         0.000         0.000         0.000         0.000         0.412
+ SOCX           0.000         0.000         0.000         0.000         0.115
+
+
+           Correlations
+              STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________
+ STOCK_UN       1.000
+ EMPLOY         0.466         1.000
+ SOCX          -0.253        -0.435         1.000
+
+
+TECHNICAL 1 OUTPUT
+
+
+     PARAMETER SPECIFICATION FOR WITHIN
+
+
+           NU
+              OLD           UNEMP         INC           JOBS          FEMALE
+              ________      ________      ________      ________      ________
+                    0             0             0             0             0
+
+
+           NU
+              AGE           AGE2          EDUP          EDUS
+              ________      ________      ________      ________
+                    0             0             0             0
+
+
+           LAMBDA
+              ATTW          FEMALE        AGE           AGE2          EDUP
+              ________      ________      ________      ________      ________
+ OLD                1             0             0             0             0
+ UNEMP              0             0             0             0             0
+ INC                2             0             0             0             0
+ JOBS               3             0             0             0             0
+ FEMALE             0             0             0             0             0
+ AGE                0             0             0             0             0
+ AGE2               0             0             0             0             0
+ EDUP               0             0             0             0             0
+ EDUS               0             0             0             0             0
+
+
+           LAMBDA
+              EDUS
+              ________
+ OLD                0
+ UNEMP              0
+ INC                0
+ JOBS               0
+ FEMALE             0
+ AGE                0
+ AGE2               0
+ EDUP               0
+ EDUS               0
+
+
+           THETA
+              OLD           UNEMP         INC           JOBS          FEMALE
+              ________      ________      ________      ________      ________
+ OLD                4
+ UNEMP              0             5
+ INC                0             0             6
+ JOBS               0             0             0             7
+ FEMALE             0             0             0             0             0
+ AGE                0             0             0             0             0
+ AGE2               0             0             0             0             0
+ EDUP               0             0             0             0             0
+ EDUS               0             0             0             0             0
+
+
+           THETA
+              AGE           AGE2          EDUP          EDUS
+              ________      ________      ________      ________
+ AGE                0
+ AGE2               0             0
+ EDUP               0             0             0
+ EDUS               0             0             0             0
+
+
+           ALPHA
+              ATTW          FEMALE        AGE           AGE2          EDUP
+              ________      ________      ________      ________      ________
+                    0             0             0             0             0
+
+
+           ALPHA
+              EDUS
+              ________
+                    0
+
+
+           BETA
+              ATTW          FEMALE        AGE           AGE2          EDUP
+              ________      ________      ________      ________      ________
+ ATTW               0             8             9            10            11
+ FEMALE             0             0             0             0             0
+ AGE                0             0             0             0             0
+ AGE2               0             0             0             0             0
+ EDUP               0             0             0             0             0
+ EDUS               0             0             0             0             0
+
+
+           BETA
+              EDUS
+              ________
+ ATTW              12
+ FEMALE             0
+ AGE                0
+ AGE2               0
+ EDUP               0
+ EDUS               0
+
+
+           PSI
+              ATTW          FEMALE        AGE           AGE2          EDUP
+              ________      ________      ________      ________      ________
+ ATTW              13
+ FEMALE             0             0
+ AGE                0             0             0
+ AGE2               0             0             0             0
+ EDUP               0             0             0             0             0
+ EDUS               0             0             0             0             0
+
+
+           PSI
+              EDUS
+              ________
+ EDUS               0
+
+
+     PARAMETER SPECIFICATION FOR BETWEEN
+
+
+           NU
+              OLD           UNEMP         INC           JOBS          GDP_O
+              ________      ________      ________      ________      ________
+                   14            15            16            17             0
+
+
+           NU
+              STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________
+                    0             0             0
+
+
+           LAMBDA
+              ATTB          GDP_O         STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________      ________      ________
+ OLD               18             0             0             0             0
+ UNEMP              0             0             0             0             0
+ INC               19             0             0             0             0
+ JOBS              20             0             0             0             0
+ GDP_O              0             0             0             0             0
+ STOCK_UN           0             0             0             0             0
+ EMPLOY             0             0             0             0             0
+ SOCX               0             0             0             0             0
+
+
+           THETA
+              OLD           UNEMP         INC           JOBS          GDP_O
+              ________      ________      ________      ________      ________
+ OLD               21
+ UNEMP              0            22
+ INC                0             0            23
+ JOBS               0             0             0            24
+ GDP_O              0             0             0             0             0
+ STOCK_UN           0             0             0             0             0
+ EMPLOY             0             0             0             0             0
+ SOCX               0             0             0             0             0
+
+
+           THETA
+              STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________
+ STOCK_UN           0
+ EMPLOY             0             0
+ SOCX               0             0             0
+
+
+           ALPHA
+              ATTB          GDP_O         STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________      ________      ________
+                    0             0             0             0             0
+
+
+           BETA
+              ATTB          GDP_O         STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________      ________      ________
+ ATTB               0            25            26            27            28
+ GDP_O              0             0             0             0             0
+ STOCK_UN           0             0             0             0             0
+ EMPLOY             0             0             0             0             0
+ SOCX               0             0             0             0             0
+
+
+           PSI
+              ATTB          GDP_O         STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________      ________      ________
+ ATTB              29
+ GDP_O              0             0
+ STOCK_UN           0             0             0
+ EMPLOY             0             0             0             0
+ SOCX               0             0             0             0             0
+
+
+     STARTING VALUES FOR WITHIN
+
+
+           NU
+              OLD           UNEMP         INC           JOBS          FEMALE
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           NU
+              AGE           AGE2          EDUP          EDUS
+              ________      ________      ________      ________
+                0.000         0.000         0.000         0.000
+
+
+           LAMBDA
+              ATTW          FEMALE        AGE           AGE2          EDUP
+              ________      ________      ________      ________      ________
+ OLD            1.000         0.000         0.000         0.000         0.000
+ UNEMP          1.000         0.000         0.000         0.000         0.000
+ INC            1.000         0.000         0.000         0.000         0.000
+ JOBS           1.000         0.000         0.000         0.000         0.000
+ FEMALE         0.000         1.000         0.000         0.000         0.000
+ AGE            0.000         0.000         1.000         0.000         0.000
+ AGE2           0.000         0.000         0.000         1.000         0.000
+ EDUP           0.000         0.000         0.000         0.000         1.000
+ EDUS           0.000         0.000         0.000         0.000         0.000
+
+
+           LAMBDA
+              EDUS
+              ________
+ OLD            0.000
+ UNEMP          0.000
+ INC            0.000
+ JOBS           0.000
+ FEMALE         0.000
+ AGE            0.000
+ AGE2           0.000
+ EDUP           0.000
+ EDUS           1.000
+
+
+           THETA
+              OLD           UNEMP         INC           JOBS          FEMALE
+              ________      ________      ________      ________      ________
+ OLD            0.324
+ UNEMP          0.000         0.343
+ INC            0.000         0.000         0.485
+ JOBS           0.000         0.000         0.000         0.500
+ FEMALE         0.000         0.000         0.000         0.000         0.000
+ AGE            0.000         0.000         0.000         0.000         0.000
+ AGE2           0.000         0.000         0.000         0.000         0.000
+ EDUP           0.000         0.000         0.000         0.000         0.000
+ EDUS           0.000         0.000         0.000         0.000         0.000
+
+
+           THETA
+              AGE           AGE2          EDUP          EDUS
+              ________      ________      ________      ________
+ AGE            0.000
+ AGE2           0.000         0.000
+ EDUP           0.000         0.000         0.000
+ EDUS           0.000         0.000         0.000         0.000
+
+
+           ALPHA
+              ATTW          FEMALE        AGE           AGE2          EDUP
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           ALPHA
+              EDUS
+              ________
+                0.000
+
+
+           BETA
+              ATTW          FEMALE        AGE           AGE2          EDUP
+              ________      ________      ________      ________      ________
+ ATTW           0.000         0.000         0.000         0.000         0.000
+ FEMALE         0.000         0.000         0.000         0.000         0.000
+ AGE            0.000         0.000         0.000         0.000         0.000
+ AGE2           0.000         0.000         0.000         0.000         0.000
+ EDUP           0.000         0.000         0.000         0.000         0.000
+ EDUS           0.000         0.000         0.000         0.000         0.000
+
+
+           BETA
+              EDUS
+              ________
+ ATTW           0.000
+ FEMALE         0.000
+ AGE            0.000
+ AGE2           0.000
+ EDUP           0.000
+ EDUS           0.000
+
+
+           PSI
+              ATTW          FEMALE        AGE           AGE2          EDUP
+              ________      ________      ________      ________      ________
+ ATTW           1.000
+ FEMALE         0.000         0.125
+ AGE            0.000         0.000       141.855
+ AGE2           0.000         0.000         0.000       143.502
+ EDUP           0.000         0.000         0.000         0.000         0.078
+ EDUS           0.000         0.000         0.000         0.000         0.000
+
+
+           PSI
+              EDUS
+              ________
+ EDUS           0.122
+
+
+     STARTING VALUES FOR BETWEEN
+
+
+           NU
+              OLD           UNEMP         INC           JOBS          GDP_O
+              ________      ________      ________      ________      ________
+                3.247         2.946         2.973         2.753         0.000
+
+
+           NU
+              STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________
+                0.000         0.000         0.000
+
+
+           LAMBDA
+              ATTB          GDP_O         STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________      ________      ________
+ OLD            1.000         0.000         0.000         0.000         0.000
+ UNEMP          1.000         0.000         0.000         0.000         0.000
+ INC            1.000         0.000         0.000         0.000         0.000
+ JOBS           1.000         0.000         0.000         0.000         0.000
+ GDP_O          0.000         1.000         0.000         0.000         0.000
+ STOCK_UN       0.000         0.000         1.000         0.000         0.000
+ EMPLOY         0.000         0.000         0.000         1.000         0.000
+ SOCX           0.000         0.000         0.000         0.000         1.000
+
+
+           THETA
+              OLD           UNEMP         INC           JOBS          GDP_O
+              ________      ________      ________      ________      ________
+ OLD            0.324
+ UNEMP          0.000         0.343
+ INC            0.000         0.000         0.485
+ JOBS           0.000         0.000         0.000         0.500
+ GDP_O          0.000         0.000         0.000         0.000         0.000
+ STOCK_UN       0.000         0.000         0.000         0.000         0.000
+ EMPLOY         0.000         0.000         0.000         0.000         0.000
+ SOCX           0.000         0.000         0.000         0.000         0.000
+
+
+           THETA
+              STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________
+ STOCK_UN       0.000
+ EMPLOY         0.000         0.000
+ SOCX           0.000         0.000         0.000
+
+
+           ALPHA
+              ATTB          GDP_O         STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           BETA
+              ATTB          GDP_O         STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________      ________      ________
+ ATTB           0.000         0.000         0.000         0.000         0.000
+ GDP_O          0.000         0.000         0.000         0.000         0.000
+ STOCK_UN       0.000         0.000         0.000         0.000         0.000
+ EMPLOY         0.000         0.000         0.000         0.000         0.000
+ SOCX           0.000         0.000         0.000         0.000         0.000
+
+
+           PSI
+              ATTB          GDP_O         STOCK_UN      EMPLOY        SOCX
+              ________      ________      ________      ________      ________
+ ATTB           1.000
+ GDP_O          0.000        65.669
+ STOCK_UN       0.000         0.000        22.354
+ EMPLOY         0.000         0.000         0.000        18.982
+ SOCX           0.000         0.000         0.000         0.000        10.426
+
+
+
+     PRIORS FOR ALL PARAMETERS            PRIOR MEAN      PRIOR VARIANCE     PRIOR STD. DEV.
+
+     Parameter 1~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 2~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 3~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 4~IG(-1.000,0.000)          infinity            infinity            infinity
+     Parameter 5~IG(-1.000,0.000)          infinity            infinity            infinity
+     Parameter 6~IG(-1.000,0.000)          infinity            infinity            infinity
+     Parameter 7~IG(-1.000,0.000)          infinity            infinity            infinity
+     Parameter 8~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 9~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 10~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 11~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 12~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 13~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 14~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 15~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 16~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 17~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 18~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 19~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 20~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 21~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 22~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 23~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 24~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 25~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 26~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 27~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 28~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 29~IG(-1.000,0.000)         infinity            infinity            infinity
+
+
+TECHNICAL 4 OUTPUT
+
+
+     ESTIMATES DERIVED FROM THE MODEL FOR WITHIN
+
+
+           ESTIMATED MEANS FOR THE LATENT VARIABLES
+              ATTW          ATTB          FEMALE        AGE           AGE2
+              ________      ________      ________      ________      ________
+                0.156         0.000         0.507        48.189        26.059
+
+
+           ESTIMATED MEANS FOR THE LATENT VARIABLES
+              EDUP          EDUS          GDP_O         STOCK_UN      EMPLOY
+              ________      ________      ________      ________      ________
+                0.195         0.420         0.000         0.000         0.000
+
+
+           ESTIMATED MEANS FOR THE LATENT VARIABLES
+              SOCX
+              ________
+                0.000
+
+
+           ESTIMATED COVARIANCE MATRIX FOR THE LATENT VARIABLES
+              ATTW          ATTB          FEMALE        AGE           AGE2
+              ________      ________      ________      ________      ________
+ ATTW           0.219
+ ATTB           0.000         0.000
+ FEMALE         0.031         0.000         0.250
+ AGE            0.579         0.000        -0.180       283.709
+ AGE2           0.644         0.000        -0.160       280.739       287.005
+ EDUP           0.034         0.000         0.003         1.708         1.806
+ EDUS           0.014         0.000         0.003        -1.042        -0.993
+ GDP_O          0.000         0.000         0.000         0.000         0.000
+ STOCK_UN       0.000         0.000         0.000         0.000         0.000
+ EMPLOY         0.000         0.000         0.000         0.000         0.000
+ SOCX           0.000         0.000         0.000         0.000         0.000
+
+
+           ESTIMATED COVARIANCE MATRIX FOR THE LATENT VARIABLES
+              EDUP          EDUS          GDP_O         STOCK_UN      EMPLOY
+              ________      ________      ________      ________      ________
+ EDUP           0.157
+ EDUS          -0.082         0.244
+ GDP_O          0.000         0.000         0.000
+ STOCK_UN       0.000         0.000         0.000         0.000
+ EMPLOY         0.000         0.000         0.000         0.000         0.000
+ SOCX           0.000         0.000         0.000         0.000         0.000
+
+
+           ESTIMATED COVARIANCE MATRIX FOR THE LATENT VARIABLES
+              SOCX
+              ________
+ SOCX           0.000
+
+
+           ESTIMATED CORRELATION MATRIX FOR THE LATENT VARIABLES
+              ATTW          ATTB          FEMALE        AGE           AGE2
+              ________      ________      ________      ________      ________
+ ATTW           1.000
+ ATTB           0.000         0.000
+ FEMALE         0.134         0.000         1.000
+ AGE            0.073         0.000        -0.021         1.000
+ AGE2           0.081         0.000        -0.019         0.984         1.000
+ EDUP           0.182         0.000         0.016         0.256         0.269
+ EDUS           0.061         0.000         0.014        -0.125        -0.119
+ GDP_O          0.000         0.000         0.000         0.000         0.000
+ STOCK_UN       0.000         0.000         0.000         0.000         0.000
+ EMPLOY         0.000         0.000         0.000         0.000         0.000
+ SOCX           0.000         0.000         0.000         0.000         0.000
+
+
+           ESTIMATED CORRELATION MATRIX FOR THE LATENT VARIABLES
+              EDUP          EDUS          GDP_O         STOCK_UN      EMPLOY
+              ________      ________      ________      ________      ________
+ EDUP           1.000
+ EDUS          -0.419         1.000
+ GDP_O          0.000         0.000         0.000
+ STOCK_UN       0.000         0.000         0.000         0.000
+ EMPLOY         0.000         0.000         0.000         0.000         0.000
+ SOCX           0.000         0.000         0.000         0.000         0.000
+
+
+           ESTIMATED CORRELATION MATRIX FOR THE LATENT VARIABLES
+              SOCX
+              ________
+ SOCX           0.000
+
+
+     ESTIMATES DERIVED FROM THE MODEL FOR BETWEEN
+
+
+           ESTIMATED MEANS FOR THE LATENT VARIABLES
+              ATTW          ATTB          FEMALE        AGE           AGE2
+              ________      ________      ________      ________      ________
+                0.000        -0.882         0.000         0.000         0.000
+
+
+           ESTIMATED MEANS FOR THE LATENT VARIABLES
+              EDUP          EDUS          GDP_O         STOCK_UN      EMPLOY
+              ________      ________      ________      ________      ________
+                0.000         0.000        35.752        12.957        57.917
+
+
+           ESTIMATED MEANS FOR THE LATENT VARIABLES
+              SOCX
+              ________
+               21.587
+
+
+           ESTIMATED COVARIANCE MATRIX FOR THE LATENT VARIABLES
+              ATTW          ATTB          FEMALE        AGE           AGE2
+              ________      ________      ________      ________      ________
+ ATTW           0.000
+ ATTB           0.000         0.077
+ FEMALE         0.000         0.000         0.000
+ AGE            0.000         0.000         0.000         0.000
+ AGE2           0.000         0.000         0.000         0.000         0.000
+ EDUP           0.000         0.000         0.000         0.000         0.000
+ EDUS           0.000         0.000         0.000         0.000         0.000
+ GDP_O          0.000        -0.273         0.000         0.000         0.000
+ STOCK_UN       0.000        -0.910         0.000         0.000         0.000
+ EMPLOY         0.000        -0.906         0.000         0.000         0.000
+ SOCX           0.000         0.650         0.000         0.000         0.000
+
+
+           ESTIMATED COVARIANCE MATRIX FOR THE LATENT VARIABLES
+              EDUP          EDUS          GDP_O         STOCK_UN      EMPLOY
+              ________      ________      ________      ________      ________
+ EDUP           0.000
+ EDUS           0.000         0.000
+ GDP_O          0.000         0.000       137.117
+ STOCK_UN       0.000         0.000        32.162        46.396
+ EMPLOY         0.000         0.000        27.368        17.992        32.162
+ SOCX           0.000         0.000         6.279        -8.053       -11.518
+
+
+           ESTIMATED COVARIANCE MATRIX FOR THE LATENT VARIABLES
+              SOCX
+              ________
+ SOCX          21.834
+
+
+           ESTIMATED CORRELATION MATRIX FOR THE LATENT VARIABLES
+              ATTW          ATTB          FEMALE        AGE           AGE2
+              ________      ________      ________      ________      ________
+ ATTW           0.000
+ ATTB           0.000         1.000
+ FEMALE         0.000         0.000         0.000
+ AGE            0.000         0.000         0.000         0.000
+ AGE2           0.000         0.000         0.000         0.000         0.000
+ EDUP           0.000         0.000         0.000         0.000         0.000
+ EDUS           0.000         0.000         0.000         0.000         0.000
+ GDP_O          0.000        -0.084         0.000         0.000         0.000
+ STOCK_UN       0.000        -0.481         0.000         0.000         0.000
+ EMPLOY         0.000        -0.575         0.000         0.000         0.000
+ SOCX           0.000         0.501         0.000         0.000         0.000
+
+
+           ESTIMATED CORRELATION MATRIX FOR THE LATENT VARIABLES
+              EDUP          EDUS          GDP_O         STOCK_UN      EMPLOY
+              ________      ________      ________      ________      ________
+ EDUP           0.000
+ EDUS           0.000         0.000
+ GDP_O          0.000         0.000         1.000
+ STOCK_UN       0.000         0.000         0.403         1.000
+ EMPLOY         0.000         0.000         0.412         0.466         1.000
+ SOCX           0.000         0.000         0.115        -0.253        -0.435
+
+
+           ESTIMATED CORRELATION MATRIX FOR THE LATENT VARIABLES
+              SOCX
+              ________
+ SOCX           1.000
+
+
+DIAGRAM INFORMATION
+
+  Mplus diagrams are currently not available for multilevel analysis.
+  No diagram output was produced.
+
+
+     Beginning Time:  09:41:36
+        Ending Time:  09:45:36
+       Elapsed Time:  00:04:00
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2018 Muthen & Muthen

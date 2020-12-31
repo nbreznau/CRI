@@ -1,0 +1,648 @@
+Mplus VERSION 8.2
+MUTHEN & MUTHEN
+01/04/2020   3:54 PM
+
+INPUT INSTRUCTIONS
+
+  DATA: file is C:/data/t41.dat;
+
+  VARIABLE:
+
+  NAMES ARE country_year
+  V1_n
+  ID
+  CASEID
+  COUNTRY
+  ISO
+  JOBS
+  HEALTH
+  OLD
+  UNEMP
+  INCOME
+  HOUSING
+  SEX
+  AGE
+  AGE_CAT
+  DK_AGE
+  MARITAL
+  Mar_1
+  Mar_2
+  Mar_3
+  Mar_4
+  Mar_5
+  DEGREE
+  ATTEND
+  ATTEND_C
+  ATT_1
+  ATT_2
+  ATT_3
+  URBRURAL
+  URBRURAL_R
+  UR_1
+  UR_2
+  UR_3
+  HOMPOP
+  MAINSTAT
+  EMP_1
+  EMP_2
+  CHILD
+  LIB
+  SOC
+  CONS
+  WEIGHT
+  deg_1
+  deg_2
+  deg_3
+  mignet_un10
+  migstock_wb
+  migstock_un
+  mignet_un
+  socx_oecd
+  wdi_unempilo
+  AV_stock_un
+  AV_net_un
+  AV_socx_oecd
+  AV_wdi_unempilo
+  AV_mignet_un10
+  C_Y_stock_un
+  C_Y_net_un
+  C_Y_socx_oecd
+  C_Y_wdi_unemplilo
+  C_Y_mignet_un10
+  age_2
+  age_3
+  age_4
+  age_5
+  age_6
+  age_7
+  ;
+
+  USEVARIABLES ARE AGE_CAT
+  SEX
+  V1_n
+  HOMPOP
+  EMP_1
+  deg_3
+
+  C_Y_net_un
+  AV_net_un
+  Sum_scale_welfare
+  ;
+
+  missing are all (-9999);
+
+  cluster = country country_year;
+
+  weight is weight;
+
+  Within = AGE_CAT
+  SEX
+  V1_n
+  HOMPOP
+  EMP_1
+  deg_3
+  ;
+
+  Between = (country_year) C_Y_net_un (country) AV_net_un;
+
+
+
+  DEFINE:
+  Sum_scale_welfare = (JOBS + HEALTH + OLD + UNEMP + INCOME + HOUSING) / 6;
+
+  ANALYSIS:
+
+  type = threelevel;
+  estimator = MLR;
+
+  MODEL:
+
+  %within%
+  sum_scale_welfare on AGE_CAT
+  SEX
+  V1_n
+  HOMPOP
+  EMP_1
+  deg_3
+  ;
+
+  %Between country_year%
+  sum_scale_welfare on C_Y_net_un;
+
+  %Between country%
+  sum_scale_welfare on AV_net_un;
+
+  output: sampstat; cinterval;
+
+
+
+*** WARNING in VARIABLE command
+  Note that only the first 8 characters of variable names are used in the output.
+  Shorten variable names to avoid any confusion.
+*** WARNING
+  Data set contains cases with missing on x-variables.
+  These cases were not included in the analysis.
+  Number of cases with missing on x-variables:  5234
+*** WARNING
+  Data set contains cases with missing on all variables except
+  x-variables.  These cases were not included in the analysis.
+  Number of cases with missing on all variables except x-variables:  4782
+   3 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                       29783
+
+Number of dependent variables                                    1
+Number of independent variables                                  8
+Number of continuous latent variables                            0
+
+Observed dependent variables
+
+  Continuous
+   SUM_SCALE_
+
+Observed independent variables
+   AGE_CAT     SEX         V1_N        HOMPOP      EMP_1       DEG_3
+   C_Y_NET_    AV_NET_U
+
+Variables with special functions
+
+  Cluster variables     COUNTRY   COUNTRY_
+  Weight variable (cluster-size scaling)
+    WEIGHT
+
+  Within variables
+   AGE_CAT     SEX         V1_N        HOMPOP      EMP_1       DEG_3
+
+  Level 2 between variables
+   C_Y_NET_
+
+  Level 3 between variables
+   AV_NET_U
+
+
+Estimator                                                      MLR
+Information matrix                                        OBSERVED
+Maximum number of iterations                                   100
+Convergence criterion                                    0.100D-05
+Maximum number of EM iterations                                500
+Convergence criteria for the EM algorithm
+  Loglikelihood change                                   0.100D-02
+  Relative loglikelihood change                          0.100D-05
+  Derivative                                             0.100D-03
+Minimum variance                                         0.100D-03
+Maximum number of steepest descent iterations                   20
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-02
+Optimization algorithm                                         EMA
+
+Input data file(s)
+  C:/data/t41.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+     Number of COUNTRY_YEAR clusters            26
+     Number of COUNTRY clusters                 16
+
+     Average cluster size for COUNTRY_YEAR level     1145.500
+
+     Estimated Intraclass Correlations for the Y Variables for COUNTRY_YEAR level
+
+                Intraclass
+     Variable  Correlation
+
+     SUM_SCAL     0.010
+
+     Average cluster size for COUNTRY level     1861.438
+
+     Estimated Intraclass Correlations for the Y Variables for COUNTRY level
+
+                Intraclass
+     Variable  Correlation
+
+     SUM_SCAL     0.143
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+     PROPORTION OF DATA PRESENT
+
+
+           Covariance Coverage
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       1.000
+ AGE_CAT        1.000         1.000
+ SEX            1.000         1.000         1.000
+ V1_N           1.000         1.000         1.000         1.000
+ HOMPOP         1.000         1.000         1.000         1.000         1.000
+ EMP_1          1.000         1.000         1.000         1.000         1.000
+ DEG_3          1.000         1.000         1.000         1.000         1.000
+ C_Y_NET_       1.000         1.000         1.000         1.000         1.000
+ AV_NET_U       1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U
+              ________      ________      ________      ________
+ EMP_1          1.000
+ DEG_3          1.000         1.000
+ C_Y_NET_       1.000         1.000         1.000
+ AV_NET_U       1.000         1.000         1.000         1.000
+
+
+SAMPLE STATISTICS
+
+NOTE:  The sample statistics for within and between refer to the
+       maximum-likelihood estimated within and between covariance
+       matrices, respectively.
+
+
+     ESTIMATED SAMPLE STATISTICS FOR WITHIN
+
+
+           Means
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                0.000        48.152         1.500         0.445         2.789
+
+
+           Means
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U
+              ________      ________      ________      ________
+                0.612         0.483         0.000         0.000
+
+
+           Covariances
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       0.258
+ AGE_CAT       -0.384       245.586
+ SEX           -0.028        -0.307         0.250
+ V1_N           0.005         0.371        -0.004         0.247
+ HOMPOP         0.027        -6.965        -0.001        -0.030         1.925
+ EMP_1          0.029        -2.485        -0.023        -0.007         0.112
+ DEG_3          0.034        -0.693        -0.003         0.039         0.004
+ C_Y_NET_       0.000         0.000         0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U
+              ________      ________      ________      ________
+ EMP_1          0.238
+ DEG_3          0.047         0.250
+ C_Y_NET_       0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         0.000
+
+
+           Correlations
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       1.000
+ AGE_CAT       -0.048         1.000
+ SEX           -0.108        -0.039         1.000
+ V1_N           0.019         0.048        -0.018         1.000
+ HOMPOP         0.038        -0.320        -0.001        -0.044         1.000
+ EMP_1          0.118        -0.325        -0.093        -0.031         0.166
+ DEG_3          0.134        -0.089        -0.012         0.158         0.005
+ C_Y_NET_       0.000         0.000         0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U
+              ________      ________      ________      ________
+ EMP_1          1.000
+ DEG_3          0.192         1.000
+ C_Y_NET_       0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         0.000
+
+
+     ESTIMATED SAMPLE STATISTICS FOR BETWEEN COUNTRY_YEAR
+
+
+           Means
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           Means
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U
+              ________      ________      ________      ________
+                0.000         0.000         0.342         0.000
+
+
+           Covariances
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       0.003
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+ C_Y_NET_       0.032         0.000         0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U
+              ________      ________      ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+ C_Y_NET_       0.000         0.000         9.352
+ AV_NET_U       0.000         0.000         0.000         0.000
+
+
+           Correlations
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       1.000
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+ C_Y_NET_       0.188         0.000         0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U
+              ________      ________      ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+ C_Y_NET_       0.000         0.000         1.000
+ AV_NET_U       0.000         0.000         0.000         0.000
+
+
+     ESTIMATED SAMPLE STATISTICS FOR BETWEEN COUNTRY
+
+
+           Means
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+                1.865         0.000         0.000         0.000         0.000
+
+
+           Means
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U
+              ________      ________      ________      ________
+                0.000         0.000         0.000         3.772
+
+
+           Covariances
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       0.044
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+ C_Y_NET_       0.000         0.000         0.000         0.000         0.000
+ AV_NET_U       0.080         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U
+              ________      ________      ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+ C_Y_NET_       0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         4.910
+
+
+           Correlations
+              SUM_SCAL      AGE_CAT       SEX           V1_N          HOMPOP
+              ________      ________      ________      ________      ________
+ SUM_SCAL       1.000
+ AGE_CAT        0.000         0.000
+ SEX            0.000         0.000         0.000
+ V1_N           0.000         0.000         0.000         0.000
+ HOMPOP         0.000         0.000         0.000         0.000         0.000
+ EMP_1          0.000         0.000         0.000         0.000         0.000
+ DEG_3          0.000         0.000         0.000         0.000         0.000
+ C_Y_NET_       0.000         0.000         0.000         0.000         0.000
+ AV_NET_U       0.174         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              EMP_1         DEG_3         C_Y_NET_      AV_NET_U
+              ________      ________      ________      ________
+ EMP_1          0.000
+ DEG_3          0.000         0.000
+ C_Y_NET_       0.000         0.000         0.000
+ AV_NET_U       0.000         0.000         0.000         1.000
+
+
+     MAXIMUM LOG-LIKELIHOOD VALUE FOR THE UNRESTRICTED (H1) MODEL IS -21575.631
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     SUM_SCALE_WELFA       1.844       0.453       1.000    9.98%       1.333      1.667      1.833
+           29783.000       0.316      -0.139       4.000    0.10%       2.000      2.333
+     AGE_CAT              48.152      -0.111      22.000    8.48%      31.000     41.000     51.000
+           29783.000     245.586      -1.185      70.000   20.40%      51.000     70.000
+     SEX                   1.500      -0.002       1.000   49.58%       1.000      1.000      2.000
+           29783.000       0.250      -2.000       2.000   50.42%       2.000      2.000
+     V1_N                  0.445       0.222       0.000   55.51%       0.000      0.000      0.000
+           29783.000       0.247      -1.951       1.000   44.49%       1.000      1.000
+     HOMPOP                2.789       1.018       0.000    0.16%       2.000      2.000      2.000
+           29783.000       1.925       2.244      17.000    0.00%       3.000      4.000
+     EMP_1                 0.612      -0.458       0.000   40.21%       0.000      0.000      1.000
+           29783.000       0.238      -1.790       1.000   59.79%       1.000      1.000
+     DEG_3                 0.483       0.068       0.000   51.25%       0.000      0.000      0.000
+           29783.000       0.250      -1.995       1.000   48.75%       1.000      1.000
+     C_Y_NET_UN            0.342       0.360      -7.900    3.85%      -1.650     -0.900      0.075
+              26.000       9.352       2.093       7.950    3.85%       0.900      1.350
+     AV_NET_UN             3.772       0.091       0.350    6.25%       1.250      2.750      3.225
+              16.000       4.910      -1.196       7.450    6.25%       4.250      5.900
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                       12
+
+Loglikelihood
+
+          H0 Value                      -21575.630
+          H0 Scaling Correction Factor      7.8431
+            for MLR
+          H1 Value                      -21575.631
+          H1 Scaling Correction Factor      7.8431
+            for MLR
+
+Information Criteria
+
+          Akaike (AIC)                   43175.259
+          Bayesian (BIC)                 43274.880
+          Sample-Size Adjusted BIC       43236.744
+            (n* = (n + 2) / 24)
+
+Chi-Square Test of Model Fit
+
+          Value                              0.000*
+          Degrees of Freedom                     0
+          P-Value                           1.0000
+          Scaling Correction Factor         1.0000
+            for MLR
+
+*   The chi-square value for MLM, MLMV, MLR, ULSMV, WLSM and WLSMV cannot be used
+    for chi-square difference testing in the regular way.  MLM, MLR and WLSM
+    chi-square difference testing is described on the Mplus website.  MLMV, WLSMV,
+    and ULSMV difference testing is done using the DIFFTEST option.
+
+RMSEA (Root Mean Square Error Of Approximation)
+
+          Estimate                           0.000
+
+CFI/TLI
+
+          CFI                                1.000
+          TLI                                1.000
+
+Chi-Square Test of Model Fit for the Baseline Model
+
+          Value                            297.966
+          Degrees of Freedom                     8
+          P-Value                           0.0000
+
+SRMR (Standardized Root Mean Square Residual)
+
+          Value for Within                   0.000
+          Value for Between Level 2          0.004
+          Value for Between Level 3          0.001
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+Within Level
+
+ SUM_SCALE_ ON
+    AGE_CAT            0.000      0.000     -0.633      0.527
+    SEX               -0.101      0.015     -6.985      0.000
+    V1_N               0.002      0.025      0.099      0.921
+    HOMPOP             0.008      0.004      1.979      0.048
+    EMP_1              0.084      0.011      7.479      0.000
+    DEG_3              0.118      0.013      9.252      0.000
+
+ Residual Variances
+    SUM_SCALE_         0.248      0.016     15.228      0.000
+
+Between COUNTRY_YEAR Level
+
+ SUM_SCALE_ ON
+    C_Y_NET_UN         0.003      0.002      1.607      0.108
+
+ Residual Variances
+    SUM_SCALE_         0.003      0.001      2.799      0.005
+
+Between COUNTRY Level
+
+ SUM_SCALE_ ON
+    AV_NET_UN          0.016      0.030      0.549      0.583
+
+ Intercepts
+    SUM_SCALE_         1.837      0.137     13.452      0.000
+
+ Residual Variances
+    SUM_SCALE_         0.042      0.016      2.670      0.008
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.365E-07
+       (ratio of smallest to largest eigenvalue)
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+Within Level
+
+ SUM_SCAL ON
+    AGE_CAT         -0.001      -0.001      -0.001       0.000       0.000       0.001       0.001
+    SEX             -0.139      -0.130      -0.125      -0.101      -0.077      -0.073      -0.064
+    V1_N            -0.062      -0.046      -0.039       0.002       0.043       0.051       0.067
+    HOMPOP          -0.002       0.000       0.001       0.008       0.014       0.016       0.018
+    EMP_1            0.055       0.062       0.065       0.084       0.102       0.106       0.113
+    DEG_3            0.085       0.093       0.097       0.118       0.139       0.143       0.151
+
+ Residual Variances
+    SUM_SCALE_       0.206       0.216       0.222       0.248       0.275       0.280       0.290
+
+Between COUNTRY_YEAR Level
+
+ SUM_SCAL ON
+    C_Y_NET_UN      -0.002      -0.001       0.000       0.003       0.007       0.008       0.009
+
+ Residual Variances
+    SUM_SCALE_       0.000       0.001       0.001       0.003       0.005       0.005       0.006
+
+Between COUNTRY Level
+
+ SUM_SCAL ON
+    AV_NET_UN       -0.061      -0.042      -0.033       0.016       0.066       0.075       0.093
+
+ Intercepts
+    SUM_SCALE_       1.485       1.569       1.612       1.837       2.062       2.105       2.189
+
+ Residual Variances
+    SUM_SCALE_       0.001       0.011       0.016       0.042       0.068       0.073       0.083
+
+
+DIAGRAM INFORMATION
+
+  Mplus diagrams are currently not available for multilevel analysis.
+  No diagram output was produced.
+
+
+     Beginning Time:  15:54:27
+        Ending Time:  15:54:31
+       Elapsed Time:  00:00:04
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2018 Muthen & Muthen

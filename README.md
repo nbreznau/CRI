@@ -16,12 +16,20 @@ Muna Adem, Jule Adriaans, Amalia Alvarez-Benjumea, Henrik Andersen, Daniel Auer,
 
 ### Abstract
 
-This R project Git presents the workflow for data obtained from the Crowdsourced Replication Initiative [Breznau, Rinke and Wuttke et al 2018](https://osf.io/preprints/socarxiv/6j9qb/) used to investigate variability in research results across researchers and their model specifications. Calls on a 'reliability crisis' in science suggest that researchers fail to produce consistent results, in particular to replicate previous studies, because of systematic bias. This bias comes in myriad formats, p-hacking, publication bias, unethical practices, etc. In this research we investigate how much of this bias is actually 'random' in the sense that it derives from idiosyncratic features of the researchers and their approaches to data analysis. We attempted to remove as many factors of systematic bias as possible to be able to observe researchers conducting real-world research, but with the advantage of having them all attempt to answer the same research question with the same data. 
+This R project Git presents the workflow for data obtained from the Crowdsourced Replication Initiative [Breznau, Rinke and Wuttke et al 2018](https://osf.io/preprints/socarxiv/6j9qb/) used to investigate variability in research results across researchers and their model specifications. Calls on a 'reliability crisis' in science suggest that researchers fail to produce consistent results, in particular to replicate previous studies, because of systematic bias. This bias comes in myriad formats, p-hacking, publication bias, unethical practices, etc. In this research we investigate how much of this bias is actually 'random' in the sense that it derives from idiosyncratic features of the researchers and their steps taken when conducting data analysis. We attempted to remove as many factors of systematic bias as possible to be able to observe researchers conducting real-world research and to test the same hypothesis with the same data. 
 
 ### Important Documents
 
 [Current Working Paper Version](https://docs.google.com/document/d/1Mlf8QANbUKt9zLxhXnp0ODt57-551YmmQatmENXEK88/edit#heading=h.4jbwvgc9efg)
 
 [Planned Empirical Analysis (gdoc)](https://docs.google.com/document/d/143S8WYJ0yP_8wWHU7BaFdwVs30COZEvCAx0bzAkKlIc/edit#heading=h.1524t8a4a16i)
+
+### Workflow
+
+All participating team codes are in the respective sub-folders by software type, for example /CRI/CRI_**Mplus** contains all teams using Mplus codes and likewise for **Stata**,**R** and **SPSS**. In the one case of **MLwiN**, the team's Stata code imports the results. 
+
+The data preparation code is in the sub-folder CRI/data_prep. After the data prep files, all necessary data analysis files are in the CRI/data folder. These files are many because participants' code often requires special files to run properly. The data files needed to reproduce the data anlysis. These files are:
+
+
 
 
