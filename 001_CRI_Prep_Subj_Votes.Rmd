@@ -21,7 +21,7 @@ Code Compiled by
    
    Hung Nguyen, hunghvnguyen@gmail.com
 
-The participants voted on model specifications fo the other teams. Due to some errors in the preliminary codes we cannot assign the subjective voting directly to the teams; however, this provided an alternate utility. Based on the variations in model descriptions given to the participants we can still estimate what features of models are seen as the most useful or correct as the data-generating model. We can then look for those features in the actual models. Thus, the models we had participants vote on are theoretical data-generating models that mostly reflect the range of models used in the CRI. 
+The participants voted on model specifications for the other teams. Due to some errors in the preliminary codes we cannot assign the subjective voting directly to the teams; however, this provided an alternate utility. Based on the variations in model descriptions given to the participants we can still estimate what features of models are seem by the participants as the most useful or 'correct' in testing the hypothesis. We can then look for those features in the actual models. Thus, the models we had participants vote on are theoretical data-generating models that mostly reflect the range of models used in the CRI. 
 
 
 ```{r setup, include=FALSE}
@@ -294,7 +294,7 @@ kialo <- kialo %>%
 ```
 ## Output File
 
-We import the master data, make a column for each model specification, and then create a total score for model. 
+We import the master data, make a column for each model specification, and then create a total score by model. 
 
 
 ```{r output1, message = F, warning = F}
