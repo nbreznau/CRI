@@ -30,6 +30,11 @@ All participating team codes are in the respective sub-folders by software type,
 
 The data preparation code is in the sub-folder CRI/data_prep. After the data prep files, all necessary data analysis files are in the CRI/data folder. These files are many because participants' code often requires special files to run properly. The data files needed to reproduce the data anlysis. These files are:
 
+| Filename | Description | Source
+| - | -------|---|
+|**popdf_out.Rdata**|The peer review/deliberation scoring of model specifications as ranked by all participants; excepting non-response|Generated in sub-folder *CRI/data_prep* |
+| 
+
 
 
 

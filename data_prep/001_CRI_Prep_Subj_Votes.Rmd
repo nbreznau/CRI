@@ -24,6 +24,8 @@ See 'Data Guide' in Readme (front page of repository)
 ```{r load}
 model_desc <- read.xlsx(here::here("data","Research Design Votes.xlsx"), sheetName = "RD Paragraph Output", header = T, stringsAsFactors = F)
 crispec <- read.xlsx(here::here("data","CRI Model Specifications and Margins.xlsx"), sheetName = "Data")
+# sometimes this imports extra rows becasue of the xlsx format, remove if so
+crispec <- subset(crispec, !is.na(u_teamid))
 votes <- read.dta13(here::here("data","votes.dta"))
 ```
 

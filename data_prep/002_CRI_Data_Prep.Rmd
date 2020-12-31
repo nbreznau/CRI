@@ -30,7 +30,7 @@ completeFun <- function(data, desiredCols) {
 
 CRI Model Specifications and Margins in the file "CRI Model Specifications and Margins.xlsx". This model specification file was qualitatively coded by hand from each team's code and the margins came from CRI_Expansion_All.Rmd.
 
-We set up two versions of the model specifications here: *cri* and *cri_str*. One is for dichotomous numerical values and the other is for string names of each variable (good for spec curve plotting).
+We set up two versions of the model specifications here: *cri* and *cri_str*. One is for dichotomous numerical values and the other is for string names of each variable (good for spec curve plotting). Participant survey also used here.
 
 
 
@@ -38,13 +38,21 @@ We set up two versions of the model specifications here: *cri* and *cri_str*. On
 # Data generated from qualitative model specification coding
 cri_str <- read_excel(here::here("data","CRI Model Specifications and Margins.xlsx"), sheet = "Data")
 
+# Data from previous 001_CRI_Prep_Subj_Votes.Rmd
+load(file = here::here("data","popdf_out.Rdata"))
+
+# original survey data from Unipark Survey SPSS files
+cri_part <- readstata13::read.dta13("data/cri_survey_long_public.dta")
+
+# datafile merged into within-team wide format
+
+cri2 <- readstata13::read.dta13("data/cri_survey_wide_public_nolabs.dta")
+
 # replace p values of 0.000000 with 0.00001
 cri_str <- cri_str %>%
   mutate(p = ifelse(p < 0.00001, 0.00001,p))
 ```
-### Sample Note
 
-Our final sample includes `r length(unique(cri_str$u_teamid))` teams including `r sum(teamsize$team_size[teamsize$u_teamid != 0]) + 1` researhers that submitted `r length(cri_str$u_teamid[cri_str$u_teamid != 0]) + 1` models. Of those teams, one did not conduct the hypothesis test based on a failed measurement invariance test, another had all their `r length(cri_str$u_teamid[cri_str$u_teamid == 1])` models fail to converge and one other had one model out of several fail to converge. The result was `r length(unique(cri_str$u_teamid)) - 2` teams with numeric results of their hypothesis tests derived from `r length(cri_str$u_teamid[!is.na(cri_str$AME) & cri_str$u_teamid != 0])` models produced by `r sum(teamsize$team_size[teamsize$u_teamid != 0]) - 3` researchers in total with an average of `r round(sum(cri_str$team_size[cri_str$u_teamid != 0])/length(cri_str$id[cri_str$u_teamid != 0]),3)` researchers per team.
 
 
 ### Standardization
@@ -258,14 +266,6 @@ Note that teams are now in wide format, so that each variable has up to three va
 
 
 ```{r combine, warning=F, message=F }
-# original survey data from Unipark Survey SPSS files
-cri_part <- readstata13::read.dta13("data/cri_survey_long_public.dta")
-
-
-# datafile merged into within-team wide format
-
-cri2 <- readstata13::read.dta13("data/cri_survey_wide_public_nolabs.dta")
-
 cri <- full_join(cri, cri2, by = "u_teamid")
 
 # remove teams that dropped out
@@ -603,11 +603,9 @@ write.csv(fit_fig, file = "results/fit_measurement.csv")
 
 ### Merge in Subjective Voting
 
-The file popdf_out.Rdata is needed for this, see 001_CRI_Prep_Subj_Votes.Rmd add link
+The file popdf_out.Rdata is needed for this, see 001_CRI_Prep_Subj_Votes.Rmd 
 
 ```{r votes, message = F, warning=F}
-
-load(file = "data/popdf_out.Rdata")
 
 cri <- left_join(cri, popdf_out, by = "id")
 
