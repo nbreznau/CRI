@@ -31,7 +31,7 @@ All participating team codes are in the respective sub-folders by software type,
 The data preparation code is in the sub-folder CRI/data_prep. After the data prep files, all necessary data analysis files are in the CRI/data folder. These files are many because participants' code often requires special files to run properly. The data files needed to reproduce the data anlysis. These files are:
 
 | Filename | Description | Source |
-| - | -------|---|
+| ---| -------|---|
 | MAIN FILES | Used in Main Analyses 01-07 | |
 | **cri.csv** | Main data analysis file, model & team-levels. All specifications coded by the PIs, team test results and researcher characteristics in numeric format | Worked up in *CRI/data_prep* |
 | **cri_str.csv** | A string-format only version of *cri_str.csv* | Worked up in *CRI/data_prep* |
