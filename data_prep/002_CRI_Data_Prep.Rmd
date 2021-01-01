@@ -404,7 +404,7 @@ cri <- cri %>%
 
 ## Researcher Characteristics
 
-### Overview
+### Overview. Table S1
 
 We create a table of selected characteristics to allow the readers to familiarize themselves with the researcher Participants. 
 
@@ -473,7 +473,7 @@ cri_r_aspects <- cbind(t(cri_r_aspects1), t(cri_r_aspects2), t(cri_r_aspects3), 
 
 kable(cri_r_aspects)
 
-write.csv(cri_r_aspects, file = "results/tbl_rcharacteristics_small.csv")
+write.csv(cri_r_aspects, file = "results/TblS1.csv")
           
 ```
 

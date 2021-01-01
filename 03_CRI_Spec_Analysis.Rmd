@@ -27,8 +27,11 @@ library(rdfanalysis)
 ```{r load, warning=F,message=F, include=F}
 
 cri <- read.csv(file = "data/cri.csv", header = T)
+cri <- subset(cri, u_teamid != 0)
 cri_str <- read.csv(file = "data/cri_str.csv", header = T)
+cri_str <- subset(cri_str, u_teamid!=0)
 cri_team <- read.csv(file = "data/cri_team.csv", header = T)
+cri_team <- subset(cri_team, u_teamid!=0)
 
 ```
 
@@ -60,7 +63,7 @@ crispectest <- crispectest %>%
 
 crispectest <- crispectest %>%
   mutate(SURVEY_WAVES = ifelse(w1985 == "Other" & w1990 == "Other" & w1996 == "w1996" & w2006 == "w2006" & w2016 == "Other", "1996 & 2006", ifelse(w1985 == "Other" & w1990 == "Other" & w1996 == "w1996" & w2006 == "w2006" & w2016 == "w2016", "1996, 2006 & 2016", ifelse(w1985 == "Other" & w1990 == "Other" & w1996 == "Other" & w2006 == "w2006" & w2016 == "w2016", "2006 & 2016", "Other"))),
-         COUNTRIES = ifelse(orig13 == "orig13", "Core Rich Democracies Only", ifelse(allavailable == "allavailable", "All Available (~26)", ifelse(eeurope == "eeurope", "Includes Eastern/CE Europe", "Other"))))
+         COUNTRIES = ifelse(orig13 == "orig13", "13 Rich Democracies Only", ifelse(allavailable == "allavailable", "All Available (~26)", ifelse(eeurope == "eeurope", "Includes Eastern/CE Europe", "Other"))))
 
 #Remove NAs
 crispectest <- subset(crispectest, !is.na(crispectest$AME_Z))
@@ -99,50 +102,15 @@ crispectest <- left_join(crispectest, cri_merge, by = "id")
 
 
 
-### Average Marginal Effects
+### Model-Level Effect Specifications
 
-#### Spec Curve. Researcher Qualities and Subjective Model Scoring
+#### Fig 1. Main Visual Results
 
-```{r fig1_DV1, echo=F}
+This figure combines many spec curves. Two big ones with researcher characteristics, and several small ones with the sub-domains of specifications.
 
+First two are ordered by effect size, the other by confidence interval minimum/maximum relative to the hypothesis.
 
-
-crispectest1 <- select(crispectest, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE, est, lb, ub)
-
-crispectest1 <- subset(crispectest1, !is.na(crispectest1$PRO_IMMIGRANT))
-crispectest1 <- subset(crispectest1, !is.na(crispectest1$TOPIC_KNOWLEDGE))
-crispectest1 <- subset(crispectest1, !is.na(crispectest1$BELIEF_HYPOTHESIS))
-
-  
-# one problem with rdfanalysis is that it outputs the categories in the order they appear in the data, therefore we have to generate 3 rows of fake data to get the order right
-  
-fake <- as.data.frame(matrix(nrow = 3, ncol = 8))
-fake[1,] <- c("Low","Low","Low","Low","Low",0,-0.00001,0.00001)
-fake[2,] <- c("Mid","Mid","Mid","Mid","Mid",0,-0.00001,0.00001)
-fake[3,] <- c("High","High","High","High","High",0,-0.00001,0.00001)
-colnames(fake) <- c("BELIEF_HYPOTHESIS", "PRO_IMMIGRANT", "TOPIC_KNOWLEDGE", "STATISTICS_SKILL", "MODEL_SCORE", "est", "lb", "ub")
-fake$est <- as.numeric(fake$est)
-fake$ub <- as.numeric(fake$ub)
-fake$lb <- as.numeric(fake$lb)
-
-crispectest1 <- bind_rows(fake,crispectest1)
-
-# remove/adjust attributes
-  crispectest1 <- crispectest1[names(crispectest1)]
-  choices <- 1:5
-  attr(crispectest1, "choices") <- choices
-  rownames(crispectest1) <- NULL
-png(file = "results/Fig1_AME.png", width = 1200, height = 850, res = 144)
-
-plot_rdf_spec_curve(crispectest1, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, pt_size = 0.3, ribbon = T)
-dev.off()
-
-knitr::include_graphics("results/Fig1_AME.png")
-```
-
-#### Fig 1. Alternative
-
-Generate spec curves by hand, one ordered by effect size, the other by confidence.
+##### Panel A. By Effect Size
 
 ```{r fig1_alt}
 # remove original study
@@ -175,6 +143,8 @@ g1 <- ggplot(crispectest) +
     axis.title.x = element_blank())
 
 ```
+
+#### Panel B. By Confidence Interval
 
 ```{r fig1_alt2}
 
@@ -213,7 +183,12 @@ g2 <- ggplot(crispectest) +
   
 
 ```
-#### Fig 1. Heatmap Concept
+
+#### Panels B & D. Researcher Characteristics
+
+Heatmap Concept
+
+we create a 'rolling average' of researcher characteristics across rows ordered by effect size. This is visually pleasing and helps identify any patterns (one tick per model for so many models is really hard visually with a continuous color scale)
 
 ```{r rolling_average}
 # create rolling average for effect ordering
@@ -290,7 +265,7 @@ g4 <- ggplot(crispectest) +
   )
 ```
 
-### Fig 1. Combined New
+### Fig 1. Combined
 
 ```{r ggplot}
 
@@ -300,6 +275,61 @@ dev.off()
 
 knitr::include_graphics("results/Fig1_new.png")
 ```
+
+
+#### Fig 1. Sub-plots
+
+We include two smaller versions of the spec-curves with four sub-domains of specifications below. This time without a rolling average.
+
+First we recode our variables of interest into 1/0s for plotting
+
+```{r recode_order}
+
+crispectest <- crispectest %>%
+  mutate(DV_Jobs = ifelse(is.na(Jobs), NA, 1), # Measurement
+         DV_Unemp = ifelse(is.na(Unemp), NA, 1),
+         DV_IncDiff = ifelse(is.na(IncDiff), NA, 1),
+         DV_OldAge = ifelse(is.na(OldAge), NA, 1),
+         DV_House = ifelse(is.na(House), NA, 1),
+         DV_Health = ifelse(is.na(Health), NA, 1),
+         DV_Scale = ifelse(is.na(Scale), NA, 1), 
+         Test_Stock = ifelse(iv_type == "Stock", 1, NA),
+         Test_Flow = ifelse(iv_type == "Flow", 1, NA),
+         Test_ChangeFlow = ifelse(iv_type == "ChangeFlow", 1, NA),
+         W_Other = ifelse(SURVEY_WAVES == "Other", 1, NA), # Sample
+         W_1996 = ifelse(SURVEY_WAVES == "w1996", 1, NA),
+         W_2006 = ifelse(SURVEY_WAVES == "w2006", 1, NA),
+         W_2016 = ifelse(SURVEY_WAVES == "w2016", 1, NA),
+         W_96_06 = ifelse(SURVEY_WAVES == "1996 & 2006", 1, NA),
+         W_90_06_16 = ifelse(SURVEY_WAVES == "1996, 2006 & 2016", 1, NA),
+         W_06_16 = ifelse(SURVEY_WAVES == "2006 & 2016", 1, NA),
+         C_13 = ifelse(COUNTRIES == "13 Rich Democracies Only", 1, NA),
+         C_Other = ifelse(COUNTRIES == "Other", 1, NA),
+         C_All = ifelse(COUNTRIES == "All Available (~26)", 1, NA),
+         C_CEE = ifelse(COUNTRIES == "Includes Eastern/CE Europe", 1, NA),
+         )
+
+#Remove NAs
+```
+
+
+##### Measurement Specs
+
+Six dependent variables, plus a scale variable
+
+```{r fig1_measure}
+
+g7 <- ggplot(crispectest) +
+  geom_tile(aes(x = count, y = 7, fill = Jobs))
+```
+
+
+##### Sample Specs
+
+##### Variable Specs
+
+##### Equation & Estimation Specs
+
 
 ### Fig 2. Team-Level New
 
