@@ -1,7 +1,5 @@
 ---
-title: "021_CRI_Unique_Cases"
-author: "Nate Breznau"
-date: "12/18/2020"
+title: "Tech 2. Common Specifications"
 output: html_document
 ---
 
@@ -39,7 +37,7 @@ cri <- subset(cri, u_teamid != 0)
 
 ### Model Specification Count
 
-The problem is that many of these model specifications were dropped because they were not the team's preferred models, or because in the margins extraction phase the PIs decided that the models were not preferable (only when the team provided them as 'extra' models). Therefore, some columns of the database have zero variance. These columns need to be removed.
+Many of these model specifications were dropped because they were not the team's preferred models, or because in the margins extraction phase the PIs decided that the models were not preferable (only when the team provided them as 'extra' models). Therefore, some columns of the database have zero variance. These columns need to be removed.
 
 We also need variables to distinguish: 
 
@@ -95,7 +93,7 @@ We identified `r nrow(cri_sums) - 2` model specifications in our qualitative cod
 
 ### Dissimilarity in Decision Realms
 
-However, a second look at these data suggests that we may want to separately cluster on different decisions.
+A second look at these data suggests that we may want to separately cluster on different decisions.
 1) Countries and waves
 2) Variables
 3) Estimation, measurement, model structure
@@ -161,6 +159,8 @@ When considering three sub-domains of specification:
 2) **Variable** specifications only produces `r length(cri$identical_variables[cri$identical_variables == 0])` unique models
 3) **Measurement, Estimation & Equation** specifications only produces `r length(cri$identical_estmodel[cri$identical_estmodel == 0])`
 
+#### Sample Sub-Domain
+
 ```{r desc_samples}
 cri_samples <- cri %>%
     subset(!is.na(AME_Z)) %>%
@@ -181,7 +181,8 @@ cri_samples <- cri_samples[order(cri_samples$cases, decreasing = T),]
 head(cri_samples)
 
 ```
- Identify the sample selection that goes with cases `r cri_samples$identical_samples`.
+ 
+Identify the sample selection that goes with cases `r cri_samples$identical_samples`.
  
 ```{r ident_sample}
 cri_samp <- cri %>%
@@ -197,7 +198,7 @@ cri_samples$identical_samples <- c("13 Richest Democracies, 1996 & 2006 Waves","
 ```
 
 
-
+#### Variables Sub-Domain
 
 ```{r desc_variables}
 cri_variables <- cri %>%
@@ -232,6 +233,8 @@ head(cri_varr)
 cri_variables$identical_variables <- c("No country-level, and 5 socio-demographic individual-level indep. variables", "No country-level, and 5 socio-demographic individual-level indep. variables + income")
 ```
 
+#### Model Components Sub-Domain
+
 ```{r desc_estmodel}
 cri_estmodel <- cri %>%
     subset(!is.na(AME_Z)) %>%
@@ -264,7 +267,7 @@ head(cri_estmm)
 cri_estmodel$identical_estmodel <- c("DV: Jobs, Test var: Stock of immigrants, logistic regression, \'two-way fixed effects\'","DV: Unemployment, Test var: Stock of immigrants, logistic regression, \'two-way fixed effects\'","DV: Income Differences, Test var: Stock of immigrants, logistic regression, \'two-way fixed effects\'","DV: Old-age Care, Test var: Stock of immigrants, logistic regression, \'two-way fixed effects\'","DV: House, Test var: Stock of immigrants, logistic regression, \'two-way fixed effects\'","DV: Health, Test var: Stock of immigrants, logistic regression, \'two-way fixed effects\'","DV: Jobs, Test var: Net migration, logistic regression, \'two-way fixed effects\'","DV: Unemployment, Test var: Net migration, logistic regression, \'two-way fixed effects\'","DV: Income Differences, Test var: Net migration, logistic regression, \'two-way fixed effects\'","DV: Old-age Care, Test var: Net migration, logistic regression, \'two-way fixed effects\'","DV: House, Test var: Net migration, logistic regression, \'two-way fixed effects\'","DV: Health, Test var: Net migration, logistic regression, \'two-way fixed effects\'")
 ```
 
-### Appendix Table X. Models Identical Across Teams on Sub-Domains of Specifications
+### Appendix Table S3. Selected Frequencies of Model Specifications out of 1,261 Models
 
 ```{r combine}
 
@@ -279,6 +282,6 @@ tbl_ax[c(9:20),] <- cri_estmodel
 
 rm(cri_samp, cri_sampp, cri_estm, cri_estmm, cri_var, cri_varr)
 
-write.csv(tbl_ax, file = "results/tblax.csv")
+write.csv(tbl_ax, file = "results/TblS3.csv")
 ```
 

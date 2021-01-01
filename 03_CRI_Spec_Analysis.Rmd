@@ -1,17 +1,11 @@
 ---
-title: "Tech 3, Specification Curves"
-output:
-  html_document:
-    df_print: paged
-    always_allow_html: true
-  html_notebook: default
+title: "Tech 3. Specification Curves"
+output: html_document
 ---
 
 
 
 ### Setup
-
-We load the rdfanalysis package designed by <a href=https://joachim-gassen.github.io/rdfanalysis/>Joachim Gassen</a> to generate specification curves.
    
 
 ```{r setup, include=FALSE}
