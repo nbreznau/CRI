@@ -26,14 +26,18 @@ This R project Git presents the workflow for data obtained from the Crowdsourced
 
 ### Workflow
 
-All participating team codes are in the respective sub-folders by software type, for example /CRI/CRI_**Mplus** contains all teams using Mplus codes and likewise for **Stata**,**R** and **SPSS**. In the one case of **MLwiN**, the team's Stata code imports the results. 
+All participating team codes are in the respective sub-folders by software type, for example /CRI/CRI_**Mplus** contains all teams using Mplus codes and likewise for **Stata**,**R** and **SPSS**. In the one case of *MLwiN*, the team's Stata code imports the results. 
 
 The data preparation code is in the sub-folder CRI/data_prep. After the data prep files, all necessary data analysis files are in the CRI/data folder. These files are many because participants' code often requires special files to run properly. The data files needed to reproduce the data anlysis. These files are:
 
-| Filename | Description | Source
+| Filename | Description | Source |
 | - | -------|---|
-|**popdf_out.Rdata**|The peer review/deliberation scoring of model specifications as ranked by all participants; excepting non-response|Generated in sub-folder *CRI/data_prep* |
-| 
+| MAIN FILES | Used in Main Analyses 01-07 | |
+| *popdf_out.Rdata* |The peer review/deliberation scoring of model specifications as ranked by all participants; excepting non-response|Generated in sub-folder **CRI/data_prep** | Participant survey and Kialo deliberation |
+| SUB-FILES | Used in Preparation of Data or App| |
+| *Research Design Votes.xlsx* | Based on participant pre-registered designs, plus cursory review of all research designs. Not a fully accurate portrayal of final research designs because, (a) the broad range of specifications not reported in basic research designs and (b) the participant's often deviated from their proposed designs, if only slightly | This is a copy of the actual template (a Google Sheet) used to create the peer review voting system in the Participant Survey | 
+| *cri_shiny.csv*| The model-level data needed to run the shiny app | Generated in **CRI/data_prep** |
+| *cri_shiny_team.csv*| The team-level data needed to run the shiny app | Generated in **CRI/data_prep** |
 
 
 

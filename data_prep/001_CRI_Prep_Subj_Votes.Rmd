@@ -13,7 +13,7 @@ The participants voted on model specifications for the other teams. Due to some 
 rm(list = ls())
 library(pacman)
 
-pacman::p_load("readstata13","xlsx","dplyr","tidyverse","ggplot2","kableExtra","fastDummies","xlsx","ragg")
+pacman::p_load("readstata13","xlsx","dplyr","tidyverse","ggplot2","kableExtra","fastDummies","ragg")
 
 ```
 
@@ -29,9 +29,13 @@ crispec <- subset(crispec, !is.na(u_teamid))
 votes <- read.dta13(here::here("data","votes.dta"))
 ```
 
-### Unipark Survey
+### Model Descriptions and Peer Voting
 
 Note that data in the file "votes.dta" is the average of participants' votes by research design presented in the survey. These designs do not perfectly match the final research designs, therefore we cannot apply them directly to the models but must identify the ranking of models based on certain components. 
+
+Seven CRI participants voted on each design (participants voted on 3 each), but due to non-response we had around 4-5 votes per design. We created a scale of support for each model description. Now we turn that scale into a dependent variable.
+
+Here we collect all model specifications described in the survey. See Supplementary Materials
 
 ```{r merge}
 # Concatenate all strings from each variable
@@ -67,7 +71,8 @@ model_desc <- model_desc %>%
          model_spec = as.factor(gsub("\\.", "", model_spec)),
          i = vote_id)
 
-model_desc <- left_join(model_desc,votes, by = "i")
+# Here join the survey descriptions with participant votes
+model_desc <- left_join(model_desc, votes, by = "i")
 
 model_desc <- select(model_desc, i, vote_id, d, everything())
 
@@ -88,9 +93,7 @@ model_desc <- model_desc %>%
   
 ```
 
-#### Peer Voting on Models
-
-Seven CRI participants voted on each design (participants voted on 3 each), but due to non-response we had around 4-5 votes per design. We created a scale of support for each model description. Now we turn that scale into a dependent variable.
+#### Complexity Reduction
 
 We use some basic correlation analysis to reduce the complexity of vote scores and specifications.
 
@@ -113,6 +116,7 @@ corrplot::corrplot(cor1)
 cor2 <- cor(cord2, use = "pairwise.complete.obs")
 corrplot::corrplot(cor2)
 ```
+#### Average Peer Vote by Specification
 
 ```{r popularity}
 # Create a table with average votes by model components
@@ -184,11 +188,11 @@ popdf$label_y = ifelse(popdf$Avg_ScoreA>0,-0.03, popdf$Avg_ScoreA - 0.02)
 popdf$label_x = popdf$xaxis+0.14
 ```
 
-#### Fig 
+#### Fig S4. Subjective Ranking of Model Specifications 
 
 ```{r fig1, warning=F, message=F, echo=T}
 
-agg_png(file = "results/FigX_modelrank.png", width = 750)
+agg_png(file = "results/FigS4_modelrank.png", width = 750)
 ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
 
   geom_bar(stat = "identity", aes(fill = group)) +

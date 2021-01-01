@@ -42,11 +42,11 @@ cri_str <- read_excel(here::here("data","CRI Model Specifications and Margins.xl
 load(file = here::here("data","popdf_out.Rdata"))
 
 # original survey data from Unipark Survey SPSS files
-cri_part <- readstata13::read.dta13("data/cri_survey_long_public.dta")
+cri_part <- readstata13::read.dta13(here::here("data","cri_survey_long_public.dta"))
 
 # datafile merged into within-team wide format
 
-cri2 <- readstata13::read.dta13("data/cri_survey_wide_public_nolabs.dta")
+cri2 <- readstata13::read.dta13(here::here("data","cri_survey_wide_public_nolabs.dta"))
 
 # replace p values of 0.000000 with 0.00001
 cri_str <- cri_str %>%
@@ -64,12 +64,13 @@ Standardization will produce some extreme outliers, so a 'better' strategy is to
 ```{r standardizeDV, warning = F, message = F}
 rm(teamsize)
 
-# Team 104 is massive outlier, we have to rescale the estimates
+# Team 104 is massive outlier, trim estimates
 cri_str <- cri_str %>%
   mutate(AME = ifelse(id == "t104m2" | id == "t104m4", AME/10, AME),
          lower = ifelse(id == "t104m2" | id == "t104m4", lower/10, lower),
          upper = ifelse(id == "t104m2" | id == "t104m4", upper/10, upper))
 
+# Create means and sd, then use our 'standardization' technique
 cri_str <- cri_str %>%
   mutate(AMEssd = ifelse(main_IV_type == "Stock", AME, NA),
          AMEfsd = ifelse(main_IV_type == "Flow", AME, NA),
@@ -86,6 +87,7 @@ cri_str <- select(cri_str, -c(AMEssd,AMEfsd))
 
 ```
 
+Recalibrate some variables. Respondents sometimes reported two conclusions because they concluded that they were conducting independent hypothesis tests (separte for 'flow' and 'stock' models). Adjust strings. 
 
 ```{r recodes, warning = F, message = F}
 cri_str <- cri_str %>%
@@ -156,6 +158,8 @@ cri_str <- cri_str[order(cri_str$count),]
 # make two datasets, one numeric, one string
 cri <- cri_str
 ```
+
+Remove some unused 'countries'. 
 
 ```{r string_encode, warning = F, message = F}
 #replace all 1's with the column name for all variable
@@ -744,9 +748,9 @@ rm(cri_stra)
 
 ```{r subj_merge}
 # fast way to strip attributes
-write.csv(cri_part, file = "data/cri_indv.csv", row.names = F)
+write.csv(cri_part, file = here::here("data","cri_indv.csv"), row.names = F)
 
-cri_indiv <- read.csv(file = "data/cri_indv.csv", header = T)
+cri_indiv <- read.csv(file = here::here("data","cri_indv.csv"), header = T)
 
 
 cri_subj <- select(cri, u_teamid, Hsupport, Hmixed)
@@ -818,7 +822,7 @@ labels = list(stats = "Statistics Skill", topic = "Topic Knowledge", belief = "B
 sem_out <- lavaanPlot(model = fit2, labels = labels, coefs = TRUE, covs = TRUE, stand = TRUE)
 pacman::p_load("DiagrammeR")
 
-png(filename = "results/SEM.png", width = 720, height = 620, res = 144)
+png(filename = here::here("results","SEM.png"), width = 720, height = 620, res = 144)
 sem_out
 dev.off()
 ```
@@ -863,9 +867,11 @@ kable(cor4)
 rm(cor,cor1,cor2,cri_team_test,cri_team_test1,cri_team_test2)
 ```
 
+For the shiny app and some of our initial specification curve probing we used the package [rdfanalysis](https://joachim-gassen.github.io/rdfanalysis/) which requires discrete chocie variables. Therefore we code continuous researcher characteristics into categories here.
+
 ```{r spec_cats}
 # The team qualities data were originally coded into 4 categories, "Highest, High, Mid and 
-# Low". It is easier to visualize with only three. And, theoretically the individual-level measurment model results are the 'most correct'.
+# Low". It is easier to visualize with only three. And, theoretically the individual-level measurement model results are the 'most correct'.
 
 # we allow NAs to be 'mid' to maintain case numbers
 cri <- cri %>%
@@ -914,16 +920,16 @@ Save Point
 ```{r save_out, warning=F,message=F}
 
 # save as csv to ensure no attributes carry over
-write.csv(cri, file = "data/cri.csv", row.names = F)
-write.csv(cri_str, file = "data/cri_str.csv", row.names = F)
-write.csv(cri_team, file = "data/cri_team.csv", row.names = F)
-write.csv(cri_indiv, file = "data/cri_indv.csv", row.names = F)
+write.csv(cri, file = here::here("data","cri.csv"), row.names = F)
+write.csv(cri_str, file = here::here("data","cri_str.csv"), row.names = F)
+write.csv(cri_team, file = here::here("data","cri_team.csv"), row.names = F)
+write.csv(cri_indiv, file = here::here("data","cri_indv.csv"), row.names = F)
 
 # remove missing
 cri_team_combine <- subset(cri_team_combine, !is.na(AME))
 cri_team_combine <- subset(cri_team_combine, !is.na(stat_cat))
 
-write.csv(cri_team_combine, file = "data/cri_team_combine.csv", row.names = F)
+write.csv(cri_team_combine, file = here::here("data","cri_team_combine.csv"), row.names = F)
 
 
 
@@ -933,10 +939,12 @@ write.csv(cri_team_combine, file = "data/cri_team_combine.csv", row.names = F)
 
 #### Prep Data for Shiny App
 
+In the folder **/CRI/CRI_shiny** we deploy a 'shiny app' to allow users to interact with the results by model specification types. This code preps the data. The app uses the rdfpackage by Gassen which requires discrete choice variables.
+
 ```{r shiny, warning= F, message = F}
 ### Transform values from 1 to column names for all countries 
 
-cri_shiny <- read.csv("data/cri.csv", header = T)
+cri_shiny <- read.csv(here::here("data","cri.csv"), header = T)
 cri_shiny <- cri_shiny %>%
   mutate_at(
     vars(AU:VE),
@@ -1016,7 +1024,7 @@ cri_shiny <- cri_shiny %>%
   
 
 # Team-level 
-cri_shiny_team <- read.csv(file = "data/cri_team.csv", header = T)
+cri_shiny_team <- read.csv(file = here::here("data","cri_team.csv"), header = T)
 
 
 cri_shiny_team <- cri_shiny_team %>%
@@ -1036,7 +1044,7 @@ cri_shiny_team <- cri_shiny_team %>%
   
 
 # Save shiny data
-write.csv(cri_shiny, file = "CRI_shiny/data/cri_shiny.csv", row.names = F)
-write.csv(cri_shiny_team, file = "CRI_shiny/data/cri_shiny_team.csv", row.names = F)
+write.csv(cri_shiny, file = here::here("CRI_shiny","data","cri_shiny.csv"), row.names = F)
+write.csv(cri_shiny_team, file = here::here("CRI_shiny","data","cri_shiny_team.csv"), row.names = F)
 
 ```
