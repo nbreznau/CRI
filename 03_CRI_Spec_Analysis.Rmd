@@ -306,9 +306,18 @@ crispectest <- crispectest %>%
          C_Other = ifelse(COUNTRIES == "Other", 1, 0),
          C_All = ifelse(COUNTRIES == "All Available (~26)", 1, 0),
          C_CEE = ifelse(COUNTRIES == "Includes Eastern/CE Europe", 1, 0),
-         )
+         IV_Emp = ifelse(emplrate_ivC == "emplrate_ivC" | unemprate_ivC == "unemprate_ivC", 1, 0),
+         IV_Emp = ifelse(is.na(IV_Emp), 0, IV_Emp),
+         IV_GDP = ifelse(is.na(gdp_ivC), 0, 1),
+         IV_Socx = ifelse(is.na(socx_ivC), 0, 1),
+         IV_None = ifelse((IV_Emp + IV_GDP + IV_Socx) == 0, 1, 0),
+         Est_ols = ifelse(mator == "ols", 1, 0),
+         Est_logit = ifelse(mator == "logit", 1, 0),
+         Est_mlglm = ifelse(mator == "ml_glm", 1, 0),
+         Est_ologit = ifelse(mator == "ologit", 1, 0),
+         Est_bayes = ifelse(mator == "bayes", 1, 0))
 
-#Remove NAs
+
 ```
 
 
@@ -318,7 +327,7 @@ Six dependent variables, plus a scale variable
 
 
 ```{r fig1_test}
-testlabs <- c("Test: Stock", "Test: Flow", "Test: Change Flow")
+testlabs <- c("Stock", "Flow", "Change Flow")
 #g7 <- 
   ggplot(crispectest) +
   geom_tile(aes(x = count, y = 3, fill = factor(Test_Stock)), height = 0.5) +
@@ -327,8 +336,8 @@ testlabs <- c("Test: Stock", "Test: Flow", "Test: Change Flow")
   scale_y_continuous(breaks = c(3,2,1), labels=testlabs) +
   scale_fill_manual(values = c("NA","blue")) +
   theme_classic() +
+  ylab("Immigration Test Operationalization") +
   theme(
-    axis.title.y = element_blank(),
     axis.title.x = element_blank(),
     legend.position = "none",
     axis.line.x = element_blank(),
@@ -345,8 +354,8 @@ mlabs <- c("Immigrants (%)", "Net Migration")
   scale_y_continuous(breaks = c(2,1), labels=mlabs) +
   scale_fill_manual(values = c("NA","darkblue")) +
   theme_classic() +
+  ylab("Immigration Test Measurement") +
   theme(
-    axis.title.y = element_blank(),
     axis.title.x = element_blank(),
     legend.position = "none",
     axis.line.x = element_blank(),
@@ -358,7 +367,7 @@ mlabs <- c("Immigrants (%)", "Net Migration")
 
 ```{r fig1_measure}
 # set labels
-dvlabs = c("DV: Jobs","DV: Unemp","DV: IncDiff","DV: OldAge","DV: House","DV: Health","DV: Scale")
+dvlabs = c("Jobs","Unemp","IncDiff","OldAge","House","Health","Scale")
 
 #g9 <- 
   ggplot(crispectest) +
@@ -372,8 +381,8 @@ dvlabs = c("DV: Jobs","DV: Unemp","DV: IncDiff","DV: OldAge","DV: House","DV: He
   scale_y_continuous(breaks = c(7,6,5,4,3,2,1), labels=dvlabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
+    ylab("Dependent Variable") +
   theme(
-    axis.title.y = element_blank(),
     axis.title.x = element_blank(),
     legend.position = "none",
     axis.line.x = element_blank(),
@@ -385,7 +394,7 @@ dvlabs = c("DV: Jobs","DV: Unemp","DV: IncDiff","DV: OldAge","DV: House","DV: He
 
 
 ```{r fig1_sample}
-samplabs <- c("1996 & 2006","2006 & 2016","1996, 2006 & 2016","Other")
+samplabs <- c("1996 & 2006","2006 & 2016","1996, 2006\n& 2016","Other")
 
 # g9 <-
 ggplot(crispectest) +
@@ -396,8 +405,8 @@ ggplot(crispectest) +
   scale_y_continuous(breaks = c(4,3,2,1), labels=samplabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
+  ylab("Survey Waves in Sample") +
   theme(
-    axis.title.y = element_blank(),
     axis.title.x = element_blank(),
     legend.position = "none",
     axis.line.x = element_blank(),
@@ -408,7 +417,81 @@ ggplot(crispectest) +
   
 ```
 
+```{r fig1_countries}
+   
 
+clabs <- c("Rich 13","CEE/East\nEurope","All\nAvailable","Other")
+
+# g9 <-
+ggplot(crispectest) +
+  geom_tile(aes(x = count, y = 4, fill = factor(C_13)), height = 0.5) +
+  geom_tile(aes(x = count, y = 3, fill = factor(C_CEE)), height = 0.5) +
+  geom_tile(aes(x = count, y = 2, fill = factor(C_All)), height = 0.5) +
+  geom_tile(aes(x = count, y = 1, fill = factor(C_Other)), height = 0.5) +
+  scale_y_continuous(breaks = c(4,3,2,1), labels=clabs) +
+  scale_fill_manual(values = c("NA","blue")) +
+    theme_classic() +
+  ylab("Countries in Sample") +
+  theme(
+    axis.title.x = element_blank(),
+    legend.position = "none",
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+  )
+
+```
+
+```{r fig1_ivs}
+
+ivlabs <- c("(Un)Emp\nRate","GDP\nper cap", "Social\nSpending","None/other")
+
+# g9 <-
+ggplot(crispectest) +
+  geom_tile(aes(x = count, y = 4, fill = factor(IV_Emp)), height = 0.5) +
+  geom_tile(aes(x = count, y = 3, fill = factor(IV_GDP)), height = 0.5) +
+  geom_tile(aes(x = count, y = 2, fill = factor(IV_Socx)), height = 0.5) +
+  geom_tile(aes(x = count, y = 1, fill = factor(IV_None)), height = 0.5) +
+  scale_y_continuous(breaks = c(4,3,2,1), labels=ivlabs) +
+  scale_fill_manual(values = c("NA","blue")) +
+    theme_classic() +
+  ylab("Other Independent Variables in Model") +
+  theme(
+    axis.title.x = element_blank(),
+    legend.position = "none",
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+  )
+
+   
+```
+
+```{r fig1_estimator}
+
+estlabs <- c("OLS","Logit","ML/GLM","Ordered\nlogit","Bayes")
+
+# g9 <-
+ggplot(crispectest) +
+  geom_tile(aes(x = count, y = 5, fill = factor(Est_ols)), height = 0.5) +
+  geom_tile(aes(x = count, y = 4, fill = factor(Est_logit)), height = 0.5) +
+  geom_tile(aes(x = count, y = 3, fill = factor(Est_mlglm)), height = 0.5) +
+  geom_tile(aes(x = count, y = 2, fill = factor(Est_ologit)), height = 0.5) +
+  geom_tile(aes(x = count, y = 1, fill = factor(Est_bayes)), height = 0.5) +
+  scale_y_continuous(breaks = c(5,4,3,2,1), labels=estlabs) +
+  scale_fill_manual(values = c("NA","blue")) +
+    theme_classic() +
+  ylab("Estimation Method") +
+  theme(
+    axis.title.x = element_blank(),
+    legend.position = "none",
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+  )
+
+    
+```
 
 ##### Sample Specs
 
