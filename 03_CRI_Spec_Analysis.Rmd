@@ -48,7 +48,7 @@ cri_team <- subset(cri_team, u_teamid!=0)
 ```{r data_prep, warning=F, message=F, include=F}
 
 # prep data
-crispectest <- dplyr::select(cri_str, id, u_teamid, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe, cluster_any, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_any, Hresult, orig13, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
+crispectest <- dplyr::select(cri_str, id, u_teamid, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe, cluster_any, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_any, Hresult, orig13, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE, main_IV_measurement, emplrate_ivC:gdp_ivC)
 
 # create sample variables 
 crispectest <- crispectest %>%
@@ -286,27 +286,26 @@ First we recode our variables of interest into 1/0s for plotting
 ```{r recode_order}
 
 crispectest <- crispectest %>%
-  mutate(DV_Jobs = ifelse(is.na(Jobs), NA, 1), # Measurement
-         DV_Unemp = ifelse(is.na(Unemp), NA, 1),
-         DV_IncDiff = ifelse(is.na(IncDiff), NA, 1),
-         DV_OldAge = ifelse(is.na(OldAge), NA, 1),
-         DV_House = ifelse(is.na(House), NA, 1),
-         DV_Health = ifelse(is.na(Health), NA, 1),
-         DV_Scale = ifelse(is.na(Scale), NA, 1), 
-         Test_Stock = ifelse(iv_type == "Stock", 1, NA),
-         Test_Flow = ifelse(iv_type == "Flow", 1, NA),
-         Test_ChangeFlow = ifelse(iv_type == "ChangeFlow", 1, NA),
-         W_Other = ifelse(SURVEY_WAVES == "Other", 1, NA), # Sample
-         W_1996 = ifelse(SURVEY_WAVES == "w1996", 1, NA),
-         W_2006 = ifelse(SURVEY_WAVES == "w2006", 1, NA),
-         W_2016 = ifelse(SURVEY_WAVES == "w2016", 1, NA),
-         W_96_06 = ifelse(SURVEY_WAVES == "1996 & 2006", 1, NA),
-         W_90_06_16 = ifelse(SURVEY_WAVES == "1996, 2006 & 2016", 1, NA),
-         W_06_16 = ifelse(SURVEY_WAVES == "2006 & 2016", 1, NA),
-         C_13 = ifelse(COUNTRIES == "13 Rich Democracies Only", 1, NA),
-         C_Other = ifelse(COUNTRIES == "Other", 1, NA),
-         C_All = ifelse(COUNTRIES == "All Available (~26)", 1, NA),
-         C_CEE = ifelse(COUNTRIES == "Includes Eastern/CE Europe", 1, NA),
+  mutate(DV_Jobs = ifelse(is.na(Jobs), 0, 1), # Measurement
+         DV_Unemp = ifelse(is.na(Unemp), 0, 1),
+         DV_IncDiff = ifelse(is.na(IncDiff), 0, 1),
+         DV_OldAge = ifelse(is.na(OldAge), 0, 1),
+         DV_House = ifelse(is.na(House), 0, 1),
+         DV_Health = ifelse(is.na(Health), 0, 1),
+         DV_Scale = ifelse(is.na(Scale), 0, 1), 
+         Test_Stock = ifelse(iv_type == "Stock", 1, 0),
+         Test_Flow = ifelse(iv_type == "Flow", 1, 0),
+         Test_ChangeFlow = ifelse(iv_type == "ChangeFlow", 1, 0),
+         M_Gross = ifelse(main_IV_measurement == "Immigrant, foreign-born" | main_IV_measurement == "Refugee" | main_IV_measurement == "Non-Western Immigrant", 1, 0),
+         M_Net = ifelse(main_IV_measurement == "Net Migration", 1, 0),
+         W_Other = ifelse(SURVEY_WAVES == "Other", 1, 0), # Sample 
+         W_96_06 = ifelse(SURVEY_WAVES == "1996 & 2006", 1, 0),
+         W_96_06_16 = ifelse(SURVEY_WAVES == "1996, 2006 & 2016", 1, 0),
+         W_06_16 = ifelse(SURVEY_WAVES == "2006 & 2016", 1, 0),
+         C_13 = ifelse(COUNTRIES == "13 Rich Democracies Only", 1, 0),
+         C_Other = ifelse(COUNTRIES == "Other", 1, 0),
+         C_All = ifelse(COUNTRIES == "All Available (~26)", 1, 0),
+         C_CEE = ifelse(COUNTRIES == "Includes Eastern/CE Europe", 1, 0),
          )
 
 #Remove NAs
@@ -317,11 +316,98 @@ crispectest <- crispectest %>%
 
 Six dependent variables, plus a scale variable
 
-```{r fig1_measure}
 
-g7 <- ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 7, fill = Jobs))
+```{r fig1_test}
+testlabs <- c("Test: Stock", "Test: Flow", "Test: Change Flow")
+#g7 <- 
+  ggplot(crispectest) +
+  geom_tile(aes(x = count, y = 3, fill = factor(Test_Stock)), height = 0.5) +
+  geom_tile(aes(x = count, y = 2, fill = factor(Test_Flow)), height = 0.5) +
+  geom_tile(aes(x = count, y = 1, fill = factor(Test_ChangeFlow)), height = 0.5) +
+  scale_y_continuous(breaks = c(3,2,1), labels=testlabs) +
+  scale_fill_manual(values = c("NA","blue")) +
+  theme_classic() +
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    legend.position = "none",
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+  )
 ```
+```{r fig1_measure}
+mlabs <- c("Immigrants (%)", "Net Migration")
+#g8 <- 
+  ggplot(crispectest) +
+  geom_tile(aes(x = count, y = 2, fill = factor(M_Gross)), height = 0.5) +
+  geom_tile(aes(x = count, y = 1, fill = factor(M_Net)), height = 0.5) +
+  scale_y_continuous(breaks = c(2,1), labels=mlabs) +
+  scale_fill_manual(values = c("NA","darkblue")) +
+  theme_classic() +
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    legend.position = "none",
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+  )
+```
+
+
+```{r fig1_measure}
+# set labels
+dvlabs = c("DV: Jobs","DV: Unemp","DV: IncDiff","DV: OldAge","DV: House","DV: Health","DV: Scale")
+
+#g9 <- 
+  ggplot(crispectest) +
+  geom_tile(aes(x = count, y = 7, fill = factor(DV_Jobs)), height = 0.5) +
+  geom_tile(aes(x = count, y = 6, fill = factor(DV_Unemp)), height = 0.5) +
+  geom_tile(aes(x = count, y = 5, fill = factor(DV_IncDiff)), height = 0.5) +
+  geom_tile(aes(x = count, y = 4, fill = factor(DV_OldAge)), height = 0.5) +
+  geom_tile(aes(x = count, y = 3, fill = factor(DV_House)), height = 0.5) +
+  geom_tile(aes(x = count, y = 2, fill = factor(DV_Health)), height = 0.5) +
+  geom_tile(aes(x = count, y = 1, fill = factor(DV_Scale)), height = 0.5) +
+  scale_y_continuous(breaks = c(7,6,5,4,3,2,1), labels=dvlabs) +
+  scale_fill_manual(values = c("NA","blue")) +
+    theme_classic() +
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    legend.position = "none",
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+  )
+  
+```
+
+
+```{r fig1_sample}
+samplabs <- c("1996 & 2006","2006 & 2016","1996, 2006 & 2016","Other")
+
+# g9 <-
+ggplot(crispectest) +
+  geom_tile(aes(x = count, y = 4, fill = factor(W_96_06)), height = 0.5) +
+  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5) +
+  geom_tile(aes(x = count, y = 2, fill = factor(W_06_16)), height = 0.5) +
+  geom_tile(aes(x = count, y = 1, fill = factor(W_Other)), height = 0.5) +
+  scale_y_continuous(breaks = c(4,3,2,1), labels=samplabs) +
+  scale_fill_manual(values = c("NA","blue")) +
+    theme_classic() +
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    legend.position = "none",
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+  )
+
+  
+```
+
 
 
 ##### Sample Specs
