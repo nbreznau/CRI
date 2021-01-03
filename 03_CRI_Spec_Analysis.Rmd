@@ -142,6 +142,21 @@ g1 <- ggplot(crispectest) +
     legend.position = "none",
     axis.title.x = element_blank())
 
+# make an adjusted version for the smaller plots
+g1a <- ggplot(crispectest) +
+  #geom_errorbar(aes(ymin = lb, ymax = ub), color = "thistle1") +
+  geom_point(aes(x = count, y = est_ns), color = "grey55", shape = "|", size = 3, show.legend =F) + 
+  geom_point(aes(x = count, y = est_sig, color = sig_group), shape = "|", size = 4) +
+  scale_color_manual(values = c("chartreuse4","NA", "firebrick"), labels = c("Negative","Not sig.","Positive"," ")) +
+  ylim(-0.21, 0.21) +
+  labs(color = "Effect at 95%CI", x = "Standardized Effect Size", y = " \n \n \n ") +
+  theme_classic() +
+  guides(color = guide_legend(override.aes = list(size=7, color=c("chartreuse4","grey55", "firebrick","NA")))) +
+  theme(
+    legend.key.size = unit(2,"line"),
+    legend.position = "none",
+    axis.text.x = element_blank())
+
 ```
 
 #### Panel B. By Confidence Interval
@@ -327,16 +342,16 @@ Six dependent variables, plus a scale variable
 
 
 ```{r fig1_test}
-testlabs <- c("Stock", "Flow", "Change Flow")
-#g7 <- 
+testlabs <- c("       Stock", "Flow", "Change\nFlow")
+g01 <- 
   ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 3, fill = factor(Test_Stock)), height = 0.5) +
-  geom_tile(aes(x = count, y = 2, fill = factor(Test_Flow)), height = 0.5) +
-  geom_tile(aes(x = count, y = 1, fill = factor(Test_ChangeFlow)), height = 0.5) +
-  scale_y_continuous(breaks = c(3,2,1), labels=testlabs) +
-  scale_fill_manual(values = c("NA","blue")) +
+  geom_tile(aes(x = count, y = 0.75, fill = factor(Test_Stock)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.5, fill = factor(Test_Flow)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.25, fill = factor(Test_ChangeFlow)), height = 0.133, width = 0.25) +
+  scale_y_continuous(breaks = c(0.75,0.5,0.25), labels=testlabs) +
+  scale_fill_manual(values = c("white","blue")) +
   theme_classic() +
-  ylab("Immigration Test Operationalization") +
+  ylab("Immigration Test\nOperationalization") +
   theme(
     axis.title.x = element_blank(),
     legend.position = "none",
@@ -345,16 +360,19 @@ testlabs <- c("Stock", "Flow", "Change Flow")
     axis.text.x = element_blank(),
   )
 ```
+
+
+
 ```{r fig1_measure}
-mlabs <- c("Immigrants (%)", "Net Migration")
-#g8 <- 
+mlabs <- c("  Immigra-\nnts (%)", "Net\nMigration")
+g02 <- 
   ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 2, fill = factor(M_Gross)), height = 0.5) +
-  geom_tile(aes(x = count, y = 1, fill = factor(M_Net)), height = 0.5) +
-  scale_y_continuous(breaks = c(2,1), labels=mlabs) +
-  scale_fill_manual(values = c("NA","darkblue")) +
+  geom_tile(aes(x = count, y = 0.5, fill = factor(M_Gross)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.25, fill = factor(M_Net)), height = 0.133, width = 0.25) +
+  scale_y_continuous(breaks = c(0.5,0.25), labels=mlabs) +
+  scale_fill_manual(values = c("white","darkblue")) +
   theme_classic() +
-  ylab("Immigration Test Measurement") +
+  ylab("Immigration Test\nMeasurement") +
   theme(
     axis.title.x = element_blank(),
     legend.position = "none",
@@ -367,19 +385,19 @@ mlabs <- c("Immigrants (%)", "Net Migration")
 
 ```{r fig1_measure}
 # set labels
-dvlabs = c("Jobs","Unemp","IncDiff","OldAge","House","Health","Scale")
+dvlabs = c("             Jobs","Unemp","IncDiff","OldAge","House","Health","Scale")
 
-#g9 <- 
+g03 <- 
   ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 7, fill = factor(DV_Jobs)), height = 0.5) +
-  geom_tile(aes(x = count, y = 6, fill = factor(DV_Unemp)), height = 0.5) +
-  geom_tile(aes(x = count, y = 5, fill = factor(DV_IncDiff)), height = 0.5) +
-  geom_tile(aes(x = count, y = 4, fill = factor(DV_OldAge)), height = 0.5) +
-  geom_tile(aes(x = count, y = 3, fill = factor(DV_House)), height = 0.5) +
-  geom_tile(aes(x = count, y = 2, fill = factor(DV_Health)), height = 0.5) +
-  geom_tile(aes(x = count, y = 1, fill = factor(DV_Scale)), height = 0.5) +
-  scale_y_continuous(breaks = c(7,6,5,4,3,2,1), labels=dvlabs) +
-  scale_fill_manual(values = c("NA","blue")) +
+  geom_tile(aes(x = count, y = 1.75, fill = factor(DV_Jobs)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 1.5, fill = factor(DV_Unemp)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 1.25, fill = factor(DV_IncDiff)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 1, fill = factor(DV_OldAge)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.75, fill = factor(DV_House)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.5, fill = factor(DV_Health)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.25, fill = factor(DV_Scale)), height = 0.133, width = 0.25) +
+  scale_y_continuous(breaks = c(1.75,1.5,1.25,1,0.75,0.5,0.25), labels=dvlabs) +
+  scale_fill_manual(values = c("white","blue")) +
     theme_classic() +
     ylab("Dependent Variable") +
   theme(
@@ -391,6 +409,40 @@ dvlabs = c("Jobs","Unemp","IncDiff","OldAge","House","Health","Scale")
   )
   
 ```
+
+
+```{r fig1_ivs}
+
+ivlabs <- c(" (Un)Emp\nRate","GDP\nper cap", "Social\nSpending","None\n/other")
+
+g04 <- ggplot(crispectest) +
+  geom_tile(aes(x = count, y = 1, fill = factor(IV_Emp)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.75, fill = factor(IV_GDP)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.5, fill = factor(IV_Socx)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.25, fill = factor(IV_None)), height = 0.133, width = 0.25) +
+  scale_y_continuous(breaks = c(1,0.75,0.5,0.25), labels=ivlabs) +
+  scale_fill_manual(values = c("white","darkblue")) +
+    theme_classic() +
+  ylab("Other Independent\nVariables in Model") +
+  xlab("Models ordered by Effect Size") +
+  theme(
+    legend.position = "none")
+
+   
+```
+
+
+```{r fig1_col1}
+agg_png(filename = "results/Fig1_Col1.png", height = 800, width = 400, res = 72)
+ggarrange(g1a, g01, g02, g03, g04, nrow = 5, ncol = 1, heights = c(0.6,.75,0.5,1.75,1.2))
+dev.off()
+
+knitr::include_graphics("results/Fig1_Col1.png")
+```
+
+
+
+
 
 
 ```{r fig1_sample}
@@ -442,30 +494,7 @@ ggplot(crispectest) +
 
 ```
 
-```{r fig1_ivs}
 
-ivlabs <- c("(Un)Emp\nRate","GDP\nper cap", "Social\nSpending","None/other")
-
-# g9 <-
-ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 4, fill = factor(IV_Emp)), height = 0.5) +
-  geom_tile(aes(x = count, y = 3, fill = factor(IV_GDP)), height = 0.5) +
-  geom_tile(aes(x = count, y = 2, fill = factor(IV_Socx)), height = 0.5) +
-  geom_tile(aes(x = count, y = 1, fill = factor(IV_None)), height = 0.5) +
-  scale_y_continuous(breaks = c(4,3,2,1), labels=ivlabs) +
-  scale_fill_manual(values = c("NA","blue")) +
-    theme_classic() +
-  ylab("Other Independent Variables in Model") +
-  theme(
-    axis.title.x = element_blank(),
-    legend.position = "none",
-    axis.line.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    axis.text.x = element_blank(),
-  )
-
-   
-```
 
 ```{r fig1_estimator}
 
