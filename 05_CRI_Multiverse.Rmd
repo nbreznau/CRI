@@ -1,0 +1,14 @@
+---
+title: "Tech 5. Multiverse/Dredge"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+library(pacman)
+
+
+pacman::p_load("ggplot2","tidyverse","readr","ExPanDaR","plotscale","lattice","tidyr","mlogit","knitr","grid","zoo","ggpubr","ragg","factoextra","cluster","kableExtra","skimr","WeightedCluster")}
+
+```
+

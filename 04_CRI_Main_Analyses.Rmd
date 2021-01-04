@@ -447,7 +447,9 @@ m08d <- summary(m08m)
 ```
 
 
-### Researcher Aspects
+### Researcher Characteristics
+
+Here we also add in **percent of models that are significant pos/neg** because this should obviously explain the researchers conclusions. We thought specifications would explain test reults, but as they mostly do not, we expect the test results are relevant. 
 
 *belief_ipred* - Belief that Hypothesis is true (that immigration reduces support), team average of predicted factor scores
 *pro_immigrant* - Support laws to better integrate immigrants, team average, single question
@@ -475,9 +477,9 @@ m11m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + 
 
 m12m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + stats_ipred, data = cri_team) 
 
-m13m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + total_score , data = cri_team)
+m13m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + belief_ipred + pro_immigrant + topic_ipred + stats_ipred + total_score , data = cri_team)
 
-m14m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + belief_ipred + pro_immigrant + topic_ipred + stats_ipred , data = cri_team)
+m14m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + belief_ipred + pro_immigrant + topic_ipred + pos_test_pct_p05 + neg_test_pct_p05, data = cri_team)
 
 m09d <- summary(m09m)
 m10d <- summary(m10m)
@@ -494,7 +496,10 @@ m14d <- summary(m14m)
 tab_model(m00m,m01m,m02m,m04m,m06m,m08m, digits = 3, p.style = "stars", show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = "results/reg22.htm")
 
 tab_model(m00m,m09m,m10m,m11m,m12m,m13m,m14m, digits = 3, p.style = "stars", show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = "results/reg23.htm")
+```
 
+
+```{r comb_tblm2}
 # First part of table (table too big to be in one)
 reg22 <- as.data.frame(read_html("results/reg22.htm") %>% html_table(fill=TRUE))
 
@@ -535,10 +540,10 @@ reg23s <- reg23[(length(reg23$Var.1)-4):(length(reg23$Var.1)),]
 reg23a <- reg23[-c((length(reg23$Var.1)-4):(length(reg23$Var.1))),]
 
 reg23a <- reg23a %>%
-  mutate(drop = ifelse(Hresult.1 != "" & Hresult.1 == "Reject" & Hresult.3 == "Reject" & Hresult.5 == "Reject" & Hresult.7 == "Reject" & Hresult.9 == "Reject" & Hresult.11 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Hresult.1 != "" & Hresult.1 == "No test" & Hresult.3 == "No test" & Hresult.5 == "No test" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test" & Hresult.13 == "No test", 1, ifelse(Hresult.1 == "" & Hresult.3 == "Reject" & Hresult.5 == "Reject" & Hresult.7 == "Reject" & Hresult.9 == "Reject" & Hresult.11 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Hresult.1 == "" & Hresult.3 == "No test" & Hresult.5 == "No test" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "belief_ipred" & Hresult.3 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Var.1 == "belief_ipred" & Hresult.3 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "pro_immigrant" & Hresult.5 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Var.1 == "pro_immigrant" & Hresult.5 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "topic_ipred" & Hresult.7 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Var.1 == "topic_ipred" & Hresult.7 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "stats_ipred" & Hresult.9 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Var.1 == "stats_ipred" & Hresult.9 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "total_score", 1, 0))))))))))))))
+  mutate(drop = ifelse(Hresult.1 != "" & Hresult.1 == "Reject" & Hresult.3 == "Reject" & Hresult.5 == "Reject" & Hresult.7 == "Reject" & Hresult.9 == "Reject" & Hresult.11 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Hresult.1 != "" & Hresult.1 == "No test" & Hresult.3 == "No test" & Hresult.5 == "No test" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test" & Hresult.13 == "No test", 1, ifelse(Hresult.1 == "" & Hresult.3 == "Reject" & Hresult.5 == "Reject" & Hresult.7 == "Reject" & Hresult.9 == "Reject" & Hresult.11 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Hresult.1 == "" & Hresult.3 == "No test" & Hresult.5 == "No test" & Hresult.7 == "No test" & Hresult.9 == "No test" & Hresult.11 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "belief_ipred" & Hresult.3 == "Reject" & Hresult.11 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Var.1 == "belief_ipred" & Hresult.3 == "No test" & Hresult.11 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "pro_immigrant" & Hresult.5 == "Reject" & Hresult.11 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Var.1 == "pro_immigrant" & Hresult.5 == "No test" & Hresult.11 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "topic_ipred" & Hresult.7 == "Reject" & Hresult.11 == "Reject" & Hresult.13 == "Reject", 1, ifelse(Var.1 == "topic_ipred" & Hresult.7 == "No test" & Hresult.11 == "No test" & Hresult.13 == "No test", 1, ifelse(Var.1 == "stats_ipred" & Hresult.9 == "Reject" & Hresult.11 == "Reject", 1, ifelse(Var.1 == "stats_ipred" & Hresult.9 == "No test" & Hresult.11 == "No test", 1, ifelse(Var.1 == "total_score" | Var.1 == "pos_test_pct_p05" | Var.1 == "neg_test_pct_p05", 1, 0))))))))))))))
 
 reg23a <- reg23a %>%
-  mutate(Hresult.13 = ifelse(Var.1 == "total_score" & Hresult.11 == "Reject", "Reject", ifelse(Var.1 == "total_score" & Hresult.11 == "No test", "No test", Hresult.13)))
+  mutate(Hresult.13 = ifelse(Var.1 == "total_score" & Hresult.11 == "Reject", "Reject", ifelse(Var.1 == "total_score" & Hresult.11 == "No test", "No test", ifelse(Var.1 == "stats_ipred" & Hresult.11 == "Reject", "Reject", ifelse(Var.1 == "stats_ipred" & Hresult.11 == "No test", "No test", Hresult.13)))))
 
 reg23a <- subset(reg23a, drop == 1)
 
@@ -769,26 +774,31 @@ rm(sim_3_vars,sim_7_vars,sim_13_vars,sim_16_vars,sims,rr,t1,avar,avg_dev_sim)
 tbl2_m22 <- as.data.frame(t(reg22))
 tbl2_m23 <- as.data.frame(t(reg23))
 
-# remove the choice rows
-tbl2_m22 <- completeFun(tbl2_m22, "47")
-tbl2_m23 <- completeFun(tbl2_m23, "47")
+# remove the choice rows (note these need to be entered by hand)
+tbl2_m22 <- completeFun(tbl2_m22, "218")
+tbl2_m23 <- completeFun(tbl2_m23, "1194")
 
-tbl2[3,5] <- tbl2_m22[2,47]
-tbl2[c(6,7,9,10,11),5] <- tbl2_m22[c(3:7),48]
+# add total deviance (column by hand)
+tbl2[3,5] <- tbl2_m22[2,214]
+# add deviance reduction
+tbl2[c(6,7,9,10,11),5] <- tbl2_m22[c(3:7),219]
 
-tbl2[c(13:17),5] <- tbl2_m23[c(3:7),48]
-tbl2[c(12),5] <- tbl2_m23[8,48]
+# NOTE: variables differ for the multinom models, it is not one characteristic
+# per model in the last models because of the inclusion of percent significant
+tbl2[c(13:15),5] <- tbl2_m23[c(3:5),1195]
+tbl2[c(16:17),5] <- "NA"
+# add researcher characteristics deviance reduction
+tbl2[c(12),5] <- tbl2_m23[7,1195]
+# add percent significant deviance reduction
+tbl2[18,1] <- "Results: Positive at 95%CI"
+tbl2[18,5] <- tbl2_m23[8,1195]
 
 tbl2[c(5,8),5] <- tbl2[c(7,11),5]
 
 # calculate unexplained dev
 tbl2[19,5] <- 1 - as.numeric(tbl2[12,5])
 
-#save versions for Supplementary Materials
-
-write.csv(reg22, file = "results/Tbl_Multinom1.csv")
-write.csv(reg23, file = "results/Tbl_Multinom2.csv")
-
+write.csv(tbl2, file = "results/Tbl2.csv")
 
 ```
 
@@ -796,39 +806,48 @@ write.csv(reg23, file = "results/Tbl_Multinom2.csv")
 
 ```{r write_tbl2}
 #make a version for plotting
-fig2 <- as.data.frame(matrix(nrow = 16, ncol = 3))
+fig2 <- as.data.frame(matrix(nrow = 20, ncol = 3))
 colnames(fig2) <- c("level","type","percent")
 #Level
-fig2[1:4,1] <- "Avg. Marginal Effects\nBetween-team variance"
-fig2[5:8,1] <- "Avg. Marginal Effects\nWithin-team variance"
-fig2[9:12,1] <- "Avg. Marginal Effects\nTotal variance"
-fig2[13:16,1] <- "Subjective conclusion\nBetween-team deviance"
+fig2[1:5,1] <- "Avg. Marginal Effects\nBetween-team variance"
+fig2[6:10,1] <- "Avg. Marginal Effects\nWithin-team variance"
+fig2[11:15,1] <- "Avg. Marginal Effects\nTotal variance"
+fig2[16:20,1] <- "Subjective conclusion\nBetween-team deviance"
 #Type
-fig2[c(1,5,9,13),2] <- "Objective conditions"
-fig2[c(2,6,10,14),2] <- "Research design"
-fig2[c(3,7,11,15),2] <- "Researcher attributes"
-fig2[c(4,8,12,16),2] <- "Unexplained variance"
+fig2[c(1,6,11,16),2] <- "Objective conditions"
+fig2[c(2,7,12,17),2] <- "Research design"
+fig2[c(3,8,13,18),2] <- "Researcher characteristics"
+fig2[c(4,9,14,19),2] <- "Results"
+fig2[c(5,10,15,20),2] <- "Unexplained variance"
 #percentage
-fig2[,3] <- c(tbl2[c(5,8,12,19),2],tbl2[c(5,8,12,19),3],tbl2[c(5,8,12,19),4],tbl2[c(5,8,12,19),5])
+# add a fifth stacked bar that only appears in the subjective conclusions
+# results to account for percentage significant results by team
+fig2[,3] <- c(tbl2[c(5,8,12,12,19),2],tbl2[c(5,8,12,12,19),3],tbl2[c(5,8,12,12,19),4],tbl2[c(5,8,12,18),5], (as.numeric(tbl2[19,5]) - as.numeric(tbl2[18,5])))
+
 fig2$percent <- as.numeric(fig2$percent)
+
 fig2[2,3] <- (fig2[2,3] - fig2[1,3])
 fig2[3,3] <- (fig2[3,3] - fig2[2,3])
-fig2[4,3] <- 1 - (fig2[1,3] + fig2[2,3] + fig2[3,3])
+fig2[4,3] <- 0
+fig2[5,3] <- 1 - (fig2[1,3] + fig2[2,3] + fig2[3,3])
 
-fig2[6,3] <- (fig2[6,3] - fig2[5,3])
 fig2[7,3] <- (fig2[7,3] - fig2[6,3])
-fig2[8,3] <- 1 - (fig2[7,3] + fig2[6,3] + fig2[5,3])
+fig2[8,3] <- (fig2[8,3] - fig2[7,3])
+fig2[9,3] <- 0
+fig2[10,3] <- 1 - (fig2[8,3] + fig2[7,3] + fig2[6,3])
 
-fig2[10,3] <- (fig2[10,3] - fig2[9,3])
-fig2[11,3] <- (fig2[11,3] - fig2[10,3])
-fig2[12,3] <- 1 - (fig2[11,3] + fig2[10,3] + fig2[9,3])
+fig2[12,3] <- (fig2[12,3] - fig2[11,3])
+fig2[13,3] <- (fig2[13,3] - fig2[12,3])
+fig2[14,3] <- 0
+fig2[15,3] <- 1 - (fig2[11,3] + fig2[12,3] + fig2[13,3])
 
-fig2[14,3] <- (fig2[14,3] - fig2[13,3])
-fig2[15,3] <- (fig2[15,3] - fig2[14,3])
-fig2[16,3] <- 1 - (fig2[15,3] + fig2[14,3] + fig2[13,3])
+fig2[17,3] <- (fig2[17,3] - fig2[16,3])
+fig2[18,3] <- (fig2[18,3] - fig2[17,3])
+fig2[19,3] <- (fig2[19,3] - fig2[18,3])
+fig2[20,3] <- 1 - (fig2[19,3] + fig2[18,3] + fig2[17,3] + fig2[16,3])
 
 
-write.csv(tbl2, file = "results/Tbl2.csv")
+
 ```
 
 
@@ -851,12 +870,12 @@ ggplot(fig2, aes(x = level, y = percent, fill = type)) +
   labs(title = "<span style = \"font-size: 18px\">**Factors Explaining Variance in Results**</span>") +
   scale_x_discrete(labels = fig2_labs, drop = F) +
   scale_y_reverse() +
-  geom_rect(aes(xmin = 1.3, xmax = 4.1, ymin = 0.005, ymax = 0.24), color = "darksalmon", size = 1.5, fill = "transparent") +
-  geom_rect(aes(xmin = 1.3, xmax = 4.1, ymin = 0.26, ymax = 0.49), color = "royalblue2", size = 1.5, fill = "transparent") +
-  geom_rect(aes(xmin = 1.3, xmax = 4.1, ymin = 0.51, ymax = 0.74), color = "chartreuse3", size = 1.5, fill = "transparent") +
-  geom_rect(aes(xmin = 1.3, xmax = 4.1, ymin = 0.76, ymax = 0.995), color = "darkorchid1", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.005, ymax = 0.24), color = "darksalmon", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.26, ymax = 0.49), color = "royalblue2", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.51, ymax = 0.74), color = "chartreuse3", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.76, ymax = 0.995), color = "darkorchid1", size = 1.5, fill = "transparent") +
   annotate("text", x = 3.7, y = 0.124, label = "UNEXPLAINED\nVARIANCE", color = "black", size = 3) +
-  annotate("text", x = 3.7, y = 0.375, label = "RESEARCHER\nATTRIBUTES", color = "black",  size = 3) +
+  annotate("text", x = 3.7, y = 0.375, label = "RESEARCHER\nCHARACTERISTICS", color = "black",  size = 3) +
   annotate("text", x = 3.7, y = 0.624, label = "RESEARCH\nDESIGN", color = "black",  size = 3) +
   annotate("text", x = 3.7, y = 0.876, label = "OBJECTIVE\nCONDITIONS", color = "black",  size = 3) +
   annotate("text", x = 2.52, y = 0.228, label = "(unique features of\neach team's research\ndesign)", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
@@ -868,13 +887,15 @@ ggplot(fig2, aes(x = level, y = percent, fill = type)) +
   annotate("text", x = 8.8, y = 0.5,  label = "50%", size = 3.5) +
   annotate("text", x = 8.8, y = 0.25,  label = "75%", size = 3.5) +
   annotate("text", x = 8.8, y = 0, hjust = 1, label = "100%", size = 3.5) +
+  annotate("text", x = 8, y = 0.67,  label = "% POSITIVE\nTEST RESULTS", size = 2.5, color = "grey20") +
   geom_segment(aes(x = 4.15, y = 0.123, xend = 4.55, yend = 0.45), color = "darksalmon") +
   geom_segment(aes(x = 4.15, y = 0.376, xend = 4.55, yend = 0.85), color = "royalblue2") +
   geom_segment(aes(x = 4.15, y = 0.626, xend = 4.55, yend = 0.945), color = "chartreuse3") +
   geom_segment(aes(x = 4.15, y = 0.876, xend = 4.55, yend = 0.99), color = "darkorchid1") +
   scale_fill_manual(values = c("Objective conditions" = "darkorchid1",
                                 "Research design" = "chartreuse3",
-                                "Researcher attributes" = "royalblue2",
+                                "Researcher characteristics" = "royalblue2",
+                                "Results" = "burlywood",
                                 "Unexplained variance" = "darksalmon")) +
   theme(axis.line = element_blank(),
         axis.text.x = element_blank(),
@@ -888,254 +909,10 @@ knitr::include_graphics("results/fig2_varexp.png")
 
 
 
+### Save output for multiverse analysis
 
-```{r prep_rain_plots}
-cri_ml_in <- cri_ml_in %>%
-  mutate(m13_e = AME_Z - m13_p,
-         stat_cat_factor = factor(STATISTICS_SKILL, levels = c("Low","Mid","High")),
-         belief_cat_factor = factor(BELIEF_HYPOTHESIS, levels = c("Low","Mid","High")),
-         topic_cat_factor = factor(TOPIC_KNOWLEDGE, levels = c("Low","Mid","High")),
-         total_score_cat_factor = factor(MODEL_SCORE, levels = c("Low","Mid","High")),
-         pro_immigrant_cat_factor = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"))
-  )
-
-write_rds(cri_ml_in, file = "data/cri_ml_in.Rda")
+```{r saveout}
+write.csv(cri_ml, file = "results/cri_ml.csv")
+write.csv(cri_team, file = "results/cri_team.csv")
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#### Test IV Type - unweighted
-
-These results do not take into account the varying number of models per team
-
-```{r m1_ivsplit, include = TRUE, warning = F}
-
-cri_stock <- subset(cri, cri$Stock == 1)
-cri_flow <- subset(cri, cri$Flow == 1)
-
-#Stock models
-m1a_stock <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_stock)
-m1b_stock <- lm(p ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_stock)
-m1c_stock <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri_stock)
-
-#Flow models
-m1a_flow <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_flow)
-m1b_flow <- lm(p ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_flow)
-m1c_flow <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale + p, data = cri_flow)
-
-tab_model(m1a_stock,m1b_stock,m1c_stock,m1a_flow,m1b_flow,m1c_flow, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
-
-
-```
-
-#### Test IV Type - weighted
-
-We abandon estimation of p-values here. They do not seem to be of substantive interest for us... yet.
-
-Weighting does not improve explained variance.
-
-```{r m1_weight, include = TRUE}
-
-m1aw <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri, weight = (inv_weight/1)*112)
-m1aw_stock <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_stock, weights = (inv_weight/1)*112)
-m1aw_flow <- lm(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_flow, weights = (inv_weight/1)*112)
-
-
-tab_model(m1aw,m1aw_stock,m1aw_flow, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
-
-
-```
-
-#### Pooled by Test Type
-
-```{r m2_pooled_iv_type}
-
-# Pooled by test variable, ref = change in flow
-
-m2 <- lm(AME_Z ~ factor(main_IV_type), data = cri)
-
-tab_model(m2, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
-
-```
-
-#### Waves of Data Used
-
-##### Model Specifications - testing universe of wave combinations
-
-Results suggest that using a 2006*2016 interaction 'maximizes' explained variance at 0.008.It suggests leaving out the main effect for w2016, but this is substantively awkward, so we put it back in for the final regression in the next code chunk.
-
-```{r wave_test}
-
-# the use of 1985 and 1990 is quite rare so we focus on the latter three waves as potential interactions
-m_wave <-
-    regsubsets(AME_Z ~ w1985 + w1990 + w1996 + w2006 + w2016 + w1996*w2006 + w1996*w2016 + w1996*w2006*w2016 + w2006*w2016,
-               data = cri,
-               nbest = 1,       # 1 best model for each number of predictors
-               nvmax = NULL,    # NULL for no limit on number of variables
-               force.in = NULL, force.out = NULL,
-               method = "exhaustive")
-
-plot(m_wave, scale = "adjr2", main = "Adjusted R^2")
-```
-
-##### Sample Selection Waves
-
-```{r m3}
-m3 <- lm(AME_Z ~ w2006 + w2016 + w2006*w2016, data = cri)
-m3_stock <- lm(AME_Z ~ w2006 + w2016 + w2006*w2016, data = cri_stock)
-m3_flow <- lm(AME_Z ~ w1996 + w2006 + w2016 + w2006*w2016, data = cri_flow)
-
-tab_model(m3, m3_stock, m3_flow, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
-```
-
-
-#### Sample Selection Related IVs
-
-##### Universe approach
-
-After running this, it is not even worth modeling. We can only get up to Adj r^2 around 0.01.
-
-```{r sample_test}
-
-# we do not interact all variables because they are mostly mutually exclusive 
-m_sample <-
-    regsubsets(AME_Z ~ w2006 + w2016 + w2006*w2016 + orig13 + orig17 + eeurope + allavailable + w2016*orig13 + w2016*orig17 + w2016*eeurope + w2016*allavailable + w2006*w2016*orig13 + w2006*w2016*orig17 + w2006*w2016*eeurope + w2006*w2016*allavailable + w2006*w2016*orig13 + w2006*orig13 + w2006*orig17 + w2006*eeurope + w2006*allavailable,
-               data = cri,
-               nbest = 1,       # 1 best model for each number of predictors
-               nvmax = NULL,    # NULL for no limit on number of variables
-               force.in = NULL, force.out = NULL,
-               method = "exhaustive")
-
-plot(m_sample, scale = "adjr2", main = "Adjusted R^2")
-```
-
-##### Sample selection
-
-orig13
-orig17, dropped, see above
-eeurope
-allavailable
-
-
-
-```{r m4}
-m4 <- lm(AME_Z ~ orig13  + eeurope + allavailable + w2006 + w2016 + w2006*w2016 + w2016*eeurope + w2016*allavailable, data = cri)
-m4_stock <- lm(AME_Z ~ orig13  + eeurope + allavailable + w2006 + w2016 + w2006*w2016 + w2016*eeurope + w2016*allavailable, data = cri_stock)
-m4_flow <- lm(AME_Z ~ orig13  + eeurope + allavailable + + w1996 + w2006 + w2016 + w2006*w2016 + w2016*eeurope + w2016*allavailable, data = cri_flow)
-
-tab_model(m4, m4_stock, m4_flow, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
-
-```
-
-
-### Team Qualities
-
-
-
-
-#### Correlations
-
-```{r rq_corr}
-cor_rq <- select(cri, AME_Z, Hsup, AME_sup_p05, belief_ipred, pro_immigrant, topic_ipred, stats_ipred, total_score)
-# cor_rq <- completeFun(cor_rq, c("AME_Z", "belief_ipred"))
-# cor_rq <- as.data.frame(cor_rq)
-cor_rqa <- as.data.frame(round(cor(cor_rq, use = "pairwise.complete.obs"), 3))
-
-# Start to build main findings table
-cor_rqa <- as.data.frame(cor_rqa[4:8,1:3])
-cor_rqa2 <- round(100*(cor_rqa^2), 3)
-
-# Stock and Flow only
-cor_rq_stock <- select(cri_stock, AME_Z, belief_ipred, pro_immigrant, topic_ipred, stats_ipred, total_score)
-cor_rqa_stock <- as.data.frame(round(cor(cor_rq_stock, use = "pairwise.complete.obs"), 3))
-
-cor_rqa_stock <- as.data.frame(cor_rqa_stock[2:6,1])
-cor_rqa2_stock <- round(100*(cor_rqa_stock^2), 3)
-
-cor_rq_flow <- select(cri_flow, AME_Z, belief_ipred, pro_immigrant, topic_ipred, stats_ipred, total_score)
-cor_rqa_flow <- as.data.frame(round(cor(cor_rq_flow, use = "pairwise.complete.obs"), 3))
-
-cor_rqa_flow <- as.data.frame(cor_rqa_flow[2:6,1])
-cor_rqa2_flow <- round(100*(cor_rqa_flow^2), 3)
-
-# bind all together
-
-cor_rqa21 <- as.data.frame(cor_rqa2[,1])
-cor_rqa22 <- as.data.frame(cor_rqa2[,2:3])
-cor_rq_final <- bind_cols(cor_rqa21, cor_rqa2_stock, cor_rqa2_flow, cor_rqa22)
-
-rm(cor_rq, cor_rq_flow, cor_rq_stock, cor_rqa, cor_rqa_flow, cor_rqa_stock, cor_rqa2, cor_rqa2_flow, cor_rqa2_stock)
-```
-
-
-#### Universe Approach
-
-```{r qs_test}
-
-# we do not interact all variables because they are mostly mutually exclusive 
-m_qs <-
-    regsubsets(AME_Z ~ belief_ipred + pro_immigrant + topic_ipred + stats_ipred + total_score + belief_ipred*pro_immigrant + belief_ipred*topic_ipred + belief_ipred*stats_ipred + belief_ipred*total_score + pro_immigrant*topic_ipred + pro_immigrant*stats_ipred + pro_immigrant*total_score + topic_ipred*stats_ipred + topic_ipred*total_score + stats_ipred*total_score,
-               data = cri,
-               nbest = 1,       # 1 best model for each number of predictors
-               nvmax = NULL,    # NULL for no limit on number of variables
-               force.in = NULL, force.out = NULL,
-               method = "exhaustive")
-
-plot(m_qs, scale = "adjr2", main = "Adjusted R^2")
-```
-
-```{r m20}
-m20 <- lm(AME_Z ~ belief_ipred + pro_immigrant + topic_ipred + stats_ipred + total_score + belief_ipred*topic_ipred + belief_ipred*stats_ipred + pro_immigrant*stats_ipred + topic_ipred*stats_ipred, data = cri)
-m20_stock <- lm(AME_Z ~ belief_ipred + pro_immigrant + topic_ipred + stats_ipred + total_score + belief_ipred*topic_ipred + belief_ipred*stats_ipred + pro_immigrant*stats_ipred + topic_ipred*stats_ipred, data = cri_stock)
-m20_flow <- lm(AME_Z ~ belief_ipred + pro_immigrant + topic_ipred + stats_ipred + total_score + belief_ipred*topic_ipred + belief_ipred*stats_ipred + pro_immigrant*stats_ipred + topic_ipred*stats_ipred, data = cri_flow)
-
-tab_model(m20, m20_stock, m20_flow, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
-
-```
-
-
-### All Aspects Combined
-
-
-```{r m30}
-m30 <- lm(AME_Z ~ belief_ipred + pro_immigrant + topic_ipred + stats_ipred + total_score + belief_ipred*topic_ipred + belief_ipred*stats_ipred + pro_immigrant*stats_ipred + topic_ipred*stats_ipred + orig13  + eeurope + allavailable + w2006 + w2016 + w2006*w2016 + w2016*eeurope + w2016*allavailable + Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri)
-
-m30_stock <- lm(AME_Z ~ belief_ipred + pro_immigrant + topic_ipred + stats_ipred + total_score + belief_ipred*topic_ipred + belief_ipred*stats_ipred + pro_immigrant*stats_ipred + topic_ipred*stats_ipred + orig13  + eeurope + allavailable + w2006 + w2016 + w2006*w2016 + w2016*eeurope + w2016*allavailable + Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_stock)
-
-m30_flow <- lm(AME_Z ~ belief_ipred + pro_immigrant + topic_ipred + stats_ipred + total_score + belief_ipred*topic_ipred + belief_ipred*stats_ipred + pro_immigrant*stats_ipred + topic_ipred*stats_ipred + orig13  + eeurope + allavailable + w2006 + w2016 + w2006*w2016 + w2016*eeurope + w2016*allavailable + Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_flow)
-
-tab_model(m30, m30_stock, m30_flow, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
-```
-
-
-### All Aspects Combined Weighted
-
-
-```{r m30w}
-m30_w <- lm(AME_Z ~ belief_ipred + pro_immigrant + topic_ipred + stats_ipred + total_score + belief_ipred*topic_ipred + belief_ipred*stats_ipred + pro_immigrant*stats_ipred + topic_ipred*stats_ipred + orig13  + eeurope + allavailable + w2006 + w2016 + w2006*w2016 + w2016*eeurope + w2016*allavailable + Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri, weights = (inv_weight/1)*112)
-
-m30_stock_w <- lm(AME_Z ~ belief_ipred + pro_immigrant + topic_ipred + stats_ipred + total_score + belief_ipred*topic_ipred + belief_ipred*stats_ipred + pro_immigrant*stats_ipred + topic_ipred*stats_ipred + orig13  + eeurope + allavailable + w2006 + w2016 + w2006*w2016 + w2016*eeurope + w2016*allavailable + Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_stock, weights = (inv_weight/1)*112)
-
-m30_flow_w <- lm(AME_Z ~ belief_ipred + pro_immigrant + topic_ipred + stats_ipred + total_score + belief_ipred*topic_ipred + belief_ipred*stats_ipred + pro_immigrant*stats_ipred + topic_ipred*stats_ipred + orig13  + eeurope + allavailable + w2006 + w2016 + w2006*w2016 + w2016*eeurope + w2016*allavailable + Jobs + Unemp + IncDiff + OldAge + House + Health + Scale, data = cri_flow, weights = (inv_weight/1)*112)
-
-tab_model(m30, m30_stock, m30_flow, p.style = "stars", show.ci = F, rm.terms = c("(Intercept)"))
-```
-
-###

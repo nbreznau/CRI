@@ -515,7 +515,7 @@ g04ci <- ggplot(crispectest) +
   theme(
     legend.position = "none",
     axis.title.y = element_blank(),
-    axis.text.x = element_blank())
+    axis.text.y = element_blank())
    
 ```
 
@@ -623,26 +623,80 @@ Order results by subjective conclusion and then percent ratio of effect sizes at
 
 ```{r fig2team_setup}
 cri_team <- cri_team %>%
-  mutate(subj_concl <- factor(Hresult, levels = c("Reject","No test","Support")),
+  mutate(subj_concl = factor(Hresult, levels = c("Reject","No test","Support")),
          pct_negpos = ifelse(subj_concl == "Reject", AME_neg_p05, 
                              ifelse(subj_concl == "No test", AME_ns_p05, AME_sup_p05)))
   
-  # order rows to make counter
-cri_team <- cri_team[order(cri_team$Hresult, cri_team$pct_negpos),]
+# order rows to make counter (by negpos)
+cri_team <- cri_team[order(cri_team$subj_concl, cri_team$pct_negpos),]
 cri_team$count <- 1:nrow(cri_team)
 
+# alternative counter (by average effect size within conclusions)
+cri_team <- cri_team[order(cri_team$subj_concl, cri_team$AME_Z),]
+cri_team$count2 <- 1:nrow(cri_team)
+
+# create trimmed AME for plotting
+cri_team <- cri_team %>%
+  mutate(AME_Zt = ifelse(AME_Z < -0.03, -0.03, ifelse(AME_Z > 0.02, 0.02, AME_Z)))
 
 cri_team <- cri_team %>%
   mutate(belief_ipredm = scale(ifelse(is.na(belief_ipred), mean(belief_ipred, na.rm=T), belief_ipred)),
          pro_immigrantm = scale(ifelse(is.na(pro_immigrant), mean(pro_immigrant, na.rm=T), pro_immigrant)),
          topic_ipredm = scale(ifelse(is.na(topic_ipred), mean(topic_ipred, na.rm=T), topic_ipred)),
          stats_ipredm = scale(ifelse(is.na(stats_ipred), mean(stats_ipred, na.rm=T), stats_ipred)),
-         total_scorem = scale(ifelse(is.na(total_score), mean(total_score, na.rm=T), total_score)))
+         total_scorem = scale(ifelse(is.na(total_score), mean(total_score, na.rm=T), total_score)),
+         percentpos = scale(pos_test_pct_p05),
+         belief_ipredm = ifelse(belief_ipredm > 2, 2, ifelse(belief_ipredm < -2, -2, belief_ipredm)),
+         pro_immigrantm = ifelse(pro_immigrantm > 2, 2, ifelse(pro_immigrantm < -2, -2, pro_immigrantm)),
+         topic_ipredm = ifelse(topic_ipredm > 2, 2, ifelse(topic_ipredm < -2, -2, topic_ipredm)),
+         stats_ipredm = ifelse(stats_ipredm > 2, 2, ifelse(stats_ipredm < -2, -2, belief_ipredm)),
+         total_scorem = ifelse(total_scorem > 2, 2, ifelse(total_scorem < -2, -2, total_scorem)),
+         percentpos = ifelse(percentpos > 2, 2, ifelse(percentpos < -2, -2, percentpos)))
 
 labs_y <- c("Model Score","Stats-Skill","Topic\nKnowledge","Pro Immigrant","Belief Hyp. True")
+
+labs_y_new <- c("Model Score","Stats-Skill","Topic\nKnowledge","Pro Immigrant","Belief Hyp. True", "% Positive\nTest Results")
+```
+
+### New Fig2
+
+```{r fig2team_new}
+g5a_new <- 
+  ggplot(cri_team) +
+  geom_point(aes(x = count2, y = AME_Zt, color = subj_concl), shape = 18, size = 6) +   scale_color_manual(values = c("firebrick","grey55", "chartreuse4"), labels = c("Rejected","Not testable","Supported")) +
+  labs(color = "Conclusion\nHypothesis is:", x = "Team Conclusions", y = "Average Effect Size\nof Team's Test Models") +
+  theme_classic() +
+  theme(
+    plot.margin=unit(c(0.2,0.2,0.2,1.05),"cm"),
+    axis.title.y = element_text(size = 12),
+    axis.title.x = element_text(size = 12)
+  )
+
+g5b_new <- ggplot(cri_team) +
+  geom_tile(aes(x = count2, y = 6, fill = percentpos), height = 0.5) +
+  geom_tile(aes(x = count2, y = 5, fill = belief_ipredm), height = 0.5) +
+  geom_tile(aes(x = count2, y = 4, fill = pro_immigrantm), height = 0.5) +
+  geom_tile(aes(x = count2, y = 3, fill = topic_ipredm), height = 0.5) +
+  geom_tile(aes(x = count2, y = 2, fill = stats_ipredm), height = 0.5) +
+  geom_tile(aes(x = count2, y = 1, fill = total_scorem), height = 0.5) +
+  scale_y_continuous(breaks = c(1,2,3,4,5,6), labels=labs_y_new) +
+    theme_classic() +
+  labs(fill = "Standardized\nScore") +
+  theme(
+    #legend.position = "none",
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    plot.margin=unit(c(0.2,0.3,0.2,0.5),"cm")
+  )
+agg_png(filename = "results/Fig2team_new2.png", res = 144, height = 900, width = 1200)
+ggarrange(g5a_new,g5b_new,ncol = 1, heights = c(1,1.2))
+dev.off()
+
+knitr::include_graphics("results/Fig2team_new2.png")
 ```
 
 
+### Old Fig2
 ```{r fig2team}
 g5a <- ggplot(cri_team) +
   geom_point(aes(x = count, y = pct_negpos, color = Hresult), shape = 18, size = 6) +   scale_color_manual(values = c("chartreuse4","grey55", "firebrick"), labels = c("Supported","Not testable","Rejected"," ")) +
