@@ -149,11 +149,10 @@ g1a <- ggplot(crispectest) +
   geom_point(aes(x = count, y = est_sig, color = sig_group), shape = "|", size = 4) +
   scale_color_manual(values = c("chartreuse4","NA", "firebrick"), labels = c("Negative","Not sig.","Positive"," ")) +
   ylim(-0.21, 0.21) +
-  labs(color = "Effect at 95%CI", x = "Standardized Effect Size", y = " \n \n \n ") +
+  labs(color = "Effect at 95%CI", x = "by Standardized Effect Size", y = " \n \n \n ") +
   theme_classic() +
   guides(color = guide_legend(override.aes = list(size=7, color=c("chartreuse4","grey55", "firebrick","NA")))) +
   theme(
-    legend.key.size = unit(2,"line"),
     legend.position = "none",
     axis.text.x = element_blank())
 
@@ -191,11 +190,25 @@ g2 <- ggplot(crispectest) +
   geom_vline(xintercept = 688) +
   theme_classic() +
   theme(
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
+    legend.position = "none",
     axis.title.x = element_blank()
   )
-  
+
+# make an adjusted version for the smaller plots
+g2a <- ggplot(crispectest) +
+  geom_errorbar(aes(x = count2, ymin = lb, ymax = ub), color = "grey55") +
+  geom_point(aes(x = count2, y = est, color = sig_group2), size = 1) +
+  scale_color_manual(values = c("chartreuse4","grey45", "firebrick"), labels = c("Negative","Not sig.","Positive")) +
+  coord_cartesian(ylim = c(-0.21,0.21)) +
+  labs(color = "Effect\nat 95%CI", x = "by Confidence Interval Minimum", size = 2) +
+  geom_vline(xintercept = 688) +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank()
+  )
 
 ```
 
@@ -338,7 +351,10 @@ crispectest <- crispectest %>%
 
 ##### Measurement Specs
 
-Six dependent variables, plus a scale variable
+For each set of explanatory variables we plot two versions. One ordered by effect size (point estimate) and a second by confidence interval minimum. Four columns in total.
+
+
+Test Format
 
 
 ```{r fig1_test}
@@ -359,9 +375,27 @@ g01 <-
     axis.ticks.x = element_blank(),
     axis.text.x = element_blank(),
   )
+
+g01ci <- 
+  ggplot(crispectest) +
+  geom_tile(aes(x = count2, y = 0.75, fill = factor(Test_Stock)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 0.5, fill = factor(Test_Flow)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 0.25, fill = factor(Test_ChangeFlow)), height = 0.133, width = 0.25) +
+  scale_y_continuous(breaks = c(0.75,0.5,0.25), labels=testlabs) +
+  scale_fill_manual(values = c("white","blue")) +
+  theme_classic() +
+  theme(
+    axis.title.x = element_blank(),
+    legend.position = "none",
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank()
+  )
 ```
 
-
+Measurement of Immigration
 
 ```{r fig1_measure}
 mlabs <- c("  Immigra-\nnts (%)", "Net\nMigration")
@@ -380,8 +414,26 @@ g02 <-
     axis.ticks.x = element_blank(),
     axis.text.x = element_blank(),
   )
+
+g02ci <- 
+  ggplot(crispectest) +
+  geom_tile(aes(x = count2, y = 0.5, fill = factor(M_Gross)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 0.25, fill = factor(M_Net)), height = 0.133, width = 0.25) +
+  scale_y_continuous(breaks = c(0.5,0.25), labels=mlabs) +
+  scale_fill_manual(values = c("white","darkblue")) +
+  theme_classic() +
+  theme(
+    axis.title.x = element_blank(),
+    legend.position = "none",
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank()
+  )
 ```
 
+Dependent Variables
 
 ```{r fig1_measure}
 # set labels
@@ -408,8 +460,30 @@ g03 <-
     axis.text.x = element_blank(),
   )
   
+g03ci <- 
+  ggplot(crispectest) +
+  geom_tile(aes(x = count, y = 1.75, fill = factor(DV_Jobs)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 1.5, fill = factor(DV_Unemp)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 1.25, fill = factor(DV_IncDiff)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 1, fill = factor(DV_OldAge)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.75, fill = factor(DV_House)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.5, fill = factor(DV_Health)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.25, fill = factor(DV_Scale)), height = 0.133, width = 0.25) +
+  scale_y_continuous(breaks = c(1.75,1.5,1.25,1,0.75,0.5,0.25), labels=dvlabs) +
+  scale_fill_manual(values = c("white","blue")) +
+    theme_classic() +
+  theme(
+    axis.title.x = element_blank(),
+    legend.position = "none",
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank()
+  )
 ```
 
+Independent Variables
 
 ```{r fig1_ivs}
 
@@ -428,13 +502,27 @@ g04 <- ggplot(crispectest) +
   theme(
     legend.position = "none")
 
+# version for right-side column 
+g04ci <- ggplot(crispectest) +
+  geom_tile(aes(x = count, y = 1, fill = factor(IV_Emp)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.75, fill = factor(IV_GDP)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.5, fill = factor(IV_Socx)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.25, fill = factor(IV_None)), height = 0.133, width = 0.25) +
+  scale_y_continuous(breaks = c(1,0.75,0.5,0.25), labels=ivlabs) +
+  scale_fill_manual(values = c("white","darkblue")) +
+    theme_classic() +
+  xlab("Models ordered by 95%CI Minimum") +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_blank(),
+    axis.text.x = element_blank())
    
 ```
 
 
 ```{r fig1_col1}
-agg_png(filename = "results/Fig1_Col1.png", height = 800, width = 400, res = 72)
-ggarrange(g1a, g01, g02, g03, g04, nrow = 5, ncol = 1, heights = c(0.6,.75,0.5,1.75,1.2))
+agg_png(filename = "results/Fig1_Col1.png", height = 800, width = 800, res = 72)
+ggarrange(g1a, g2a, g01, g01ci, g02, g02ci, g03, g03ci, g04, g04ci, nrow = 5, ncol = 2, heights = c(0.6,.75,0.5,1.75,1.2), widths = c(1,0.9))
 dev.off()
 
 knitr::include_graphics("results/Fig1_Col1.png")
