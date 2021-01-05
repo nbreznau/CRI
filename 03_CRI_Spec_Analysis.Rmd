@@ -50,6 +50,21 @@ cri_team <- subset(cri_team, u_teamid!=0)
 # prep data
 crispectest <- dplyr::select(cri_str, id, u_teamid, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe, cluster_any, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_any, Hresult, orig13, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE, main_IV_measurement, emplrate_ivC:gdp_ivC)
 
+# create background degree variable (1 = other, 2 = methods focus, 3 = soc, 4 = polsci, 5 = psych)
+crimrg <- cri %>%
+  mutate(backgr_degree1 = ifelse(is.na(backgr_degree1), 6, backgr_degree1), # replace NA
+         backgr_degree2 = ifelse(is.na(backgr_degree2), 6, backgr_degree2),
+         backgr_degree3 = ifelse(is.na(backgr_degree3), 6, backgr_degree3),
+         degree = car::recode(backgr_degree1, "1 = 1; 2 = 1; 6 = 1; 7 = 2; 3 = 3; 4 = 4; 5 = 5"),
+         degree = ifelse(backgr_degree2 == 7, 2, ifelse(backgr_degree3 == 7, 2, degree)),
+         # if any methods, then make methods for team
+         )
+
+crimrg <- select(crimrg, degree, id)
+
+crispectest <- left_join(crispectest, crimrg, by = "id")
+
+
 # create sample variables 
 crispectest <- crispectest %>%
   mutate(w1985 = ifelse(is.na(w1985), "Other", w1985),
@@ -653,7 +668,7 @@ cri_team <- cri_team %>%
          total_scorem = ifelse(total_scorem > 2, 2, ifelse(total_scorem < -2, -2, total_scorem)),
          percentpos = ifelse(percentpos > 2, 2, ifelse(percentpos < -2, -2, percentpos)))
 
-labs_y <- c("Model Score","Stats-Skill","Topic\nKnowledge","Pro Immigrant","Belief Hyp. True")
+labs_y <- c("Model Score","Stats-Skill","Topic\nKnowledge","Pro Immigrant","Belief Hyp. True") 
 
 labs_y_new <- c("Model Score","Stats-Skill","Topic\nKnowledge","Pro Immigrant","Belief Hyp. True", "% Positive\nTest Results")
 ```
@@ -729,136 +744,13 @@ dev.off()
 knitr::include_graphics("results/Fig2team_new.png")
 ```
 
-
-#### Fig 2. Model Features Pooled
-
-```{r}
-crispectest2 <- crispectest %>%
-  mutate(IMMIGRATION_MEASURE = iv_type,
-         DV_MEASURE = dv_type)
-
-crispectest2 <- subset(crispectest2, !is.na(crispectest2$IMMIGRATION_MEASURE))
-crispectest2 <- subset(crispectest2, !is.na(crispectest2$DV_MEASURE))
-
-crispectest2 <- select(crispectest2, IMMIGRATION_MEASURE, DV_MEASURE, est, lb, ub)
-
-# remove/adjust attributes
-  crispectest2 <- crispectest2[names(crispectest2)]
-  choices <- 1:2
-  attr(crispectest2, "choices") <- choices
-  rownames(crispectest2) <- NULL
-png(file = "results/Fig2_AME.png", width = 1200, height = 850, res = 144)
-
-plot_rdf_spec_curve(crispectest2, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, pt_size = 0.3, ribbon = T)
-dev.off()
-
-knitr::include_graphics("results/Fig2_AME.png")
-```
-#### Fig 2_Stock. Model Features Stock Models Only
-
-```{r fig2_stock}
-crispectest3 <- subset(crispectest2, IMMIGRATION_MEASURE == "Stock")
-crispectest3 <- select(crispectest3, -c(IMMIGRATION_MEASURE))
-
-# remove/adjust attributes
-  crispectest3 <- crispectest3[names(crispectest3)]
-  choices <- 1
-  attr(crispectest3, "choices") <- choices
-  rownames(crispectest3) <- NULL
-png(file = "results/Fig2_Stock_AME.png", width = 800, height = 650, res = 144)
-
-plot_rdf_spec_curve(crispectest3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, pt_size = 0.3, ribbon = T)
-dev.off()
-
-knitr::include_graphics("results/Fig2_Stock_AME.png")
+```{r saveout}
+write.csv(crispectest, file = "results/crispectest.csv")
 ```
 
 
-#### Fig 2_Stock. Model Features Flow Models Only
 
-```{r fig2_flow}
-crispectest4 <- subset(crispectest2, IMMIGRATION_MEASURE == "Flow")
-crispectest4 <- select(crispectest4, -c(IMMIGRATION_MEASURE))
-
-# remove/adjust attributes
-  crispectest4 <- crispectest4[names(crispectest4)]
-  choices <- 1
-  attr(crispectest4, "choices") <- choices
-  rownames(crispectest4) <- NULL
-png(file = "results/Fig2_Flow_AME.png", width = 800, height = 650, res = 144)
-
-plot_rdf_spec_curve(crispectest3, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, pt_size = 0.3, ribbon = T)
-dev.off()
-
-knitr::include_graphics("results/Fig2_Flow_AME.png")
-```
-
-#### Fig 3. Sample Features
-
-```{r fig3}
-crispectest5 <- select(crispectest, SURVEY_WAVES, COUNTRIES, est, lb, ub)
-
-crispectest5 <- subset(crispectest5, !is.na(crispectest5$SURVEY_WAVES))
-crispectest5 <- subset(crispectest5, !is.na(crispectest5$COUNTRIES))
-
-
-# remove/adjust attributes
-  crispectest5 <- crispectest5[names(crispectest5)]
-  choices <- 1:2
-  attr(crispectest5, "choices") <- choices
-  rownames(crispectest5) <- NULL
-png(file = "results/Fig3_AME.png", width = 1200, height = 850, res = 144)
-
-plot_rdf_spec_curve(crispectest5, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Average Marginal Effects\n(standardized)", choice_ind_point = F, pt_size = 0.3, ribbon = T)
-dev.off()
-
-knitr::include_graphics("results/Fig3_AME.png")
-```
-
-### Subjective Team Conclusions
-
-#### Fig 4. By Researcher Qualities and 
-
-```{r fig4_DV2, echo=F}
-
-
-spec_team <- select(cri_team, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE, est, lb, ub)
-
-spec_team <- subset(spec_team, !is.na(BELIEF_HYPOTHESIS))
-spec_team <- subset(spec_team, !is.na(MODEL_SCORE))
-# one problem with rdfanalysis is that it outputs the categories in the order they appear in the data, therefore we have to generate 3 rows of fake data to get the order right
-  
-fake <- as.data.frame(matrix(nrow = 3, ncol = 8))
-fake[1,] <- c("Low","Low","Low","Low","Low",0,-0.01,0.01)
-fake[2,] <- c("Mid","Mid","Mid","Mid","Mid",0,-0.01,0.01)
-fake[3,] <- c("High","High","High","High","High",0,-0.01,0.01)
-colnames(fake) <- c("BELIEF_HYPOTHESIS", "PRO_IMMIGRANT", "TOPIC_KNOWLEDGE", "STATISTICS_SKILL", "MODEL_SCORE", "est", "lb", "ub")
-fake$est <- as.numeric(fake$est)
-fake$ub <- as.numeric(fake$ub)
-fake$lb <- as.numeric(fake$lb)
-
-spec_team1 <- bind_rows(fake,spec_team)
-
-# remove/adjust attributes
-  spec_team1 <- spec_team1[names(spec_team1)]
-  choices <- 1:5
-  attr(spec_team1, "choices") <- choices
-  rownames(spec_team1) <- NULL
-png(file = "results/Fig4_AME.png", width = 700, height = 700, res = 144)
-
-plot_rdf_spec_curve(spec_team1, "est", "lb", "ub", est_color = "grey", est_color_signeg = "red", est_color_sigpos = "blue", lower_to_upper = 1.5, est_label = "Subjective Conclusion", choice_ind_point = F, pt_size = 0.5, ribbon = T)
-dev.off()
-
-knitr::include_graphics("results/Fig4_AME.png")
-```
-
-
-#### Figure 5. (same as Fig 2 at team level)
-
-#### Figure 6. (same as Fig 3 at team level)
-
-
-## Dissimilarity Analysis
+## Dissimilarity/Cluster Analysis
 
 ### Model Specification Count
 
@@ -901,9 +793,9 @@ cri_spec_only2 <- cri_spec_only2[ - as.numeric(which(apply(cri_spec_only2, 2, va
 
 ```{r clus_cut, warning = F, message = F, echo = F}
 # k-means clustering
-# cri_km2 <- eclust(cri_spec_only2, "kmeans", nstart = 25)
+cri_km2 <- eclust(cri_spec_only2, "kmeans", nstart = 25)
 
-# saveRDS(cri_km2, file = "results/cri_km2.Rds")
+saveRDS(cri_km2, file = "results/cri_km2.Rds")
 
 readRDS(cri_km2, file = "results/cri_km2.Rds")
 

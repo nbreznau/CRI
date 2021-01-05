@@ -1,10 +1,13 @@
 ---
 title: "Tech 4, Main Analyses"
-output: html_notebook
+output: html_document
 ---
 
+We first analyze sources of variance in average marginal effects (standardized) at the model level and then subjective team conclusions at the team-conclusion level. We enter common model specifications and researcher characteristics. Our first analyses are based on logic - our expectations that wave and countries choices in the data sample, strategies of testing the hypothesis and measuring the dependent and test variables of interest, estimation method, independent variables and equation components should explain a major portion of the variance. 
 
-   
+We next let the computer run all possible combinations of specifications, in case our models missed something important.
+
+Finally, we analyze if researcher characteristics associate with model specifications - even though we discovered that these common specifications cannot explain variance in outcomes.
 
 ```{r setup, include=FALSE, warning=F}
 
@@ -39,6 +42,7 @@ cri_str = string values
 cri_team = team-level data (by conclusion)
 cri_team_combine = team-level data parsed by type of test variable (stock and flow)
 cri_indiv = participant-level data from our survey, identifying characteristics redacted
+crispectest = datafile created in the file 03_Spec_Analysis
 
 ### Load Data
 
@@ -47,6 +51,7 @@ cri <- read.csv(file = "data/cri.csv", header = T)
 cri_str <- read.csv(file = "data/cri_str.csv", header = T)
 cri_team <- read.csv(file = "data/cri_team.csv", header = T)
 cri_indiv <- read.csv(file = "data/cri_indv.csv", header = T)
+crispectest <- read.csv(file = "results/crispectest.csv", header = T)
 
 # setup multilevel dataset
 
@@ -914,5 +919,43 @@ knitr::include_graphics("results/fig2_varexp.png")
 ```{r saveout}
 write.csv(cri_ml, file = "results/cri_ml.csv")
 write.csv(cri_team, file = "results/cri_team.csv")
+```
+
+## Researcher Characteristics
+
+Do researcher characteristics explain model specifications?
+
+For this we use the data crispectest, worked up in 03_CRI_Spec_Analysis. For simplicity we use a multinomial model and calculate deviance reduction using dummies.
+
+
+iv_type
+IV_None
+degree (1 = other, 2 = methods focus, 3 = soc, 4 = polsci, 5 = psych)
+software
+mator
+twowayfe
+SURVEY_WAVES
+COUNTRIES
+
+```{r rchar}
+rchars <- "belief_ipredm + pro_immigrantm + topic_ipredm + stats_ipred + factor(u_teamid)"
+
+#set reference levels, add degree types
+crispectest$iv_type <- relevel(factor(crispectest$iv_type, levels = c("Stock","Flow","ChangeFlow")), ref = "Stock")
+crispectest$software <- relevel(factor(crispectest$software), ref = "Stata")
+crispectest$degree <- car::recode(crispectest$degree, "1 = 'Other';2 = 'Methods_focus'; 3 = 'Sociology'; 4 = 'Poli_Sci'; 5 = 'Psych'")
+  
+crispectest$degree <- relevel(factor(crispectest$degree), ref = "Sociology")
+
+# Test strategy
+m100 <- multinom(iv_type ~ 1, data = crispectest)
+m101 <- multinom(iv_type ~ factor(u_teamid), data = crispectest)
+m102 <- multinom(paste0("iv_type ~", rchars), data = crispectest)
+m103 <- multinom(paste0("iv_type ~", rchars, "+ degree + software"), data = crispectest)
+
+# 
+tab_model(m103, digits = 3, p.style = "stars", rm.terms = c("factor(u_teamid)10","factor(u_teamid)101","factor(u_teamid)104","factor(u_teamid)106","factor(u_teamid)12","factor(u_teamid)13","factor(u_teamid)16","factor(u_teamid)17","factor(u_teamid)18","factor(u_teamid)19","factor(u_teamid)20","factor(u_teamid)21","factor(u_teamid)23","factor(u_teamid)22","factor(u_teamid)26","factor(u_teamid)27","factor(u_teamid)28","factor(u_teamid)29","factor(u_teamid)3","factor(u_teamid)30","factor(u_teamid)31","factor(u_teamid)32","factor(u_teamid)33","factor(u_teamid)34","factor(u_teamid)35","factor(u_teamid)36","factor(u_teamid)37","factor(u_teamid)38","factor(u_teamid)39","factor(u_teamid)40","factor(u_teamid)41","factor(u_teamid)42","factor(u_teamid)43","factor(u_teamid)44","factor(u_teamid)45","factor(u_teamid)46","factor(u_teamid)47","factor(u_teamid)48","factor(u_teamid)49","factor(u_teamid)5","factor(u_teamid)52","factor(u_teamid)53","factor(u_teamid)54","factor(u_teamid)55","factor(u_teamid)56","factor(u_teamid)57","factor(u_teamid)58","factor(u_teamid)59","factor(u_teamid)6","factor(u_teamid)60","factor(u_teamid)61","factor(u_teamid)62","factor(u_teamid)63","factor(u_teamid)64","factor(u_teamid)65","factor(u_teamid)66","factor(u_teamid)67","factor(u_teamid)68","factor(u_teamid)69","factor(u_teamid)70","factor(u_teamid)71","factor(u_teamid)7","factor(u_teamid)72","factor(u_teamid)73","factor(u_teamid)75","factor(u_teamid)77","factor(u_teamid)8","factor(u_teamid)82","factor(u_teamid)83","factor(u_teamid)84","factor(u_teamid)86","factor(u_teamid)87","factor(u_teamid)93","factor(u_teamid)94","factor(u_teamid)95","factor(u_teamid)96","factor(u_teamid)97","factor(u_teamid)98"), show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = "results/reg103.htm")
+
+
 ```
 
