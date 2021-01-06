@@ -194,18 +194,21 @@ crispectest$count2 <- 1:nrow(crispectest)
 crispectest <- crispectest %>%
   mutate(est2 = ifelse(sig_group2 == 2, 0, est))
 
-g2 <- ggplot(crispectest) +
+g2 <- 
+  ggplot(crispectest) +
   geom_errorbar(aes(x = count2, ymin = lb, ymax = ub), color = "grey55") +
   geom_point(aes(x = count2, y = est, color = sig_group2), size = 1) +
   scale_color_manual(values = c("chartreuse4","grey45", "firebrick"), labels = c("Negative","Not sig.","Positive")) +
   coord_cartesian(ylim = c(-0.21,0.21)) +
   labs(color = "Effect\nat 95%CI", x = "Model", y = "Effect Range", size = 2) +
-  annotate("text", x = 150, y = 0.05,label = "Point Est. < 0\nOrdered by\nUpper CI", size = 2.5, color = "chartreuse4") +
-  annotate("text", x = 1200, y = -0.05,label = "Point Est. > 0\nOrdered by\nLower CI", size = 2.5, color = "firebrick") +
+  annotate("text", x = 450, y = 0.13,label = "Effects < 0\nordered by\nupper bound", size = 2.5, color = "grey10") +
+  annotate("text", x = 900, y = -0.13,label = "Effects > 0\nordered by\nlower bound", size = 2.5, color = "grey10") +
+  geom_segment(aes(x = 600, y = 0.08, xend = 350, yend = 0.08), arrow = arrow(length = unit(0.2, "cm"), type = "closed"), color = "grey10") +
+  geom_vline(xintercept = 688) +
+  geom_segment(aes(x = 776, y = -0.08, xend = 1000, yend = -0.08), arrow = arrow(length = unit(0.2, "cm"), type = "closed"), color = "grey10") +
   geom_vline(xintercept = 688) +
   theme_classic() +
   theme(
-    legend.position = "none",
     axis.title.x = element_blank()
   )
 
@@ -301,6 +304,7 @@ g4 <- ggplot(crispectest) +
   xlab("Models ordered by Minimum Confidence Boundary (95%CI)") +
     theme_classic() +
   theme(
+    plot.margin=unit(c(0.1,0.9,0.1,0.3),"cm"),
     axis.text.y = element_text(color = "NA"),
     axis.title.y = element_blank(),
     legend.text = element_text(size = 6),
@@ -710,39 +714,6 @@ dev.off()
 knitr::include_graphics("results/Fig2team_new2.png")
 ```
 
-
-### Old Fig2
-```{r fig2team}
-g5a <- ggplot(cri_team) +
-  geom_point(aes(x = count, y = pct_negpos, color = Hresult), shape = 18, size = 6) +   scale_color_manual(values = c("chartreuse4","grey55", "firebrick"), labels = c("Supported","Not testable","Rejected"," ")) +
-  labs(color = "Conclusion\nHypothesis is:", x = "Team Conclusions", y = "Tests Supporting Conclusion\n(ratio of team's models, at 95%CI)") +
-  theme_classic() +
-  theme(
-    plot.margin=unit(c(0.2,0.2,0.2,1.05),"cm"),
-    axis.title.y = element_text(size = 10),
-    axis.title.x = element_text(size = 9)
-  ) 
-
-g5b <- ggplot(cri_team) +
-  geom_tile(aes(x = count, y = 5, fill = belief_ipredm), height = 0.5) +
-  geom_tile(aes(x = count, y = 4, fill = pro_immigrantm), height = 0.5) +
-  geom_tile(aes(x = count, y = 3, fill = topic_ipredm), height = 0.5) +
-  geom_tile(aes(x = count, y = 2, fill = stats_ipredm), height = 0.5) +
-  geom_tile(aes(x = count, y = 1, fill = total_scorem), height = 0.5) +
-  scale_y_continuous(breaks = c(1,2,3,4,5), labels=labs_y) +
-    theme_classic() +
-  theme(
-    legend.position = "none",
-    axis.title.y = element_blank(),
-    axis.title.x = element_blank(),
-    plot.margin=unit(c(0.2,3.2,0.2,0.3),"cm")
-  )
-agg_png(filename = "results/Fig2team_new.png", res = 144, height = 900, width = 1200)
-ggarrange(g5a,g5b,ncol = 1)
-dev.off()
-
-knitr::include_graphics("results/Fig2team_new.png")
-```
 
 ```{r saveout}
 write.csv(crispectest, file = "results/crispectest.csv")
