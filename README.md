@@ -16,13 +16,27 @@ Muna Adem, Jule Adriaans, Amalia Alvarez-Benjumea, Henrik Andersen, Daniel Auer,
 
 ### Abstract
 
-This R project Git presents the workflow for data obtained from the Crowdsourced Replication Initiative [Breznau, Rinke and Wuttke et al 2018](https://osf.io/preprints/socarxiv/6j9qb/) used to investigate variability in research results across researchers and their model specifications. Calls on a 'reliability crisis' in science suggest that researchers fail to produce consistent results, in particular to replicate previous studies, because of systematic bias. This bias comes in myriad formats, p-hacking, publication bias, unethical practices, etc. In this research we investigate how much of this bias is actually 'random' in the sense that it derives from idiosyncratic features of the researchers and their steps taken when conducting data analysis. We attempted to remove as many factors of systematic bias as possible to be able to observe researchers conducting real-world research and to test the same hypothesis with the same data. 
+This R project Git presents the workflow for data obtained from the Crowdsourced Replication Initiative [Breznau, Rinke and Wuttke et al 2018](https://osf.io/preprints/socarxiv/6j9qb/) used to investigate variability in research results across researchers and their model specifications. Calls on a 'reliability crisis' in science suggest that researchers fail to produce consistent results, in particular to replicate previous studies, because of systematic bias. This bias comes in myriad formats, p-hacking, publication bias, unethical practices, etc. In this research we investigate how if there are sources of bias in idiosyncratic characteristics of researchers or decisions taken during the data-analysis process. We attempted to remove as many factors of systematic bias as possible to be able to observe researchers conducting real-world research and to test the same hypothesis with the same data. We conlcude that idioisyncratic bias found in a hidden universe of data analysis should be taken seriously in addition to questionable reserach practices stemming from structural biases as both threaten scientific reliability.
+
+### Workflow
+
+#### 1. Source Code Cleaning
+
+We collected the code from 73 teams and cleaned it for public sharing. This involved qualitative identification of model specifications, ensuring replicability, extracting Average Marginal Effects (AMEs) and redacting any identifying features. The resulting code are compiled by software type in the sub-folders of this project, orderd by team ID number (folders: *CRI_SPSS_Teams*,*CRI_Stata_Teams*,*CRI_Mplus_Teams* and *CRI_R_Teams*). The code in the *CRI_R_Teams* folder imports the results from all other codes to compile a final dataset of AMEs and confidence interval measures. 
+
+#### 2. Data Pre-Preparation
+
+Prior to our main analyses we import data from the Participant Survey including subjective voting on model quality, and the voting during the post-result deliberation on Kialo. The code for these files are contained in the folder *data_prep*. It is not necessary to run these as their output is already saved in the *data* folder.
+
+#### 3. Workflow
+
+The code in our workflow is contained in .Rmd files numbered from **01_** to **06_**. As these have already been run, users may skip directly to specific analyses without the need to run **01_** through **03_** where further data cleaning and sorting takes place.
 
 ### Important Documents
 
 [Current Working Paper Version](https://docs.google.com/document/d/1Mlf8QANbUKt9zLxhXnp0ODt57-551YmmQatmENXEK88/edit#heading=h.4jbwvgc9efg)
 
-[Planned Empirical Analysis (gdoc)](https://docs.google.com/document/d/143S8WYJ0yP_8wWHU7BaFdwVs30COZEvCAx0bzAkKlIc/edit#heading=h.1524t8a4a16i)
+
 
 ### Workflow
 

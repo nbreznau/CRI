@@ -682,7 +682,7 @@ labs_y_new <- c("Model Score","Stats-Skill","Topic\nKnowledge","Pro Immigrant","
 ```{r fig2team_new}
 g5a_new <- 
   ggplot(cri_team) +
-  geom_point(aes(x = count2, y = AME_Zt, color = subj_concl), shape = 18, size = 6) +   scale_color_manual(values = c("firebrick","grey55", "chartreuse4"), labels = c("Rejected","Not testable","Supported")) +
+  geom_point(aes(x = count2, y = AME_Zt, color = subj_concl), shape = 18, size = 4) +   scale_color_manual(values = c("firebrick","grey55", "chartreuse4"), labels = c("Rejected","Not testable","Supported")) +
   labs(color = "Conclusion\nHypothesis is:", x = "Team Conclusions", y = "Average Effect Size\nof Team's Test Models") +
   theme_classic() +
   theme(
