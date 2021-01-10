@@ -1,7 +1,7 @@
-# The Reliability of Scientific Data-Analysis
+# The Hidden Universe of Data-Analysis
 
 
-### Research Design and Data Analysis
+### Research Design and Analysis by:
 
 **Nate Breznau**
 <br>**Eike Mark Rinke**
@@ -34,9 +34,11 @@ The code in our workflow is contained in .Rmd files numbered from **01_** to **0
 
 ### Important Documents
 
-[Current Working Paper Version](https://docs.google.com/document/d/1Mlf8QANbUKt9zLxhXnp0ODt57-551YmmQatmENXEK88/edit#heading=h.4jbwvgc9efg)
+[Current Working Paper Version](https://drive.google.com/file/d/11Y3ebvEKjbdyQ9TDtM4uoJYcHeRgYXbx/view?usp=sharing)
 
+[Current Supplementary Materials](https://drive.google.com/file/d/1COLKFvQlRGDd25cxAnHLNReAiiDNBbj2/view?usp=sharing)
 
+[Executive Report - describing the full study](https://osf.io/preprints/socarxiv/6j9qb/)
 
 ### Source Data
 
