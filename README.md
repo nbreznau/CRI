@@ -45,7 +45,7 @@ The data preparation code is in the sub-folder CRI/data_prep. After the data pre
 | Filename | Description | Source |
 | ---| -------|---|
 | ### MAIN FILES | Used in Main Analyses 01-07 | |
-| **cri.csv** | Main data analysis file, model & team-levels. All specifications coded by the PIs, team test results and researcher characteristics in numeric format | Worked up in *CRI/data_prep* |
+| ***cri.csv*** | Main data analysis file, model & team-levels. All specifications coded by the PIs, team test results and researcher characteristics in numeric format | Worked up in *CRI/data_prep* |
 | **cri_str.csv** | A string-format only version of *cri_str.csv* | Worked up in *CRI/data_prep* |
 | **cri_team.csv** | A version of *cri_str.csv* aggregated team-level means (N = 89 because 16 teams conducted independent hypothesis tests by 'stock' and 'flow' immigration measures) | Worked up in **CRI/data_prep** |
 | **popdf_out.Rdata** |The peer review/deliberation scoring of model specifications as ranked by all participants; excepting non-response|Generated in sub-folder *CRI/data_prep* | Participant survey and Kialo deliberation |
