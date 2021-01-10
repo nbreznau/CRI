@@ -43,17 +43,17 @@ The code in our workflow is contained in .Rmd files numbered from **01_** to **0
 The data preparation code is in the sub-folder CRI/data_prep. After the data prep files, all necessary data analysis files are in the CRI/data folder. These files are many because participants' code often requires special files to run properly. The data files needed to reproduce the data anlysis. These files are:
 
 | Filename | Description | Source |
-| ---| -------|---|
+| ----| -------|---|
 | ### MAIN FILES | Used in Main Analyses 01-07 | |
 | ***cri.csv*** | Main data analysis file, model & team-levels. All specifications coded by the PIs, team test results and researcher characteristics in numeric format | Worked up in *CRI/data_prep* |
-| **cri_str.csv** | A string-format only version of *cri_str.csv* | Worked up in *CRI/data_prep* |
-| **cri_team.csv** | A version of *cri_str.csv* aggregated team-level means (N = 89 because 16 teams conducted independent hypothesis tests by 'stock' and 'flow' immigration measures) | Worked up in **CRI/data_prep** |
-| **popdf_out.Rdata** |The peer review/deliberation scoring of model specifications as ranked by all participants; excepting non-response|Generated in sub-folder *CRI/data_prep* | Participant survey and Kialo deliberation |
+| ***cri_str.csv*** | A string-format only version of *cri_str.csv* | Worked up in *CRI/data_prep* |
+| ***cri_team.csv*** | A version of *cri_str.csv* aggregated team-level means (N = 89 because 16 teams conducted independent hypothesis tests by 'stock' and 'flow' immigration measures) | Worked up in **CRI/data_prep** |
+| ***popdf_out.Rdata*** |The peer review/deliberation scoring of model specifications as ranked by all participants; excepting non-response|Generated in sub-folder *CRI/data_prep* | Participant survey and Kialo deliberation |
 |   |        |   |
 | ### SUB-FILES | Used in Preparation of Data or App| |
-| **Research Design Votes.xlsx** | Based on participant pre-registered designs, plus cursory review of all research designs. Not a fully accurate portrayal of final research designs because, (a) the broad range of specifications not reported in basic research designs and (b) the participant's often deviated from their proposed designs, if only slightly | This is a copy of the actual template (a Google Sheet) used to create the peer review voting system in the Participant Survey | 
-| **cri_shiny.csv**| The model-level data needed to run the shiny app | Generated in *CRI/data_prep* |
-| **cri_shiny_team.csv**| The team-level data needed to run the shiny app | Generated in *CRI/data_prep* |
+| ***Research Design Votes.xlsx*** | Based on participant pre-registered designs, plus cursory review of all research designs. Not a fully accurate portrayal of final research designs because, (a) the broad range of specifications not reported in basic research designs and (b) the participant's often deviated from their proposed designs, if only slightly | This is a copy of the actual template (a Google Sheet) used to create the peer review voting system in the Participant Survey | 
+| ***cri_shiny.csv***| The model-level data needed to run the shiny app | Generated in *CRI/data_prep* |
+| ***cri_shiny_team.csv***| The team-level data needed to run the shiny app | Generated in *CRI/data_prep* |
 
 The cri main files include team zero, which is the state of the art study from Brady and Finnigan [(2014)](https://doi.org/10.1177/0003122413513022) providing a launching point for the CRI coded in all the same ways, but the two authors were not participants therefore it is dropped from most analyses.
 
