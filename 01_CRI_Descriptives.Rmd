@@ -12,7 +12,7 @@ output: html_document
 rm(list = ls())
 library(pacman)
 
-pacman::p_load("tidyverse","knitr","kableExtra","reshape","ggplot2","ragg","summarytools")
+pacman::p_load("tidyverse","knitr","kableExtra","reshape","ggplot2","ragg","summarytools", "Hmisc")
 
 ```
 
@@ -44,8 +44,7 @@ codebook <- subset(cri_str, u_teamid != 0)
 codebook$DV[grepl("Scale",codebook$DV)] <- "Scale"
 codebook <- select(codebook, DV, main_IV_type, main_IV_measurement, main_IV_time, num_countries, main_IV_as_control, software, mator, indepv, inv_weight) %>%
     mutate(num_countries = factor(num_countries),
-           main_IV_as_control = factor(main_IV_as_control),
-           inv_weight = 1/inv_weight)
+           main_IV_as_control = factor(main_IV_as_control))
 
 # summarytools::freq(codebook, order = "freq", style = "grid")
 
@@ -112,6 +111,8 @@ There were `r sum(cri_count$team_size)-2` participants in `r length(unique(cri$u
 There were `r sum(duplicated(cri_team$u_teamid))` teams that came to more than one conclusion. For example, finding support of the hypothesis for immigration stock models, but finding rejection of the hypothesis for immigration flow models. Therefore, we have `r length(cri_team$u_teamid)` observations ('results') in the team-level data that derive from `r length(unique(cri_teamt$u_teamid))-1` teams. We also have the conclusion from the study by Brady and Finnigan ([2014](https://doi.org/10.1177/000312240607100306)) that provides an example of a state of the art study for testing this hypothesis included as team number '0' for comparison purposes.
 
 #### Summary Stats
+
+We no longer use this approach but leave these tables here in case of interest. The codebook is now our main summary statistics location.
 
 ```{r descriptive, warning = F, message = F, include = F}
 sum1 <- summarise_at(cri, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(mean), na.rm = T)
@@ -293,12 +294,18 @@ knitr::include_graphics(here::here("results","Tbl1_cor.png"))
 
 #### Basic Descriptive Visualization of Outcomes
 
-```{r hist_results_basic}
+```{r recodes}
 cri0 <- subset(cri, u_teamid != 0) %>%
   # recode outliers to make better histogram
   mutate(AME_Zc = ifelse(AME_Z > 0.125, 0.15, ifelse(AME_Z < -0.125, -0.15, AME_Z)))
 
-  
+# add weighted mean & variance to plot
+w_mean <- round(weighted.mean(cri$AME_Z, w = cri$inv_weight, na.rm = T),4)
+w_var <- round(wtd.var(cri$AME_Z, weights = cri$inv_weight, na.rm = T),4)
+```
+
+
+```{r hist_results_basic}
 g1 <-  ggplot(data = cri0) +
   #geom_density(aes(x = AME)) +
   geom_histogram(aes(x = AME_Zc), breaks = c(-0.15,-0.125,-0.0625,-0.03125,-0.015625,-0.0078125,-0.00390625,0,0.00390625,0.0078125,0.015625,0.03125,0.0625,0.125,0.15)) +
@@ -306,6 +313,9 @@ g1 <-  ggplot(data = cri0) +
   annotate("text", x = -0.15, y = 55, label = "AME < -0.15\ncombined", size = 2.5, hjust = 0) +
   geom_segment(aes(x = -0.14, y = 40, xend = -0.14, yend = 15), arrow = arrow(length = unit(0.3, "cm"))) +
   annotate("text", x = 0.15, y = 55, label = "AME > 0.15\ncombined", size = 2.5, hjust = 1) +
+  annotate("text", x = 0.07, y = 140, label = paste0("μ", " = ", w_mean), size = 3, hjust = 0) +
+  annotate("text", x = 0.07, y = 130, label = expression(paste(sigma^{2}, " = ")), size = 3, hjust = 0) +
+  annotate("text", x = 0.1, y = 128, label = w_var, size = 3, hjust = 0) +
   geom_segment(aes(x = 0.14, y = 40, xend = 0.14, yend = 22), arrow = arrow(length = unit(0.3, "cm"))) +
   theme_classic()
   

@@ -919,6 +919,10 @@ Save Point
 
 ```{r save_out, warning=F,message=F}
 
+# weighting variable is inverted, fix here.
+cri$inv_weight <- 1/cri$inv_weight
+cri_str$inv_weight <- 1/cri_str$inv_weight
+
 # save as csv to ensure no attributes carry over
 write.csv(cri, file = here::here("data","cri.csv"), row.names = F)
 write.csv(cri_str, file = here::here("data","cri_str.csv"), row.names = F)
@@ -928,6 +932,7 @@ write.csv(cri_indiv, file = here::here("data","cri_indv.csv"), row.names = F)
 # remove missing
 cri_team_combine <- subset(cri_team_combine, !is.na(AME))
 cri_team_combine <- subset(cri_team_combine, !is.na(stat_cat))
+
 
 write.csv(cri_team_combine, file = here::here("data","cri_team_combine.csv"), row.names = F)
 
