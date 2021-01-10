@@ -22,7 +22,7 @@ This R project Git presents the workflow for data obtained from the Crowdsourced
 
 #### 1. Source Code Cleaning
 
-We collected the code from 73 teams and cleaned it for public sharing. This involved qualitative identification of model specifications, ensuring replicability, extracting Average Marginal Effects (AMEs) and redacting any identifying features. The resulting code are compiled by software type in the sub-folders of this project, orderd by team ID number (folders: *CRI_SPSS_Teams*,*CRI_Stata_Teams*,*CRI_Mplus_Teams* and *CRI_R_Teams*). The code in the *CRI_R_Teams* folder imports the results from all other codes to compile a final dataset of AMEs and confidence interval measures. 
+We collected the code from 73 teams and cleaned it for public sharing. This involved qualitative identification of model specifications, ensuring replicability, extracting Average Marginal Effects (AMEs) and redacting any identifying features. The resulting code are compiled by software type in the sub-folders of this project, orderd by team ID number (in sub-folder **team_code**, and sub-folders: *team_code_SPSS*,*team_code_Stata*,*team_code_Mplus* and *team_code_R*). The code in the *team_code_R* folder imports the results from all other codes to compile a final dataset of AMEs and confidence interval measures. 
 
 #### 2. Data Pre-Preparation
 
@@ -38,9 +38,7 @@ The code in our workflow is contained in .Rmd files numbered from **01_** to **0
 
 
 
-### Workflow
-
-All participating team codes are in the respective sub-folders by software type, for example /CRI/CRI_**Mplus** contains all teams using Mplus codes and likewise for **Stata**,**R** and **SPSS**. In the one case of *MLwiN*, the team's Stata code imports the results. 
+### Source Data
 
 The data preparation code is in the sub-folder CRI/data_prep. After the data prep files, all necessary data analysis files are in the CRI/data folder. These files are many because participants' code often requires special files to run properly. The data files needed to reproduce the data anlysis. These files are:
 
@@ -56,6 +54,6 @@ The data preparation code is in the sub-folder CRI/data_prep. After the data pre
 | **cri_shiny.csv**| The model-level data needed to run the shiny app | Generated in *CRI/data_prep* |
 | **cri_shiny_team.csv**| The team-level data needed to run the shiny app | Generated in *CRI/data_prep* |
 
-The cri main files include team zero, which is the state of the art study providing a launching point for the CRI. coded in all the same ways, but the two authors were not participants therefore it is dropped from most analyses.
+The cri main files include team zero, which is the state of the art study from Brady and Finnigan [(2014)](https://doi.org/10.1177/0003122413513022) providing a launching point for the CRI coded in all the same ways, but the two authors were not participants therefore it is dropped from most analyses.
 
 

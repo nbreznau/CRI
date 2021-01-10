@@ -18,7 +18,7 @@ pacman::p_load("tidyverse","knitr","kableExtra","reshape","ggplot2","ragg","summ
 
 ### Data
 
-The datasets in here were worked up in the project sub-folder 'CRI/data_prep' 
+The datasets in here were worked up starting in the sub-folder 'team_code' in the 'team_code_R.Rmd' file and then in the project sub-folder 'CRI/data_prep' 
 
 1. *cri.csv* = model-level data, numerical values
 2. *cri_team.csv* = team-level data
