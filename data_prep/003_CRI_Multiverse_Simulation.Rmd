@@ -1,0 +1,522 @@
+---
+title: "Untitled"
+author: "Nate Breznau"
+output: html_document
+---
+
+
+This code comes from Team 18, it has been altered by the PIs to produce both continuous and dichotomous dependent variables. 
+
+
+```{r setup, include=FALSE}
+rm(list = ls())
+pacman::p_load("tidyverse","haven","foreign","textreg","xtable","MASS")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r dataprep}
+
+## ---- Data Preparation ----
+issp1996 <- read_dta(here::here("data/ZA2900.dta"))
+issp2006 <- read_dta(here::here("data/ZA4700.dta"))
+issp2016 <- read_dta(here::here("data/ZA6900_v2-0-0.dta"))
+
+
+# ISSP 1996
+issp1996_red <- issp1996 %>% 
+  # select and rename variables
+  dplyr::select(old_age_care = v39,
+                unemployed = v41, 
+                reduce_income_diff = v42, 
+                jobs = v36, 
+                housing = v44,
+                health = v38,
+                sex = v200, 
+                age = v201, 
+                education = v205, 
+                employment = v206, 
+                country = v3, 
+                income = v218) %>%
+  # modify/recode variables
+  mutate_all(as_factor) %>%
+  mutate(year = 1996, 
+         oldage_c = case_when(
+           old_age_care %in% c("Definitely should") ~ 4,
+           old_age_care %in% c("Probably should") ~ 3,
+           old_age_care %in% c("Probably not") ~ 2,
+           old_age_care %in% c("Definitely not") ~ 1,
+           is.na(old_age_care) ~ NA_real_),
+         unemp_c = case_when(
+           unemployed %in% c("Definitely should") ~ 4,
+           unemployed %in% c("Probably should") ~ 3,
+           unemployed %in% c("Probably not") ~ 2,
+           unemployed %in% c("Definitely not") ~ 1,
+           is.na(unemployed) ~ NA_real_),
+         incdiff_c = case_when(
+           reduce_income_diff %in% c("Definitely should") ~ 4,
+           reduce_income_diff %in% c("Probably should") ~ 3,
+           reduce_income_diff %in% c("Probably not") ~ 2,
+           reduce_income_diff %in% c("Definitely not") ~ 1,
+           is.na(reduce_income_diff) ~ NA_real_),
+         jobs_c = case_when(
+           jobs %in% c("Definitely should") ~ 4,
+           jobs %in% c("Probably should") ~ 3,
+           jobs %in% c("Probably not") ~ 2,
+           jobs %in% c("Definitely not") ~ 1,
+           is.na(jobs) ~ NA_real_),
+         housing_c = case_when(
+           housing %in% c("Definitely should") ~ 4,
+           housing %in% c("Probably should") ~ 3,
+           housing %in% c("Probably not") ~ 2,
+           housing %in% c("Definitely not") ~ 1,
+           is.na(housing) ~ NA_real_),
+         health_c = case_when(
+           health %in% c("Definitely should") ~ 4,
+           health %in% c("Probably should") ~ 3,
+           health %in% c("Probably not") ~ 2,
+           health %in% c("Definitely not") ~ 1,
+           is.na(health) ~ NA_real_),         
+         old_age_care = case_when(
+           old_age_care %in% c("Definitely should", "Probably should") ~ 1,
+           old_age_care %in% c("Definitely not", "Probably not") ~ 0,
+           is.na(old_age_care) ~ NA_real_),
+         unemployed = case_when(
+           unemployed %in% c("Definitely should", "Probably should") ~ 1,
+           unemployed %in% c("Definitely not", "Probably not") ~ 0,
+           is.na(unemployed) ~ NA_real_),
+         reduce_income_diff = case_when(
+           reduce_income_diff %in% c("Definitely should", "Probably should") ~ 1,
+           reduce_income_diff %in% c("Definitely not", "Probably not") ~ 0,
+           is.na(reduce_income_diff) ~ NA_real_),
+         jobs = case_when(
+           jobs %in% c("Definitely should", "Probably should") ~ 1,
+           jobs %in% c("Definitely not", "Probably not") ~ 0,
+           is.na(jobs) ~ NA_real_),
+         housing = case_when(
+           housing %in% c("Definitely should", "Probably should") ~ 1,
+           housing %in% c("Definitely not", "Probably not") ~ 0,
+           is.na(housing) ~ NA_real_),
+         health = case_when(
+           health %in% c("Definitely should", "Probably should be") ~ 1,
+           health %in% c("Definitely not", "Probably not") ~ 0,
+           is.na(health) ~ NA_real_),
+         sex = as.integer(recode_factor(sex, `1`= "Male", `2` = "Female")) - 1,
+         age = as.integer(substr(age, 1, 2)),
+         education = case_when(
+
+           education %in% c("Incpl primary", 
+                            "Incpl secondary", 
+                            "Primary compl") ~ "Primary or less",
+           education %in% c("Secondary compl", 
+                            "Semi-higher,Incpl uni.") ~ "Secondary",
+           education %in% "University compl" ~ "University or more",
+           is.na(education) | education %in% "None;still at school,uni" ~ NA_character_),
+         education = factor(education, levels = unique(education)[c(3, 1, 2)]),
+
+         employment = case_when(
+           employment %in% "F-time empl,main job" ~ "Full-time",
+           employment %in% c("Help family member", "Housewife <man>", 
+                             "Oth,n i lab force", "Permanent disabled", 
+                             "Retired", "Studt,school,educ") ~ "Not active",
+           employment %in% c("Less part-time", "P-t empl,main job") ~ "Part-time",
+           employment %in% "Unemployed" ~ "Active unemployed",
+           is.na(employment) ~ NA_character_),
+         employment = factor(employment, levels = unique(employment)[c(3, 1, 2, 5)]),
+         country = case_when(
+           country == "aus" ~ "Australia",
+           country == "bg" ~ "Bulgaria",
+           country == "cdn" ~ "Canada",
+           country == "ch" ~ "Switzerland",
+           country == "cy" ~ "Cyprus",
+           country == "cz" ~ "Czech Republic",
+           country %in% c("D-E", "D-W") ~ "Germany", # recoded to match 2006 coding
+           country == "e" ~ "Spain",
+           country == "f" ~ "France",
+           country == "gb" ~ "United Kingdom",
+           country == "h" ~ "Hungary",
+           country == "i" ~ "Italy",
+           country %in% c("IL-A", "IL-J") ~ "Israel", # recoded to match 2006 coding
+           country == "irl" ~ "Ireland",
+           country == "j" ~ "Japan",
+           country == "lv" ~ "Latvia",
+           country == "n" ~ "Norway",
+           country == "nz" ~ "New Zealand",
+           country == "pl" ~ "Poland",
+           country == "rp" ~ "Philippines", 
+           country == "rus" ~ "Russia",
+           country == "s" ~ "Sweden",
+           country == "slo" ~ "Slovenia",
+           country == "usa" ~ "United States")) %>%
+  mutate(income_orig = as.character(income),
+         income = case_when(
+           income_orig == "No income" ~ 0,
+           income_orig == "RUS:in thous. Rubles" ~ 53,
+           income_orig == "J:in thous. Yen" ~ 1500, 
+           income_orig == "SLO:>999 000 Tolar, N,E:>1 000 000" & country == "Slovenia" ~ 999000,
+           income_orig == "SLO:>999 000 Tolar, N,E:>1 000 000" & country == "Norway" ~ 1000000,
+           income_orig == "SLO:>999 000 Tolar, N,E:>1 000 000" & country == "Spain" ~ 1000000,
+           income_orig == "Refused" ~ NA_real_,
+           income_orig == "Dont know" ~ NA_real_,
+           income_orig == "na" ~ NA_real_,
+           TRUE ~ as.numeric(income_orig))) %>%
+  dplyr::select(-employment, -income_orig)
+
+issp1996_red$education %>% unique()
+issp1996_red$country %>% unique()
+
+
+# ISSP 2006
+issp2006_red <- issp2006 %>% 
+  dplyr::select(old_age_care = V28, 
+                unemployed = V30, 
+                reduce_income_diff = V31, 
+                jobs = V25, 
+                housing = V33,
+                health = V27,
+                sex, 
+                age, 
+                education = degree, 
+                employment = wrkst, 
+                country = V3a) %>%
+  mutate_all(as_factor) %>%
+  mutate(year = 2006,
+         oldage_c = case_when(
+           old_age_care %in% c("Definitely should be") ~ 4,
+           old_age_care %in% c("Probably should be") ~ 3,
+           old_age_care %in% c("Probably should not be") ~ 2,
+           old_age_care %in% c("Definitely should not be") ~ 1,
+           is.na(old_age_care) ~ NA_real_),
+         unemp_c = case_when(
+           unemployed %in% c("Definitely should be") ~ 4,
+           unemployed %in% c("Probably should be") ~ 3,
+           unemployed %in% c("Probably should not be") ~ 2,
+           unemployed %in% c("Definitely should not be") ~ 1,
+           is.na(unemployed) ~ NA_real_),
+         incdiff_c = case_when(
+           reduce_income_diff %in% c("Definitely should be") ~ 4,
+           reduce_income_diff %in% c("Probably should be") ~ 3,
+           reduce_income_diff %in% c("Probably should not be") ~ 2,
+           reduce_income_diff %in% c("Definitely should not be") ~ 1,
+           is.na(reduce_income_diff) ~ NA_real_),
+         jobs_c = case_when(
+           jobs %in% c("Definitely should be") ~ 4,
+           jobs %in% c("Probably should be") ~ 3,
+           jobs %in% c("Probably should not be") ~ 2,
+           jobs %in% c("Definitely should not be") ~ 1,
+           is.na(jobs) ~ NA_real_),
+         housing_c = case_when(
+           housing %in% c("Definitely should be") ~ 4,
+           housing %in% c("Probably should be") ~ 3,
+           housing %in% c("Probably should not be") ~ 2,
+           housing %in% c("Definitely should not be") ~ 1,
+           is.na(housing) ~ NA_real_),
+         health_c = case_when(
+           health %in% c("Definitely should be") ~ 4,
+           health %in% c("Probably should be") ~ 3,
+           health %in% c("Probably should not be") ~ 2,
+           health %in% c("Definitely should not be") ~ 1,
+           is.na(health) ~ NA_real_),
+         old_age_care = case_when(
+           old_age_care %in% c("Definitely should be", "Probably should be") ~ 1,
+           old_age_care %in% c("Definitely should not be", "Probably should not be") ~ 0,
+           is.na(old_age_care) ~ NA_real_),
+         unemployed = case_when(
+           unemployed %in% c("Definitely should be", "Probably should be") ~ 1,
+           unemployed %in% c("Definitely should not be", "Probably should not be") ~ 0,
+           is.na(unemployed) ~ NA_real_),
+         reduce_income_diff = case_when(
+           reduce_income_diff %in% c("Definitely should be", "Probably should be") ~ 1,
+           reduce_income_diff %in% c("Definitely should not be", "Probably should not be") ~ 0,
+           is.na(reduce_income_diff) ~ NA_real_),
+         jobs = case_when(
+           jobs %in% c("Definitely should be", "Probably should be") ~ 1,
+           jobs %in% c("Definitely should not be", "Probably should not be") ~ 0,
+           is.na(jobs) ~ NA_real_),
+         housing = case_when(
+           housing %in% c("Definitely should be", "Probably should be") ~ 1,
+           housing %in% c("Definitely should not be", "Probably should not be") ~ 0,
+           is.na(housing) ~ NA_real_),
+         health = case_when(
+           health %in% c("Definitely should be", "Probably should be") ~ 1,
+           health %in% c("Definitely should not be", "Probably should not be") ~ 0,
+           is.na(health) ~ NA_real_),
+         sex = as.integer(recode_factor(sex, `1`= "Male", `2` = "Female")) - 1,
+         age = as.integer(substr(age, 1, 2)),
+
+         education = case_when(
+           education %in% c("Above higher secondary level,other qualification",
+                            "Above lowest qualification",
+                            "Higher secondary completed") ~ "Secondary",
+           education %in% c("Lowest formal qualification", 
+                            "No formal qualification, incomplete primary") ~ "Primary or less",
+           education %in% "University degree completed, graduate studies" ~ "University or more",
+           is.na(education) ~ NA_character_),
+         education = factor(education, levels = unique(education)[c(2, 1, 3)]),
+         employment = case_when(
+           employment %in% c("Employed, full-time,main job") ~ "Full-time",
+           employment %in% c("Employed, less than part-time",
+                             "Employed, part-time,main job") ~ "Part-time",
+           employment %in% c("Helpig family member",
+                             "Housewife,-man,home duties",
+                             "Other,not in labour force",
+                             "Permanently disabled",
+                             "Retired",
+                             "Student,school,vocational training") ~ "Not active",
+           employment %in% "Unemployed" ~ "Active unemployed",
+           is.na(employment) ~ NA_character_),
+         employment = factor(employment, levels = unique(employment)[c(3, 2, 1, 5)]),
+         country = substr(country, 4, 20),
+         country = ifelse(country == "Great Britain", "United Kingdom", country)) %>%
+  dplyr::select(-employment)
+
+issp2006_red$education %>% unique()
+issp2006_red$country %>% unique()
+
+
+# ISSP 2016
+issp2016_red <- issp2016 %>% 
+  # select and rename variables
+  dplyr::select(sex = SEX,
+                age = AGE,
+                education = DEGREE,
+                country = country,
+                old_age_care = v24, 
+                unemployed = v26, 
+                reduce_income_diff = v27, 
+                jobs = v21,
+                health = v23,
+                housing = v29) %>%
+  mutate_at(vars(sex, education:housing), as_factor) %>%
+  mutate(year = 2016,
+         oldage_c = case_when(
+           old_age_care %in% c("Definitely should be") ~ 4,
+           old_age_care %in% c("Probably should be") ~ 3,
+           old_age_care %in% c("Probably should not be") ~ 2,
+           old_age_care %in% c("Definitely should not be") ~ 1,
+           is.na(old_age_care) ~ NA_real_),
+         unemp_c = case_when(
+           unemployed %in% c("Definitely should be") ~ 4,
+           unemployed %in% c("Probably should be") ~ 3,
+           unemployed %in% c("Probably should not be") ~ 2,
+           unemployed %in% c("Definitely should not be") ~ 1,
+           is.na(unemployed) ~ NA_real_),
+         incdiff_c = case_when(
+           reduce_income_diff %in% c("Definitely should be") ~ 4,
+           reduce_income_diff %in% c("Probably should be") ~ 3,
+           reduce_income_diff %in% c("Probably should not be") ~ 2,
+           reduce_income_diff %in% c("Definitely should not be") ~ 1,
+           is.na(reduce_income_diff) ~ NA_real_),
+         jobs_c = case_when(
+           jobs %in% c("Definitely should be") ~ 4,
+           jobs %in% c("Probably should be") ~ 3,
+           jobs %in% c("Probably should not be") ~ 2,
+           jobs %in% c("Definitely should not be") ~ 1,
+           is.na(jobs) ~ NA_real_),
+         housing_c = case_when(
+           housing %in% c("Definitely should be") ~ 4,
+           housing %in% c("Probably should be") ~ 3,
+           housing %in% c("Probably should not be") ~ 2,
+           housing %in% c("Definitely should not be") ~ 1,
+           is.na(housing) ~ NA_real_),
+         health_c = case_when(
+           health %in% c("Definitely should be") ~ 4,
+           health %in% c("Probably should be") ~ 3,
+           health %in% c("Probably should not be") ~ 2,
+           health %in% c("Definitely should not be") ~ 1,
+           is.na(health) ~ NA_real_),
+         education = case_when(
+           education %in% c("No formal education", 
+                            "Primary school (elementary education)") ~ "Primary or less",
+           education %in% c("Lower secondary (secondary completed that does not allow entry to university: end of obligatory school)", 
+                            "Upper secondary (programs that allows entry to university)",
+                            "Post secondary, non-tertiary (other upper secondary programs toward the labour market or technical formation)") ~ "Secondary",
+           education %in% c("Lower level tertiary, first stage (also technical schools at a tertiary level)",
+                            "Upper level tertiary (Master, Doctor)") ~ "University or more",
+           is.na(education) | education %in% "No answer, other" ~ NA_character_),
+         education = factor(education, levels = unique(education)[c(4, 1, 2)]),
+         old_age_care = case_when(
+           old_age_care %in% c("Definitely should be", "Probably should be") ~ 1,
+           old_age_care %in% c("Definitely should not be", "Probably should not be") ~ 0,
+           is.na(old_age_care) ~ NA_real_),
+         unemployed = case_when(
+           unemployed %in% c("Definitely should be", "Probably should be") ~ 1,
+           unemployed %in% c("Definitely should not be", "Probably should not be") ~ 0,
+           is.na(unemployed) ~ NA_real_),
+         reduce_income_diff = case_when(
+           reduce_income_diff %in% c("Definitely should be", "Probably should be") ~ 1,
+           reduce_income_diff %in% c("Definitely should not be", "Probably should not be") ~ 0,
+           is.na(reduce_income_diff) ~ NA_real_),
+         jobs = case_when(
+           jobs %in% c("Definitely should be", "Probably should be") ~ 1,
+           jobs %in% c("Definitely should not be", "Probably should not be") ~ 0,
+           is.na(jobs) ~ NA_real_),
+         housing = case_when(
+           housing %in% c("Definitely should be", "Probably should be") ~ 1,
+           housing %in% c("Definitely should not be", "Probably should not be") ~ 0,
+           is.na(housing) ~ NA_real_),
+         health = case_when(
+           health %in% c("Definitely should be", "Probably should be") ~ 1,
+           health %in% c("Definitely should not be", "Probably should not be") ~ 0,
+           is.na(health) ~ NA_real_),
+         sex = as.integer(recode_factor(sex, `1`= "Male", `2` = "Female")) - 1,
+         sex = ifelse(sex == 2, NA_real_, sex),
+         age = ifelse(age %in% c(0, 999), NA_real_, age),
+         country = case_when(
+           country == "AU-Australia" ~ "Australia",
+           country == "BE-Belgium" ~ "Belgium",
+           country == "CL-Chile" ~ "Chile",
+           country == "TW-Taiwan" ~ "Taiwan",
+           country == "HR-Croatia" ~ "Croatia",
+           country == "CZ-Czech Republic" ~ "Czech Republic",
+           country == "DK-Denmark" ~ "Denmark",
+           country == "FI-Finland" ~ "Finland",
+           country == "FR-France" ~ "France",
+           country == "GE-Georgia" ~ "Georgia",
+           country == "DE-Germany" ~ "Germany",
+           country == "HU-Hungary" ~ "Hungary",
+           country == "IS-Iceland" ~ "Iceland",
+           country == "IN-India" ~ "India",
+           country == "IL-Israel" ~ "Israel",
+           country == "JP-Japan" ~ "Japan",
+           country == "KR-Korea (South)" ~ "South Korea",
+           country == "LV-Latvia" ~ "Latvia",
+           country == "LT-Lithuania" ~ "Lithuania",
+           country == "NZ-New Zealand" ~ "New Zealand",
+           country == "NO-Norway" ~ "Norway",
+           country == "PH-Philippines" ~ "Philippines",
+           country == "RU-Russia" ~ "Russia",
+           country == "SK-Slovakia" ~ "Slovakia",
+           country == "SI-Slovenia" ~ "Slovenia",
+           country == "ZA-South Africa" ~ "South Africa",
+           country == "ES-Spain" ~ "Spain",
+           country == "SR-Suriname" ~ "Suriname",
+           country == "SE-Sweden" ~ "Sweden",
+           country == "CH-Switzerland" ~ "Switzerland",
+           country == "TH-Thailand" ~ "Thailand",
+           country == "TR-Turkey" ~ "Turkey",
+           country == "GB-Great Britain and/or United Kingdom" ~ "United Kingdom",
+           country == "US-United States" ~ "United States",
+           country == "VE-Venezuela" ~ "Venezuela"))
+
+
+## ---- Add income data ----
+# 1996
+median_income <- issp1996_red %>% 
+  group_by(country) %>% 
+  summarize(median = median(income, na.rm = TRUE))
+
+issp1996_red_income <- issp1996_red %>% mutate(income = NA)
+for (i in 1:length(median_income$country)) {
+  m_inc <- median_income[i, ]
+  issp1996_red_income$income[issp1996_red$country == m_inc$country & 
+                               issp1996_red$income < m_inc$median & 
+                               !is.na(issp1996_red$income)] <- 0
+  issp1996_red_income$income[issp1996_red$country == m_inc$country & 
+                               issp1996_red$income >= m_inc$median & 
+                               !is.na(issp1996_red$income)] <- 1
+}
+
+
+# 2006
+colnames(issp2006)
+fi_data_2006 <- cbind(issp2006[, 148:180]) %>% apply(., 2, as.numeric)
+
+fi_matrix_2006 <- fi_data_2006 * NA
+for (i in seq_len(ncol(fi_matrix_2006))){
+  median_income <- summary(fi_data_2006[, i])[3]
+  fi_matrix_2006[, i][fi_data_2006[, i] < median_income[i]] <- 0
+  fi_matrix_2006[, i][fi_data_2006[, i] >= median_income[i]] <- 1
+}
+
+fi_2006 <- rowSums(fi_matrix_2006, na.rm = TRUE)
+all_na <- apply(fi_matrix_2006, 1, function(x) all(is.na(x)))
+fi_2006[all_na] <- NA
+
+
+# 2016
+colnames(issp2016)
+fi_data_2016 <- issp2016 %>% 
+  dplyr::select(315:349) %>% cbind()
+
+for (i in seq_len(ncol(fi_data_2016))){
+  fi_data_2016[, i][fi_data_2016[, i] %in% c("NAP, other countries",
+                                             "NAP, all other countries",
+                                             "No answer",
+                                             "Don't know",
+                                             "Refused")] <- NA
+  fi_data_2016[, i][fi_data_2016[, i] %in% c(9999999, 9999990, 99999990,
+                                             999990, 999999, 999999990,
+                                             999999999, 999998, 999999998,
+                                             999997, 9999998, 9999997)] <- NA
+}
+fi_data_2016 <- apply(fi_data_2016, 2, as.numeric)
+
+fi_matrix_2016 <- fi_data_2016 * NA
+for (i in seq_len(ncol(fi_data_2016))){
+  median_income <- summary(fi_data_2016[, i])[3]
+  fi_matrix_2016[, i][fi_data_2016[, i] < median_income] <- 0
+  fi_matrix_2016[, i][fi_data_2016[, i] >= median_income] <- 1
+}
+
+fi_2016 <- rowSums(fi_matrix_2016, na.rm = TRUE)
+all_na <- apply(fi_matrix_2016, 1, function(x) all(is.na(x)))
+fi_2016[all_na] <- NA
+
+# add to ISSP data
+issp2006_red_income <- cbind(issp2006_red, income = fi_2006)
+issp2016_red_income <- cbind(issp2016_red, income = fi_2016)
+
+
+# combine ISSP data
+issp <- rbind(issp1996_red_income, issp2006_red_income, issp2016_red_income) %>%
+  mutate(age_sq = age^2) %>%
+  dplyr::select(year, country, female = sex, age, age_sq, education, income,
+                reduce_income_diff, incdiff_c, jobs, jobs_c, old_age_care, oldage_c, unemployed, unemp_c, housing, housing_c, health, health_c)
+
+
+## ---- Add country-level data: migration stock and net migration ----
+cri_macro <- read.csv(here::here("data/cri_macro.csv"), 
+                      stringsAsFactors = FALSE) %>%
+  mutate_at(vars(gdp_oecd:socx_oecd), as.numeric)
+
+# 1. migration stock (time t)
+l2_migstock <- cri_macro %>% 
+  filter(year %in% c(1996, 2006, 2016)) %>% 
+  dplyr::select(iso_country, country, year, migstock_un)
+
+# 2. net migration (time t-1)
+l2_netmig <- cri_macro %>% 
+  filter(year %in% c(1995, 2005, 2015)) %>% 
+  dplyr::select(iso_country, country, year, mignet_un) %>%
+  mutate(year_t_minus_1 = year, 
+         year = year + 1)
+
+# combine migration stock and net migration data
+l2_migration <- merge(l2_migstock, l2_netmig, 
+                      by = c("iso_country", "country", "year"), all = FALSE) %>%
+  mutate(country = ifelse(country == "Korea, South", "South Korea", country),
+         country = ifelse(country == "The Netherlands", "Netherlands", country)) %>%
+  rename(foreignpct = migstock_un, 
+         netmigpct = mignet_un)
+
+# merge with level 2 data
+cri_data <- merge(issp, l2_migration, by = c("country", "year"), all.x = TRUE)
+
+# keep only countries of interest
+cri_data <- cri_data %>%  filter(country %in% c("Australia", "Canada", "Croatia", 
+                                                "Czech Republic", "Denmark", "Finland", 
+                                                "France", "Germany", "Great Britain", 
+                                                "Hungary", "Ireland", "Japan", 
+                                                "Latvia", "New Zealand", "Norway", 
+                                                "Poland", "Slovenia", "Spain", 
+                                                "Sweden", "Switzerland", "United States"))
+
+# PI recode
+cri_data$netmigpct <- cri_data$netmigpct/10
+
+
+# save for multiverse analysis
+write.csv(cri_data, file = here::here("data/team18_multi.csv"))
+```
+

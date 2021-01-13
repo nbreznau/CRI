@@ -2,7 +2,7 @@
 title: "CRI_Expansion_All"
 author: "Nate Breznau"
 date: "July 28, 2019"
-output: html_notebook
+output: html_document
 ---
 
 # THE CROWDSOURCED REPLICATION INITIATIVE (CRI)
@@ -1076,9 +1076,20 @@ country_data <- filter(country_data, country %in% c("Australia", "Germany",
 # Merge data --------------------------------------------------------------
 
 # Combine data from each year
+# PI Note, data90 causes problems, change labels
+data90 <- data90 %>%
+  mutate(unemployed2 = as.numeric(unemployed),
+         unemployed = unemployed2,
+         age2 = as.numeric(age),
+         age = age2,
+         not_in_labor_force2 = as.numeric(not_in_labor_force),
+         not_in_labor_force = not_in_labor_force2)
+
+data90 <- select(data90, -c(age2, unemployed2, not_in_labor_force2))
 data <- bind_rows(data85, data90, data96, data06, data16)
 
 #PI Note, their coding drops 1985, 1990 and 2016 because of missing values.
+
 
 # Add country-level predictors
 data <- left_join(data, country_data, by = c("country", "year"))
@@ -1103,7 +1114,7 @@ data$housing <- (data$housing - 5) * -1
 # Data analysis -----------------------------------------------------------
 
 #PI recode
-data$net_migration <- data$net_migration/10
+data$net_migration <- as.numeric(data$net_migration)/10
 # Jobs
 model_jobs <- lmer(jobs ~ percent_foreign_born + net_migration + 
                      social_welfare_expenditure + employment_rate + multiculturalism_policy + 
@@ -1389,7 +1400,6 @@ team16[2, 3] = as.numeric(round(0.410/.48,5))
 team16[2, 4] = "t16m2"
 
 save(team16, file = pfunc("team16.Rdata"))
-
 
 rm(list = ls()[!ls() %in% keep])
 detachAllPackages()
@@ -1868,7 +1878,6 @@ team18$id <- paste("t18m",seq.int(1:12),sep = "")
 team18 <- team18[,-1]
 team18[,c(1:6)] <- round(unlist(team18[,c(1:6)]),3)
 save(team18, file = pfunc("team18.Rdata"))
-
 
 # clean up space
 rm(list = ls()[!ls() %in% keep])

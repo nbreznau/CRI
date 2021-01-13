@@ -45,9 +45,9 @@ dropdownButton <- function(label = "", status = c("default", "primary", "success
 ui <- fluidPage(
   useShinyjs(),
   tags$style(HTML("#title {font-size: 22px; line-height: 22px; margin: 12px 0}")),
-  h1(id = "title", "The Effect of Immigration on Social Policy Preferences", align = "center"),
+  h1(id = "title", "The Hidden Universe of Data Analysis", align = "center"),
   tags$style(HTML("#subtitle {font-size: 20px; line-height: 20px; color: #3E3673; margin: 12px 0}")),
-  h1(id = "subtitle", "Interactive Appendix of 1,292 Model Specifications from 73 Crowdsourced Research Teams", align = "center"),
+  h1(id = "subtitle", "1,253 Model Specifications, 73 Teams, same Data & Hypothesis", align = "center"),
   tags$hr(style="border-color: black;"),
   hr(),
   fluidRow(

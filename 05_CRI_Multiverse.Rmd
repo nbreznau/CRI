@@ -3,12 +3,813 @@ title: "Tech 5. Multiverse/Dredge"
 output: html_document
 ---
 
+
+This code has two purposes. 
+
+The first is to determine how much variance we should reasonably expect to explain using a 'static' multiverse approach where we use a single worked up data set from one of the teams and then apply a range of possible model specifications to it. Then we predict the outcomes using the model specifications. 
+
+The second is to run a multiverse analysis of the real data and real model specifications to see if we 'missed' anything or combinations of things that could explain the outcomes.
+
 ```{r setup, include=FALSE}
 rm(list = ls())
 library(pacman)
 
+options(scipen = 999)
 
-pacman::p_load("ggplot2","tidyverse","readr","ExPanDaR","plotscale","lattice","tidyr","mlogit","knitr","grid","zoo","ggpubr","ragg","factoextra","cluster","kableExtra","skimr","WeightedCluster")}
+pacman::p_load("ggplot2","tidyverse","MuMIn","ggpubr","ragg","factoextra","lme4","dplyr","lmerTest","margins")
+
+```
+
+## Expected Explained Variance (a simulation)
+
+We take a team whose results were derived using R and used three waves of the ISSP - Team 18. Their DV is dichotomized, the has pluses and minuses in our multiverse analysis.
+
+```{r team18_sim, warning = F, message = F}
+t18m <- read.csv(file = here::here("data/team18_multi.csv"), header = T)
+
+# doesn't include all macro-indicators, merge in here
+cri_macro <- read.csv(file = here::here("data/cri_macro.csv"), header = T)
+
+# merge on country
+t18m <- left_join(t18m, cri_macro, by = c("iso_country","year"))
+
+# make numeric
+t18m <- t18m %>%
+    mutate(wdi_unempilo = as.numeric(wdi_unempilo),
+           socx_oecd = as.numeric(socx_oecd),
+           gdp_oecd = as.numeric(gdp_oecd),
+           ginid_solt = as.numeric(ginid_solt),
+           migstock_un = as.numeric(migstock_un),
+           netmigpct = as.numeric(netmigpct)) %>%
+    dplyr::select(., year, female:health_c, migstock_un, netmigpct, wdi_unempilo, socx_oecd, gdp_oecd, iso_country)
+
+
+```
+
+## Data Frame Prep
+
+```{r models}
+dvs <- c("jobs","unemployed","reduce_income_diff","old_age_care","housing","health")
+
+dvs_c <- c("jobs_c","unemp_c","incdiff_c","oldage_c","housing_c","health_c")
+
+# for stock effects
+vars <- c("", "wdi_unempilo + ", "socx_oecd + ", "gdp_oecd + ", "netmigpct + ", 
+          "wdi_unempilo + socx_oecd + ", 
+          "wdi_unempilo + gdp_oecd + ", 
+          "wdi_unempilo + socx_oecd + gdp_oecd + ", 
+          "socx_oecd + gdp_oecd + ", 
+          "netmigpct + wdi_unempilo + ", 
+          "netmigpct + socx_oecd + ", 
+          "netmigpct + gdp_oecd + ", 
+          "netmigpct + wdi_unempilo + socx_oecd + ", 
+          "netmigpct + wdi_unempilo + gdp_oecd + ", 
+          "netmigpct + socx_oecd + gdp_oecd + ", 
+          "netmigpct + wdi_unempilo + socx_oecd + gdp_oecd + ")
+
+# switch stock and flow for flow effects
+vars2 <- c("", "wdi_unempilo + ", "socx_oecd + ", "gdp_oecd + ", "migstock_un + ", 
+          "wdi_unempilo + socx_oecd + ", 
+          "wdi_unempilo + gdp_oecd + ", 
+          "wdi_unempilo + socx_oecd + gdp_oecd + ", 
+          "socx_oecd + gdp_oecd + ", 
+          "migstock_un + wdi_unempilo + ", 
+          "migstock_un + socx_oecd + ", 
+          "migstock_un + gdp_oecd + ", 
+          "migstock_un + wdi_unempilo + socx_oecd + ", 
+          "migstock_un + wdi_unempilo + gdp_oecd + ", 
+          "migstock_un + socx_oecd + gdp_oecd + ", 
+          "migstock_un + wdi_unempilo + socx_oecd + gdp_oecd + ")
+
+# names(vars) <- c(1:16)
+
+# create a results frame
+m1_results <- matrix(ncol = 17, nrow = 576)
+m2_results <- matrix(ncol = 17, nrow = 576)
+m3_results <- matrix(ncol = 17, nrow = 576)
+m4_results <- matrix(ncol = 17, nrow = 576)
+
+colnames(m1_results) <- c("mname", "dv","AME", "p", "mator", "sample", "unemp", "socx", "gdp", "stock", "netmig", "AME_type", "twowayfe", "ctry_dummies","year_dummies","glm","logit")
+colnames(m2_results) <- colnames(m1_results)
+colnames(m3_results) <- colnames(m1_results)
+colnames(m4_results) <- colnames(m1_results)
+
+
+```
+
+## OLS Models
+
+### Stock Models, OLS, All years
+```{r models}
+i = 1
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+x <- lm(paste0(dv,
+               " ~ ",
+               "migstock_un + ",
+               vars[var], 
+               "factor(year) + factor(iso_country)"), data = t18m, na.action = "na.omit")
+m1_results[i,1] <- model
+m1_results[i,2] <- dv
+m1_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m1_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m1_results[i,5:6] <- c("ols","All")
+m1_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,10] <- 1
+m1_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,12:17] <- c("Stock",1,0,0,0,0)
+i <- i + 1
+    }
+}
+```
+
+### Net Models, OLS, All years
+```{r models2}
+i = 97
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+x <- lm(paste0(dv,
+               " ~ ",
+               "netmigpct + ",
+               vars2[var], 
+               "factor(year) + factor(iso_country)"), data = t18m, na.action = "na.omit")
+m1_results[i,1] <- model
+m1_results[i,2] <- dv
+m1_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m1_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m1_results[i,5:6] <- c("ols","All")
+m1_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,11] <- 1
+m1_results[i,12:17] <- c("Flow",1,0,0,0,0)
+i <- i + 1
+    }
+}
+```
+
+### Stock Models, OLS, 1996 & 2006 only
+```{r models3}
+t18m_9606 <- subset(t18m, year != 2016)
+
+i = 1
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+y <- vars[var]
+x <- lm(paste0(dv,
+               " ~ ",
+               "migstock_un + ",
+               vars[var], 
+               "factor(year) + factor(iso_country)"), data = t18m_9606, na.action = "na.omit")
+m2_results[i,1] <- model
+m2_results[i,2] <- dv
+m2_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m2_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m2_results[i,5:6] <- c("ols","w96_06")
+m2_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,10] <- 1
+m2_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,12:17] <- c("Stock",1,0,0,0,0)
+i <- i + 1
+    }
+}
+```
+
+
+
+### Net Models, OLS, 1996 & 2006 only
+```{r models4}
+
+i = 97
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars2[var])
+y <- vars2[var]
+x <- lm(paste0(dv,
+               " ~ ",
+               "netmigpct + ",
+               vars2[var], 
+               "factor(year) + factor(iso_country)"), data = t18m_9606, na.action = "na.omit")
+m2_results[i,1] <- model
+m2_results[i,2] <- dv
+m2_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m2_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m2_results[i,5:6] <- c("ols","w96_06")
+m2_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,11] <- 1
+m2_results[i,12:17] <- c("Flow",1,0,0,0,0)
+i <- i + 1
+    }
+}
+```
+
+### Stock Models, OLS, 2006 & 2016 only
+```{r models3}
+t18m_0616 <- subset(t18m, year != 1996)
+
+i = 1
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+y <- vars[var]
+x <- lm(paste0(dv,
+               " ~ ",
+               "migstock_un + ",
+               vars[var], 
+               "factor(year) + factor(iso_country)"), data = t18m_0616, na.action = "na.omit")
+m3_results[i,1] <- model
+m3_results[i,2] <- dv
+m3_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m3_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m3_results[i,5:6] <- c("ols","w06_16")
+m3_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,10] <- 1
+m3_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,12:17] <- c("Stock",1,0,0,0,0)
+i <- i + 1
+    }
+}
+```
+
+### Net Models, OLS, 1996 & 2006 only
+```{r models4}
+
+i = 97
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars2[var])
+y <- vars2[var]
+x <- lm(paste0(dv,
+               " ~ ",
+               "netmigpct + ",
+               vars2[var], 
+               "factor(year) + factor(iso_country)"), data = t18m_0616, na.action = "na.omit")
+m3_results[i,1] <- model
+m3_results[i,2] <- dv
+m3_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m3_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m3_results[i,5:6] <- c("ols","w06_16")
+m3_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,11] <- 1
+m3_results[i,12:17] <- c("Flow",1,0,0,0,0)
+i <- i + 1
+    }
+}
+```
+
+
+### Stock Models, OLS, All years, Year dummies only (no country FE)
+```{r models}
+i = 1
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+x <- lm(paste0(dv,
+               " ~ ",
+               "migstock_un + ",
+               vars[var], 
+               "factor(year)"), data = t18m, na.action = "na.omit")
+m4_results[i,1] <- model
+m4_results[i,2] <- dv
+m4_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m4_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m4_results[i,5:6] <- c("ols","All")
+m4_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,10] <- 1
+m4_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,12:17] <- c("Stock",0,0,1,0,0)
+i <- i + 1
+    }
+}
+```
+
+### Net Models, OLS, All years, Year dummies only (no country FE)
+```{r models2}
+i = 97
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+x <- lm(paste0(dv,
+               " ~ ",
+               "netmigpct + ",
+               vars2[var], 
+               "factor(year)"), data = t18m, na.action = "na.omit")
+m4_results[i,1] <- model
+m4_results[i,2] <- dv
+m4_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m4_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m4_results[i,5:6] <- c("ols","All")
+m4_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,11] <- 1
+m4_results[i,12:17] <- c("Flow",0,0,1,0,0)
+i <- i + 1
+    }
+}
+```
+
+## Logit Models
+
+### Stock Models, logit, All years
+```{r models}
+i = 385
+for (dv in dvs) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+x <- glm(paste0(dv,
+               " ~ ",
+               "migstock_un + ",
+               vars[var], 
+               "factor(year) + factor(iso_country)"), data = t18m, na.action = "na.omit", family = "binomial")
+m1_results[i,1] <- model
+m1_results[i,2] <- dv
+m1_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("migstock_un")))[2]),5)
+m1_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m1_results[i,5:6] <- c("logit","All")
+m1_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,10] <- 1
+m1_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,12:17] <- c("Stock",1,0,0,0,1)
+i <- i + 1
+    }
+}
+```
+
+### Net Models, logit, All years
+```{r models2}
+i = 481
+for (dv in dvs) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+x <- glm(paste0(dv,
+               " ~ ",
+               "netmigpct + ",
+               vars2[var], 
+               "factor(year) + factor(iso_country)"), data = t18m, na.action = "na.omit", family = "binomial")
+m1_results[i,1] <- model
+m1_results[i,2] <- dv
+m1_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("netmigpct")))[2]),5)
+m1_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m1_results[i,5:6] <- c("logit","All")
+m1_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,11] <- 1
+m1_results[i,12:17] <- c("Flow",1,0,0,0,1)
+i <- i + 1
+    }
+}
+```
+
+### Stock Models, logit, 1996 & 2006 only
+```{r models3}
+t18m_9606 <- subset(t18m, year != 2016)
+
+i = 385
+for (dv in dvs) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+y <- vars[var]
+x <- glm(paste0(dv,
+               " ~ ",
+               "migstock_un + ",
+               vars[var], 
+               "factor(year) + factor(iso_country)"), data = t18m_9606, na.action = "na.omit", family = "binomial")
+m2_results[i,1] <- model
+m2_results[i,2] <- dv
+m2_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("migstock_un")))[2]),5)
+m2_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m2_results[i,5:6] <- c("logit","w96_06")
+m2_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,10] <- 1
+m2_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,12:17] <- c("Stock",1,0,0,0,1)
+i <- i + 1
+    }
+}
+```
+
+
+
+### Net Models, logit, 1996 & 2006 only
+```{r models4}
+
+i = 481
+for (dv in dvs) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars2[var])
+y <- vars2[var]
+x <- glm(paste0(dv,
+               " ~ ",
+               "netmigpct + ",
+               vars2[var], 
+               "factor(year) + factor(iso_country)"), data = t18m_9606, na.action = "na.omit", family = "binomial")
+m2_results[i,1] <- model
+m2_results[i,2] <- dv
+m2_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("netmigpct")))[2]),5)
+m2_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m2_results[i,5:6] <- c("logit","w96_06")
+m2_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,11] <- 1
+m2_results[i,12:17] <- c("Flow",1,0,0,0,1)
+i <- i + 1
+    }
+}
+```
+
+### Stock Models, logit, 2006 & 2016 only
+```{r models3}
+t18m_0616 <- subset(t18m, year != 1996)
+
+i = 385
+for (dv in dvs) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+y <- vars[var]
+x <- glm(paste0(dv,
+               " ~ ",
+               "migstock_un + ",
+               vars[var], 
+               "factor(year) + factor(iso_country)"), data = t18m_0616, na.action = "na.omit", family = "binomial")
+m3_results[i,1] <- model
+m3_results[i,2] <- dv
+m3_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("migstock_un")))[2]),5)
+m3_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m3_results[i,5:6] <- c("logit","w06_16")
+m3_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,10] <- 1
+m3_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,12:17] <- c("Stock",1,0,0,0,1)
+i <- i + 1
+    }
+}
+```
+
+### Net Models, logit, 1996 & 2006 only
+```{r models4}
+
+i = 481
+for (dv in dvs) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars2[var])
+y <- vars2[var]
+x <- glm(paste0(dv,
+               " ~ ",
+               "netmigpct + ",
+               vars2[var], 
+               "factor(year) + factor(iso_country)"), data = t18m_0616, na.action = "na.omit", family = "binomial")
+m3_results[i,1] <- model
+m3_results[i,2] <- dv
+m3_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("netmigpct")))[2]),5)
+m3_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m3_results[i,5:6] <- c("logit","w06_16")
+m3_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,11] <- 1
+m3_results[i,12:17] <- c("Flow",1,0,0,0,1)
+i <- i + 1
+    }
+}
+```
+
+
+### Stock Models, logit, All years, Year dummies only (no country FE)
+```{r models}
+i = 385
+for (dv in dvs) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+x <- glm(paste0(dv,
+               " ~ ",
+               "migstock_un + ",
+               vars[var], 
+               "factor(year)"), data = t18m, na.action = "na.omit", family = "binomial")
+m4_results[i,1] <- model
+m4_results[i,2] <- dv
+m4_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("migstock_un")))[2]),5)
+m4_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m4_results[i,5:6] <- c("logit","All")
+m4_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,10] <- 1
+m4_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,12:17] <- c("Stock",0,0,1,0,1)
+i <- i + 1
+    }
+}
+```
+
+### Net Models, logit, All years, Year dummies only (no country FE)
+```{r models2}
+i = 481
+for (dv in dvs) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+x <- glm(paste0(dv,
+               " ~ ",
+               "netmigpct + ",
+               vars2[var], 
+               "factor(year)"), data = t18m, na.action = "na.omit", family = "binomial")
+m4_results[i,1] <- model
+m4_results[i,2] <- dv
+m4_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("netmigpct")))[2]),5)
+m4_results[i,4] <- round(summary(x)$coefficients[2,4],5)
+m4_results[i,5:6] <- c("logit","All")
+m4_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,11] <- 1
+m4_results[i,12:17] <- c("Flow",0,0,1,0,1)
+i <- i + 1
+    }
+}
+```
+
+
+## GLM Models
+
+### Stock Models, GLM, All years, country-level, year dummy
+```{r models}
+i = 193
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+x <- lmer(paste0(dv,
+               " ~ ",
+               "migstock_un + ",
+               vars[var], 
+               "factor(year) + (1|iso_country)"), data = t18m, na.action = "na.omit")
+m1_results[i,1] <- model
+m1_results[i,2] <- dv
+m1_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m1_results[i,4] <- round(summary(x)$coefficients[2,5],5)
+m1_results[i,5:6] <- c("glm","All")
+m1_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,10] <- 1
+m1_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,12:17] <- c("Stock",0,0,1,1,0)
+i <- i + 1
+    }
+}
+```
+
+### Net Models, GLM, All years, country-level, year dummy
+```{r models2}
+i = 289
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+x <- lmer(paste0(dv,
+               " ~ ",
+               "netmigpct + ",
+               vars2[var], 
+               "factor(year) + (1 | iso_country)"), data = t18m, na.action = "na.omit")
+m1_results[i,1] <- model
+m1_results[i,2] <- dv
+m1_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m1_results[i,4] <- round(summary(x)$coefficients[2,5],5)
+m1_results[i,5:6] <- c("glm","All")
+m1_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,11] <- 1
+m1_results[i,12:17] <- c("Flow",0,0,1,1,0)
+i <- i + 1
+    }
+}
+```
+
+### Stock Models, GLM, country-level, year dummy, 1996 & 2006 only
+```{r models3}
+t18m_9606 <- subset(t18m, year != 2016)
+
+i = 193
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+y <- vars[var]
+x <- lmer(paste0(dv,
+               " ~ ",
+               "migstock_un + ",
+               vars[var], 
+               "factor(year) + (1 | iso_country)"), data = t18m_9606, na.action = "na.omit")
+m2_results[i,1] <- model
+m2_results[i,2] <- dv
+m2_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m2_results[i,4] <- round(summary(x)$coefficients[2,5],5)
+m2_results[i,5:6] <- c("glm","w96_06")
+m2_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,10] <- 1
+m2_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,12:17] <- c("Stock",0,0,1,1,0)
+i <- i + 1
+    }
+}
+```
+
+### Net Models, GLM, country-level, year dummy, 1996 & 2006 only
+```{r models4}
+
+i = 289
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars2[var])
+y <- vars2[var]
+x <- lmer(paste0(dv,
+               " ~ ",
+               "netmigpct + ",
+               vars2[var], 
+               "factor(year) + (1 | iso_country)"), data = t18m_9606, na.action = "na.omit")
+m2_results[i,1] <- model
+m2_results[i,2] <- dv
+m2_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m2_results[i,4] <- round(summary(x)$coefficients[2,5],5)
+m2_results[i,5:6] <- c("glm","w96_06")
+m2_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,11] <- 1
+m2_results[i,12:17] <- c("Flow",0,0,1,1,0)
+i <- i + 1
+    }
+}
+```
+
+### Stock Models, GLM, country-level, year dummy, 2006 & 2016 only
+```{r models3}
+t18m_0616 <- subset(t18m, year != 1996)
+
+i = 193
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+y <- vars[var]
+x <- lmer(paste0(dv,
+               " ~ ",
+               "migstock_un + ",
+               vars[var], 
+               "factor(year) + (1 | iso_country)"), data = t18m_0616, na.action = "na.omit")
+m3_results[i,1] <- model
+m3_results[i,2] <- dv
+m3_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m3_results[i,4] <- round(summary(x)$coefficients[2,5],5)
+m3_results[i,5:6] <- c("glm","w06_16")
+m3_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,10] <- 1
+m3_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,12:17] <- c("Stock",0,0,1,1,0)
+i <- i + 1
+    }
+}
+```
+
+### Net Models, GLM, country-level, year dummy, 2006 & 2016 only
+```{r models4}
+
+i = 289
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars2[var])
+y <- vars2[var]
+x <- lmer(paste0(dv,
+               " ~ ",
+               "netmigpct + ",
+               vars2[var], 
+               "factor(year) + (1 | iso_country)"), data = t18m_0616, na.action = "na.omit")
+m3_results[i,1] <- model
+m3_results[i,2] <- dv
+m3_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m3_results[i,4] <- round(summary(x)$coefficients[2,5],5)
+m3_results[i,5:6] <- c("glm","w06_16")
+m3_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,11] <- 1
+m3_results[i,12:17] <- c("Flow",0,0,1,1,0)
+i <- i + 1
+    }
+}
+```
+
+
+### Stock Models, GLM, All years, no year dummy
+```{r models}
+i = 193
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+x <- lmer(paste0(dv,
+               " ~ ",
+               "migstock_un + ",
+               vars[var], 
+               "(1 | iso_country)"), data = t18m, na.action = "na.omit")
+m4_results[i,1] <- model
+m4_results[i,2] <- dv
+m4_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m4_results[i,4] <- round(summary(x)$coefficients[2,5],5)
+m4_results[i,5:6] <- c("glm","All")
+m4_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,10] <- 1
+m4_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,12:17] <- c("Stock",0,0,0,1,0)
+i <- i + 1
+    }
+}
+```
+
+### Net Models, GLM, All years, no year dummy
+```{r models2}
+i = 289
+for (dv in dvs_c) {
+    for (var in 1:16) {
+model <- paste0("m1_",dv, "_", vars[var])
+x <- lmer(paste0(dv,
+               " ~ ",
+               "netmigpct + ",
+               vars2[var], 
+               "(1 | iso_country)"), data = t18m, na.action = "na.omit")
+m4_results[i,1] <- model
+m4_results[i,2] <- dv
+m4_results[i,3] <- round(summary(x)$coefficients[2,1],5)
+m4_results[i,4] <- round(summary(x)$coefficients[2,5],5)
+m4_results[i,5:6] <- c("glm","All")
+m4_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,11] <- 1
+m4_results[i,12:17] <- c("Flow",0,0,0,1,0)
+i <- i + 1
+    }
+}
+```
+
+## Explaining Variance in Multiverse
+
+```{r dataprep}
+multi_df <- as.data.frame(rbind(m1_results, m2_results, m3_results, m4_results))
+
+multi_df <- multi_df %>%
+    mutate(ols = ifelse(mator == "ols", 1, 0),
+           sample = factor(sample),
+           otherdv = ifelse(stock == 1 & netmig == 1, 1, 0),
+           AME = as.numeric(AME))
+
+saveRDS(multi_df, file = here::here("results/multi_df.Rda"))
+
+```
+
+
+```{r multimodels}
+
+multi_df <- readRDS(multi_df, file = here::here("results/multi_df.Rda"))
+
+m0 <- lm()
 
 ```
 
