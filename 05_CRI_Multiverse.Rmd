@@ -800,16 +800,33 @@ multi_df <- multi_df %>%
            otherdv = ifelse(stock == 1 & netmig == 1, 1, 0),
            AME = as.numeric(AME))
 
-saveRDS(multi_df, file = here::here("results/multi_df.Rda"))
+save(multi_df, file = here::here("results/multi_df.Rda"))
 
 ```
 
 
 ```{r multimodels}
 
-multi_df <- readRDS(multi_df, file = here::here("results/multi_df.Rda"))
+load(file = here::here("results/multi_df.Rda"))
 
-m0 <- lm()
 
+# m0 <- lm(AME ~ 1, data = multi_df)
+m1 <- lm(AME ~ factor(dv) + factor(AME_type), data = multi_df)
+m2 <- lm(AME ~ factor(dv) + factor(AME_type) + factor(sample), data = multi_df)
+m3 <- lm(AME ~ factor(dv) + factor(AME_type) + factor(sample) + unemp + socx + gdp + otherdv, data = multi_df)
+m4 <- lm(AME ~ factor(dv) + factor(AME_type) + factor(sample) + unemp + socx + gdp + otherdv + factor(mator), data = multi_df)
+m5 <- lm(AME ~ factor(dv) + factor(AME_type) + factor(dv)*factor(AME_type) + factor(sample) + unemp + socx + gdp + otherdv + factor(mator), data = multi_df)
+
+expvar <- matrix(nrow = 5, ncol = 3)
+
+expvar[,1] <- c("m1","m2","m3","m4","m5")
+expvar[,2] <- c("DVs + AME type","+ sample", "+ IVs", "+ other DV + Estimator", "DV*Type interaction")
+expvar[,3] <- c(summary(m1)[["r.squared"]], summary(m2)[["r.squared"]], summary(m3)[["r.squared"]], summary(m4)[["r.squared"]], summary(m5)[["r.squared"]])
+
+write.csv(expvar, file = "results/TblSX_multi.csv")
+```
+
+```{r}
+sjPlot::tab_model(m3, m4, m5, show.ci = F, p.style = "stars")
 ```
 
