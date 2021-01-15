@@ -16,11 +16,11 @@ library(pacman)
 
 options(scipen = 999)
 
-pacman::p_load("ggplot2","tidyverse","MuMIn","ggpubr","ragg","factoextra","lme4","dplyr","lmerTest","margins")
+pacman::p_load("ggplot2","tidyverse","MuMIn","ggpubr","ragg","factoextra","lme4","dplyr","lmerTest","margins","rvest","nnet")
 
 ```
 
-## Expected Explained Variance (a simulation)
+# Expected Explained Variance (a simulation)
 
 We take a team whose results were derived using R and used three waves of the ISSP - Team 18. Their DV is dichotomized, the has pluses and minuses in our multiverse analysis.
 
@@ -826,7 +826,118 @@ expvar[,3] <- c(summary(m1)[["r.squared"]], summary(m2)[["r.squared"]], summary(
 write.csv(expvar, file = "results/TblSX_multi.csv")
 ```
 
-```{r}
+
+```{r plotms}
 sjPlot::tab_model(m3, m4, m5, show.ci = F, p.style = "stars")
 ```
 
+# Dredge Function
+
+Given computing times, we start with smaller sets of variables and then eliminate those that do not appear in the top fitting models (AIC/LL).
+
+```{r newloads}
+
+cri_ml <- read.csv(file = "results/cri_ml.csv", header = T)
+
+# remove NAs
+cri_ml <- cri_ml[!is.na(cri_ml$AME_Z),]
+
+# set global option
+options(na.action = "na.fail")
+```
+
+## DVs and Measurement
+
+```{r dredge1}
+
+
+dredge1 <- lm(AME_Z ~ Jobs + IncDiff + House + Unemp + Health + OldAge + Flow + Stock + ChangeFlow + Stock*Jobs + Stock*House + Stock*IncDiff , data = cri_ml)
+
+models1 <- dredge(dredge1)
+```
+```{r dredge2}
+
+
+dredge2 <- lm(AME_Z ~ Jobs + IncDiff + House + Health +  Flow + Stock + ChangeFlow + Stock*IncDiff , data = cri_ml)
+
+models2 <- dredge(dredge2)
+```
+```{r dredge3}
+
+dredge3 <- lm(AME_Z ~ Jobs + IncDiff + House + Health +  Flow + Stock + ChangeFlow + Stock*IncDiff + w1996 + w2006 + w2016 + w2006*w2016 + orig13 + orig13*Jobs + eeurope + allavailable, data = cri_ml)
+
+models3 <- dredge(dredge3)
+
+
+```
+
+```{r dredge4}
+
+dredge4 <- lm(AME_Z ~ Jobs + IncDiff + House + Flow + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + allavailable + twowayfe + level_cyear + mlm_fe + mlm_re, data = cri_ml)
+
+models4 <- dredge(dredge4)
+
+
+```
+
+```{r dredge5}
+
+dredge5 <- lm(AME_Z ~ Jobs + IncDiff + House + Flow + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + mlm_re + pro_immigrant + stats_ipred + belief_ipred, data = cri_ml)
+
+models5 <- dredge(dredge5)
+
+
+```
+
+```{r dredge6}
+
+dredge6 <- lm(AME_Z ~ Jobs + IncDiff + House + Flow + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + mlm_re + stats_ipred + twowayfe*Jobs + twowayfe*Stock, data = cri_ml)
+
+models6 <- dredge(dredge6)
+
+
+```
+
+
+
+```{r dredge7}
+
+dredge7 <- lm(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock, data = cri_ml)
+
+models7 <- dredge(dredge7)
+
+# Interestingly the 'best' models (via AICc) have only one variable. But this indicates the low explanatory power of each additional variable.
+
+dredge8 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock + (1 | u_teamid), data = cri_ml)
+
+models8 <- dredge(dredge8)
+
+
+```
+
+Final Model
+
+Used to explain variance reduction - compare with Fig 2 in the main text and Table S6.
+
+```{r final}
+m_dredged <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + (1 | u_teamid), data = cri_ml)
+
+sjPlot::tab_model(m_dredged, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = "results/reg_dredge.htm")
+
+m_d_out_v <- as.data.frame(VarCorr(m_dredged))
+
+m_d_out <- as.data.frame(read_html("results/reg_dredge.htm") %>% html_table(fill=TRUE))
+
+# add var to data frame
+m_d_out <- m_d_out[-c(18:21),]
+m_d_out[c(15:17),1] <- c("Team-Level","Model-Level","Total")
+# values taken from main models, see Table S6
+m_d_out[c(15:17),2] <- c(round(((0.062 - (m_d_out_v[1,4]*100))/0.062)*100,3), 
+                         round(((0.488 - (m_d_out_v[2,4]*100))/0.488)*100,3), 
+                         round(((0.550 - (m_d_out_v[1,4]*100) - (m_d_out_v[2,4]*100))/0.550)*100,3))
+
+# Save table
+write.csv(m_d_out, file = "results/TblS10_dredge.csv")
+```
+
+Computer selected model can explain `r m_d_out[18,2]` of the total variance.
