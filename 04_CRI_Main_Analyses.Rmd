@@ -3,9 +3,11 @@ title: "Tech 4, Main Analyses"
 output: html_document
 ---
 
-We first analyze sources of variance in average marginal effects (standardized) at the model level and then subjective team conclusions at the team-conclusion level. We enter common model specifications and researcher characteristics. Our first analyses are based on logic - our expectations that wave and countries choices in the data sample, strategies of testing the hypothesis and measuring the dependent and test variables of interest, estimation method, independent variables and equation components should explain a major portion of the variance. 
+We first analyze sources of variance in average marginal effects (standardized) at the model level and then subjective team conclusions at the team-conclusion level. We enter common model specifications and researcher characteristics. Our first analyses are based on logic - our expectations that wave and countries choices in the data sample, strategies of testing the hypothesis and measuring the dependent and test variables of interest, estimation method, independent variables and equation components should explain a major portion of the variance.
 
-We next let the computer run all possible combinations of specifications, in case our models missed something important.
+We also ask if and why researchers come to more consensus in their models and conclusions. For this we use variance function regressions to explain variance-as-outcomes. This is done in **041_CRI_Main_Analyses_Variance_Function.Rmd**
+
+We let the computer run all possible combinations of specifications, in case our models missed something important. This is done in **05_CRI_Multiverse.Rmd**
 
 Finally, we analyze if researcher characteristics associate with model specifications - even though we discovered that these common specifications cannot explain variance in outcomes.
 
@@ -189,6 +191,7 @@ m06v <- as.data.frame(VarCorr(m06))
 
 
 m06vars <- "+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable"
+
 ```
 
 
@@ -235,6 +238,7 @@ Using the R^2 'hacking' tool we found some combinations of these variables that 
 These probably need to be run independently, so that we see the reduction for each one.
 
 ```{r res_aspects_mlms}
+
 m09 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ belief_ipred + (1 | team)"), data = cri_ml)
 m10 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ pro_immigrant +  (1 | team)"), data = cri_ml) 
 
