@@ -183,6 +183,14 @@ cri_teams <- cri_teams %>%
 ```
 
 
+## Plots of Variance and Intercepts
+
+
+### Linear plots (not used in the paper)
+
+Here we plot first linearly the within-team unexplained variance and the between-team unexplained variance.
+
+
 ```{r plots}
 
 agg_png(filename = "results/FigX_varint_belief.png", height = 600, width = 800, res = 144)
@@ -234,6 +242,16 @@ ggplot(cri_teams, aes(y = AME_team_var, x = total_score)) +
     stat_cor(digits = 2, p.accuracy = 0.001) +
     theme_classic()
 ```
+
+### Rainclouds
+
+
+
+HHHHHHHHHHEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRRRREEEEE
+
+
+
+
 
 
 
@@ -304,8 +322,21 @@ while(DLL > .0001){
 
 results <- list("meanmodel"=meanmodel,"varmod"=varmod, "model"=model)
 
+Tbl11 <- as.data.frame(matrix(nrow = 6, ncol = 4))
 
+Tbl11[,1] <- c("Variable","Belief in Hypothesis","Pro-Immigrant","Topical Knowledge","Stats Experience","Model Score")
 
+Tbl11[,2] <- round(varmod@beta,3)
+Tbl11[,3] <- round(meanmodel@beta,3)
+Tbl11[,4] <- round(model@beta,3)
+
+Tbl11[1,] <- c("Variable","Variance Coeff","Mean Coeff","Standard Coeff")
+
+write.csv(Tbl11, file = "results/Tbl11.csv")
+
+# summary(varmod)
+# summary(meanmod)
+# summary(model)
 
 ```
 
