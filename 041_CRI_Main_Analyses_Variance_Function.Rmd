@@ -16,7 +16,11 @@ library(pacman)
 # devtools::install_github("easystats/effectsize")
 
 
-pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools","rvest","nnet","parameters","insight","effectsize","ggtext","mdthemes","ragg", "ggpubr")
+pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools","rvest","nnet","parameters","insight","effectsize","ggtext","mdthemes","ragg", "ggpubr","readr","cowplot")
+
+source(file = "script/R_rainclouds.R")
+source(file = "script/summarySE.R")
+
 
 # add in variance estimates (more than 2-digits)
 # disable scientific notation
@@ -155,7 +159,7 @@ cri_ml <- cri_ml %>%
 cor1 <- select(cri_ml, AME_team_int, AME_team_sd, AME_pred, AME_pred_center, AME_resid, AME_resid_center, AME_Z)
 cor2 <- cor(cor1, use = "complete")
 
-# the estimates from ranef see to be the standard error, not the variance by team!
+# the estimates from ranef seem to be the standard error, not the variance by team!
 # square to get variance - this appears to be wrong
 
 cri_ml$AME_team_var <- cri_ml$AME_team_sd^2
@@ -177,6 +181,7 @@ cri_teams <- cri_ml %>%
 
 cri_teams <- cri_teams %>%
     mutate(AME_team_var = ifelse(is.na(AME_team_var), 0, AME_team_var), # here NA means a single model or no variance, recode to 0
+           AME_team_var2 = ifelse(AME_team_var > 0.03, 0.03, AME_team_var),  # three teams are insane outliers
            AME_team_var = ifelse(AME_team_var > 0.004, 0.004, AME_team_var),  # three teams are insane outliers
            AME_team_var_Z = scale(AME_team_var))
 
@@ -223,35 +228,141 @@ ggplot(cri_teams, ) +
     theme_classic()
 dev.off()
 
-
-ggplot(cri_teams, aes(y = AME_team_var, x = pro_immigrant)) +
-    geom_point() +
-    geom_smooth(method = "lm", se = F) +
-    stat_cor(digits = 2, p.accuracy = 0.001) +
-    theme_classic()
-
-ggplot(cri_teams, aes(y = AME_team_var, x = topic_ipred)) +
-    geom_point() +
-    geom_smooth(method = "lm", se = F) +
-    stat_cor(digits = 2, p.accuracy = 0.001) +
-    theme_classic()
-
-ggplot(cri_teams, aes(y = AME_team_var, x = total_score)) +
-    geom_point() +
-    geom_smooth(method = "lm", se = F) +
-    stat_cor(digits = 2, p.accuracy = 0.001) +
-    theme_classic()
+# not used but potentially useful plots
+# ggplot(cri_teams, aes(y = AME_team_var, x = pro_immigrant)) +
+#     geom_point() +
+#     geom_smooth(method = "lm", se = F) +
+#     stat_cor(digits = 2, p.accuracy = 0.001) +
+#     theme_classic()
+# 
+# ggplot(cri_teams, aes(y = AME_team_var, x = topic_ipred)) +
+#     geom_point() +
+#     geom_smooth(method = "lm", se = F) +
+#     stat_cor(digits = 2, p.accuracy = 0.001) +
+#     theme_classic()
+# 
+# ggplot(cri_teams, aes(y = AME_team_var, x = total_score)) +
+#     geom_point() +
+#     geom_smooth(method = "lm", se = F) +
+#     stat_cor(digits = 2, p.accuracy = 0.001) +
+#     theme_classic()
 ```
 
 ### Rainclouds
 
+Allen M, Poggiali D, Whitaker K et al. Raincloud plots: a multi-platform tool for robust data visualization [version 2; peer review: 2 approved]. Wellcome Open Res ([2021](https://doi.org/10.12688/wellcomeopenres.15191.2)), 4:63.
+
+```{r rainclouds_prep}
+# create grouped data
+cri_team_groups <- cri_teams %>%
+  mutate(beliefZ = ifelse(scale(belief_ipred) > 0, 1, 0),
+         proZ = ifelse(scale(pro_immigrant) > 0, 1, 0),
+         statsZ = ifelse(scale(stats_ipred) > 0, 1, 0),
+         topicZ = ifelse(scale(topic_ipred) > 0, 1, 0),
+         AME_team_var_log = log(AME_team_var2),
+         AME_team_var = AME_team_var_log + 11,
+         AME_team_var = ifelse(AME_team_var == "-Inf", 0, AME_team_var)) %>%
+  select(AME_team_int, AME_team_var, AME_team_int, beliefZ, proZ, statsZ, topicZ, belief_ipred, pro_immigrant, stats_ipred, topic_ipred)
+
+# group 1 belief
+cri_team_groups1 <- cri_team_groups %>%
+  mutate(group = 4,
+         high = beliefZ)
+
+cri_team_groups2 <- cri_team_groups %>%
+  mutate(group = 3,
+         high = proZ)
+
+cri_team_groups3 <- cri_team_groups %>%
+  mutate(group = 2,
+         high = statsZ)
+
+cri_team_groups4 <- cri_team_groups %>%
+  mutate(group = 1,
+         high = topicZ)
+
+cri_team_g <- rbind(cri_team_groups1, cri_team_groups2, cri_team_groups3, cri_team_groups4)
+
+cri_team_g <- subset(cri_team_g, !is.na(AME_team_int))
+cri_team_g$group <- as.factor(cri_team_g$group)
+cri_team_g$high <- as.factor(cri_team_g$high)
+
+```
 
 
-HHHHHHHHHHEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRRRREEEEE
+```{r rainclouds_b}
+g1 <-ggplot(cri_team_g, aes(x = group, y = AME_team_int)) +
+  geom_flat_violin(aes(x = group, fill = high), 
+                   position = position_nudge(x = .1, y = 0), 
+                   adjust = 1.5, 
+                   trim = F, 
+                   alpha = .5, 
+                   colour = NA) +
+  geom_point(aes(x = as.numeric(group) - 0.05, y = AME_team_int, colour = high), position = position_jitter(width = 0.05), size = 0.25, shape = 20) +
+  scale_colour_brewer(palette = "Dark2", breaks = c(0,1),
+                   labels = c("Higher","Lower"), name = "") +
+  scale_fill_brewer(palette = "Dark2", breaks = c(0,1),
+                   labels = c("Higher","Lower"), name = "") +
+  scale_x_discrete(breaks = c(1,2,3,4),
+                   labels = c("Belief in\nHypothesis","Pro-\nimmigration","Stats-\nskills","Topic\nknowledge")) +
+  ylab("Average AME\n(between-team variance)") +
+  stat_cor(aes(x = belief_ipred, y = AME_team_int), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 1.15, label.y = -0.011, size = 2, data = cri_team_groups1) +
+  stat_cor(aes(x = pro_immigrant, y = AME_team_int), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 2.15, label.y = -0.011, size = 2, data = cri_team_groups2) +
+  stat_cor(aes(x = stats_ipred, y = AME_team_int), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 3.15, label.y = -0.011, size = 2, data = cri_team_groups2) +
+  stat_cor(aes(x = topic_ipred, y = AME_team_int), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 4.15, label.y = -0.011, size = 2, data = cri_team_groups2) +
+  coord_flip(ylim = c(-0.04,0.04)) + 
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.text.y = element_text(hjust = 0, color = "black"),
+        axis.title.y = element_blank(),
+        axis.title.x = element_text(size = 10))
 
 
 
+```
 
+```{r rainclouds_w}
+g2 <- ggplot(cri_team_g, aes(x = group, y = AME_team_var)) +
+  geom_flat_violin(aes(x = group, fill = high), 
+                   position = position_nudge(x = .1, y = 0), 
+                   adjust = 1.5, 
+                   trim = F, 
+                   alpha = .5, 
+                   colour = NA) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey70", size = 0.5, show.legend = FALSE) +
+  geom_point(aes(x = as.numeric(group) - 0.05, y = AME_team_var, colour = high), position = position_jitter(width = 0.05, height = 0.05), size = 0.25, shape = 20) +
+  stat_cor(aes(x = belief_ipred, y = AME_team_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 1.15, label.y = 1, size = 2, data = cri_team_groups1) +
+  stat_cor(aes(x = pro_immigrant, y = AME_team_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 2.15, label.y = 1, size = 2, data = cri_team_groups2) +
+  stat_cor(aes(x = stats_ipred, y = AME_team_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 3.15, label.y = 1, size = 2, data = cri_team_groups2) +
+  stat_cor(aes(x = topic_ipred, y = AME_team_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 4.15, label.y = 1, size = 2, data = cri_team_groups2) +
+  scale_colour_brewer(palette = "Dark2", breaks = c(0,1),
+                   labels = c("Higher","Lower"), name = "") +
+  scale_fill_brewer(palette = "Dark2", breaks = c(0,1),
+                   labels = c("Higher","Lower"), name = "", expand = c(0, 0)) +
+  scale_x_discrete(breaks = c(1,2,3,4), 
+                   labels = c("Belief in\nHypothesis","Pro-\nimmigration","Stats-\nskills","Topic\nknowledge")) +
+  ylab("Log Variance of AME\n(within-team variance)") +
+  ylim(0,10) +
+  coord_flip() + 
+  theme_classic() +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.title.x = element_text(size = 10),
+        axis.line.y = element_blank())
+
+
+
+```
+
+
+```{r combine}
+agg_png(filename = "results/Fig2_rain.png", width = 1000, height = 800, res = 144)
+ggarrange(g1,g2)
+dev.off()
+
+knitr::include_graphics("results/Fig2_rain.png")
+```
 
 
 
