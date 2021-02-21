@@ -38,9 +38,6 @@ cri_team <- subset(cri_team, u_teamid!=0)
 
 
 
-
-
-
 ## Specification Curves
 
 ### Data Prep
@@ -112,6 +109,14 @@ cri_merge <- select(cri, id, belief_ipred, pro_immigrant, topic_ipred, stats_ipr
 
 crispectest <- left_join(crispectest, cri_merge, by = "id")
 
+# remove original study
+crispectest <- subset(crispectest, u_teamid != 0)
+cri_team <- subset(cri_team, u_teamid !=0)
+
+# order rows to make counter
+crispectest <- crispectest[order(crispectest$est),]
+crispectest$count <- 1:nrow(crispectest)
+
 ```
 
 
@@ -119,7 +124,62 @@ crispectest <- left_join(crispectest, cri_merge, by = "id")
 
 ### Model-Level Effect Specifications
 
-#### Fig 1. Main Visual Results
+### Main Plot
+
+#### Fig 1
+
+```{r fig1_main_prep}
+#compress values for better visualization
+# 0-0.05 = 0-1
+# 0.05-0.505 = 1-2
+
+crispectest <- crispectest %>%
+  mutate(est_ns_scl = abs(est_ns),
+         est_ns_scl = ifelse(est_ns_scl > 0 & est_ns_scl <= 0.05, est_ns_scl/0.05, ifelse(est_ns_scl > 0.05 & est_ns_scl <=0.505, ((est_ns_scl - 0.05)/0.505)+1, est_ns_scl+1.505)),
+         est_ns_scl = ifelse(est_ns > 0, est_ns_scl, -1*est_ns_scl),
+         est_sig_scl = abs(est_sig),
+         est_sig_scl = ifelse(est_sig_scl > 0 & est_sig_scl <= 0.05, est_sig_scl/0.05, ifelse(est_sig_scl > 0.05 & est_sig_scl <=0.505, ((est_sig_scl - 0.05)/0.505)+1, est_sig_scl+1.505)),
+         est_sig_scl = ifelse(est_sig > 0, est_sig_scl, -1*est_sig_scl))
+```
+
+
+```{r fig1_main}
+agg_png(filename = "results/Fig1.png", width = 800, height = 500, res = 144)
+ggplot(crispectest) +
+  #geom_errorbar(aes(ymin = lb, ymax = ub), color = "thistle1") +
+  geom_point(aes(x = count, y = est_ns_scl), color = "grey55", shape = "|", size = 2, show.legend =F) + 
+  geom_point(aes(x = count, y = est_sig_scl, color = sig_group), shape = "|", size = 3) +
+  scale_color_manual(values = c("chartreuse4","NA", "firebrick"), labels = c("Negative","Not sig.","Positive"," ")) +
+  geom_vline(xintercept = 1214, color = "grey", linetype = "dashed") +
+  geom_vline(xintercept = 52, color = "grey", linetype = "dashed") +
+  #ylim(-1.8, 1.8) +
+  annotate(geom = "text", x = 150, y = 0.4, label = "NEGATIVE MARGIN, 95%CI\n(direction with hypothesis)", color = "chartreuse4", hjust = 0, size = 3) +
+  annotate(geom = "text", x = 750, y = -0.4, label = "POSITIVE MARGIN, 95%CI\n(direction against hypothesis)", color = "firebrick", hjust = 0, size = 3) +
+  annotate(geom = "text", x = 680, y = -1.5, label = "grey indicates not sig.\ndifferent from zero", color = "grey55", size = 3) +
+  geom_vline(xintercept = -30) +
+  annotate(geom = "segment", x = -35, xend = -25, y = -1.1, yend = -1.1, color = "white", size = 2) +
+  annotate(geom = "segment", x = -35, xend = -25, y = 1.1, yend = 1.1, color = "white", size = 2) +
+  labs(color = "Effect at 95%CI", x = "Model", y = "Average Marginal Effect\nxy-Standarized") +
+  scale_y_continuous(labels = c("-0.50","-0.05","0.00","0.05","0.50"), breaks = c(-1.75, -1, 0, 1, 1.75), limits = c(-1.8,1.8)) +
+  coord_cartesian(xlim = c(-15,1255), clip = "off") +
+  scale_x_continuous(expand = c(0,15)) +
+  theme_classic() +
+  guides(color = guide_legend(override.aes = list(size=7, color=c("chartreuse4","grey55", "firebrick","NA")))) +
+  theme(
+    legend.key.size = unit(2,"line"),
+    legend.position = "none",
+    #axis.title.x = element_blank()
+    axis.line.y = element_blank(),
+    )
+dev.off()
+
+knitr::include_graphics("results/Fig1.png")
+```
+
+
+### Supplementary Plots
+
+#### Fig 1_supplementary. Main Visual Results
 
 This figure combines many spec curves. Two big ones with researcher characteristics, and several small ones with the sub-domains of specifications.
 
@@ -128,13 +188,7 @@ First two are ordered by effect size, the other by confidence interval minimum/m
 ##### Panel A. By Effect Size
 
 ```{r fig1_alt}
-# remove original study
-crispectest <- subset(crispectest, u_teamid != 0)
-cri_team <- subset(cri_team, u_teamid !=0)
 
-# order rows to make counter
-crispectest <- crispectest[order(crispectest$est),]
-crispectest$count <- 1:nrow(crispectest)
 
 # create identifier of neg, ns, pos
 crispectest <- crispectest %>%
