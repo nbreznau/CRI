@@ -23,6 +23,8 @@ This is the repository for preparation and analysis of data obtained from the *C
 
 ### Workflow
 
+In addition to providing the raw R code in Rmd (markdown) files. We also knit each Rmd file into an html document so that non-R users may view the workflow. Therefore, each markdown file has a corresponding html file that can be opened by any browser software. For example, the file `01_CRI_Descriptives.Rmd` has a corresponding `01_CRI_Descriptives.html` file in the same folder for easy viewing (without the need for R).
+
 #### 1. Source Code Cleaning
 
 We collected the code from 73 teams and cleaned it for public sharing. This involved qualitative identification of model specifications, ensuring replicability, extracting Average Marginal Effects (AMEs) and redacting any identifying features. The resulting code are compiled by software type in the sub-folders of this project, orderd by team ID number (in folder **team_code**, and sub-folders: *team_code_SPSS*,*team_code_Stata*,*team_code_Mplus* and *team_code_R*). The code in the *team_code_R* folder imports the results from all other codes to compile a final dataset of effect sizes and confidence interval measures. 
@@ -32,15 +34,19 @@ We collected the code from 73 teams and cleaned it for public sharing. This invo
 Prior to our main analyses we import data from the Participant Survey including subjective voting on model quality, and the voting during the post-result deliberation. The code for these files are contained in the folder **data_prep**. It is not necessary to run these as their output is already saved in the **data** folder. In the **data_prep** folder are three command files:
 
 1. `001_CRI_Prep_Subj_Votes.Rmd` - prepares the subjective voting on the quality of models
-2. `002_CRI_Data_Prep.Rmd` - cleans up the variables into workable formats and runs a measurement model to estimate researcher characteristics
+2. `002_CRI_Data_Prep.Rmd` - cleans up the variables into workable formats, prepares shiny app data, provides correlations, and runs a measurement model to estimate researcher characteristics
 3. `003_CRI_Multiverse_Simulation` - sets up data to analyze how much variance we should expect to explain via model specifications
 
 #### 3. Workflow
 
 Our primary analyses and result out put are in the **code** folder. It contains:
 
-1. 01_CRI_Descriptives - final cleaning and descriptive analysis
-2. 02_CRI_Common_Specifications - 
+1. `01_CRI_Descriptives.Rmd` - final cleaning and descriptive analysis
+2. `02_CRI_Common_Specifications.Rmd` - identifying and counting model specifications and dissimilarities
+3. `03_CRI_Spec_Analysis.Rmd` - plotting specification curves
+4. `04_CRI_Main_Analyses.Rmd` - main regression models aiming to explain variance within and between teams in both effects and subjective conclusions
+5. `05_CRI_Main_Analyses_Variance_Function.Rmd` - variance function regressions that additionally aim to explain variation in variance by team, also contains plots of intercepts and variance against reseracher characteristics
+6. `06_
 
 ### Important Documents
 
