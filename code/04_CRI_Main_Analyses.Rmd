@@ -49,11 +49,11 @@ crispectest = datafile created in the file 03_Spec_Analysis
 ### Load Data
 
 ```{r load, warning=F,message=F}
-cri <- read.csv(file = "data/cri.csv", header = T)
-cri_str <- read.csv(file = "data/cri_str.csv", header = T)
-cri_team <- read.csv(file = "data/cri_team.csv", header = T)
-cri_indiv <- read.csv(file = "data/cri_indv.csv", header = T)
-crispectest <- read.csv(file = "results/crispectest.csv", header = T)
+cri <- read.csv(file = here::here("data/cri.csv"), header = T)
+cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = T)
+cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = T)
+cri_indiv <- read.csv(file = here::here("data/cri_indv.csv"), header = T)
+crispectest <- read.csv(file = here::here("results/crispectest.csv"), header = T)
 
 # setup multilevel dataset
 
@@ -269,9 +269,9 @@ m14v <- as.data.frame(VarCorr(m14))
 ### Combine All
 
 ```{r comb_tbl}
-tab_model(m00,m01,m02,m04,m06,m07,m09,m10,m11,m12,m13, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = "results/reg11.htm")
+tab_model(m00,m01,m02,m04,m06,m07,m09,m10,m11,m12,m13, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = here::here("results/reg11.htm"))
 
-reg11 <- as.data.frame(read_html("results/reg11.htm") %>% html_table(fill=TRUE))
+reg11 <- as.data.frame(read_html(here::here("results/reg11.htm")) %>% html_table(fill=TRUE))
 
 colnames(reg11) <- c("Effect", "m00","m01", "m02","m04", "m06","m07","m09","m10", "m11","m12","m13")
 
@@ -320,10 +320,10 @@ reg11[36,2:12] <- ""
 kable_styling(kable(reg11))
 
 # Added AIC,LL later = separate file
-write.csv(aiclog, file = "results/Tbl_AME_Spec_Reg_LL.csv")
+write.csv(aiclog, file = here::here("results/Tbl_AME_Spec_Reg_LL.csv"))
 
 
-write.csv(reg11, file = "results/Tbl_AME_Specification_Regressions.csv")
+write.csv(reg11, file = here::here("results/Tbl_AME_Specification_Regressions.csv"))
 ```
 
 ```{r residual_var}
@@ -502,15 +502,15 @@ m14d <- summary(m14m)
 ### Combine All
 
 ```{r comb_tblm}
-tab_model(m00m,m01m,m02m,m04m,m06m,m08m, digits = 3, p.style = "stars", show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = "results/reg22.htm")
+tab_model(m00m,m01m,m02m,m04m,m06m,m08m, digits = 3, p.style = "stars", show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = here::here("results/reg22.htm"))
 
-tab_model(m00m,m09m,m10m,m11m,m12m,m13m,m14m, digits = 3, p.style = "stars", show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = "results/reg23.htm")
+tab_model(m00m,m09m,m10m,m11m,m12m,m13m,m14m, digits = 3, p.style = "stars", show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = here::here("results/reg23.htm"))
 ```
 
 
 ```{r comb_tblm2}
 # First part of table (table too big to be in one)
-reg22 <- as.data.frame(read_html("results/reg22.htm") %>% html_table(fill=TRUE))
+reg22 <- as.data.frame(read_html(here::here("results/reg22.htm")) %>% html_table(fill=TRUE))
 
 # problem with tab_model, opened a claim on GitHub, for now remove duplicate rows
 
@@ -540,10 +540,10 @@ reg22a[nrow(reg22a),2:(ncol(reg22a))] <- ""
 
 colnames(reg22) <- c("Effect", "m00m_coef","m00m_chc","m01m_coef","m01m_chc","m02m_coef","m02m_chc","m04m_coef","m04m_chc","m06m_coef","m06m_chc","m08m_coef","m08m_chc")
 
-write.csv(reg22a, file = "results/Tbl_Multinom1.csv")
+write.csv(reg22a, file = here::here("results/Tbl_Multinom1.csv"))
 
 # Second part of table
-reg23 <- as.data.frame(read_html("results/reg23.htm") %>% html_table(fill=TRUE))
+reg23 <- as.data.frame(read_html(here::here("results/reg23.htm")) %>% html_table(fill=TRUE))
 
 reg23s <- reg23[(length(reg23$Var.1)-4):(length(reg23$Var.1)),]
 reg23a <- reg23[-c((length(reg23$Var.1)-4):(length(reg23$Var.1))),]
@@ -568,7 +568,7 @@ colnames(reg23) <- c("Effect","m00m_coef","m01m_chc", "m09m_coef","m09m_chc","m1
 reg22[nrow(reg22)+1,1] <- "Pct Dev Reduction"
 reg23[nrow(reg23)+1,1] <- "Pct Dev Reduction"
 
-write.csv(reg23a, file = "results/Tbl_Multinom2.csv")
+write.csv(reg23a, file = here::here("results/Tbl_Multinom2.csv"))
 
 #kable_styling(kable())
 ```
@@ -807,7 +807,7 @@ tbl2[c(5,8),5] <- tbl2[c(7,11),5]
 # calculate unexplained dev
 tbl2[19,5] <- 1 - as.numeric(tbl2[12,5])
 
-write.csv(tbl2, file = "results/Tbl2.csv")
+write.csv(tbl2, file = here::here("results/Tbl2.csv"))
 
 ```
 
@@ -870,7 +870,7 @@ fig2_labs <- c(" ","  ","   ","     ","<span style = \"font-size: 14px\">**Avg. 
 
 
 ```{r fig2_plot}
-agg_png(filename= "results/fig2_varexp.png", res = 144, width = 1100, height = 800)
+agg_png(filename= here::here("results/Fig3.png"), res = 144, width = 1100, height = 800)
 ggplot(fig2, aes(x = level, y = percent, fill = type)) +
   geom_bar(stat = "identity") +
   coord_flip() +
@@ -879,40 +879,40 @@ ggplot(fig2, aes(x = level, y = percent, fill = type)) +
   labs(title = "<span style = \"font-size: 18px\">**Factors Explaining Variance in Results**</span>") +
   scale_x_discrete(labels = fig2_labs, drop = F) +
   scale_y_reverse() +
-  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.005, ymax = 0.24), color = "darksalmon", size = 1.5, fill = "transparent") +
-  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.26, ymax = 0.49), color = "royalblue2", size = 1.5, fill = "transparent") +
-  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.51, ymax = 0.74), color = "chartreuse3", size = 1.5, fill = "transparent") +
-  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.76, ymax = 0.995), color = "darkorchid1", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.005, ymax = 0.24), color = "#E6AB02", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.26, ymax = 0.49), color = "#7570B3", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.51, ymax = 0.74), color = "#1B9E77", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.76, ymax = 0.995), color = "#666666", size = 1.5, fill = "transparent") +
   annotate("text", x = 3.7, y = 0.124, label = "UNEXPLAINED\nVARIANCE", color = "black", size = 3) +
   annotate("text", x = 3.7, y = 0.375, label = "RESEARCHER\nCHARACTERISTICS", color = "black",  size = 3) +
   annotate("text", x = 3.7, y = 0.624, label = "RESEARCH\nDESIGN", color = "black",  size = 3) +
   annotate("text", x = 3.7, y = 0.876, label = "OBJECTIVE\nCONDITIONS", color = "black",  size = 3) +
-  annotate("text", x = 2.52, y = 0.228, label = "(unique features of\neach team's research\ndesign)", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
-  annotate("text", x = 2.01, y = 0.48, label = "- Belief in hypothesis\n- Pro-immigration\n- Topic knowledge\n- Statistics skills\n- Model ranking", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
-  annotate("text", x = 2.53, y = 0.730, label = "- Measurement\n- Sample selection\n- Model specification", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
-  annotate("text", x = 2.741, y = 0.988, label = "- Materials\n- Group assignment", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
+  annotate("text", x = 2.3, y = 0.228, label = "Idiosyncratic remaining\nvariance associated\nwith each team's\nresearch design", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
+  annotate("text", x = 2.3, y = 0.48, label = "- Method expertise\n- Topic expertise\n- Prior attitudes\n- Prior beliefs", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
+  annotate("text", x = 2.3, y = 0.730, label = "- Measurement\n- Sample selection\n- Model specification\n -Model ranking", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
+  annotate("text", x = 2.77, y = 0.988, label = "- Materials\n- Group assignment", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
   annotate("text", x = 8.8, y = 1, hjust = 0, label = "0%", size = 3.5) +
   annotate("text", x = 8.8, y = 0.75,  label = "25%", size = 3.5) +
   annotate("text", x = 8.8, y = 0.5,  label = "50%", size = 3.5) +
   annotate("text", x = 8.8, y = 0.25,  label = "75%", size = 3.5) +
   annotate("text", x = 8.8, y = 0, hjust = 1, label = "100%", size = 3.5) +
   annotate("text", x = 8, y = 0.67,  label = "% POSITIVE\nTEST RESULTS", size = 2.5, color = "grey20") +
-  geom_segment(aes(x = 4.15, y = 0.123, xend = 4.55, yend = 0.45), color = "darksalmon") +
-  geom_segment(aes(x = 4.15, y = 0.376, xend = 4.55, yend = 0.85), color = "royalblue2") +
-  geom_segment(aes(x = 4.15, y = 0.626, xend = 4.55, yend = 0.945), color = "chartreuse3") +
-  geom_segment(aes(x = 4.15, y = 0.876, xend = 4.55, yend = 0.99), color = "darkorchid1") +
-  scale_fill_manual(values = c("Objective conditions" = "darkorchid1",
-                                "Research design" = "chartreuse3",
-                                "Researcher characteristics" = "royalblue2",
+  geom_segment(aes(x = 4.15, y = 0.123, xend = 4.55, yend = 0.45), color = "#E6AB02") +
+  geom_segment(aes(x = 4.15, y = 0.376, xend = 4.55, yend = 0.85), color = "#7570B3") +
+  geom_segment(aes(x = 4.15, y = 0.626, xend = 4.55, yend = 0.945), color = "#1B9E77") +
+  geom_segment(aes(x = 4.15, y = 0.876, xend = 4.55, yend = 0.99), color = "#666666") +
+  scale_fill_manual(values = c("Objective conditions" = "#666666",
+                                "Research design" = "#1B9E77",
+                                "Researcher characteristics" = "#7570B3",
                                 "Results" = "burlywood",
-                                "Unexplained variance" = "darksalmon")) +
+                                "Unexplained variance" = "#E6AB02")) +
   theme(axis.line = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks = element_blank(),
         legend.position = "none")
 dev.off()
 
-knitr::include_graphics("results/fig2_varexp.png")
+knitr::include_graphics(here::here("results/Fig3.png"))
 
 ```
 

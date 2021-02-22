@@ -4,12 +4,6 @@ output: html_document
 ---
 
 
-
-
-
-### Setup
-
-
 ```{r setup, include=FALSE}
 rm(list = ls())
 library(pacman)
@@ -20,12 +14,13 @@ pacman::p_load("devtools","ggplot2","tidyverse","readr","ExPanDaR","plotscale","
 
 ```
 
+## Load Data
 
 ```{r load, warning=F,message=F, include=F}
 
-cri <- read.csv(file = "data/cri.csv", header = T)
-cri_str <- read.csv(file = "data/cri_str.csv", header = T)
-cri_team <- read.csv(file = "data/cri_team.csv", header = T)
+cri <- read.csv(file = here::here("data/cri.csv"), header = T)
+cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = T)
+cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = T)
 
 #remove B&F study
 cri <- subset(cri, u_teamid != 0)
@@ -99,7 +94,7 @@ A second look at these data suggests that we may want to separately cluster on d
 3) Estimation, measurement, model structure
 4) All at once
 
-```{r diss_1}
+```{r diss_1, warning = F}
 # select only country and wave variables
 cri_spec_only01 <- select(cri_spec_only, w1985:TR)
 # variables in the model
@@ -161,7 +156,7 @@ When considering three sub-domains of specification:
 
 #### Sample Sub-Domain
 
-```{r desc_samples}
+```{r desc_samples, warning = F}
 cri_samples <- cri %>%
     subset(!is.na(AME_Z)) %>%
     subset(identical_samples != 0) %>%
@@ -184,7 +179,7 @@ head(cri_samples)
  
 Identify the sample selection that goes with cases `r cri_samples$identical_samples`.
  
-```{r ident_sample}
+```{r ident_sample, warning = F}
 cri_samp <- cri %>%
     subset(cri$identical_samples %in% cri_samples$identical_samples)
 cri_samp <- select(cri_samp, identical_samples, w1985:TR)
@@ -220,7 +215,7 @@ cri_variables <- cri_variables[order(cri_variables$cases, decreasing = T),]
 head(cri_variables)
 ```
 
-```{r ident_variables}
+```{r ident_variables1, warning = F}
 cri_var <- cri %>%
     subset(cri$identical_variables %in% cri_variables$identical_variables)
 cri_var <- select(cri_var, identical_variables, main_IV_as_control, emigration_ivC:fbXleftright)
@@ -235,7 +230,7 @@ cri_variables$identical_variables <- c("No country-level, and 5 socio-demographi
 
 #### Model Components Sub-Domain
 
-```{r desc_estmodel}
+```{r desc_estmodel, warning = F}
 cri_estmodel <- cri %>%
     subset(!is.na(AME_Z)) %>%
     subset(identical_estmodel != 0) %>%
@@ -254,7 +249,7 @@ cri_estmodel <- subset(cri_estmodel, teams > 5)
 cri_estmodel <- cri_estmodel[order(cri_estmodel$cases, decreasing = T),]
 head(cri_estmodel)
 ```
-```{r ident_variables}
+```{r ident_variables, warning = F}
 cri_estm <- cri %>%
     subset(cri$identical_estmodel %in% cri_estmodel$identical_estmodel)
 cri_estm  <- select(cri_estm , identical_estmodel, netmig, west, nonwest, muslim, refugee, main_IV_time, main_IV_effect, Jobs:ChangeFlow, twowayfe:pseudo_pnl, dichotomize)
@@ -269,7 +264,7 @@ cri_estmodel$identical_estmodel <- c("DV: Jobs, Test var: Stock of immigrants, l
 
 ### Appendix Table S3. Selected Frequencies of Model Specifications out of 1,261 Models
 
-```{r combine}
+```{r combine, warning = F}
 
 tbl_ax <- as.data.frame(matrix(nrow = 20, ncol = 6))
 
@@ -282,6 +277,6 @@ tbl_ax[c(9:20),] <- cri_estmodel
 
 rm(cri_samp, cri_sampp, cri_estm, cri_estmm, cri_var, cri_varr)
 
-write.csv(tbl_ax, file = "results/TblS3.csv")
+write.csv(tbl_ax, file = here::here("results/TblS3.csv"))
 ```
 

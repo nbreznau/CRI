@@ -4,10 +4,6 @@ output: html_document
 ---
 
 
-
-### Setup
-   
-
 ```{r setup, include=FALSE}
 rm(list = ls())
 library(pacman)
@@ -15,22 +11,18 @@ library(pacman)
 
 pacman::p_load("devtools","ggplot2","tidyverse","readr","ExPanDaR","plotscale","lattice","tidyr","mlogit","knitr","grid","zoo","ggpubr","ragg","factoextra","cluster","kableExtra","skimr","WeightedCluster")
 
-# Load Researcher Degrees of Freedom Analysis package
-#  
-# devtools::install_github("joachim-gassen/rdfanalysis")
-library(rdfanalysis)
-
 
 ```
 
+## Load Data
 
 ```{r load, warning=F,message=F, include=F}
 
-cri <- read.csv(file = "data/cri.csv", header = T)
+cri <- read.csv(file = here::here("data/cri.csv"), header = T)
 cri <- subset(cri, u_teamid != 0)
-cri_str <- read.csv(file = "data/cri_str.csv", header = T)
+cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = T)
 cri_str <- subset(cri_str, u_teamid!=0)
-cri_team <- read.csv(file = "data/cri_team.csv", header = T)
+cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = T)
 cri_team <- subset(cri_team, u_teamid!=0)
 
 ```
@@ -129,9 +121,20 @@ crispectest$count <- 1:nrow(crispectest)
 #### Fig 1
 
 ```{r fig1_main_prep}
+# create identifier of neg, ns, pos
+crispectest <- crispectest %>%
+  mutate(sig_group = as.factor(ifelse(est < 0 & ub > 0, NA, ifelse(est > 0 & lb < 0, NA, ifelse(est < 0 & ub < 0, 1, ifelse(est > 0 & lb > 0, 3, 2))))),
+         est_sig = ifelse(!is.na(sig_group), est, NA),
+         est_ns = ifelse(is.na(sig_group), est, NA),
+         sig_group2 = as.factor(ifelse(is.na(sig_group), 2, sig_group)))
+
+
+
 #compress values for better visualization
 # 0-0.05 = 0-1
 # 0.05-0.505 = 1-2
+
+
 
 crispectest <- crispectest %>%
   mutate(est_ns_scl = abs(est_ns),
@@ -144,27 +147,30 @@ crispectest <- crispectest %>%
 
 
 ```{r fig1_main}
-agg_png(filename = "results/Fig1.png", width = 800, height = 500, res = 144)
+agg_png(filename = here::here("results/Fig1.png"), width = 800, height = 500, res = 144)
 ggplot(crispectest) +
   #geom_errorbar(aes(ymin = lb, ymax = ub), color = "thistle1") +
   geom_point(aes(x = count, y = est_ns_scl), color = "grey55", shape = "|", size = 2, show.legend =F) + 
   geom_point(aes(x = count, y = est_sig_scl, color = sig_group), shape = "|", size = 3) +
-  scale_color_manual(values = c("chartreuse4","NA", "firebrick"), labels = c("Negative","Not sig.","Positive"," ")) +
-  geom_vline(xintercept = 1214, color = "grey", linetype = "dashed") +
-  geom_vline(xintercept = 52, color = "grey", linetype = "dashed") +
+  scale_color_manual(values = c("#66A61E","NA", "#D95F02"), labels = c("Negative","Not sig.","Positive"," ")) +
+  #geom_vline(xintercept = 1214, color = "grey", linetype = "dashed") +
+  #geom_vline(xintercept = 52, color = "grey", linetype = "dashed") +
   #ylim(-1.8, 1.8) +
-  annotate(geom = "text", x = 150, y = 0.4, label = "NEGATIVE MARGIN, 95%CI\n(direction with hypothesis)", color = "chartreuse4", hjust = 0, size = 3) +
-  annotate(geom = "text", x = 750, y = -0.4, label = "POSITIVE MARGIN, 95%CI\n(direction against hypothesis)", color = "firebrick", hjust = 0, size = 3) +
-  annotate(geom = "text", x = 680, y = -1.5, label = "grey indicates not sig.\ndifferent from zero", color = "grey55", size = 3) +
+  annotate(geom = "text", x = 150, y = 0.5, label = "NEGATIVE AME, 95%CI", color = "#66A61E", fontface = "bold", hjust = 0, size = 3) +
+  annotate(geom = "text", x = 800, y = 1, label = "POSITIVE AME, 95%CI", color = "#D95F02", fontface = "bold", hjust = 0, size = 3) +
+  annotate(geom = "text", x = 450, y = -0.6, label = "NOT SIGNIFICANT AME, 95%CI", fontface = 3, color = "grey55", hjust = 0, size = 2.5) +
+  #annotate(geom = "text", x = 680, y = -1.5, label = "grey indicates not sig.\ndifferent from zero", color = "grey55", size = 3) +
   geom_vline(xintercept = -30) +
   annotate(geom = "segment", x = -35, xend = -25, y = -1.1, yend = -1.1, color = "white", size = 2) +
   annotate(geom = "segment", x = -35, xend = -25, y = 1.1, yend = 1.1, color = "white", size = 2) +
-  labs(color = "Effect at 95%CI", x = "Model", y = "Average Marginal Effect\nxy-Standarized") +
+  annotate(geom = "segment", x = -38, xend = -22, y = 1.12, yend = 1.18, color = "black", size = 0.5) +
+  annotate(geom = "segment", x = -38, xend = -22, y = -1.18, yend = -1.12, color = "black", size = 0.5) +
+  labs(color = "Effect at 95%CI", x = "Model Number, ordered by point estimate", y = "Average Marginal Effect (AME)") +
   scale_y_continuous(labels = c("-0.50","-0.05","0.00","0.05","0.50"), breaks = c(-1.75, -1, 0, 1, 1.75), limits = c(-1.8,1.8)) +
   coord_cartesian(xlim = c(-15,1255), clip = "off") +
   scale_x_continuous(expand = c(0,15)) +
   theme_classic() +
-  guides(color = guide_legend(override.aes = list(size=7, color=c("chartreuse4","grey55", "firebrick","NA")))) +
+  guides(color = guide_legend(override.aes = list(size=7, color=c("#66A61E","grey55", "#D95F02","NA")))) +
   theme(
     legend.key.size = unit(2,"line"),
     legend.position = "none",
@@ -173,13 +179,13 @@ ggplot(crispectest) +
     )
 dev.off()
 
-knitr::include_graphics("results/Fig1.png")
+knitr::include_graphics(here::here("results/Fig1.png"))
 ```
 
 
 ### Supplementary Plots
 
-#### Fig 1_supplementary. Main Visual Results
+#### Fig 1_supplementary. 
 
 This figure combines many spec curves. Two big ones with researcher characteristics, and several small ones with the sub-domains of specifications.
 
@@ -189,13 +195,6 @@ First two are ordered by effect size, the other by confidence interval minimum/m
 
 ```{r fig1_alt}
 
-
-# create identifier of neg, ns, pos
-crispectest <- crispectest %>%
-  mutate(sig_group = as.factor(ifelse(est < 0 & ub > 0, NA, ifelse(est > 0 & lb < 0, NA, ifelse(est < 0 & ub < 0, 1, ifelse(est > 0 & lb > 0, 3, 2))))),
-         est_sig = ifelse(!is.na(sig_group), est, NA),
-         est_ns = ifelse(is.na(sig_group), est, NA),
-         sig_group2 = as.factor(ifelse(is.na(sig_group), 2, sig_group)))
 
 g1 <- ggplot(crispectest) +
   #geom_errorbar(aes(ymin = lb, ymax = ub), color = "thistle1") +
@@ -370,11 +369,11 @@ g4 <- ggplot(crispectest) +
 
 ```{r ggplot}
 
-agg_png(filename = "results/Fig1_new.png", res = 144, height = 900, width = 1700)
+agg_png(filename = here::here("results/Fig1_new.png"), res = 144, height = 900, width = 1700)
 ggarrange(g1,g2,g3,g4, labels = c("A ","B ","C ","D "))
 dev.off()
 
-knitr::include_graphics("results/Fig1_new.png")
+knitr::include_graphics(here::here("results/Fig1_new.png"))
 ```
 
 
@@ -535,13 +534,13 @@ g03 <-
   
 g03ci <- 
   ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 1.75, fill = factor(DV_Jobs)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 1.5, fill = factor(DV_Unemp)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 1.25, fill = factor(DV_IncDiff)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 1, fill = factor(DV_OldAge)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.75, fill = factor(DV_House)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.5, fill = factor(DV_Health)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.25, fill = factor(DV_Scale)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 1.75, fill = factor(DV_Jobs)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 1.5, fill = factor(DV_Unemp)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 1.25, fill = factor(DV_IncDiff)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(DV_OldAge)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 0.75, fill = factor(DV_House)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 0.5, fill = factor(DV_Health)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 0.25, fill = factor(DV_Scale)), height = 0.133, width = 0.25) +
   scale_y_continuous(breaks = c(1.75,1.5,1.25,1,0.75,0.5,0.25), labels=dvlabs) +
   scale_fill_manual(values = c("white","blue")) +
     theme_classic() +
@@ -577,10 +576,10 @@ g04 <- ggplot(crispectest) +
 
 # version for right-side column 
 g04ci <- ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 1, fill = factor(IV_Emp)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.75, fill = factor(IV_GDP)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.5, fill = factor(IV_Socx)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.25, fill = factor(IV_None)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(IV_Emp)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 0.75, fill = factor(IV_GDP)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 0.5, fill = factor(IV_Socx)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 0.25, fill = factor(IV_None)), height = 0.133, width = 0.25) +
   scale_y_continuous(breaks = c(1,0.75,0.5,0.25), labels=ivlabs) +
   scale_fill_manual(values = c("white","darkblue")) +
     theme_classic() +
@@ -594,11 +593,11 @@ g04ci <- ggplot(crispectest) +
 
 
 ```{r fig1_col1}
-agg_png(filename = "results/Fig1_Col1.png", height = 800, width = 800, res = 72)
+agg_png(filename = here::here("results/Fig1_Col1.png"), height = 800, width = 800, res = 72)
 ggarrange(g1a, g2a, g01, g01ci, g02, g02ci, g03, g03ci, g04, g04ci, nrow = 5, ncol = 2, heights = c(0.6,.75,0.5,1.75,1.2), widths = c(1,0.9))
 dev.off()
 
-knitr::include_graphics("results/Fig1_Col1.png")
+knitr::include_graphics(here::here("results/Fig1_Col1.png"))
 ```
 
 
@@ -607,9 +606,9 @@ knitr::include_graphics("results/Fig1_Col1.png")
 
 
 ```{r fig1_sample}
-samplabs <- c("1996 & 2006","2006 & 2016","1996, 2006\n& 2016","Other")
+samplabs <- c("1996 &\n2006","2006 &\n2016","1996, 2006\n& 2016","Other")
 
-# g9 <-
+ g9 <-
 ggplot(crispectest) +
   geom_tile(aes(x = count, y = 4, fill = factor(W_96_06)), height = 0.5) +
   geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5) +
@@ -626,6 +625,26 @@ ggplot(crispectest) +
     axis.ticks.x = element_blank(),
     axis.text.x = element_blank(),
   )
+ 
+ g9ci <-
+ggplot(crispectest) +
+  geom_tile(aes(x = count2, y = 4, fill = factor(W_96_06)), height = 0.5) +
+  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5) +
+  geom_tile(aes(x = count2, y = 2, fill = factor(W_06_16)), height = 0.5) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(W_Other)), height = 0.5) +
+  scale_y_continuous(breaks = c(4,3,2,1), labels=samplabs) +
+  scale_fill_manual(values = c("NA","blue")) +
+    theme_classic() +
+  ylab("Survey Waves in Sample") +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    legend.position = "none",
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+  )
 
   
 ```
@@ -633,9 +652,9 @@ ggplot(crispectest) +
 ```{r fig1_countries}
    
 
-clabs <- c("Rich 13","CEE/East\nEurope","All\nAvailable","Other")
+clabs <- c("Rich 13"," CEE/East\nEurope","All\nAvailable","Other")
 
-# g9 <-
+g10 <-
 ggplot(crispectest) +
   geom_tile(aes(x = count, y = 4, fill = factor(C_13)), height = 0.5) +
   geom_tile(aes(x = count, y = 3, fill = factor(C_CEE)), height = 0.5) +
@@ -653,15 +672,35 @@ ggplot(crispectest) +
     axis.text.x = element_blank(),
   )
 
+g10ci <-
+ggplot(crispectest) +
+  geom_tile(aes(x = count2, y = 4, fill = factor(C_13)), height = 0.5) +
+  geom_tile(aes(x = count2, y = 3, fill = factor(C_CEE)), height = 0.5) +
+  geom_tile(aes(x = count2, y = 2, fill = factor(C_All)), height = 0.5) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(C_Other)), height = 0.5) +
+  scale_y_continuous(breaks = c(4,3,2,1), labels=clabs) +
+  scale_fill_manual(values = c("NA","blue")) +
+    theme_classic() +
+  ylab("Countries in Sample") +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    legend.position = "none",
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+  )
+
 ```
 
 
 
 ```{r fig1_estimator}
 
-estlabs <- c("OLS","Logit","ML/GLM","Ordered\nlogit","Bayes")
+estlabs <- c("OLS","Logit"," ML/GLM","Ordered\nlogit","Bayes")
 
-# g9 <-
+g11 <-
 ggplot(crispectest) +
   geom_tile(aes(x = count, y = 5, fill = factor(Est_ols)), height = 0.5) +
   geom_tile(aes(x = count, y = 4, fill = factor(Est_logit)), height = 0.5) +
@@ -672,15 +711,45 @@ ggplot(crispectest) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
   ylab("Estimation Method") +
+  xlab("Models ordered by Effect Size") +
   theme(
-    axis.title.x = element_blank(),
+    #axis.title.x = element_blank(),
     legend.position = "none",
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.text.x = element_blank(),
   )
 
+g11ci <-
+ggplot(crispectest) +
+  geom_tile(aes(x = count2, y = 5, fill = factor(Est_ols)), height = 0.5) +
+  geom_tile(aes(x = count2, y = 4, fill = factor(Est_logit)), height = 0.5) +
+  geom_tile(aes(x = count2, y = 3, fill = factor(Est_mlglm)), height = 0.5) +
+  geom_tile(aes(x = count2, y = 2, fill = factor(Est_ologit)), height = 0.5) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(Est_bayes)), height = 0.5) +
+  scale_y_continuous(breaks = c(5,4,3,2,1), labels=estlabs) +
+  scale_fill_manual(values = c("NA","blue")) +
+    theme_classic() +
+  ylab("Estimation Method") +
+  xlab("Models ordered by 95%CI Minimum") +
+  theme(
+    axis.title.y = element_blank(),
+    legend.position = "none",
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+  )
+
     
+```
+
+```{r fig1_col34}
+agg_png(filename = here::here("results/Fig1_Col34.png"), height = 800, width = 800, res = 72)
+ggarrange(g1a, g2a, g9, g9ci, g10, g10ci, g11, g11ci, nrow = 4, ncol = 2, heights = c(0.6,1,1,1.2), widths = c(1,0.9))
+dev.off()
+
+knitr::include_graphics(here::here("results/Fig1_Col34.png"))
 ```
 
 ##### Sample Specs
@@ -761,16 +830,16 @@ g5b_new <- ggplot(cri_team) +
     axis.title.x = element_blank(),
     plot.margin=unit(c(0.2,0.3,0.2,0.5),"cm")
   )
-agg_png(filename = "results/Fig2team_new2.png", res = 144, height = 900, width = 1200)
+agg_png(filename = here::here("results/Fig2team_new2.png"), res = 144, height = 900, width = 1200)
 ggarrange(g5a_new,g5b_new,ncol = 1, heights = c(1,1.2))
 dev.off()
 
-knitr::include_graphics("results/Fig2team_new2.png")
+knitr::include_graphics(here::here("results/Fig2team_new2.png"))
 ```
 
 
 ```{r saveout}
-write.csv(crispectest, file = "results/crispectest.csv")
+write.csv(crispectest, file = here::here("results/crispectest.csv"))
 ```
 
 
@@ -816,13 +885,18 @@ cri_spec_only2 <- cri_spec_only2[ - as.numeric(which(apply(cri_spec_only2, 2, va
 
 (when analyzing all) This demonstrates 3 clusters, but teams 10, 61 and 82 are obvious outliers. Therefore, we re-run the analysis with them removed.
 
+This routine takes long so we've commented it out and saved the results for re-loading below.
+
 ```{r clus_cut, warning = F, message = F, echo = F}
 # k-means clustering
 cri_km2 <- eclust(cri_spec_only2, "kmeans", nstart = 25)
 
-saveRDS(cri_km2, file = "results/cri_km2.Rds")
+saveRDS(cri_km2, file = here::here("results/cri_km2.Rds"))
+```
 
-readRDS(cri_km2, file = "results/cri_km2.Rds")
+
+```{r clus_cut, warning = F, message = F, echo = F}
+readRDS(cri_km2, file = here::here("results/cri_km2.Rds"))
 
 #recombine
 cri_spec_only2$cluster <- cri_km2$cluster

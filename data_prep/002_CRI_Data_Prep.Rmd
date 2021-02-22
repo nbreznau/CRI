@@ -1,5 +1,5 @@
 ---
-title: "Data Preparation"
+title: "Tech 002. Data Preparation"
 output:
   html_document:
     df_print: paged
@@ -28,7 +28,7 @@ completeFun <- function(data, desiredCols) {
 
 ### CRI Margins & Model Specs
 
-CRI Model Specifications and Margins in the file "CRI Model Specifications and Margins.xlsx". This model specification file was qualitatively coded by hand from each team's code and the margins came from CRI_Expansion_All.Rmd.
+CRI Model Specifications and Margins in the file "CRI Model Specifications and Margins.xlsx". This model specification file was qualitatively coded by hand from each team's code and the margins came from `CRI_Expansion_All.Rmd` command file located in the folder **team_code\team_code_R**.
 
 We set up two versions of the model specifications here: *cri* and *cri_str*. One is for dichotomous numerical values and the other is for string names of each variable (good for spec curve plotting). Participant survey also used here.
 
@@ -420,7 +420,7 @@ cri <- cri %>%
 cri_r_aspects1 <- cri %>%
   subset(., u_teamid != 0) %>%
   ungroup() %>%
-  summarize(belief_1 = round(mean(belief_1_avg, na.rm = T),1),
+  summarise(belief_1 = round(mean(belief_1_avg, na.rm = T),1),
           belief_2 = round(mean(belief_2_avg, na.rm = T),1),
           pro_immigrant_mean = round(mean(pro_immigrant, na.rm = T),1),
           taught_stat_courses = round(mean(stat4, na.rm = T),1),
@@ -433,7 +433,7 @@ cri_r_aspects1 <- cri %>%
 cri_r_aspects2 <- cri %>%
   subset(., u_teamid != 0) %>%
   ungroup() %>%
-  summarize(belief_1_sd = round(sd(belief_1_avg, na.rm = T),1),
+  summarise(belief_1_sd = round(sd(belief_1_avg, na.rm = T),1),
           belief_2_sd = round(sd(belief_2_avg, na.rm = T),1),
           pro_immigrant_sd = round(sd(pro_immigrant, na.rm = T),1),
           taught_stat_courses_sd = round(sd(stat4, na.rm = T),1),
@@ -446,7 +446,7 @@ cri_r_aspects2 <- cri %>%
 cri_r_aspects3 <- cri %>%
   subset(., u_teamid != 0) %>%
   ungroup() %>%
-  summarize(belief_1_min = 1,
+  summarise(belief_1_min = 1,
           belief_2_min = 1,
           pro_immigrant_min = min(pro_immigrant, na.rm = T),
           taught_stat_courses_min = min(stat4, na.rm = T),
@@ -459,7 +459,7 @@ cri_r_aspects3 <- cri %>%
 cri_r_aspects4 <- cri %>%
   subset(., u_teamid != 0) %>%
   ungroup() %>%
-  summarize(belief_1_max = 5,
+  summarise(belief_1_max = 5,
           belief_2_max = 5,
           pro_immigrant_max = max(pro_immigrant, na.rm = T),
           taught_stat_courses_max = max(stat4, na.rm = T),
@@ -473,7 +473,7 @@ cri_r_aspects <- cbind(t(cri_r_aspects1), t(cri_r_aspects2), t(cri_r_aspects3), 
 
 kable(cri_r_aspects)
 
-write.csv(cri_r_aspects, file = "results/TblS1.csv")
+write.csv(cri_r_aspects, file = here::here("results/TblS1.csv"))
           
 ```
 
@@ -563,7 +563,7 @@ cor1$label <- c("(stat1)",
                     "(belief_strength)", 
                     "(pro_immigrant)")
 cor1 <- select(cor1, label, everything())
-write.csv(cor1, file = "results/TblS3_measrement.csv")
+write.csv(cor1, file = here::here("results/TblS3_measrement.csv"))
 
 ```
 
@@ -600,7 +600,7 @@ colnames(fit_fig) <- c("Index/Test","Score")
 fit_fig[1:4,1] <- c("CLI","TFI","RMSEA","chi-test p")
 fit_fig[1:4,2] <- round(c(fitsi[["FIT"]][["cfi"]],fitsi[["FIT"]][["tli"]],fitsi[["FIT"]][["rmsea"]],fitsi[["FIT"]][["pvalue"]]),3)
 
-write.csv(fit_fig, file = "results/fit_measurement.csv")
+write.csv(fit_fig, file = here::here("results/fit_measurement.csv"))
 
 ```
 
@@ -1049,7 +1049,7 @@ cri_shiny_team <- cri_shiny_team %>%
   
 
 # Save shiny data
-write.csv(cri_shiny, file = here::here("CRI_shiny","data","cri_shiny.csv"), row.names = F)
-write.csv(cri_shiny_team, file = here::here("CRI_shiny","data","cri_shiny_team.csv"), row.names = F)
+write.csv(cri_shiny, file = here::here("shiny/data/cri_shiny.csv"), row.names = F)
+write.csv(cri_shiny_team, file = here::here("shiny/data/cri_shiny_team.csv"), row.names = F)
 
 ```

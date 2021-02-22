@@ -22,9 +22,9 @@ The datasets in here were worked up starting in the sub-folder 'team_code' in th
 
 
 ```{r load, warning=F,message=F, include =F}
-cri <- read.csv(file = "data/cri.csv", header = T)
-cri_team <- read.csv(file = "data/cri_team.csv", header = T)
-cri_str <- read.csv(file = "data/cri_str.csv", header = T)
+cri <- read.csv(file = here::here("data/cri.csv"), header = T)
+cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = T)
+cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = T)
 
 # team stats
 cri_count <- aggregate(cri_team, by = list(cri_team$u_teamid), FUN = "mean", na.rm = T)
@@ -104,7 +104,7 @@ write.csv(codebook1, file = here::here("results","codebook1.csv"))
 Our final sample is `r length(unique(cri_str$u_teamid))` teams including `r sum(cri_count$team_size[cri_count$u_teamid != 0]) + 1` researhers that submitted `r length(cri_str$u_teamid[cri_str$u_teamid != 0]) + 1` models. Of those teams, one did not conduct the hypothesis test based on a failed measurement invariance test, another had all their `r length(cri_str$u_teamid[cri_str$u_teamid == 1])` models fail to converge and one other had one model out of several fail to converge. The result was `r length(unique(cri_str$u_teamid)) - 2` teams with numeric results of their hypothesis tests derived from `r length(cri_str$u_teamid[!is.na(cri_str$AME) & cri_str$u_teamid != 0])` models produced by `r sum(cri_count$team_size[cri_count$u_teamid != 0]) - 3` researchers in total with an average of `r round(sum(cri_str$team_size[cri_str$u_teamid != 0])/length(cri_str$id[cri_str$u_teamid != 0]),3)` researchers per team.
 There were `r sum(cri_count$team_size)-2` participants in `r length(unique(cri$u_teamid))` teams that produced `r length(cri$u_teamid[cri$u_teamid > 0])` models. 
 
-There were `r sum(duplicated(cri_team$u_teamid))` teams that came to more than one conclusion. For example, finding support of the hypothesis for immigration stock models, but finding rejection of the hypothesis for immigration flow models. Therefore, we have `r length(cri_team$u_teamid)` observations ('results') in the team-level data that derive from `r length(unique(cri_teamt$u_teamid))-1` teams. We also have the conclusion from the study by Brady and Finnigan ([2014](https://doi.org/10.1177/000312240607100306)) that provides an example of a state of the art study for testing this hypothesis included as team number '0' for comparison purposes.
+There were `r sum(duplicated(cri_team$u_teamid))` teams that came to more than one conclusion. For example, finding support of the hypothesis for immigration stock models, but finding rejection of the hypothesis for immigration flow models. Therefore, we have `r length(cri_team$u_teamid)` observations ('results') in the team-level data that derive from `r length(unique(cri_team$u_teamid))-1` teams. We also have the conclusion from the study by Brady and Finnigan ([2014](https://doi.org/10.1177/000312240607100306)) that provides an example of a state of the art study for testing this hypothesis included as team number '0' for comparison purposes.
 
 #### Summary Stats
 
@@ -199,7 +199,7 @@ kable_styling(t2) %>%
 ```
 
 ```{r table2, warning=F, message=F, echo=T}
-knitr::include_graphics("results/Table2.png")
+knitr::include_graphics(here::here("results/Table2.png"))
 ```
 
 ### Main Findings - Tables 1-3
@@ -266,7 +266,7 @@ colnames(sq_cormat) <- c("Positive","Not Sig.","Negative")
 rownames(sq_cormat) <- c("Supported","Inconclusive","Rejected")
 sq_cormat_melted <- melt(sq_cormat)
 
-agg_png(filename = "results/Tbl1_cor.png", res = 144, height = 600, width = 700)
+agg_png(filename = here::here("results/Tbl1_cor.png"), res = 144, height = 600, width = 700)
 ggplot(data = sq_cormat_melted, aes(X1, X2, fill = value))+
  geom_tile(color = "white")+
  scale_fill_gradient2(low = "maroon", high = "green", mid = "grey", 
@@ -325,6 +325,6 @@ agg_png(filename = "results/FigS5.png", res = 144, width = 1000)
 ggpubr::ggarrange(g1,g2, labels = c("A","B"))
 dev.off()
 
-knitr::include_graphics("results/FigS5.png")
+knitr::include_graphics(here::here("results/FigS5.png"))
 ```
 

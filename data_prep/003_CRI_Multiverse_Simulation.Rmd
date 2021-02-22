@@ -1,11 +1,11 @@
 ---
-title: "Untitled"
+title: "Tech 003. Multiverse Simulation"
 author: "Nate Breznau"
 output: html_document
 ---
 
 
-This code comes from Team 18, it has been altered by the PIs to produce both continuous and dichotomous dependent variables. 
+This code was borrowed from Team 18, it has been altered by the PIs to produce both continuous and dichotomous dependent variables. 
 
 
 ```{r setup, include=FALSE}
@@ -15,7 +15,7 @@ pacman::p_load("tidyverse","haven","foreign","textreg","xtable","MASS")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r dataprep}
+```{r dataprep, warning = F}
 
 ## ---- Data Preparation ----
 issp1996 <- read_dta(here::here("data/ZA2900.dta"))
