@@ -91,7 +91,7 @@ codebook1 <- codebook1 %>%
 
 codebook1 <- select(codebook1, -var)
 
-write.csv(codebook1, file = here::here("results","codebook1.csv"))
+write.csv(codebook1, file = here::here("results/codebook1.csv"))
 
 
 ```
@@ -182,11 +182,11 @@ t1 <- kable(cri_sum, row.names = F)
 
 ```{r desc_team1, warning=F, message=F, include=F}
 kable_styling(t1) %>%
-  as_image(width = 4, file = here::here("results","Table1.png"))
+  as_image(width = 4, file = here::here("results/Tbl_codebook.png"))
 ```
 
 ```{r table1, warning=F, message=F, echo=T}
-knitr::include_graphics(here::here("results","Table1.png"))
+knitr::include_graphics(here::here("results/Tbl_codebook.png"))
 ```
 
 #### Table 2. Model-Level Descriptive Statistics
@@ -194,12 +194,12 @@ knitr::include_graphics(here::here("results","Table1.png"))
 ```{r descriptive1, warning = F, message = F, include=F}
 
 kable_styling(t2) %>%
-  as_image(width = 4, file = here::here("results","Table2.png"))
+  as_image(width = 4, file = here::here("results/Tbl_codebook2.png"))
 
 ```
 
 ```{r table2, warning=F, message=F, echo=T}
-knitr::include_graphics(here::here("results/Table2.png"))
+knitr::include_graphics(here::here("results/Tbl_codebook2.png"))
 ```
 
 ### Main Findings - Tables 1-3
@@ -251,7 +251,7 @@ tbl1[11,2] <- ((mean(cri_team0$Hnotest, na.rm = T)*87)+2)/89
 tbl1[12,2] <- (mean(cri_team0$Hrej, na.rm = T)*87)/89
 tbl1[13,2] <- 1
 
-write.csv(tbl1, file = here::here("results","tbl1.csv"))
+write.csv(tbl1, file = here::here("results/tbl1.csv"))
   
 ```
 
@@ -284,7 +284,7 @@ ggplot(data = sq_cormat_melted, aes(X1, X2, fill = value))+
       axis.ticks = element_blank())
 dev.off()
 
-knitr::include_graphics(here::here("results","Tbl1_cor.png"))
+knitr::include_graphics(here::here("results/Tbl1_cor.png"))
 
 ```
 
