@@ -14,9 +14,9 @@ pacman::p_load("devtools","ggplot2","tidyverse","readr","ExPanDaR","plotscale","
 
 ```
 
-## Load Data
+### Load Data
 
-```{r load, warning=F,message=F, include=F}
+```{r load, warning=F,message=F}
 
 cri <- read.csv(file = here::here("data/cri.csv"), header = T)
 cri <- subset(cri, u_teamid != 0)
@@ -30,9 +30,9 @@ cri_team <- subset(cri_team, u_teamid!=0)
 
 
 
-## Specification Curves
+### Specification Curves
 
-### Data Prep
+#### Data Prep
 
 ```{r data_prep, warning=F, message=F, include=F}
 
@@ -116,9 +116,9 @@ crispectest$count <- 1:nrow(crispectest)
 
 ### Model-Level Effect Specifications
 
-### Main Plot
+#### Main Plot
 
-#### Fig 1
+##### Fig 1
 
 ```{r fig1_main_prep}
 # create identifier of neg, ns, pos
@@ -183,9 +183,9 @@ knitr::include_graphics(here::here("results/Fig1.png"))
 ```
 
 
-### Supplementary Plots
+#### Supplementary Plots
 
-#### Fig 1_supplementary. 
+##### Fig 1_supplementary. 
 
 This figure combines many spec curves. Two big ones with researcher characteristics, and several small ones with the sub-domains of specifications.
 
@@ -193,18 +193,18 @@ First two are ordered by effect size, the other by confidence interval minimum/m
 
 ##### Panel A. By Effect Size
 
-```{r fig1_alt}
+```{r S6panelA}
 
 
 g1 <- ggplot(crispectest) +
   #geom_errorbar(aes(ymin = lb, ymax = ub), color = "thistle1") +
   geom_point(aes(x = count, y = est_ns), color = "grey55", shape = "|", size = 2, show.legend =F) + 
   geom_point(aes(x = count, y = est_sig, color = sig_group), shape = "|", size = 3) +
-  scale_color_manual(values = c("chartreuse4","NA", "firebrick"), labels = c("Negative","Not sig.","Positive"," ")) +
+  scale_color_manual(values = c("#66A61E","grey55", "#D95F02"), labels = c("Negative","Not sig.","Positive"," ")) +
   ylim(-0.21, 0.21) +
   labs(color = "Effect at 95%CI", x = "Model", y = " \n \nStandardized\nEffect Size") +
   theme_classic() +
-  guides(color = guide_legend(override.aes = list(size=7, color=c("chartreuse4","grey55", "firebrick","NA")))) +
+  guides(color = guide_legend(override.aes = list(size=7, color=c("#66A61E","grey55", "#D95F02","NA")))) +
   theme(
     legend.key.size = unit(2,"line"),
     legend.position = "none",
@@ -215,20 +215,20 @@ g1a <- ggplot(crispectest) +
   #geom_errorbar(aes(ymin = lb, ymax = ub), color = "thistle1") +
   geom_point(aes(x = count, y = est_ns), color = "grey55", shape = "|", size = 3, show.legend =F) + 
   geom_point(aes(x = count, y = est_sig, color = sig_group), shape = "|", size = 4) +
-  scale_color_manual(values = c("chartreuse4","NA", "firebrick"), labels = c("Negative","Not sig.","Positive"," ")) +
+  scale_color_manual(values = c("#66A61E","grey55", "#D95F02"), labels = c("Negative","Not sig.","Positive"," ")) +
   ylim(-0.21, 0.21) +
   labs(color = "Effect at 95%CI", x = "by Standardized Effect Size", y = " \n \n \n ") +
   theme_classic() +
-  guides(color = guide_legend(override.aes = list(size=7, color=c("chartreuse4","grey55", "firebrick","NA")))) +
+  guides(color = guide_legend(override.aes = list(size=7, color=c("#66A61E","grey55", "#D95F02","NA")))) +
   theme(
     legend.position = "none",
     axis.text.x = element_blank())
 
 ```
 
-#### Panel B. By Confidence Interval
+##### Panel B. By Confidence Interval
 
-```{r fig1_alt2}
+```{r S6_panelB}
 
 
 
@@ -251,7 +251,7 @@ g2 <-
   ggplot(crispectest) +
   geom_errorbar(aes(x = count2, ymin = lb, ymax = ub), color = "grey55") +
   geom_point(aes(x = count2, y = est, color = sig_group2), size = 1) +
-  scale_color_manual(values = c("chartreuse4","grey45", "firebrick"), labels = c("Negative","Not sig.","Positive")) +
+  scale_color_manual(values = c("#66A61E","grey55", "#D95F02"), labels = c("Negative","Not sig.","Positive")) +
   coord_cartesian(ylim = c(-0.21,0.21)) +
   labs(color = "Effect\nat 95%CI", x = "Model", y = "Effect Range", size = 2) +
   annotate("text", x = 450, y = 0.13,label = "Effects < 0\nordered by\nupper bound", size = 2.5, color = "grey10") +
@@ -269,7 +269,7 @@ g2 <-
 g2a <- ggplot(crispectest) +
   geom_errorbar(aes(x = count2, ymin = lb, ymax = ub), color = "grey55") +
   geom_point(aes(x = count2, y = est, color = sig_group2), size = 1) +
-  scale_color_manual(values = c("chartreuse4","grey45", "firebrick"), labels = c("Negative","Not sig.","Positive")) +
+  scale_color_manual(values = c("#66A61E","grey55", "#D95F02"), labels = c("Negative","Not sig.","Positive")) +
   coord_cartesian(ylim = c(-0.21,0.21)) +
   labs(color = "Effect\nat 95%CI", x = "by Confidence Interval Minimum", size = 2) +
   geom_vline(xintercept = 688) +
@@ -283,7 +283,7 @@ g2a <- ggplot(crispectest) +
 
 ```
 
-#### Panels B & D. Researcher Characteristics
+##### Panels B & D. Researcher Characteristics
 
 Heatmap Concept
 
@@ -331,11 +331,11 @@ crispectest <- crispectest %>%
 labs_y <- c("Model Score","Stats-Skill","Topic\nKnowledge","Pro Immigrant","Belief Hyp. True")
 
 g3 <- ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 5, fill = belief_roll), height = 0.5) +
-  geom_tile(aes(x = count, y = 4, fill = pro_roll), height = 0.5) +
-  geom_tile(aes(x = count, y = 3, fill = topic_roll), height = 0.5) +
-  geom_tile(aes(x = count, y = 2, fill = stats_roll), height = 0.5) +
-  geom_tile(aes(x = count, y = 1, fill = total_roll), height = 0.5) +
+  geom_tile(aes(x = count, y = 5, fill = belief_roll), height = 0.5, width = 0.25) +
+  geom_tile(aes(x = count, y = 4, fill = pro_roll), height = 0.5, width = 0.25) +
+  geom_tile(aes(x = count, y = 3, fill = topic_roll), height = 0.5, width = 0.25) +
+  geom_tile(aes(x = count, y = 2, fill = stats_roll), height = 0.5, width = 0.25) +
+  geom_tile(aes(x = count, y = 1, fill = total_roll), height = 0.5, width = 0.25) +
   scale_y_continuous(breaks = c(1,2,3,4,5), labels=labs_y) +
     theme_classic() +
   xlab("Models ordered by Effect Size") +
@@ -347,11 +347,11 @@ labs_y2 <- c("Model","l","e","t","e")
 
 
 g4 <- ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 5, fill = belief_roll2), height = 0.5) +
-  geom_tile(aes(x = count2, y = 4, fill = pro_roll2), height = 0.5) +
-  geom_tile(aes(x = count2, y = 3, fill = topic_roll2), height = 0.5) +
-  geom_tile(aes(x = count2, y = 2, fill = stats_roll2), height = 0.5) +
-  geom_tile(aes(x = count2, y = 1, fill = total_roll2), height = 0.5) +
+  geom_tile(aes(x = count2, y = 5, fill = belief_roll2), height = 0.5, width = 0.25) +
+  geom_tile(aes(x = count2, y = 4, fill = pro_roll2), height = 0.5, width = 0.25) +
+  geom_tile(aes(x = count2, y = 3, fill = topic_roll2), height = 0.5, width = 0.25) +
+  geom_tile(aes(x = count2, y = 2, fill = stats_roll2), height = 0.5, width = 0.25) +
+  geom_tile(aes(x = count2, y = 1, fill = total_roll2), height = 0.5, width = 0.25) +
   labs(fill = "Score") +
   scale_y_continuous(breaks = c(1,2,3,4,5), labels=labs_y2) +
   xlab("Models ordered by Minimum Confidence Boundary (95%CI)") +
@@ -365,19 +365,19 @@ g4 <- ggplot(crispectest) +
   )
 ```
 
-### Fig 1. Combined
+##### Fig S6. 
 
-```{r ggplot}
+```{r figS6, warning = F}
 
-agg_png(filename = here::here("results/Fig1_new.png"), res = 144, height = 900, width = 1700)
+agg_png(filename = here::here("results/FigS6.png"), res = 144, height = 900, width = 1700)
 ggarrange(g1,g2,g3,g4, labels = c("A ","B ","C ","D "))
 dev.off()
 
-knitr::include_graphics(here::here("results/Fig1_new.png"))
+knitr::include_graphics(here::here("results/FigS6.png"))
 ```
 
 
-#### Fig 1. Sub-plots
+##### Fig 1. Sub-plots
 
 We include two smaller versions of the spec-curves with four sub-domains of specifications below. This time without a rolling average.
 
@@ -429,7 +429,7 @@ For each set of explanatory variables we plot two versions. One ordered by effec
 Test Format
 
 
-```{r fig1_test}
+```{r figS7d, warning = F}
 testlabs <- c("       Stock", "Flow", "Change\nFlow")
 g01 <- 
   ggplot(crispectest) +
@@ -469,7 +469,7 @@ g01ci <-
 
 Measurement of Immigration
 
-```{r fig1_measure}
+```{r figS7c, warning = F}
 mlabs <- c("  Immigra-\nnts (%)", "Net\nMigration")
 g02 <- 
   ggplot(crispectest) +
@@ -507,7 +507,7 @@ g02ci <-
 
 Dependent Variables
 
-```{r fig1_measure}
+```{r figS7b, warning = F}
 # set labels
 dvlabs = c("             Jobs","Unemp","IncDiff","OldAge","House","Health","Scale")
 
@@ -557,7 +557,7 @@ g03ci <-
 
 Independent Variables
 
-```{r fig1_ivs}
+```{r figS7a, warning = F}
 
 ivlabs <- c(" (Un)Emp\nRate","GDP\nper cap", "Social\nSpending","None\n/other")
 
@@ -592,12 +592,12 @@ g04ci <- ggplot(crispectest) +
 ```
 
 
-```{r fig1_col1}
-agg_png(filename = here::here("results/Fig1_Col1.png"), height = 800, width = 800, res = 72)
+```{r figS7, warning = F}
+agg_png(filename = here::here("results/FigS7.png"), height = 800, width = 800, res = 72)
 ggarrange(g1a, g2a, g01, g01ci, g02, g02ci, g03, g03ci, g04, g04ci, nrow = 5, ncol = 2, heights = c(0.6,.75,0.5,1.75,1.2), widths = c(1,0.9))
 dev.off()
 
-knitr::include_graphics(here::here("results/Fig1_Col1.png"))
+knitr::include_graphics(here::here("results/FigS7.png"))
 ```
 
 
@@ -605,15 +605,15 @@ knitr::include_graphics(here::here("results/Fig1_Col1.png"))
 
 
 
-```{r fig1_sample}
+```{r figS8c, warning = F}
 samplabs <- c("1996 &\n2006","2006 &\n2016","1996, 2006\n& 2016","Other")
 
  g9 <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 4, fill = factor(W_96_06)), height = 0.5) +
-  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5) +
-  geom_tile(aes(x = count, y = 2, fill = factor(W_06_16)), height = 0.5) +
-  geom_tile(aes(x = count, y = 1, fill = factor(W_Other)), height = 0.5) +
+  geom_tile(aes(x = count, y = 4, fill = factor(W_96_06)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 2, fill = factor(W_06_16)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 1, fill = factor(W_Other)), height = 0.5, width = 0.2) +
   scale_y_continuous(breaks = c(4,3,2,1), labels=samplabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
@@ -628,10 +628,10 @@ ggplot(crispectest) +
  
  g9ci <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 4, fill = factor(W_96_06)), height = 0.5) +
-  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5) +
-  geom_tile(aes(x = count2, y = 2, fill = factor(W_06_16)), height = 0.5) +
-  geom_tile(aes(x = count2, y = 1, fill = factor(W_Other)), height = 0.5) +
+  geom_tile(aes(x = count2, y = 4, fill = factor(W_96_06)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 2, fill = factor(W_06_16)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(W_Other)), height = 0.5, width = 0.2) +
   scale_y_continuous(breaks = c(4,3,2,1), labels=samplabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
@@ -649,19 +649,19 @@ ggplot(crispectest) +
   
 ```
 
-```{r fig1_countries}
+```{r figS8b, warning = F}
    
 
 clabs <- c("Rich 13"," CEE/East\nEurope","All\nAvailable","Other")
 
 g10 <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 4, fill = factor(C_13)), height = 0.5) +
-  geom_tile(aes(x = count, y = 3, fill = factor(C_CEE)), height = 0.5) +
-  geom_tile(aes(x = count, y = 2, fill = factor(C_All)), height = 0.5) +
-  geom_tile(aes(x = count, y = 1, fill = factor(C_Other)), height = 0.5) +
+  geom_tile(aes(x = count, y = 4, fill = factor(C_13)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 3, fill = factor(C_CEE)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 2, fill = factor(C_All)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 1, fill = factor(C_Other)), height = 0.5, width = 0.2) +
   scale_y_continuous(breaks = c(4,3,2,1), labels=clabs) +
-  scale_fill_manual(values = c("NA","blue")) +
+  scale_fill_manual(values = c("NA","darkblue")) +
     theme_classic() +
   ylab("Countries in Sample") +
   theme(
@@ -674,12 +674,12 @@ ggplot(crispectest) +
 
 g10ci <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 4, fill = factor(C_13)), height = 0.5) +
-  geom_tile(aes(x = count2, y = 3, fill = factor(C_CEE)), height = 0.5) +
-  geom_tile(aes(x = count2, y = 2, fill = factor(C_All)), height = 0.5) +
-  geom_tile(aes(x = count2, y = 1, fill = factor(C_Other)), height = 0.5) +
+  geom_tile(aes(x = count2, y = 4, fill = factor(C_13)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 3, fill = factor(C_CEE)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 2, fill = factor(C_All)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(C_Other)), height = 0.5, width = 0.2) +
   scale_y_continuous(breaks = c(4,3,2,1), labels=clabs) +
-  scale_fill_manual(values = c("NA","blue")) +
+  scale_fill_manual(values = c("NA","darkblue")) +
     theme_classic() +
   ylab("Countries in Sample") +
   theme(
@@ -696,17 +696,17 @@ ggplot(crispectest) +
 
 
 
-```{r fig1_estimator}
+```{r figS8a, warning = F}
 
 estlabs <- c("OLS","Logit"," ML/GLM","Ordered\nlogit","Bayes")
 
 g11 <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 5, fill = factor(Est_ols)), height = 0.5) +
-  geom_tile(aes(x = count, y = 4, fill = factor(Est_logit)), height = 0.5) +
-  geom_tile(aes(x = count, y = 3, fill = factor(Est_mlglm)), height = 0.5) +
-  geom_tile(aes(x = count, y = 2, fill = factor(Est_ologit)), height = 0.5) +
-  geom_tile(aes(x = count, y = 1, fill = factor(Est_bayes)), height = 0.5) +
+  geom_tile(aes(x = count, y = 5, fill = factor(Est_ols)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 4, fill = factor(Est_logit)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 3, fill = factor(Est_mlglm)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 2, fill = factor(Est_ologit)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 1, fill = factor(Est_bayes)), height = 0.5, width = 0.2) +
   scale_y_continuous(breaks = c(5,4,3,2,1), labels=estlabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
@@ -722,11 +722,11 @@ ggplot(crispectest) +
 
 g11ci <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 5, fill = factor(Est_ols)), height = 0.5) +
-  geom_tile(aes(x = count2, y = 4, fill = factor(Est_logit)), height = 0.5) +
-  geom_tile(aes(x = count2, y = 3, fill = factor(Est_mlglm)), height = 0.5) +
-  geom_tile(aes(x = count2, y = 2, fill = factor(Est_ologit)), height = 0.5) +
-  geom_tile(aes(x = count2, y = 1, fill = factor(Est_bayes)), height = 0.5) +
+  geom_tile(aes(x = count2, y = 5, fill = factor(Est_ols)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 4, fill = factor(Est_logit)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 3, fill = factor(Est_mlglm)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 2, fill = factor(Est_ologit)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(Est_bayes)), height = 0.5, width = 0.2) +
   scale_y_continuous(breaks = c(5,4,3,2,1), labels=estlabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
@@ -744,26 +744,20 @@ ggplot(crispectest) +
     
 ```
 
-```{r fig1_col34}
-agg_png(filename = here::here("results/Fig1_Col34.png"), height = 800, width = 800, res = 72)
+```{r figS8, warning = F}
+agg_png(filename = here::here("results/FigS8.png"), height = 600, width = 800, res = 72)
 ggarrange(g1a, g2a, g9, g9ci, g10, g10ci, g11, g11ci, nrow = 4, ncol = 2, heights = c(0.6,1,1,1.2), widths = c(1,0.9))
 dev.off()
 
-knitr::include_graphics(here::here("results/Fig1_Col34.png"))
+knitr::include_graphics(here::here("results/FigS8.png"))
 ```
 
-##### Sample Specs
 
-##### Variable Specs
-
-##### Equation & Estimation Specs
-
-
-### Fig 2. Team-Level New
+#### Fig S9. Team-Level Supplementary Plot
 
 Order results by subjective conclusion and then percent ratio of effect sizes at p05 neg/pos.
 
-```{r fig2team_setup}
+```{r figS9a, warning = F}
 cri_team <- cri_team %>%
   mutate(subj_concl = factor(Hresult, levels = c("Reject","No test","Support")),
          pct_negpos = ifelse(subj_concl == "Reject", AME_neg_p05, 
@@ -800,12 +794,12 @@ labs_y <- c("Model Score","Stats-Skill","Topic\nKnowledge","Pro Immigrant","Beli
 labs_y_new <- c("Model Score","Stats-Skill","Topic\nKnowledge","Pro Immigrant","Belief Hyp. True", "% Positive\nTest Results")
 ```
 
-### New Fig2
+#### Figure S9
 
-```{r fig2team_new}
+```{r figS9, warning = F}
 g5a_new <- 
   ggplot(cri_team) +
-  geom_point(aes(x = count2, y = AME_Zt, color = subj_concl), shape = 18, size = 4) +   scale_color_manual(values = c("firebrick","grey55", "chartreuse4"), labels = c("Rejected","Not testable","Supported")) +
+  geom_point(aes(x = count2, y = AME_Zt, color = subj_concl), shape = 18, size = 4) +   scale_color_manual(values = c("#66A61E","grey55", "#D95F02"), labels = c("Rejected","Not testable","Supported")) +
   labs(color = "Conclusion\nHypothesis is:", x = "Team Conclusions", y = "Average Effect Size\nof Team's Test Models") +
   theme_classic() +
   theme(
@@ -830,56 +824,15 @@ g5b_new <- ggplot(cri_team) +
     axis.title.x = element_blank(),
     plot.margin=unit(c(0.2,0.3,0.2,0.5),"cm")
   )
-agg_png(filename = here::here("results/Fig2team_new2.png"), res = 144, height = 900, width = 1200)
+agg_png(filename = here::here("results/FigS9.png"), res = 144, height = 900, width = 1200)
 ggarrange(g5a_new,g5b_new,ncol = 1, heights = c(1,1.2))
 dev.off()
 
-knitr::include_graphics(here::here("results/Fig2team_new2.png"))
+knitr::include_graphics(here::here("results/FigS9.png"))
 ```
 
 
 ```{r saveout}
 write.csv(crispectest, file = here::here("results/crispectest.csv"))
-```
-
-
-
-## Dissimilarity/Cluster Analysis
-
-### Model Specification Count
-
-The problem is that many of these model specifications were dropped because they were not the team's preferred models, or because in the margins extraction phase the PIs decided that the models were not preferable (only when the team provided them as 'extra' models). Therefore, some columns of the database have zero variance. These columns need to be removed.
-
-```{r qual_codes, warning = F}
-# Get data with only model specs
-cri_spec_only <- cri
-
-         
-cri_spec_only <- select(cri_spec_only, -c(count:main_IV_measurement, num_countries, inv_weight, additionalinfo, Hsupport:HresultF, AME_sup_p05:MODEL_SCORE))
-
-
-
-# convert character to numeric
-cri_spec_only <- cri_spec_only %>%
-  mutate(main_IV_time = as.numeric(as.factor(main_IV_time)),
-         main_IV_effect = as.numeric(as.factor(main_IV_effect)),
-         package = as.numeric(as.factor(package)))
-
-# specifications with at least three teams using them
-rownames(cri_spec_only) <- cri_spec_only$id
-cri_spec_only_team <- aggregate(cri_spec_only, by = list(cri_spec_only$u_teamid), FUN = "mean")
-# our analysis below revealed we should try a subset
-cri_spec_only2 <- subset(cri_spec_only, u_teamid != 10 & u_teamid != 61 & u_teamid != 82)
-cri_spec_only <- select(cri_spec_only,-c(u_teamid, id))
-cri_spec_only2 <- select(cri_spec_only2,-c(u_teamid, id))
-cri_sums <- colSums(Filter(is.numeric, cri_spec_only_team))
-cri_sums <- as.data.frame(c("sum",cri_sums))
-cri_sums[,1] <- as.numeric(cri_sums[,1])
-cri_sums_uncommon <- subset(cri_sums, cri_sums[,1] < 3)
-
-# remove zero variance columns
-cri_spec_only <- cri_spec_only[ - as.numeric(which(apply(cri_spec_only, 2, var) == 0))]
-cri_spec_only2 <- cri_spec_only2[ - as.numeric(which(apply(cri_spec_only2, 2, var) == 0))]
-
 ```
 

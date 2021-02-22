@@ -274,8 +274,8 @@ ggplot(data = sq_cormat_melted, aes(X1, X2, fill = value))+
    name="Pearson\nCorrelation") +
   theme_minimal() +
   coord_fixed() +
-  xlab("Regression Coefficients, 95% CI\n(percentage by team)") +
-  ylab("Subjective Team Conclusion\nabout Hypothesis Test") +
+  xlab("Subjective Team Conclusion\nabout Hypothesis Test") +
+  ylab("AMEs, 95% CI\n(percentage by team)") +
   geom_text(aes(X1, X2, label = value), color = "black", size = 4) +
   theme(panel.grid.major = element_blank(),
         axis.title.x = element_text(vjust = -0.8),
@@ -301,7 +301,7 @@ w_var <- round(wtd.var(cri$AME_Z, weights = cri$inv_weight, na.rm = T),4)
 ```
 
 
-```{r hist_results_basic}
+```{r hist_results_basic, warning = F}
 g1 <-  ggplot(data = cri0) +
   #geom_density(aes(x = AME)) +
   geom_histogram(aes(x = AME_Zc), breaks = c(-0.15,-0.125,-0.0625,-0.03125,-0.015625,-0.0078125,-0.00390625,0,0.00390625,0.0078125,0.015625,0.03125,0.0625,0.125,0.15)) +
@@ -321,7 +321,7 @@ g2 <- ggplot(data = cri_team0) +
   scale_x_discrete(labels=c("Not testable","Reject","Support")) +
   theme_classic()
 
-agg_png(filename = "results/FigS5.png", res = 144, width = 1000)
+agg_png(filename = here::here("results/FigS5.png"), res = 144, width = 1000)
 ggpubr::ggarrange(g1,g2, labels = c("A","B"))
 dev.off()
 

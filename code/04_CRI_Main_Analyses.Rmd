@@ -5,9 +5,9 @@ output: html_document
 
 We first analyze sources of variance in average marginal effects (standardized) at the model level and then subjective team conclusions at the team-conclusion level. We enter common model specifications and researcher characteristics. Our first analyses are based on logic - our expectations that wave and countries choices in the data sample, strategies of testing the hypothesis and measuring the dependent and test variables of interest, estimation method, independent variables and equation components should explain a major portion of the variance.
 
-We also ask if and why researchers come to more consensus in their models and conclusions. For this we use variance function regressions to explain variance-as-outcomes. This is done in **041_CRI_Main_Analyses_Variance_Function.Rmd**
+We also ask if and why researchers come to more consensus in their models and conclusions. For this we use variance function regressions to explain variance-as-outcomes. This is done in **05_CRI_Main_Analyses_Variance_Function.Rmd**
 
-We let the computer run all possible combinations of specifications, in case our models missed something important. This is done in **05_CRI_Multiverse.Rmd**
+We let the computer run all possible combinations of specifications, in case our models missed something important. This is done in **06_CRI_Multiverse.Rmd**
 
 Finally, we analyze if researcher characteristics associate with model specifications - even though we discovered that these common specifications cannot explain variance in outcomes.
 
@@ -120,11 +120,11 @@ cri_team <- left_join(cri_team, t1, by = "u_teamid")
 ```
 
 
-# Regresssion Approach to Explaining Variance
+## Regresssion Approach to Explaining Variance
 
-## Explaining Average Marginal Effects
+### Explaining Average Marginal Effects
 
-### Objective Conditions
+#### Objective Conditions
 
 Here we consider that the design of the CRI has an influence on the findings of the researchers. This includes the 6 variables to potentially use for the DV and the experimental conditions. We do not include the variable 'Scale' here because this required a conscious choice by the teams to deviate from the observed DVs that were provided.
 
@@ -134,7 +134,7 @@ The problem we face is that there is only an average of roughly 13 models per te
 
 
 
-```{r obj_mlms}
+```{r obj_mlms, warning = F}
 m00 <- lmer(AME_Z ~ (1 | team), data = cri_ml)
 #m01a <- lmer(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + (1 | team), data = cri_ml)
 
@@ -158,7 +158,7 @@ The teams had several possibilities to measure the DV (or DVs) including linear,
 
 note that logit is the only one that seems to matter, surprisingly the 'type' of measure does not matter (foreign-born, non-western, refugee, etc.; although there are far fewer models that do not simply use foreign-born)
 
-```{r subj_measurement_mlms}
+```{r subj_measurement_mlms, warning = F}
 
 m03 <- lmer(paste0(m01vars, "+ logit + ologit + lpm + mlogit + ols + (1 | team)"), data = cri_ml)
 
@@ -203,7 +203,7 @@ main IVs in same model or not (this causes one team to get dropped so we don't u
 
 m08 independent vars l2 selection
 
-```{r subj_model_mlms}
+```{r subj_model_mlms, warning = F}
 
 m07 <- lmer(paste0(m01vars, m04vars, m06vars, " + twowayfe + level_cyear + mlm_fe + mlm_re  + (1 | team)"), data = cri_ml)
 m08 <- lmer(paste0(m01vars, m04vars, m06vars, " + twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin + (1 | team) "), data = cri_ml)
@@ -237,7 +237,7 @@ Using the R^2 'hacking' tool we found some combinations of these variables that 
 
 These probably need to be run independently, so that we see the reduction for each one.
 
-```{r res_aspects_mlms}
+```{r res_aspects_mlms, warning = F}
 
 m09 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ belief_ipred + (1 | team)"), data = cri_ml)
 m10 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ pro_immigrant +  (1 | team)"), data = cri_ml) 
@@ -268,7 +268,7 @@ m14v <- as.data.frame(VarCorr(m14))
 
 ### Combine All
 
-```{r comb_tbl}
+```{r comb_tbl, warning = F}
 tab_model(m00,m01,m02,m04,m06,m07,m09,m10,m11,m12,m13, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = here::here("results/reg11.htm"))
 
 reg11 <- as.data.frame(read_html(here::here("results/reg11.htm")) %>% html_table(fill=TRUE))
@@ -320,13 +320,13 @@ reg11[36,2:12] <- ""
 kable_styling(kable(reg11))
 
 # Added AIC,LL later = separate file
-write.csv(aiclog, file = here::here("results/Tbl_AME_Spec_Reg_LL.csv"))
+write.csv(aiclog, file = here::here("results/Tbl_S5.csv"))
 
 
-write.csv(reg11, file = here::here("results/Tbl_AME_Specification_Regressions.csv"))
+write.csv(reg11, file = here::here("results/Tbl_S5.csv"))
 ```
 
-```{r residual_var}
+```{r residual_var, warning = F}
 
 # identify cases used in m13
 cri_ml$in_m13 <- TRUE
@@ -341,7 +341,7 @@ cri_ml_in$m13_p <- as.data.frame(predict(m13), newdata = cri_ml_in)
 ```
 
 
-```{r variance_explained_table}
+```{r variance_explained_table, warning = F}
 
 tbl2_m <- as.data.frame(t(reg11))
 
@@ -388,7 +388,7 @@ Only at the team level, n = 88
 
 Multinomial: support, not testable, reject
 
-```{r obj_mlmsm, results = F}
+```{r obj_mlmsm, results = F, warning = F}
 cri_team$Hresult <- relevel(as.factor(cri_team$Hresult), ref = "Support")
 
 m00m <- multinom(Hresult ~ 1 , data = cri_team)
@@ -477,7 +477,7 @@ These probably need to be run independently, so that we see the reduction for ea
 
 Mean replacement for team 27
 
-```{r res_aspects_mlmsm,  results=F}
+```{r res_aspects_mlmsm,  results=F, warning = F}
 m09m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + belief_ipred  , data = cri_team)
 
 m10m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + pro_immigrant , data = cri_team) 
@@ -540,7 +540,7 @@ reg22a[nrow(reg22a),2:(ncol(reg22a))] <- ""
 
 colnames(reg22) <- c("Effect", "m00m_coef","m00m_chc","m01m_coef","m01m_chc","m02m_coef","m02m_chc","m04m_coef","m04m_chc","m06m_coef","m06m_chc","m08m_coef","m08m_chc")
 
-write.csv(reg22a, file = here::here("results/Tbl_Multinom1.csv"))
+write.csv(reg22a, file = here::here("results/TblS7.csv"))
 
 # Second part of table
 reg23 <- as.data.frame(read_html(here::here("results/reg23.htm")) %>% html_table(fill=TRUE))
@@ -568,7 +568,7 @@ colnames(reg23) <- c("Effect","m00m_coef","m01m_chc", "m09m_coef","m09m_chc","m1
 reg22[nrow(reg22)+1,1] <- "Pct Dev Reduction"
 reg23[nrow(reg23)+1,1] <- "Pct Dev Reduction"
 
-write.csv(reg23a, file = here::here("results/Tbl_Multinom2.csv"))
+write.csv(reg23a, file = here::here("results/TblS7.2.csv"))
 
 #kable_styling(kable())
 ```
@@ -730,7 +730,7 @@ for(i in 1:20){
 
 #### Add simulation results
 
-```{r tbl2}
+```{r tbl2, warning = F}
 # add adjusted deviance
 
 # Tabulate average deviance
@@ -779,7 +779,7 @@ rm(sim_3_vars,sim_7_vars,sim_13_vars,sim_16_vars,sims,rr,t1,avar,avg_dev_sim)
 
 #### Add adjusted deviance 
 
-```{r devto2}
+```{r devto2, warning = F}
 tbl2_m22 <- as.data.frame(t(reg22))
 tbl2_m23 <- as.data.frame(t(reg23))
 
@@ -807,7 +807,7 @@ tbl2[c(5,8),5] <- tbl2[c(7,11),5]
 # calculate unexplained dev
 tbl2[19,5] <- 1 - as.numeric(tbl2[12,5])
 
-write.csv(tbl2, file = here::here("results/Tbl2.csv"))
+write.csv(tbl2, file = here::here("results/Fig2.csv"))
 
 ```
 
@@ -860,16 +860,16 @@ fig2[20,3] <- 1 - (fig2[19,3] + fig2[18,3] + fig2[17,3] + fig2[16,3])
 ```
 
 
-## Table 2. As a Stacked Bar
+## Figure 3. Variance Reduction by Level
 
-```{r fig2_setup}
+```{r fig3_setup}
 fig2$level <- factor(fig2$level, levels = c(" ","  ","   ","    ","Avg. Marginal Effects\nBetween-team variance","Avg. Marginal Effects\nWithin-team variance","Avg. Marginal Effects\nTotal variance","Subjective conclusion\nBetween-team deviance","     "))
 
 fig2_labs <- c(" ","  ","   ","     ","<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Between-team variance","<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Within-team variance","<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Total variance","<span style = \"font-size: 14px\">**Subjective Conclusions**</span><br>Between-team deviance"," ")
 ```
 
 
-```{r fig2_plot}
+```{r fig3_plot}
 agg_png(filename= here::here("results/Fig3.png"), res = 144, width = 1100, height = 800)
 ggplot(fig2, aes(x = level, y = percent, fill = type)) +
   geom_bar(stat = "identity") +
@@ -889,7 +889,7 @@ ggplot(fig2, aes(x = level, y = percent, fill = type)) +
   annotate("text", x = 3.7, y = 0.876, label = "OBJECTIVE\nCONDITIONS", color = "black",  size = 3) +
   annotate("text", x = 2.3, y = 0.228, label = "Idiosyncratic remaining\nvariance associated\nwith each team's\nresearch design", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
   annotate("text", x = 2.3, y = 0.48, label = "- Method expertise\n- Topic expertise\n- Prior attitudes\n- Prior beliefs", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
-  annotate("text", x = 2.3, y = 0.730, label = "- Measurement\n- Sample selection\n- Model specification\n -Model ranking", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
+  annotate("text", x = 2.3, y = 0.730, label = "- Measurement\n- Sample selection\n- Model specification\n- Model ranking", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
   annotate("text", x = 2.77, y = 0.988, label = "- Materials\n- Group assignment", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
   annotate("text", x = 8.8, y = 1, hjust = 0, label = "0%", size = 3.5) +
   annotate("text", x = 8.8, y = 0.75,  label = "25%", size = 3.5) +
@@ -897,10 +897,15 @@ ggplot(fig2, aes(x = level, y = percent, fill = type)) +
   annotate("text", x = 8.8, y = 0.25,  label = "75%", size = 3.5) +
   annotate("text", x = 8.8, y = 0, hjust = 1, label = "100%", size = 3.5) +
   annotate("text", x = 8, y = 0.67,  label = "% POSITIVE\nTEST RESULTS", size = 2.5, color = "grey20") +
-  geom_segment(aes(x = 4.15, y = 0.123, xend = 4.55, yend = 0.45), color = "#E6AB02") +
-  geom_segment(aes(x = 4.15, y = 0.376, xend = 4.55, yend = 0.85), color = "#7570B3") +
-  geom_segment(aes(x = 4.15, y = 0.626, xend = 4.55, yend = 0.945), color = "#1B9E77") +
-  geom_segment(aes(x = 4.15, y = 0.876, xend = 4.55, yend = 0.99), color = "#666666") +
+  annotate("text", x = 4.8, y = 0.1, label = "82.4%", fontface= 2) +
+  annotate("text", x = 5.8, y = 0.1, label = "96.8%", fontface= 2) +
+  annotate("text", x = 6.8, y = 0.1, label = "95.2%", fontface= 2) +
+  annotate("text", x = 7.8, y = 0.1, label = "52.4%", fontface= 2) +
+  annotate("text", x = 7.8, y = 0.25, label = "unexplained =", fontface= 3, size = 3) +
+  annotate("segment", x = 4.15, y = 0.123, xend = 4.55, yend = 0.45, color = "#E6AB02") +
+  annotate("segment",x = 4.15, y = 0.376, xend = 4.55, yend = 0.85, color = "#7570B3") +
+  annotate("segment",x = 4.15, y = 0.626, xend = 4.55, yend = 0.945, color = "#1B9E77") +
+  annotate("segment",x = 4.15, y = 0.876, xend = 4.55, yend = 0.99, color = "#666666") +
   scale_fill_manual(values = c("Objective conditions" = "#666666",
                                 "Research design" = "#1B9E77",
                                 "Researcher characteristics" = "#7570B3",
@@ -921,8 +926,8 @@ knitr::include_graphics(here::here("results/Fig3.png"))
 ### Save output for multiverse analysis
 
 ```{r saveout}
-write.csv(cri_ml, file = "results/cri_ml.csv")
-write.csv(cri_team, file = "results/cri_team.csv")
+write.csv(cri_ml, file = here::here("results/cri_ml.csv"))
+write.csv(cri_team, file = here::here("results/cri_team.csv"))
 ```
 
 ## Researcher Characteristics
@@ -941,7 +946,7 @@ twowayfe
 SURVEY_WAVES
 COUNTRIES
 
-```{r rchar}
+```{r rchar, warning = F}
 rchars <- "belief_ipredm + pro_immigrantm + topic_ipredm + stats_ipred + factor(u_teamid)"
 
 #set reference levels, add degree types
@@ -958,7 +963,7 @@ m102 <- multinom(paste0("iv_type ~", rchars), data = crispectest)
 m103 <- multinom(paste0("iv_type ~", rchars, "+ degree + software"), data = crispectest)
 
 # 
-tab_model(m103, digits = 3, p.style = "stars", rm.terms = c("factor(u_teamid)10","factor(u_teamid)101","factor(u_teamid)104","factor(u_teamid)106","factor(u_teamid)12","factor(u_teamid)13","factor(u_teamid)16","factor(u_teamid)17","factor(u_teamid)18","factor(u_teamid)19","factor(u_teamid)20","factor(u_teamid)21","factor(u_teamid)23","factor(u_teamid)22","factor(u_teamid)26","factor(u_teamid)27","factor(u_teamid)28","factor(u_teamid)29","factor(u_teamid)3","factor(u_teamid)30","factor(u_teamid)31","factor(u_teamid)32","factor(u_teamid)33","factor(u_teamid)34","factor(u_teamid)35","factor(u_teamid)36","factor(u_teamid)37","factor(u_teamid)38","factor(u_teamid)39","factor(u_teamid)40","factor(u_teamid)41","factor(u_teamid)42","factor(u_teamid)43","factor(u_teamid)44","factor(u_teamid)45","factor(u_teamid)46","factor(u_teamid)47","factor(u_teamid)48","factor(u_teamid)49","factor(u_teamid)5","factor(u_teamid)52","factor(u_teamid)53","factor(u_teamid)54","factor(u_teamid)55","factor(u_teamid)56","factor(u_teamid)57","factor(u_teamid)58","factor(u_teamid)59","factor(u_teamid)6","factor(u_teamid)60","factor(u_teamid)61","factor(u_teamid)62","factor(u_teamid)63","factor(u_teamid)64","factor(u_teamid)65","factor(u_teamid)66","factor(u_teamid)67","factor(u_teamid)68","factor(u_teamid)69","factor(u_teamid)70","factor(u_teamid)71","factor(u_teamid)7","factor(u_teamid)72","factor(u_teamid)73","factor(u_teamid)75","factor(u_teamid)77","factor(u_teamid)8","factor(u_teamid)82","factor(u_teamid)83","factor(u_teamid)84","factor(u_teamid)86","factor(u_teamid)87","factor(u_teamid)93","factor(u_teamid)94","factor(u_teamid)95","factor(u_teamid)96","factor(u_teamid)97","factor(u_teamid)98"), show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = "results/reg103.htm")
+tab_model(m103, digits = 3, p.style = "stars", rm.terms = c("factor(u_teamid)10","factor(u_teamid)101","factor(u_teamid)104","factor(u_teamid)106","factor(u_teamid)12","factor(u_teamid)13","factor(u_teamid)16","factor(u_teamid)17","factor(u_teamid)18","factor(u_teamid)19","factor(u_teamid)20","factor(u_teamid)21","factor(u_teamid)23","factor(u_teamid)22","factor(u_teamid)26","factor(u_teamid)27","factor(u_teamid)28","factor(u_teamid)29","factor(u_teamid)3","factor(u_teamid)30","factor(u_teamid)31","factor(u_teamid)32","factor(u_teamid)33","factor(u_teamid)34","factor(u_teamid)35","factor(u_teamid)36","factor(u_teamid)37","factor(u_teamid)38","factor(u_teamid)39","factor(u_teamid)40","factor(u_teamid)41","factor(u_teamid)42","factor(u_teamid)43","factor(u_teamid)44","factor(u_teamid)45","factor(u_teamid)46","factor(u_teamid)47","factor(u_teamid)48","factor(u_teamid)49","factor(u_teamid)5","factor(u_teamid)52","factor(u_teamid)53","factor(u_teamid)54","factor(u_teamid)55","factor(u_teamid)56","factor(u_teamid)57","factor(u_teamid)58","factor(u_teamid)59","factor(u_teamid)6","factor(u_teamid)60","factor(u_teamid)61","factor(u_teamid)62","factor(u_teamid)63","factor(u_teamid)64","factor(u_teamid)65","factor(u_teamid)66","factor(u_teamid)67","factor(u_teamid)68","factor(u_teamid)69","factor(u_teamid)70","factor(u_teamid)71","factor(u_teamid)7","factor(u_teamid)72","factor(u_teamid)73","factor(u_teamid)75","factor(u_teamid)77","factor(u_teamid)8","factor(u_teamid)82","factor(u_teamid)83","factor(u_teamid)84","factor(u_teamid)86","factor(u_teamid)87","factor(u_teamid)93","factor(u_teamid)94","factor(u_teamid)95","factor(u_teamid)96","factor(u_teamid)97","factor(u_teamid)98"), show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = here::here("results/reg103.htm"))
 
 
 ```
