@@ -25,6 +25,8 @@ This is the repository for preparation and analysis of data obtained from the *C
 
 In addition to providing the raw R code in Rmd (markdown) files. We also knit each Rmd file into an html document so that non-R users may view the workflow. Therefore, each markdown file has a corresponding html file that can be opened by any browser software. For example, the file `01_CRI_Descriptives.Rmd` has a corresponding `01_CRI_Descriptives.html` file in the same folder for easy viewing (without the need for R).
 
+The main data files include team zero, which is the results and model specificaitons from the study of Brady and Finnigan [(2014)](https://doi.org/10.1177/0003122413513022) providing a launching point for the CRI; team zero is dropped from our main analyses but provides a point of comparison.
+
 #### 1. Source Code Cleaning
 
 We collected the code from 73 teams and cleaned it for public sharing. This involved qualitative identification of model specifications, ensuring replicability, extracting Average Marginal Effects (AMEs) and redacting any identifying features. The resulting code are compiled by software type in the sub-folders of this project, orderd by team ID number (in folder **team_code**, and sub-folders: *team_code_SPSS*,*team_code_Stata*,*team_code_Mplus* and *team_code_R*). The code in the *team_code_R* folder imports the results from all other codes to compile a final dataset of effect sizes and confidence interval measures. 
@@ -46,15 +48,8 @@ Our primary analyses and result out put are in the **code** folder. It contains:
 3. `03_CRI_Spec_Analysis.Rmd` - plotting specification curves
 4. `04_CRI_Main_Analyses.Rmd` - main regression models aiming to explain variance within and between teams in both effects and subjective conclusions
 5. `05_CRI_Main_Analyses_Variance_Function.Rmd` - variance function regressions that additionally aim to explain variation in variance by team, also contains plots of intercepts and variance against reseracher characteristics
-6. `06_
-
-### Important Documents
-
-[Current Working Paper Version](https://drive.google.com/file/d/11Y3ebvEKjbdyQ9TDtM4uoJYcHeRgYXbx/view?usp=sharing)
-
-[Current Supplementary Materials](https://drive.google.com/file/d/1COLKFvQlRGDd25cxAnHLNReAiiDNBbj2/view?usp=sharing)
-
-[Executive Report - describing the full study](https://osf.io/preprints/socarxiv/6j9qb/)
+6. `06_CRI_Multiverse.Rmd` - uses a function to test all possible combinations of model specifications to explain variance
+7. `07_CRI_DVspecific_Analyses` - re-running main models separately by dependent variable (out of hte 6 ISSP survey questions)
 
 ### Source Data
 
@@ -73,6 +68,14 @@ The data preparation code is in the sub-folder CRI/data_prep. After the data pre
 | ***cri_shiny.csv***| The model-level data needed to run the shiny app | Generated in *CRI/data_prep* |
 | ***cri_shiny_team.csv***| The team-level data needed to run the shiny app | Generated in *CRI/data_prep* |
 
-The cri main files include team zero, which is the state of the art study from Brady and Finnigan [(2014)](https://doi.org/10.1177/0003122413513022) providing a launching point for the CRI coded in all the same ways, but the two authors were not participants therefore it is dropped from most analyses.
+### Important Documents
+
+[Current Working Paper Version](https://drive.google.com/file/d/11Y3ebvEKjbdyQ9TDtM4uoJYcHeRgYXbx/view?usp=sharing)
+
+[Current Supplementary Materials](https://drive.google.com/file/d/1COLKFvQlRGDd25cxAnHLNReAiiDNBbj2/view?usp=sharing)
+
+[Executive Report - describing the full study](https://osf.io/preprints/socarxiv/6j9qb/)
+
+
 
 
