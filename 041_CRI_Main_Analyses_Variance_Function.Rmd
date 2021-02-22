@@ -3,7 +3,7 @@ title: "Tech 4_var, Main Variance Analyses"
 output: html_document
 ---
 
-Variance function regressions
+Variance function regressions.
 
 ```{r setup, include=FALSE, warning=F}
 
@@ -168,7 +168,10 @@ cri_ml$AME_team_var <- cri_ml$AME_team_sd^2
 cri_teams <- cri_ml %>%
     group_by(team) %>%
     summarise(team = mean(team),
-              AME_team_int = mean(AME_Z), 
+              AME_Z_int = mean(AME_Z), # raw scores
+              AME_Z_sd = sd(AME_Z_w),
+              AME_Z_var = AME_Z_sd^2,
+              AME_team_int = mean(AME_team_int), # residuals from M7
               AME_team_sd = sd(AME_resid_center), 
               AME_team_var = AME_team_sd^2,
               stats_ipred = mean(stats_ipred),
@@ -181,19 +184,24 @@ cri_teams <- cri_ml %>%
 
 cri_teams <- cri_teams %>%
     mutate(AME_team_var = ifelse(is.na(AME_team_var), 0, AME_team_var), # here NA means a single model or no variance, recode to 0
-           AME_team_var2 = ifelse(AME_team_var > 0.03, 0.03, AME_team_var),  # three teams are insane outliers
-           AME_team_var = ifelse(AME_team_var > 0.004, 0.004, AME_team_var),  # three teams are insane outliers
-           AME_team_var_Z = scale(AME_team_var))
+           AME_Z_var = ifelse(is.na(AME_Z_var), 0, AME_Z_var),
+           AME_team_var2 = ifelse(AME_team_var > 0.03, 0.03, AME_team_var),  # three teams are outliers
+           AME_Z_var2 = ifelse(AME_Z_var > 0.03, 0.03, AME_Z_var),
+           AME_team_var = ifelse(AME_team_var > 0.004, 0.004, AME_team_var),  # three teams are outliers
+           AME_Z_var = ifelse(AME_Z_var > 0.004, 0.004, AME_Z_var))
 
 ```
 
 
-## Plots of Variance and Intercepts
+## Plots of Variance and Intercepts - Adjusted
+
+First we use an adjusted version of Model 7 (see 04_CRI_Main_Analyses.Rmd) to estimate the residual, unexplained intercepts and variances. We compare these to our researcher characteristics under the potential threat that random luck/noise has led some researchers with certain characteristics to select use certain models that lead to the appearance of variance in results by characteristic. Thus, the comparisons are 'all else equal'. They are the most conservative test, because they remove the likelihood that reseracher characteristics lead to certain model specification choices, and that these choices lead to certain outcomes. 
+
+### Linear plots. Supplementary.
+
+Here we plot linearly the within-team and between-team unexplained variance. Within-team variance scores zero when there is only one model.
 
 
-### Linear plots (not used in the paper)
-
-Here we plot first linearly the within-team unexplained variance and the between-team unexplained variance.
 
 
 ```{r plots}
@@ -222,35 +230,44 @@ ggplot(cri_teams, ) +
     ylim(-2,2) +
     annotate(geom = "text", x = -1.5, y = -0.3, label = "Variances by Team (\u0394)", hjust = 0, color = "goldenrod") +
     annotate(geom = "text", x = -1.5, y = 0.65, label = "Intercepts by Team (X)", hjust = 0, color = "royalblue1") +
-    xlab("Statistical Skills and Experience") +
+    xlab("Methodological Expertise") +
     ylab("Variances and Intercepts\n(indep. standardized values)") +
     #stat_cor(digits = 2, p.accuracy = 0.001) +
     theme_classic()
 dev.off()
 
-# not used but potentially useful plots
-# ggplot(cri_teams, aes(y = AME_team_var, x = pro_immigrant)) +
-#     geom_point() +
-#     geom_smooth(method = "lm", se = F) +
-#     stat_cor(digits = 2, p.accuracy = 0.001) +
-#     theme_classic()
-# 
-# ggplot(cri_teams, aes(y = AME_team_var, x = topic_ipred)) +
-#     geom_point() +
-#     geom_smooth(method = "lm", se = F) +
-#     stat_cor(digits = 2, p.accuracy = 0.001) +
-#     theme_classic()
-# 
-# ggplot(cri_teams, aes(y = AME_team_var, x = total_score)) +
-#     geom_point() +
-#     geom_smooth(method = "lm", se = F) +
-#     stat_cor(digits = 2, p.accuracy = 0.001) +
-#     theme_classic()
+agg_png(filename = "results/FigX_varint_attitude.png", height = 600, width = 800, res = 144)
+ggplot(cri_teams, ) +
+    geom_point(aes(y = scale(AME_team_var), x = pro_immigrant), color = "goldenrod", shape = 2) +
+    geom_point(aes(y = scale(AME_team_int), x = pro_immigrant), color = "royalblue1", shape = 4) +
+    geom_smooth(aes(y = scale(AME_team_var), x = pro_immigrant), color = "goldenrod", method = "lm", se = F) +
+    geom_smooth(aes(y = scale(AME_team_int), x = pro_immigrant), color = "royalblue1", method = "lm", se = F) +
+    ylim(-2,2) +
+    annotate(geom = "text", x = 1, y = -1, label = "Variances by Team (\u0394)", hjust = 0, color = "goldenrod") +
+    annotate(geom = "text", x = 1, y = 0.5, label = "Intercepts by Team (X)", hjust = 0, color = "royalblue1") +
+    xlab("Prior Attitudes toward Immigration") +
+    ylab("Variances and Intercepts\n(indep. standardized values)") +
+    #stat_cor(digits = 2, p.accuracy = 0.001) +
+    theme_classic()
+dev.off()
+
+agg_png(filename = "results/FigX_varint_topic.png", height = 600, width = 800, res = 144)
+ggplot(cri_teams, ) +
+    geom_point(aes(y = scale(AME_team_var), x = topic_ipred), color = "goldenrod", shape = 2) +
+    geom_point(aes(y = scale(AME_team_int), x = topic_ipred), color = "royalblue1", shape = 4) +
+    geom_smooth(aes(y = scale(AME_team_var), x = topic_ipred), color = "goldenrod", method = "lm", se = F) +
+    geom_smooth(aes(y = scale(AME_team_int), x = topic_ipred), color = "royalblue1", method = "lm", se = F) +
+    ylim(-2,2) +
+    annotate(geom = "text", x = 0.5, y = 0.1, label = "Variances by Team (\u0394)", hjust = 0, color = "goldenrod") +
+    annotate(geom = "text", x = 0.4, y = -1.8, label = "Intercepts by Team (X)", hjust = 0, color = "royalblue1") +
+    xlab("Topical Expertise") +
+    ylab("Variances and Intercepts\n(indep. standardized values)") +
+    #stat_cor(digits = 2, p.accuracy = 0.001) +
+    theme_classic()
+dev.off()
 ```
 
-### Rainclouds
-
-Allen M, Poggiali D, Whitaker K et al. Raincloud plots: a multi-platform tool for robust data visualization [version 2; peer review: 2 approved]. Wellcome Open Res ([2021](https://doi.org/10.12688/wellcomeopenres.15191.2)), 4:63.
+Here we group and stack the data for plotting. One row for each team and characteristic (data repeated 4 times).
 
 ```{r rainclouds_prep}
 # create grouped data
@@ -260,9 +277,12 @@ cri_team_groups <- cri_teams %>%
          statsZ = ifelse(scale(stats_ipred) > 0, 1, 0),
          topicZ = ifelse(scale(topic_ipred) > 0, 1, 0),
          AME_team_var_log = log(AME_team_var2),
+         AME_Z_var_log = log(AME_Z_var2),
          AME_team_var = AME_team_var_log + 11,
-         AME_team_var = ifelse(AME_team_var == "-Inf", 0, AME_team_var)) %>%
-  select(AME_team_int, AME_team_var, AME_team_int, beliefZ, proZ, statsZ, topicZ, belief_ipred, pro_immigrant, stats_ipred, topic_ipred)
+         AME_Z_var = AME_Z_var_log + 11,
+         AME_team_var = ifelse(AME_team_var == "-Inf", 0, AME_team_var),
+         AME_Z_var = ifelse(AME_Z_var == "-Inf", 0, AME_Z_var)) %>%
+  select(AME_team_int, AME_team_var, AME_team_int, beliefZ, proZ, statsZ, topicZ, belief_ipred, pro_immigrant, stats_ipred, topic_ipred, AME_Z_var, AME_Z_int, AME_Z_var)
 
 # group 1 belief
 cri_team_groups1 <- cri_team_groups %>%
@@ -289,6 +309,12 @@ cri_team_g$high <- as.factor(cri_team_g$high)
 
 ```
 
+### Rainclouds. Residuals M7. Supplementary
+
+Allen M, Poggiali D, Whitaker K et al. Raincloud plots: a multi-platform tool for robust data visualization [version 2; peer review: 2 approved]. Wellcome Open Res ([2021](https://doi.org/10.12688/wellcomeopenres.15191.2)), 4:63.
+
+
+
 
 ```{r rainclouds_b}
 g1 <- 
@@ -312,18 +338,18 @@ g1 <-
   stat_cor(aes(x = pro_immigrant, y = AME_team_int), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 2.15, label.y = -0.011, size = 2, data = cri_team_groups2) +
   stat_cor(aes(x = stats_ipred, y = AME_team_int), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 3.15, label.y = -0.011, size = 2, data = cri_team_groups2) +
   stat_cor(aes(x = topic_ipred, y = AME_team_int), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 4.15, label.y = -0.011, size = 2, data = cri_team_groups2) +
-  annotate(geom = "text", x = 4.45, y = -0.023, 
+  annotate(geom = "text", x = 4.4, y = -0.023, 
            label = "LOWER\nSCORE\nGROUP", 
            color = "#D95F02",
            size = 2.3
            ) +
-  annotate(geom = "text", x = 4.45, y = 0.018, 
-           label = "HIGHER\nSCORE\nGROUP", 
+  annotate(geom = "text", x = 4.49, y = 0.018, 
+           label = "HIGHER SCORE\nGROUP", 
            color = "#1B9E77",
            size = 2.3
            ) +
-  annotate(geom = "segment", x = 4.43, xend = 4.37, y = -0.0155, yend = -0.015, color = "#D95F02", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
-  annotate(geom = "segment", x = 4.413, xend = 4.368, y = 0.0118, yend = 0.0102, color = "#1B9E77", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
+  annotate(geom = "segment", x = 4.3, xend = 4.25, y = -0.0148, yend = -0.0143, color = "#D95F02", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
+  annotate(geom = "segment", x = 4.5, xend = 4.455, y = 0.0058, yend = 0.0042, color = "#1B9E77", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
   coord_flip(ylim = c(-0.04,0.04)) + 
   theme_classic() +
   theme(legend.position = "none",
@@ -372,14 +398,105 @@ g2 <- ggplot(cri_team_g, aes(x = group, y = AME_team_var)) +
 
 
 ```{r combine}
-agg_png(filename = "results/Fig2_rain.png", width = 1000, height = 800, res = 144)
+agg_png(filename = "results/Fig2_supplementary.png", width = 1000, height = 800, res = 144)
 ggarrange(g1,g2) 
 dev.off()
 
-knitr::include_graphics("results/Fig2_rain.png")
+knitr::include_graphics("results/Fig2_supplementary.png")
+```
+
+### Rainclouds. Figure 2. Main
+
+
+
+```{r fig2}
+g3 <- 
+  
+  ggplot(cri_team_g, aes(x = group, y = AME_Z_int)) +
+  geom_flat_violin(aes(x = group, fill = high), 
+                   position = position_nudge(x = .1, y = 0), 
+                   adjust = 1.5, 
+                   trim = F, 
+                   alpha = .5, 
+                   colour = NA) +
+  geom_point(aes(x = as.numeric(group) - 0.05, y = AME_Z_int, colour = high), position = position_jitter(width = 0.05), size = 0.25, shape = 20) +
+  scale_colour_brewer(palette = "Dark2", breaks = c(0,1),
+                   labels = c("Higher","Lower"), name = "") +
+  scale_fill_brewer(palette = "Dark2", breaks = c(0,1),
+                   labels = c("Higher","Lower"), name = "") +
+  scale_x_discrete(breaks = c(1,2,3,4),
+                   labels = c("Prior\nbeliefs","Prior\nattitudes","Topical\nexpertise","Method-\nological\nexpertise")) +
+  ylab("Average AME\n(between-team variance)") +
+  stat_cor(aes(x = belief_ipred, y = AME_Z_int), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 1.15, label.y = -0.011, size = 2, data = cri_team_groups1) +
+  stat_cor(aes(x = pro_immigrant, y = AME_Z_int), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 2.15, label.y = -0.011, size = 2, data = cri_team_groups2) +
+  stat_cor(aes(x = stats_ipred, y = AME_Z_int), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 3.15, label.y = -0.011, size = 2, data = cri_team_groups2) +
+  stat_cor(aes(x = topic_ipred, y = AME_Z_int), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 4.15, label.y = -0.011, size = 2, data = cri_team_groups2) +
+  annotate(geom = "text", x = 4.45, y = -0.023, 
+           label = "LOWER\nSCORE\nGROUP", 
+           color = "#D95F02",
+           size = 2.3
+           ) +
+  annotate(geom = "text", x = 4.45, y = 0.018, 
+           label = "HIGHER\nSCORE\nGROUP", 
+           color = "#1B9E77",
+           size = 2.3
+           ) +
+  annotate(geom = "segment", x = 4.43, xend = 4.37, y = -0.0155, yend = -0.015, color = "#D95F02", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
+  annotate(geom = "segment", x = 4.413, xend = 4.368, y = 0.0118, yend = 0.0102, color = "#1B9E77", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
+  coord_flip(ylim = c(-0.04,0.04)) + 
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.text.y = element_text(hjust = 0, color = "black"),
+        axis.title.y = element_blank(),
+        axis.title.x = element_text(size = 10))
+
+
+
+```
+
+```{r rainclouds_w}
+g4 <- ggplot(cri_team_g, aes(x = group, y = AME_Z_var)) +
+  geom_flat_violin(aes(x = group, fill = high), 
+                   position = position_nudge(x = .1, y = 0), 
+                   adjust = 1.5, 
+                   trim = F, 
+                   alpha = .5, 
+                   colour = NA) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey70", size = 0.5, show.legend = FALSE) +
+  geom_point(aes(x = as.numeric(group) - 0.05, y = AME_Z_var, colour = high), position = position_jitter(width = 0.05, height = 0.05), size = 0.25, shape = 20) +
+  stat_cor(aes(x = belief_ipred, y = AME_Z_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 1.15, label.y = 1, size = 2, data = cri_team_groups1) +
+  stat_cor(aes(x = pro_immigrant, y = AME_Z_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 2.15, label.y = 1, size = 2, data = cri_team_groups2) +
+  stat_cor(aes(x = stats_ipred, y = AME_Z_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 3.15, label.y = 1, size = 2, data = cri_team_groups2) +
+  stat_cor(aes(x = topic_ipred, y = AME_Z_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 4.15, label.y = 1, size = 2, data = cri_team_groups2) +
+  scale_colour_brewer(palette = "Dark2", breaks = c(0,1),
+                   labels = c("Higher","Lower"), name = "") +
+  scale_fill_brewer(palette = "Dark2", breaks = c(0,1),
+                   labels = c("Higher","Lower"), name = "", expand = c(0, 0)) +
+  scale_x_discrete(breaks = c(1,2,3,4), 
+                   labels = c("Prior\nbeliefs","Prior\nattitudes","Topical\nexpertise","Method-\nological\nexpertise")) +
+  ylab("Log Variance of AME\n(within-team variance)") +
+  ylim(0,10) +
+  coord_flip() + 
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.title.x = element_text(size = 10),
+        axis.line.y = element_blank())
+
+
+
 ```
 
 
+```{r combine}
+agg_png(filename = "results/Fig2.png", width = 1000, height = 800, res = 144)
+ggarrange(g3,g4) 
+dev.off()
+
+knitr::include_graphics("results/Fig2.png")
+```
 
 ## Variance Function Regression
 

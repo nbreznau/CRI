@@ -4,10 +4,6 @@ output: html_document
 ---
 
 
-
-   
-   
-
 ```{r setup, include=FALSE}
 rm(list = ls())
 library(pacman)
