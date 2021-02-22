@@ -19,21 +19,28 @@ Muna Adem, Jule Adriaans, Amalia Alvarez-Benjumea, Henrik Andersen, Daniel Auer,
 
 ### Abstract
 
-This is the repository for preparation and analysis of data obtained from the *Crowdsourced Replication Initiative* [(Breznau, Rinke and Wuttke et al 2018)](https://osf.io/preprints/socarxiv/6j9qb/) used to investigate variability in research results across researchers and their model specifications. Calls on a 'reliability crisis' in science suggest that researchers fail to produce consistent results, in particular to replicate previous studies, because of systematic bias. This bias comes in myriad formats, p-hacking, publication bias, unethical practices, etc. In this research we investigate how if there are sources of bias in idiosyncratic characteristics of researchers or decisions taken during the data-analysis process. We attempted to remove as many factors of systematic bias as possible to be able to observe researchers conducting real-world research and to test the same hypothesis with the same data. We conlcude that idioisyncratic bias found in a hidden universe of data analysis should be taken seriously in addition to questionable reserach practices stemming from structural biases as both threaten scientific reliability.
+This is the repository for preparation and analysis of data obtained from the *Crowdsourced Replication Initiative* [(Breznau, Rinke and Wuttke et al 2018)](https://osf.io/preprints/socarxiv/6j9qb/) used to investigate variability in research results across researchers and their model specifications. Results from 162 researchers in 73 teams testing the same hypothesis with the same data reveals a universe of unique possibilities in the process of data analysis. Contrary to our expectations, variance in results and subjective conclusions are little explained by model specifications and even less by characteristics of the researchers in each team. Although there were common specifications across many teams regarding sample selection, variance components, estimator and additional independent variables, each of the 1,261 test models submitted by the teams was ultimately a unique combination of specifications. As such, the extreme variation in substantive research outcomes and researcher conclusions suggests that researcher-specific if not model-specific idiosyncratic variation is an important source of unreliability in science. Moreover, variance in the decisions made during the data analytic process cannot be explained much by the characteristics of the researchers, such as their methodological and topical expertise, or prior beliefs. These findings highlight the often underappreciated complexity and ambiguity inherent in the process of data analysis in science. They also demonstrate that recent calls for running countless alternative model specifications may not bring scientists any closer to reliability because the noise of idiosyncratic research variability remains. This adds to ongoing debates about the replicability and credibility of social science research. It thus raises far-ranging questions about the conditions for, and indeed possibility of, reaching scientific or meta-scientific consensus about substantive social questions based on available data alone.
 
 ### Workflow
 
 #### 1. Source Code Cleaning
 
-We collected the code from 73 teams and cleaned it for public sharing. This involved qualitative identification of model specifications, ensuring replicability, extracting Average Marginal Effects (AMEs) and redacting any identifying features. The resulting code are compiled by software type in the sub-folders of this project, orderd by team ID number (in sub-folder **team_code**, and sub-folders: *team_code_SPSS*,*team_code_Stata*,*team_code_Mplus* and *team_code_R*). The code in the *team_code_R* folder imports the results from all other codes to compile a final dataset of AMEs and confidence interval measures. 
+We collected the code from 73 teams and cleaned it for public sharing. This involved qualitative identification of model specifications, ensuring replicability, extracting Average Marginal Effects (AMEs) and redacting any identifying features. The resulting code are compiled by software type in the sub-folders of this project, orderd by team ID number (in folder **team_code**, and sub-folders: *team_code_SPSS*,*team_code_Stata*,*team_code_Mplus* and *team_code_R*). The code in the *team_code_R* folder imports the results from all other codes to compile a final dataset of effect sizes and confidence interval measures. 
 
 #### 2. Data Pre-Preparation
 
-Prior to our main analyses we import data from the Participant Survey including subjective voting on model quality, and the voting during the post-result deliberation on Kialo. The code for these files are contained in the folder *data_prep*. It is not necessary to run these as their output is already saved in the *data* folder. In the *data_prep* folder is also the code we use to create a multiverse analysis to test how much simulated model specifications can explain outcomes as a reference for how much real model specifications explain outcomes in our study.
+Prior to our main analyses we import data from the Participant Survey including subjective voting on model quality, and the voting during the post-result deliberation. The code for these files are contained in the folder **data_prep**. It is not necessary to run these as their output is already saved in the **data** folder. In the **data_prep** folder are three command files:
+
+1. `001_CRI_Prep_Subj_Votes.Rmd` - prepares the subjective voting on the quality of models
+2. `002_CRI_Data_Prep.Rmd` - cleans up the variables into workable formats and runs a measurement model to estimate researcher characteristics
+3. `003_CRI_Multiverse_Simulation` - sets up data to analyze how much variance we should expect to explain via model specifications
 
 #### 3. Workflow
 
-The code in our workflow is contained in .Rmd files numbered from **01_** to **06_**. As these have already been run, users may skip directly to specific analyses without the need to run **01_** through **03_** where further data cleaning and sorting takes place.
+Our primary analyses and result out put are in the **code** folder. It contains:
+
+1. 01_CRI_Descriptives - final cleaning and descriptive analysis
+2. 02_CRI_Common_Specifications - 
 
 ### Important Documents
 
