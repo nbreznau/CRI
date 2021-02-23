@@ -879,18 +879,18 @@ ggplot(fig2, aes(x = level, y = percent, fill = type)) +
   labs(title = "<span style = \"font-size: 18px\">**Factors Explaining Variance in Results**</span>") +
   scale_x_discrete(labels = fig2_labs, drop = F) +
   scale_y_reverse() +
-  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.005, ymax = 0.24), color = "#E6AB02", size = 1.5, fill = "transparent") +
-  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.26, ymax = 0.49), color = "#7570B3", size = 1.5, fill = "transparent") +
-  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.51, ymax = 0.74), color = "#1B9E77", size = 1.5, fill = "transparent") +
-  geom_rect(aes(xmin = 1.7, xmax = 4.1, ymin = 0.76, ymax = 0.995), color = "#666666", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 2, xmax = 4.1, ymin = 0.005, ymax = 0.24), color = "#E6AB02", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 2, xmax = 4.1, ymin = 0.26, ymax = 0.49), color = "#7570B3", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 2, xmax = 4.1, ymin = 0.51, ymax = 0.74), color = "#1B9E77", size = 1.5, fill = "transparent") +
+  geom_rect(aes(xmin = 2, xmax = 4.1, ymin = 0.76, ymax = 0.995), color = "#666666", size = 1.5, fill = "transparent") +
   annotate("text", x = 3.7, y = 0.124, label = "UNEXPLAINED\nVARIANCE", color = "black", size = 3) +
   annotate("text", x = 3.7, y = 0.375, label = "RESEARCHER\nCHARACTERISTICS", color = "black",  size = 3) +
   annotate("text", x = 3.7, y = 0.624, label = "RESEARCH\nDESIGN", color = "black",  size = 3) +
-  annotate("text", x = 3.7, y = 0.876, label = "OBJECTIVE\nCONDITIONS", color = "black",  size = 3) +
+  annotate("text", x = 3.7, y = 0.876, label = "ASSIGNED\nCONDITIONS", color = "black",  size = 3) +
   annotate("text", x = 2.3, y = 0.228, label = "Idiosyncratic remaining\nvariance associated\nwith each team's\nresearch design", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
   annotate("text", x = 2.3, y = 0.48, label = "- Method expertise\n- Topic expertise\n- Prior attitudes\n- Prior beliefs", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
   annotate("text", x = 2.3, y = 0.730, label = "- Measurement\n- Sample selection\n- Model specification\n- Model ranking", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
-  annotate("text", x = 2.77, y = 0.988, label = "- Materials\n- Group assignment", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
+  annotate("text", x = 2.77, y = 0.988, label = "- Materials provided\n- Pre-analysis tasks", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
   annotate("text", x = 8.8, y = 1, hjust = 0, label = "0%", size = 3.5) +
   annotate("text", x = 8.8, y = 0.75,  label = "25%", size = 3.5) +
   annotate("text", x = 8.8, y = 0.5,  label = "50%", size = 3.5) +
