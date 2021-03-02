@@ -156,16 +156,16 @@ ggplot(crispectest) +
   #geom_vline(xintercept = 1214, color = "grey", linetype = "dashed") +
   #geom_vline(xintercept = 52, color = "grey", linetype = "dashed") +
   #ylim(-1.8, 1.8) +
-  annotate(geom = "text", x = 150, y = 0.5, label = "NEGATIVE AME, 95%CI", color = "#66A61E", fontface = "bold", hjust = 0, size = 3) +
-  annotate(geom = "text", x = 800, y = 1, label = "POSITIVE AME, 95%CI", color = "#D95F02", fontface = "bold", hjust = 0, size = 3) +
-  annotate(geom = "text", x = 450, y = -0.6, label = "NOT SIGNIFICANT AME, 95%CI", fontface = 3, color = "grey55", hjust = 0, size = 2.5) +
+  annotate(geom = "text", x = 150, y = 0.5, label = "NEGATIVE, 95% CI", color = "#66A61E", fontface = "bold", hjust = 0, size = 3) +
+  annotate(geom = "text", x = 800, y = 1, label = "POSITIVE, 95% CI", color = "#D95F02", fontface = "bold", hjust = 0, size = 3) +
+  annotate(geom = "text", x = 450, y = -0.6, label = "NOT STAT. SIGNIFICANT, 95% CI", fontface = 3, color = "grey55", hjust = 0, size = 2.5) +
   #annotate(geom = "text", x = 680, y = -1.5, label = "grey indicates not sig.\ndifferent from zero", color = "grey55", size = 3) +
   geom_vline(xintercept = -30) +
   annotate(geom = "segment", x = -35, xend = -25, y = -1.1, yend = -1.1, color = "white", size = 2) +
   annotate(geom = "segment", x = -35, xend = -25, y = 1.1, yend = 1.1, color = "white", size = 2) +
   annotate(geom = "segment", x = -38, xend = -22, y = 1.12, yend = 1.18, color = "black", size = 0.5) +
   annotate(geom = "segment", x = -38, xend = -22, y = -1.18, yend = -1.12, color = "black", size = 0.5) +
-  labs(color = "Effect at 95%CI", x = "Model Number, ordered by point estimate", y = "Average Marginal Effect (AME)") +
+  labs(color = "Effect at 95% CI", x = "Models Ordered by AME", y = "Average Margina Effect (AME)") +
   scale_y_continuous(labels = c("-0.50","-0.05","0.00","0.05","0.50"), breaks = c(-1.75, -1, 0, 1, 1.75), limits = c(-1.8,1.8)) +
   coord_cartesian(xlim = c(-15,1255), clip = "off") +
   scale_x_continuous(expand = c(0,15)) +
@@ -799,7 +799,7 @@ labs_y_new <- c("Model Score","Stats-Skill","Topic\nKnowledge","Pro Immigrant","
 ```{r figS9, warning = F}
 g5a_new <- 
   ggplot(cri_team) +
-  geom_point(aes(x = count2, y = AME_Zt, color = subj_concl), shape = 18, size = 4) +   scale_color_manual(values = c("#66A61E","grey55", "#D95F02"), labels = c("Rejected","Not testable","Supported")) +
+  geom_point(aes(x = count2, y = AME_Zt, color = subj_concl), shape = 18, size = 4) +   scale_color_manual(values = c("#D95F02", "grey55", "#66A61E"), labels = c("Rejected","Not testable","Supported")) +
   labs(color = "Conclusion\nHypothesis is:", x = "Team Conclusions", y = "Average Effect Size\nof Team's Test Models") +
   theme_classic() +
   theme(
