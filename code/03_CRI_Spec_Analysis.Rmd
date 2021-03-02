@@ -37,7 +37,7 @@ cri_team <- subset(cri_team, u_teamid!=0)
 ```{r data_prep, warning=F, message=F, include=F}
 
 # prep data
-crispectest <- dplyr::select(cri_str, id, u_teamid, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe, cluster_any, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_any, Hresult, orig13, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE, main_IV_measurement, emplrate_ivC:gdp_ivC)
+crispectest <- dplyr::select(cri_str, id, u_teamid, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe, cluster_any, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_any, Hresult, orig13, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE, main_IV_measurement, emplrate_ivC:gdp_ivC, inv_weight)
 
 # create background degree variable (1 = other, 2 = methods focus, 3 = soc, 4 = polsci, 5 = psych)
 crimrg <- cri %>%
@@ -113,12 +113,11 @@ crispectest$count <- 1:nrow(crispectest)
 
 
 
-
 ### Model-Level Effect Specifications
 
 #### Main Plot
 
-##### Fig 1
+Setup
 
 ```{r fig1_main_prep}
 # create identifier of neg, ns, pos
@@ -145,8 +144,24 @@ crispectest <- crispectest %>%
          est_sig_scl = ifelse(est_sig > 0, est_sig_scl, -1*est_sig_scl))
 ```
 
+Generate weighted percentage of each effect
+
+```{r fig1_pcts}
+sig_neg <- 100*round(sum(crispectest$inv_weight[crispectest$sig_group2 == 1])/sum(crispectest$inv_weight),3)
+
+sig_pos <- 100*round(sum(crispectest$inv_weight[crispectest$sig_group2 == 3])/sum(crispectest$inv_weight),3)
+
+ns <- 100*round(sum(crispectest$inv_weight[crispectest$sig_group2 == 2])/sum(crispectest$inv_weight),3)
+
+
+```
+
+Generate and save Fig 1
 
 ```{r fig1_main}
+# for plotting a circle
+dat = data.frame(x=runif(1), y=runif(1))
+
 agg_png(filename = here::here("results/Fig1.png"), width = 800, height = 500, res = 144)
 ggplot(crispectest) +
   #geom_errorbar(aes(ymin = lb, ymax = ub), color = "thistle1") +
@@ -156,17 +171,25 @@ ggplot(crispectest) +
   #geom_vline(xintercept = 1214, color = "grey", linetype = "dashed") +
   #geom_vline(xintercept = 52, color = "grey", linetype = "dashed") +
   #ylim(-1.8, 1.8) +
-  annotate(geom = "text", x = 150, y = 0.5, label = "NEGATIVE, 95% CI", color = "#66A61E", fontface = "bold", hjust = 0, size = 3) +
-  annotate(geom = "text", x = 800, y = 1, label = "POSITIVE, 95% CI", color = "#D95F02", fontface = "bold", hjust = 0, size = 3) +
-  annotate(geom = "text", x = 450, y = -0.6, label = "NOT STAT. SIGNIFICANT, 95% CI", fontface = 3, color = "grey55", hjust = 0, size = 2.5) +
+  annotate(geom = "text", x = 340, y = 1.45, label = "NEGATIVE", color = "#66A61E", fontface = "bold", size = 3) +
+  annotate(geom = "text", x = 940, y = 1.45, label = "POSITIVE", color = "#D95F02", fontface = "bold", size = 3) +
+  annotate(geom = "text", x = 640, y = 1.45, label = "NOT STAT.\nSIGNIFICANT", fontface = "bold", color = "grey55", size = 3) +
   #annotate(geom = "text", x = 680, y = -1.5, label = "grey indicates not sig.\ndifferent from zero", color = "grey55", size = 3) +
   geom_vline(xintercept = -30) +
   annotate(geom = "segment", x = -35, xend = -25, y = -1.1, yend = -1.1, color = "white", size = 2) +
   annotate(geom = "segment", x = -35, xend = -25, y = 1.1, yend = 1.1, color = "white", size = 2) +
   annotate(geom = "segment", x = -38, xend = -22, y = 1.12, yend = 1.18, color = "black", size = 0.5) +
   annotate(geom = "segment", x = -38, xend = -22, y = -1.18, yend = -1.12, color = "black", size = 0.5) +
-  labs(color = "Effect at 95% CI", x = "Models Ordered by AME", y = "Average Margina Effect (AME)") +
-  scale_y_continuous(labels = c("-0.50","-0.05","0.00","0.05","0.50"), breaks = c(-1.75, -1, 0, 1, 1.75), limits = c(-1.8,1.8)) +
+  labs(color = "Effect at 95% CI", x = "Models Ordered by AME", y = "Average Marginal Effect (AME)") +
+  geom_point(aes(x=340, y=-2), data=dat, size=18, shape=1, color="#66A61E") +
+  geom_point(aes(x=640, y=-2), data=dat, size=26, shape=1, color="grey55") +
+  geom_point(aes(x=940, y=-2), data=dat, size=14, shape=1, color="#D95F02") +
+  annotate("text", x=340, y=-2, label = paste(sig_neg), color="#66A61E", fontface = "bold") +
+  annotate("text", x=640, y=-2, label = paste(ns), color="grey55", fontface = "bold") +
+  annotate("text", x=940, y=-2, label = paste(sig_pos), color="#D95F02", fontface = "bold") +
+  annotate("text", x=640, y=-1.1, label = "Weighted % of Distribution:", color="grey20", size = 2.5, fontface = 3) +
+  annotate("text", x=640, y=0.5, label = "Point Estimates:", color="grey20", size = 2.5, fontface = 3) +
+  scale_y_continuous(labels = c("-0.50","-0.05","0.00","0.05","0.50"), breaks = c(-1.75, -1, 0, 1, 1.75), limits = c(-2.6,1.8)) +
   coord_cartesian(xlim = c(-15,1255), clip = "off") +
   scale_x_continuous(expand = c(0,15)) +
   theme_classic() +

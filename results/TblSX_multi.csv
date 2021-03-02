@@ -1,7 +1,0 @@
-,,
-Model,Specifications,r2
-m1,DVs + AME type,0.118
-m2,+ sample,0.119
-m3,+ IVs,0.128
-m4,+ other DV + Estimator,0.131
-m5,+ DV*Type interaction,0.164

@@ -1,6 +1,6 @@
 ---
 title: "Tech 6, DV-Specific Analyses"
-output: html_notebook
+output: html_document
 ---
 
 
@@ -43,9 +43,9 @@ cri_indiv = participant-level data from our survey, identifying characteristics 
 ### Load Data
 
 ```{r load, warning=F,message=F}
-cri <- read.csv(file = "data/cri.csv", header = T)
-cri_str <- read.csv(file = "data/cri_str.csv", header = T)
-cri_indiv <- read.csv(file = "data/cri_indv.csv", header = T)
+cri <- read.csv(file = here::here("data/cri.csv"), header = T)
+cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = T)
+cri_indiv <- read.csv(file = here::here("data/cri_indv.csv"), header = T)
 
 # setup multilevel dataset
 
@@ -128,7 +128,7 @@ note that logit is the only one that seems to matter, surprisingly the 'type' of
 
 In the DV specific case there is often only one model per team, thus the multilevel structure is not helpful (mostly singular identification as a result). Therefore we switch to an lm (results are nearly identical because the random-intercepts at the team-level were zero)
 
-```{r subj_measurement_mlms}
+```{r subj_measurement_mlms, warning = F, message = F}
 
 dvs <- c("Jobs","Unemp","IncDiff","OldAge","House","Health")
 #run regressions across all datasets
@@ -190,7 +190,7 @@ dv_var_table[14:19,6] <- c(sum_cases(m06_dv,1),sum_cases(m06_dv,2),sum_cases(m06
 
 Given such fewer cases we adjust the numbmer of variables
 
-```{r subj_model_mlms}
+```{r subj_model_mlms, warning = F, message = F}
 m08_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow + twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin)
 
 dv_var_table[20:25,1] <- "m08x"
@@ -216,7 +216,7 @@ Maximum variance explained
 
 Again we use a modified version, dropping many variables from m08x
 
-```{r res_aspects_mlms}
+```{r res_aspects_mlms, warning = F, message = F}
 m12_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow + twowayfe + mlm_fe + belief_ipred + pro_immigrant + stats_ipred + topic_ipred + total_score)
 
 dv_var_table[26:31,1] <- "m12x"
@@ -232,6 +232,6 @@ dv_var_table[26:31,6] <- c(sum_cases(m12_dv,1),sum_cases(m12_dv,2),sum_cases(m12
 Save as table
 
 ```{r output}
-write.csv(dv_var_table, file = "results/Tbl_DVspecific_variance_explained.csv")
+write.csv(dv_var_table, file = here::here("results/TblS9.csv"))
 ```
 

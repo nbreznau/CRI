@@ -1,5 +1,5 @@
 ---
-title: "Tech 5. Multiverse/Dredge"
+title: "Tech 6. Multiverse/Dredge"
 output: html_document
 ---
 
@@ -20,7 +20,7 @@ pacman::p_load("ggplot2","tidyverse","MuMIn","ggpubr","ragg","factoextra","lme4"
 
 ```
 
-# Expected Explained Variance (a simulation)
+### Expected Explained Variance (a simulation)
 
 We take a team whose results were derived using R and used three waves of the ISSP - Team 18. Their DV is dichotomized, the has pluses and minuses in our multiverse analysis.
 
@@ -46,9 +46,9 @@ t18m <- t18m %>%
 
 ```
 
-## Data Frame Prep
+#### Data Frame Prep
 
-```{r models}
+```{r models, warning = F}
 dvs <- c("jobs","unemployed","reduce_income_diff","old_age_care","housing","health")
 
 dvs_c <- c("jobs_c","unemp_c","incdiff_c","oldage_c","housing_c","health_c")
@@ -97,10 +97,10 @@ colnames(m4_results) <- colnames(m1_results)
 
 ```
 
-## OLS Models
+### OLS Models
 
-### Stock Models, OLS, All years
-```{r models}
+#### Stock Models, OLS, All years
+```{r models1, warning = F}
 i = 1
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -126,8 +126,8 @@ i <- i + 1
 }
 ```
 
-### Net Models, OLS, All years
-```{r models2}
+#### Net Models, OLS, All years
+```{r models2, warning = F}
 i = 97
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -153,8 +153,8 @@ i <- i + 1
 }
 ```
 
-### Stock Models, OLS, 1996 & 2006 only
-```{r models3}
+#### Stock Models, OLS, 1996 & 2006 only
+```{r models3, warning = F}
 t18m_9606 <- subset(t18m, year != 2016)
 
 i = 1
@@ -185,8 +185,8 @@ i <- i + 1
 
 
 
-### Net Models, OLS, 1996 & 2006 only
-```{r models4}
+#### Net Models, OLS, 1996 & 2006 only
+```{r models4, warning = F}
 
 i = 97
 for (dv in dvs_c) {
@@ -214,8 +214,8 @@ i <- i + 1
 }
 ```
 
-### Stock Models, OLS, 2006 & 2016 only
-```{r models3}
+#### Stock Models, OLS, 2006 & 2016 only
+```{r models5, warning = F}
 t18m_0616 <- subset(t18m, year != 1996)
 
 i = 1
@@ -244,8 +244,8 @@ i <- i + 1
 }
 ```
 
-### Net Models, OLS, 1996 & 2006 only
-```{r models4}
+#### Net Models, OLS, 1996 & 2006 only
+```{r models6, warning = F}
 
 i = 97
 for (dv in dvs_c) {
@@ -274,8 +274,8 @@ i <- i + 1
 ```
 
 
-### Stock Models, OLS, All years, Year dummies only (no country FE)
-```{r models}
+#### Stock Models, OLS, All years, Year dummies only (no country FE)
+```{r models7, warning = F}
 i = 1
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -301,8 +301,8 @@ i <- i + 1
 }
 ```
 
-### Net Models, OLS, All years, Year dummies only (no country FE)
-```{r models2}
+#### Net Models, OLS, All years, Year dummies only (no country FE)
+```{r models8, warning = F}
 i = 97
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -328,10 +328,10 @@ i <- i + 1
 }
 ```
 
-## Logit Models
+### Logit Models
 
-### Stock Models, logit, All years
-```{r models}
+#### Stock Models, logit, All years
+```{r model9, warning = F}
 i = 385
 for (dv in dvs) {
     for (var in 1:16) {
@@ -357,8 +357,8 @@ i <- i + 1
 }
 ```
 
-### Net Models, logit, All years
-```{r models2}
+#### Net Models, logit, All years
+```{r models10, warning = F}
 i = 481
 for (dv in dvs) {
     for (var in 1:16) {
@@ -384,8 +384,8 @@ i <- i + 1
 }
 ```
 
-### Stock Models, logit, 1996 & 2006 only
-```{r models3}
+#### Stock Models, logit, 1996 & 2006 only
+```{r models11, warning = F}
 t18m_9606 <- subset(t18m, year != 2016)
 
 i = 385
@@ -416,8 +416,8 @@ i <- i + 1
 
 
 
-### Net Models, logit, 1996 & 2006 only
-```{r models4}
+#### Net Models, logit, 1996 & 2006 only
+```{r models12, warning = F}
 
 i = 481
 for (dv in dvs) {
@@ -445,8 +445,8 @@ i <- i + 1
 }
 ```
 
-### Stock Models, logit, 2006 & 2016 only
-```{r models3}
+#### Stock Models, logit, 2006 & 2016 only
+```{r models13, warning = F}
 t18m_0616 <- subset(t18m, year != 1996)
 
 i = 385
@@ -475,8 +475,8 @@ i <- i + 1
 }
 ```
 
-### Net Models, logit, 1996 & 2006 only
-```{r models4}
+#### Net Models, logit, 1996 & 2006 only
+```{r models14, warning = F}
 
 i = 481
 for (dv in dvs) {
@@ -505,8 +505,8 @@ i <- i + 1
 ```
 
 
-### Stock Models, logit, All years, Year dummies only (no country FE)
-```{r models}
+#### Stock Models, logit, All years, Year dummies only (no country FE)
+```{r models15, warning = F}
 i = 385
 for (dv in dvs) {
     for (var in 1:16) {
@@ -532,8 +532,8 @@ i <- i + 1
 }
 ```
 
-### Net Models, logit, All years, Year dummies only (no country FE)
-```{r models2}
+#### Net Models, logit, All years, Year dummies only (no country FE)
+```{r models16, warning = F}
 i = 481
 for (dv in dvs) {
     for (var in 1:16) {
@@ -560,10 +560,10 @@ i <- i + 1
 ```
 
 
-## GLM Models
+### GLM Models
 
-### Stock Models, GLM, All years, country-level, year dummy
-```{r models}
+#### Stock Models, GLM, All years, country-level, year dummy
+```{r models17, warning = F}
 i = 193
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -589,8 +589,8 @@ i <- i + 1
 }
 ```
 
-### Net Models, GLM, All years, country-level, year dummy
-```{r models2}
+#### Net Models, GLM, All years, country-level, year dummy
+```{r models18, warning = F}
 i = 289
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -616,8 +616,8 @@ i <- i + 1
 }
 ```
 
-### Stock Models, GLM, country-level, year dummy, 1996 & 2006 only
-```{r models3}
+#### Stock Models, GLM, country-level, year dummy, 1996 & 2006 only
+```{r models19, warning = F}
 t18m_9606 <- subset(t18m, year != 2016)
 
 i = 193
@@ -646,8 +646,8 @@ i <- i + 1
 }
 ```
 
-### Net Models, GLM, country-level, year dummy, 1996 & 2006 only
-```{r models4}
+#### Net Models, GLM, country-level, year dummy, 1996 & 2006 only
+```{r models20, warning = F}
 
 i = 289
 for (dv in dvs_c) {
@@ -675,8 +675,8 @@ i <- i + 1
 }
 ```
 
-### Stock Models, GLM, country-level, year dummy, 2006 & 2016 only
-```{r models3}
+#### Stock Models, GLM, country-level, year dummy, 2006 & 2016 only
+```{r models21, warning = F}
 t18m_0616 <- subset(t18m, year != 1996)
 
 i = 193
@@ -705,8 +705,8 @@ i <- i + 1
 }
 ```
 
-### Net Models, GLM, country-level, year dummy, 2006 & 2016 only
-```{r models4}
+#### Net Models, GLM, country-level, year dummy, 2006 & 2016 only
+```{r models22, warning = F}
 
 i = 289
 for (dv in dvs_c) {
@@ -735,8 +735,8 @@ i <- i + 1
 ```
 
 
-### Stock Models, GLM, All years, no year dummy
-```{r models}
+#### Stock Models, GLM, All years, no year dummy
+```{r models23, warning = F}
 i = 193
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -762,8 +762,8 @@ i <- i + 1
 }
 ```
 
-### Net Models, GLM, All years, no year dummy
-```{r models2}
+#### Net Models, GLM, All years, no year dummy
+```{r models24, warning = F}
 i = 289
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -789,9 +789,9 @@ i <- i + 1
 }
 ```
 
-## Explaining Variance in Multiverse
+### Explaining Variance in Multiverse
 
-```{r dataprep}
+```{r dataprep, warning = F}
 multi_df <- as.data.frame(rbind(m1_results, m2_results, m3_results, m4_results))
 
 multi_df <- multi_df %>%
@@ -805,7 +805,7 @@ save(multi_df, file = here::here("results/multi_df.Rda"))
 ```
 
 
-```{r multimodels}
+```{r multimodels, warning = F}
 
 load(file = here::here("results/multi_df.Rda"))
 
@@ -823,7 +823,7 @@ expvar[,1] <- c("m1","m2","m3","m4","m5")
 expvar[,2] <- c("DVs + AME type","+ sample", "+ IVs", "+ other DV + Estimator", "DV*Type interaction")
 expvar[,3] <- c(summary(m1)[["r.squared"]], summary(m2)[["r.squared"]], summary(m3)[["r.squared"]], summary(m4)[["r.squared"]], summary(m5)[["r.squared"]])
 
-write.csv(expvar, file = "results/TblSX_multi.csv")
+write.csv(expvar, file = here::here("results/TblS8.csv"))
 ```
 
 
@@ -835,9 +835,9 @@ sjPlot::tab_model(m3, m4, m5, show.ci = F, p.style = "stars")
 
 Given computing times, we start with smaller sets of variables and then eliminate those that do not appear in the top fitting models (AIC/LL).
 
-```{r newloads}
+```{r newloads, warning = F}
 
-cri_ml <- read.csv(file = "results/cri_ml.csv", header = T)
+cri_ml <- read.csv(file = here::here("results/cri_ml.csv"), header = T)
 
 # remove NAs
 cri_ml <- cri_ml[!is.na(cri_ml$AME_Z),]
@@ -848,21 +848,22 @@ options(na.action = "na.fail")
 
 ## DVs and Measurement
 
-```{r dredge1}
+```{r dredge1, warning = F}
 
 
 dredge1 <- lm(AME_Z ~ Jobs + IncDiff + House + Unemp + Health + OldAge + Flow + Stock + ChangeFlow + Stock*Jobs + Stock*House + Stock*IncDiff , data = cri_ml)
 
 models1 <- dredge(dredge1)
 ```
-```{r dredge2}
+
+```{r dredge2, warning = F}
 
 
 dredge2 <- lm(AME_Z ~ Jobs + IncDiff + House + Health +  Flow + Stock + ChangeFlow + Stock*IncDiff , data = cri_ml)
 
 models2 <- dredge(dredge2)
 ```
-```{r dredge3}
+```{r dredge3, warning = F}
 
 dredge3 <- lm(AME_Z ~ Jobs + IncDiff + House + Health +  Flow + Stock + ChangeFlow + Stock*IncDiff + w1996 + w2006 + w2016 + w2006*w2016 + orig13 + orig13*Jobs + eeurope + allavailable, data = cri_ml)
 
@@ -871,7 +872,7 @@ models3 <- dredge(dredge3)
 
 ```
 
-```{r dredge4}
+```{r dredge4, warning = F}
 
 dredge4 <- lm(AME_Z ~ Jobs + IncDiff + House + Flow + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + allavailable + twowayfe + level_cyear + mlm_fe + mlm_re, data = cri_ml)
 
@@ -880,7 +881,7 @@ models4 <- dredge(dredge4)
 
 ```
 
-```{r dredge5}
+```{r dredge5, warning = F}
 
 dredge5 <- lm(AME_Z ~ Jobs + IncDiff + House + Flow + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + mlm_re + pro_immigrant + stats_ipred + belief_ipred, data = cri_ml)
 
@@ -889,7 +890,7 @@ models5 <- dredge(dredge5)
 
 ```
 
-```{r dredge6}
+```{r dredge6, warning = F}
 
 dredge6 <- lm(AME_Z ~ Jobs + IncDiff + House + Flow + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + mlm_re + stats_ipred + twowayfe*Jobs + twowayfe*Stock, data = cri_ml)
 
@@ -900,7 +901,7 @@ models6 <- dredge(dredge6)
 
 
 
-```{r dredge7}
+```{r dredge7, warning = F}
 
 dredge7 <- lm(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock, data = cri_ml)
 
@@ -919,14 +920,14 @@ Final Model
 
 Used to explain variance reduction - compare with Fig 2 in the main text and Table S6.
 
-```{r final}
+```{r final, warning = F}
 m_dredged <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + (1 | u_teamid), data = cri_ml)
 
-sjPlot::tab_model(m_dredged, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = "results/reg_dredge.htm")
+sjPlot::tab_model(m_dredged, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = here::here("results/reg_dredge.htm"))
 
 m_d_out_v <- as.data.frame(VarCorr(m_dredged))
 
-m_d_out <- as.data.frame(read_html("results/reg_dredge.htm") %>% html_table(fill=TRUE))
+m_d_out <- as.data.frame(read_html(here::here("results/reg_dredge.htm")) %>% html_table(fill=TRUE))
 
 # add var to data frame
 m_d_out <- m_d_out[-c(18:21),]
@@ -937,7 +938,7 @@ m_d_out[c(15:17),2] <- c(round(((0.062 - (m_d_out_v[1,4]*100))/0.062)*100,3),
                          round(((0.550 - (m_d_out_v[1,4]*100) - (m_d_out_v[2,4]*100))/0.550)*100,3))
 
 # Save table
-write.csv(m_d_out, file = "results/TblS10_dredge.csv")
+write.csv(m_d_out, file = here::here("results/TblS10_dredge.csv"))
 ```
 
 Computer selected model can explain `r m_d_out[18,2]` of the total variance.
