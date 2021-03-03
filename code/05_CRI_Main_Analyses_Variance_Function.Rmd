@@ -575,7 +575,7 @@ Tbl11[,4] <- round(model@beta,3)
 
 Tbl11[1,] <- c("Variable","Variance Coeff","Mean Coeff","Standard Coeff")
 
-write.csv(Tbl11, file = here::here("results/Tbl11.csv"))
+write.csv(Tbl11, file = here::here("results/TblS11.csv"))
 
 # summary(varmod)
 # summary(meanmod)
