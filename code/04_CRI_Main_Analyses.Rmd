@@ -862,22 +862,32 @@ fig2[20,3] <- 1 - (fig2[19,3] + fig2[18,3] + fig2[17,3] + fig2[16,3])
 
 ## Figure 3. Variance Reduction by Level
 
-```{r fig3_setup}
-fig2$level <- factor(fig2$level, levels = c(" ","  ","   ","    ","Avg. Marginal Effects\nBetween-team variance","Avg. Marginal Effects\nWithin-team variance","Avg. Marginal Effects\nTotal variance","Subjective conclusion\nBetween-team deviance","     "))
 
-fig2_labs <- c(" ","  ","   ","     ","<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Between-team variance","<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Within-team variance","<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Total variance","<span style = \"font-size: 14px\">**Subjective Conclusions**</span><br>Between-team deviance"," ")
+
+```{r fig3_recode}
+#reorder categories to match the order presented in the text
+fig3 <- fig2
+fig3[1:5,] <- fig2[16:20,]
+fig3[6:10,] <- fig2[6:10,]
+fig3[11:15,] <- fig2[1:5,]
+fig3[16:20,] <- fig2[11:15,]
 ```
 
+```{r fig3_setup}
+fig3$level <- factor(fig3$level, levels = c(" ","  ","   ","    ","Subjective conclusion\nBetween-team deviance","Avg. Marginal Effects\nWithin-team variance","Avg. Marginal Effects\nBetween-team variance","Avg. Marginal Effects\nTotal variance","     "))
+
+fig3_labs <- c(" ","  ","   ","     ","<span style = \"font-size: 14px\">**Subjective Conclusions**</span><br>Between-team deviance","<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Within-team variance","<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Between-team variance","<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Total variance"," ")
+```
 
 ```{r fig3_plot}
 agg_png(filename= here::here("results/Fig3.png"), res = 144, width = 1100, height = 800)
-ggplot(fig2, aes(x = level, y = percent, fill = type)) +
+ggplot(fig3, aes(x = level, y = percent, fill = type)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   labs(x = "", y = "", fill = "Percent\nexplained by") +
   md_theme_classic() +
   labs(title = "<span style = \"font-size: 18px\">**Factors Explaining Variance in Results**</span>") +
-  scale_x_discrete(labels = fig2_labs, drop = F) +
+  scale_x_discrete(labels = fig3_labs, drop = F) +
   scale_y_reverse() +
   geom_rect(aes(xmin = 2, xmax = 4.1, ymin = 0.005, ymax = 0.24), color = "#E6AB02", size = 1.5, fill = "transparent") +
   geom_rect(aes(xmin = 2, xmax = 4.1, ymin = 0.26, ymax = 0.49), color = "#7570B3", size = 1.5, fill = "transparent") +
@@ -896,12 +906,12 @@ ggplot(fig2, aes(x = level, y = percent, fill = type)) +
   annotate("text", x = 8.8, y = 0.5,  label = "50%", size = 3.5) +
   annotate("text", x = 8.8, y = 0.25,  label = "75%", size = 3.5) +
   annotate("text", x = 8.8, y = 0, hjust = 1, label = "100%", size = 3.5) +
-  annotate("text", x = 8, y = 0.67,  label = "% POSITIVE\nTEST RESULTS", size = 2.5, color = "grey20") +
-  annotate("text", x = 4.8, y = 0.1, label = "82.4%", fontface= 2) +
+  annotate("text", x = 5, y = 0.67,  label = "% POSITIVE\nTEST RESULTS", size = 2.5, color = "grey20") +
+  annotate("text", x = 6.8, y = 0.1, label = "82.4%", fontface= 2) +
   annotate("text", x = 5.8, y = 0.1, label = "96.8%", fontface= 2) +
-  annotate("text", x = 6.8, y = 0.1, label = "95.2%", fontface= 2) +
-  annotate("text", x = 7.8, y = 0.1, label = "52.4%", fontface= 2) +
-  annotate("text", x = 7.8, y = 0.25, label = "unexplained =", fontface= 3, size = 3) +
+  annotate("text", x = 7.8, y = 0.1, label = "95.2%", fontface= 2) +
+  annotate("text", x = 4.8, y = 0.143, label = "80.1 / 52.4%", fontface= 2) +
+  annotate("text", x = 4.8, y = 0.35, label = "unexplained =", fontface= 3, size = 3) +
   annotate("segment", x = 4.15, y = 0.123, xend = 4.55, yend = 0.45, color = "#E6AB02") +
   annotate("segment",x = 4.15, y = 0.376, xend = 4.55, yend = 0.85, color = "#7570B3") +
   annotate("segment",x = 4.15, y = 0.626, xend = 4.55, yend = 0.945, color = "#1B9E77") +
@@ -909,7 +919,7 @@ ggplot(fig2, aes(x = level, y = percent, fill = type)) +
   scale_fill_manual(values = c("Objective conditions" = "#666666",
                                 "Research design" = "#1B9E77",
                                 "Researcher characteristics" = "#7570B3",
-                                "Results" = "burlywood",
+                                "Results" = "lightpink1",
                                 "Unexplained variance" = "#E6AB02")) +
   theme(axis.line = element_blank(),
         axis.text.x = element_blank(),

@@ -854,6 +854,10 @@ dev.off()
 knitr::include_graphics(here::here("results/FigS9.png"))
 ```
 
+#### Note for FigS9
+
+We find that `r round(length(cri_team$pos_test_pct_p05[cri_team$pos_test_pct_p05>0.6])/88,3)` percent of teams had a majority of positive test results (a negative effect of immigration at p<0.05) and `r round(length(cri_team$neg_test_pct_p05[cri_team$neg_test_pct_p05>0.6])/88,3)` percent had a majority negative.
+
 
 ```{r saveout}
 write.csv(crispectest, file = here::here("results/crispectest.csv"))
