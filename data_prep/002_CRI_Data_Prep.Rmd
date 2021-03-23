@@ -944,7 +944,7 @@ write.csv(cri_team_combine, file = here::here("data","cri_team_combine.csv"), ro
 
 #### Prep Data for Shiny App
 
-In the folder **/CRI/CRI_shiny** we deploy a 'shiny app' to allow users to interact with the results by model specification types. This code preps the data. The app uses the rdfpackage by Gassen which requires discrete choice variables.
+In the folder **/CRI/CRI_shiny** we deploy a 'shiny app' to allow users to interact with the results by model specification types. 
 
 ```{r shiny, warning= F, message = F}
 ### Transform values from 1 to column names for all countries 
@@ -1046,7 +1046,41 @@ cri_shiny_team <- cri_shiny_team %>%
     lb = est - 0.001,
     ub = est + 0.001
   ) 
+
+# Remove unnecessary columns, remove Brady and Finnigan study
+
+cri_shiny <- cri_shiny %>%
+  subset(u_teamid != 0) %>%
+  select(-c(additionalinfo, fbXnet:fbXleftright,backgr_degree_other1:belief_2_avg))
   
+cri_shiny_team <- cri_shiny_team %>%
+  subset(u_teamid != 0) %>%
+  select(-c(fbXnet:fbXleftright,backgr_degree1:model_eval3))
+
+# Need text versions for filtering
+cri_shiny <- cri_shiny %>%
+  mutate(Jobs_str = ifelse(Jobs == 1 & Scale != 1, "Jobs", 0),
+         Unemp_str = ifelse(Unemp == 1 & Scale != 1, "Unemp", 0),
+         IncDiff_str = ifelse(IncDiff == 1 & Scale != 1, "IncDiff", 0),
+         OldAge_str = ifelse(OldAge == 1 & Scale != 1, "OldAge", 0),
+         House_str = ifelse(House == 1 & Scale != 1, "House", 0),
+         Health_str = ifelse(Health == 1 & Scale != 1, "Health", 0),
+         Scale_str = ifelse(Scale == 1, "Scaled", 0),
+         Soc_Spending = ifelse(socx_ivC == 1, "Soc_Spending", 0),
+         Unemp_Rate = ifelse(unemprate_ivC == 1 | emplrate_ivC == 1, "Unemp_Rate", 0),
+         GDP_Per_Capita = ifelse(gdp_ivC == 1, "GDP_Per_Capita", 0),
+         Gini = ifelse(ginin_ivC == 1 | poverty_ivC == 1, "Gini", 0),
+         None = ifelse(Unemp_Rate == 0 & gdp_ivC == 0 & socx_ivC == 0 & Gini == 0, "None", 0),
+         Stock_str = ifelse(Stock == 1, "Stock", 0),
+         Flow_str = ifelse(Flow == 1, "Flow", 0),
+         ChangeFlow_str = ifelse(ChangeFlow == 1, "ChangeFlow", 0),
+         StockFlow = ifelse(main_IV_as_control == 1, "StockFlow", 0),
+         clustse = ifelse(cluster_any == "Yes", "clustse", 0),
+         twowayfe = ifelse(twowayfe == "Yes", "twowayfe", 0),
+         dichtdv = ifelse(dichotomize == 1, "dichtdv", 0),
+         nonlin = ifelse(anynonlin == 1, "nonlin", 0),
+         other_other = ifelse(clustse == 0 & twowayfe == 0 & dichtdv == 0 & nonlin== 0, 1, 0))
+
 
 # Save shiny data
 write.csv(cri_shiny, file = here::here("shiny/data/cri_shiny.csv"), row.names = F)

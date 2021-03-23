@@ -21,19 +21,56 @@ wavelist <- c("w1985","w1990","w1996","w2006","w2016")
 server <- function(input, output, session) {
   
   output$exec <- renderUI({
-    url <- a("The Crowdsourced Replication Initiative", href="https://osf.io/preprints/socarxiv/6j9qb/")
+    url <- a("Original Study Description", href="https://osf.io/preprints/socarxiv/6j9qb/")
+    tagList(url)
+  })
+  
+  output$workp <- renderUI({
+    url <- a("Replication Materials", href="https://github.com/nbreznau/CRI")
     tagList(url)
   })
   
   ### Specification curve AME  
   output$spec_curve <- renderPlot({
     dfspec1 <- reactive({
-      filter(df, DV %in% input$mspecdv & indepv %in% input$mspecivx & mator %in% input$emator & cluster_any %in% input$clust & 
-               twowayfe %in% input$twoway & dv_m %in% input$dv_m & iv_type %in% input$mspeciv & cntrlista %in% input$countries1a & 
-               cntrlistb %in% input$countries1b & cntrlistc %in% input$countries1c & wavelist %in% input$mwave & 
-               BELIEF_HYPOTHESIS %in% input$belief & STATISTICS_SKILL %in% input$stat & TOPIC_KNOWLEDGE %in% input$topic &
-               MODEL_SCORE %in% input$total & PRO_IMMIGRANT %in% input$proimm)
+      filter(df, Jobs_str %in% input$mspecdv | # first filter on DV
+               Unemp_str %in% input$mspecdv |
+               IncDiff_str %in% input$mspecdv |
+               OldAge_str %in% input$mspecdv |
+               House_str %in% input$mspecdv |
+               Health_str %in% input$mspecdv |
+               Scale_str %in% input$mspecdv) %>%
+        filter(Stock_str %in% input$mspeciv | # filter on TEST
+                 Flow_str %in% input$mspeciv |
+                 ChangeFlow_str %in% input$mspeciv |
+                 StockFlow %in% input$mspeciv) %>%
+        filter(Soc_Spending %in% input$mspecivx | # filter on IVs
+                 Unemp_Rate %in% input$mspecivx |
+                 GDP_Per_Capita %in% input$mspecivx |
+                 Gini %in% input$mspecivx |
+                 None %in% input$mspecivx) %>%
+        # make it so countries must be included by summing the true/false conditions with the length of the checkbox output
+        filter((AU %in% input$countries1a  + AT %in% input$countries1a + BE %in% input$countries1a +
+                  CA %in% input$countries1a + CL %in% input$countries1a + HR %in% input$countries1a + 
+                  CZ %in% input$countries1a + DK %in% input$countries1a + FI %in% input$countries1a + 
+                  FR %in% input$countries1a + DE %in% input$countries1a) == length(input$countries1a)) %>%
+        filter((HU %in% input$countries1b + IE %in% input$countries1b + IL %in% input$countries1b + 
+                  IT %in% input$countries1b + JP %in% input$countries1b + KR %in% input$countries1b + 
+                  LV %in% input$countries1b + LT %in% input$countries1b + NT %in% input$countries1b + 
+                  NZ %in% input$countries1b + NO %in% input$countries1b) == length(input$countries1b)) %>%
+        filter((PL %in% input$countries1c + PT %in% input$countries1c + RU %in% input$countries1c + 
+                  SK %in% input$countries1c + SI %in% input$countries1c + ES %in% input$countries1c + 
+                  SE %in% input$countries1c + CH %in% input$countries1c + UK %in% input$countries1c + 
+                  US %in% input$countries1c + UY %in% input$countries1c) == length(input$countries1c)) %>%
+        filter(mator %in% input$emator &  
+                 BELIEF_HYPOTHESIS %in% input$belief & STATISTICS_SKILL %in% input$stat & TOPIC_KNOWLEDGE %in% input$topic &
+                 MODEL_SCORE %in% input$total & PRO_IMMIGRANT %in% input$proimm) %>%
+        filter((w1985 %in% input$mwave +  w1990 %in% input$mwave + w1996 %in% input$mwave + 
+                  w2006 %in% input$mwave + w2016 %in% input$mwave) == length(input$mwave)) %>%
+        filter(other_other == 1 | clustse %in% input$other | twowayfe %in% input$other | dichtdv %in% input$other | nonlin %in% input$other)
+
     })
+    
     dfspec <- ({
       dplyr::select(dfspec1(), DV, iv_type, software, est, lb, ub)
     })
@@ -60,9 +97,18 @@ server <- function(input, output, session) {
   
   output$p_val <- renderPlot({
     dfp1 <- reactive({
-      filter(df,DV %in% input$mspecdv2 & indepv %in% input$mspecivx2 & mator %in% input$emator2 & cluster_any %in% input$clust2 & 
-               twowayfe %in% input$twoway2 & dv_m %in% input$dv_m2 & iv_type %in% input$mspeciv2 & cntrlista %in% input$countries2a & 
-               cntrlistb %in% input$countries2b & cntrlistc %in% input$countries2c & wavelist %in% input$mwave2 & 
+      filter(df,Jobs_str %in% input$mspecdv2 & 
+               Unemp_str %in% input$mspecdv2 &
+               IncDiff_str %in% input$mspecdv2 &
+               OldAge_str %in% input$mspecdv2 &
+               House_str %in% input$mspecdv2 &
+               Health_str %in% input$mspecdv2 &
+               Scale_str %in% input$mspecdv2 &
+               #indepv %in% input$mspecivx2 & mator %in% input$emator2 & cluster_any %in% input$clust2 & 
+               #twowayfe %in% input$twoway2 & dv_m %in% input$dv_m2 & iv_type %in% input$mspeciv2 & 
+               #cntrlista %in% input$countries2a & 
+               #cntrlistb %in% input$countries2b & cntrlistc %in% input$countries2c & 
+               wavelist %in% input$mwave2 & 
                BELIEF_HYPOTHESIS %in% input$belief2 & STATISTICS_SKILL %in% input$stat2 & TOPIC_KNOWLEDGE %in% input$topic2 &
                MODEL_SCORE %in% input$total2 & PRO_IMMIGRANT %in% input$proimm2)
       
