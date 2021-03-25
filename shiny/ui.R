@@ -46,10 +46,9 @@ ui <- fluidPage(
   useShinyjs(),
   tags$style(HTML("#title {font-size: 22px; line-height: 22px; margin: 12px 0}")),
   h1(id = "title", "The Hidden Universe of Data Analysis", align = "center"),
-  tags$style(HTML("#subtitle {font-size: 20px; line-height: 20px; color: #3E3673; margin: 12px 0}")),
-  h1(id = "subtitle", "1,253 Model Specifications, 73 Teams, same Data & Hypothesis", align = "center"),
+  tags$style(HTML("#subtitle {font-size: 20px; border-bottom: 2px solid silver; line-height: 20px; color: #3E3673; margin: 12px 0}")),
+  h1(id = "subtitle", "One Dataset, One Hypothesis, 73 Teams and 1,253 Models", align = "center"),
   tags$hr(style="border-color: black;"),
-  hr(),
 
 # FIRST MAIN COLUMN  
     mainPanel(
@@ -60,49 +59,50 @@ ui <- fluidPage(
   ## FIRST TAB PANEL        
         tabPanel("EFFECTS", 
                  fluidRow(
-                   column(8, style={'height: 500px; border-left: 1px solid silver; border-top: 1px solid silver'},
+                   column(8, style={'height: 500px; border-left: 1px solid silver; border-bottom: 1px solid silver; border-top: 1px solid silver'},
                           plotOutput("spec_curve")),
-                   column(4, style={'height: 500px; border-left: 1px solid silver; border-right: 1px solid silver; border-top: 1px solid silver'},
-                          h3("NOTES FOR USERS", style={'margin:16px 0; padding: 4px; font-size: 14px; text-align:center; background-color:#4682B433;'}),
-                          h6("Toggle through the tabs by clicking to view (1) effects, (2) p-values or (3) subjective team conclusions. Below the main plot, labeled rows are model specifications vertically aligning with each effect. A mark in these rows indicates that the model producing the effect contains that specification and/or came from researchers with a certain prior belief that the hypothesis was true. Below users can filter results by different model specifications that each team deemed plausible data generating models. Therefore, not all combinations of specifications were considered plausible and many combinations will have no corresponding results.", style={'margin:1.5px 0; font-size: 11px '}),
-                          hr(),
-                          h6(uiOutput("exec"), style={'margin:1.5px 0; text-align: center; font-size: 13px; font-style: italic'}),
-                          h6("     "),
-                          h6(uiOutput("workp"), style={'margin:1.5px 0; text-align: center; font-size: 13px; font-style: italic'}),
-                          hr(),
-                          h6("App Design: Nate Breznau & Hung H.V. Nguyen ", style={'margin:1.5px 0; font-size: 11px'}),
-                          h6("University of Bremen", style={'margin:1.5px 0; font-size: 11px '}),
-                          h6("Contact: breznau.nate@gmail.com", style={'margin:1.5px 0; font-size: 11px '}),
-                          h6("     "),
-                          h3("The reset button below removes all user defined paramters", style={'margin:12px 0; text-align: center; font-size: 12px; padding: 4px; background-color:#4682B433;'}),
-                          h6("     "),
-                          actionButton("resetAll", "Reset All"))
+                   column(4, style = {'height:500px; border-left: 1px solid silver; border-right: 1px solid silver; border-top: 1px solid silver; border-bottom: 1px solid silver'},
+                          h5("SUMMARY", style={'margin:4px 0; padding: 4px; font-size: 14px; text-align:center; background-color:#D3D3D3'}),
+                          h6(strong(textOutput("modeln")), style={'font-size: 18px; text-align:center; padding-top: 12px'}), 
+                          h6("of 1,253 models", style={'margin:1.5px 0; text-align:center; padding: 2px;'}),
+                          h6(strong(textOutput("teamn")), style={'margin:9px 0; font-size: 18px; text-align:center; padding-top: 12px'}),
+                          h6("of 73 teams*", style={'margin:1.5px 0; text-align:center; padding: 2px;'}),
+                          h6(strong(textOutput("signeg")), style={'font-size: 18px; text-align:center; padding-top: 12px'}), 
+                          h6("had negative effects at 95% CI", style={'margin:1.5px 0; text-align:center; padding: 2px'}),
+                          h6("(weighted by models per team)", style={'margin:1.5px 0; text-align:center; padding: 2px'}),
+                          h6(strong(textOutput("sigpos")), style={'font-size: 18px; text-align:center; padding-top: 12px'}), 
+                          h6("had positive effects at 95% CI", style={'margin:1.5px 0; text-align:center; padding: 2px'}),
+                          h6("(weighted by models per team)", style={'margin:1.5px 0; text-align:center; padding: 2px'}),
+                          br(),
+                          br(),
+                          h6("*Two teams had no results, one lacked convergence and other failed measurement invariance", style={'margin:1px 0; font-size: 9px'})),
                  ),
+                 br(),
 
     ### FIRST FLUID ROW                 
-                 fluidRow( 
-                   column(2, style = {'height: 75px; border-left: 1px solid silver;border-bottom: 1px solid silver'},
-                          h6(em("In the figure above:"))),
-                   column(2, style = {'height: 75px; border-bottom: 1px solid silver'},
-                          tags$style(HTML("#ret {font-size: 11px; line-height: 11px; color: #e60000}")),
-                          h6(id = "ret", strong("Red = negative at 95% CI"))),
-                   column(2, style = {'height: 75px; border-bottom: 1px solid silver'},
-                          tags$style(HTML("#grr {font-size: 11px; line-height: 11px; color: #808080}")),
-                          h6(id = "grr", strong("Gray = non-significant at 95% CI"))),
-                   column(2, style = {'height: 75px; border-bottom: 1px solid silver'},
-                          tags$style(HTML("#blu {font-size: 11px; line-height: 11px; color: #0000ff}")),
-                          h6(id = "blu", strong("Blue = positive at 95% CI"))),
-                   column(4, style = {'height: 75px; border-right: 1px solid silver; border-left: 1px solid silver; border-bottom: 1px solid silver'},
-                          h6(" "))), ## end of first fluid row   
+                 # fluidRow( 
+                 #   column(2, style = {'height: 75px; border-left: 1px solid silver;border-bottom: 1px solid silver'},
+                 #          h6(em("In the figure above:"))),
+                 #   column(2, style = {'height: 75px; border-bottom: 1px solid silver; color: #66a61e'},
+                 #          tags$style(HTML("#gre {font-size: 11px; line-height: 11px; color: #66a61e}")),
+                 #          h6(id = "gre", strong("Green = negative at 95% CI"))),
+                 #   column(2, style = {'height: 75px; border-bottom: 1px solid silver'},
+                 #          tags$style(HTML("#grr {font-size: 11px; line-height: 11px; color: #808080}")),
+                 #          h6(id = "grr", strong("Gray = non-significant at 95% CI"))),
+                 #   column(2, style = {'height: 75px; border-bottom: 1px solid silver'},
+                 #          tags$style(HTML("#org {font-size: 11px; line-height: 11px; color: #d95f02}")),
+                 #          h6(id = "org", strong("Orange = positive at 95% CI"))),
+                 #   column(4, style = {'height: 75px; border-right: 1px solid silver; border-left: 1px solid silver; border-bottom: 1px solid silver'},
+                 #          h6(" "))), ## end of first fluid row   
     ### Splitting Row
                  fluidRow( 
-                          h4("Filter models by specifications and researcher characteristics"), style = {'text-align: center; padding: 8px; background-color:#4682B433'}
+                          h5("Filter models by research design and team characteristics"), style = {'text-align: center; padding: 8px; background-color:#4682B433'}
                                  ),
     ### SECOND FLUID ROW
                  fluidRow( 
-                   column(3, style = {'height:350px; border-left: 1px solid silver; border-top: 1px solid silver; border-bottom: 1px solid silver'},
+                   column(3, style = {'height:400px; border-left: 1px solid silver; border-top: 1px solid silver; border-bottom: 1px solid silver'},
                           br(),
-                          dropdownButton(label = h5("Dependent Variables"), status = "default", 
+                          dropdownButton(label = h5("Dep. Variables"), status = "default", 
                                          checkboxGroupInput(
                                            inputId = "mspecdv",
                                            label = "Questions Used <government should>:", 
@@ -116,7 +116,7 @@ ui <- fluidPage(
                                            selected = c("Jobs", "IncDiff","Unemp","OldAge","House","Health","Scaled")
                                            )),
                           br(),
-                          dropdownButton(label = h5("Immigration Measures"), status = "default", 
+                          dropdownButton(label = h5("Immigration Vars"), status = "default", 
                                          checkboxGroupInput(
                                            inputId = "mspeciv",
                                            label = "% Foreign-Born as:", 
@@ -127,7 +127,7 @@ ui <- fluidPage(
                                            selected = c("Stock","Flow","ChangeFlow", "StockFlow")
                                          )),
                           br(),
-                          dropdownButton(label = h5("Country-Level Controls"), status = "default", width = 80,
+                          dropdownButton(label = h5("Country Controls"), status = "default", width = 80,
                                          checkboxGroupInput(
                                            inputId = "mspecivx",
                                            label = NULL,
@@ -139,10 +139,10 @@ ui <- fluidPage(
                                            selected = c("Soc_Spending","Unemp_Rate","Gini","GDP_Per_Capita",
                                                         "None")
                                          ))),
-                  column(3, style = {'height:350px; border-top: 1px solid silver; border-bottom: 1px solid silver'},
+                  column(2, style = {'height:400px; border-top: 1px solid silver; border-bottom: 1px solid silver'},
                          br(),
                           div( id = "cntry",
-                            dropdownButton(label = h5("Countries Included"), status = "default", tags$label("Must Include:"),
+                            dropdownButton(label = h5("Countries"), status = "default", tags$label("Must Include:"),
                                          fluidRow(
                                            column(width=12,
                                                   actionButton(
@@ -175,7 +175,7 @@ ui <- fluidPage(
                           )),
                           br(),
                           div( id = "wave", 
-                            dropdownButton(label = h5("Survey waves"), status = "default", tags$label("Must include:"),
+                            dropdownButton(label = h5("Waves"), status = "default", tags$label("Must include:"),
                                          fluidRow(
                                            column(12,
                                                   checkboxGroupInput(
@@ -190,7 +190,7 @@ ui <- fluidPage(
                                            )))
                             ),
                           br(),
-                          dropdownButton(label = h5("Estimator/Other"), status = "default", width = 80,
+                          dropdownButton(label = h5("Other"), status = "default", width = 80,
                                          fluidRow(
                                            column(12, 
                                                   checkboxGroupInput(    
@@ -216,7 +216,7 @@ ui <- fluidPage(
                                            )))
                                          ),
                          br(),
-                         dropdownButton(label = h5("Peer Evaluation"), status = "default", width = 80,
+                         dropdownButton(label = h5("Peer Score"), status = "default", width = 80,
                                         checkboxGroupInput(    
                                           inputId = "total",
                                           label = ("Model veracity:"),
@@ -226,9 +226,9 @@ ui <- fluidPage(
                                           selected = c("Low","Mid","High")
                                         )
                          )),
-                   column(3, style = {'height:350px; border-top: 1px solid silver; border-bottom: 1px solid silver'},
+                   column(3, style = {'height:400px; border-top: 1px solid silver; border-bottom: 1px solid silver'},
                           br(),
-                          dropdownButton(label = h5("Method Expertise"), status = "default", width = 80,
+                          dropdownButton(label = h5("Methods Exp."), status = "default", width = 80,
                                          checkboxGroupInput(    
                                            inputId = "stat",
                                            label = ("Statistics Experience/ Knowledge"),
@@ -239,7 +239,7 @@ ui <- fluidPage(
                                          )),
                           
                           br(),
-                          dropdownButton(label = h5("Topic Expertise"), status = "default", width = 80,
+                          dropdownButton(label = h5("Topic Exp."), status = "default", width = 80,
                                          checkboxGroupInput(    
                                            inputId = "topic",
                                            label = ("Topical Experience/ Knowledge"),
@@ -249,7 +249,7 @@ ui <- fluidPage(
                                            selected = c("Low","Mid","High")
                                          )),
                           br(),
-                          dropdownButton(label = h5("Prior Beliefs"), status = "default", width = 80,
+                          dropdownButton(label = h5("Prior Belief"), status = "default", width = 80,
                                          checkboxGroupInput(    
                                              inputId = "belief",
                                              label = ("Hyp. is true"),
@@ -259,7 +259,7 @@ ui <- fluidPage(
                                              selected = c("Low","Mid","High")
                                          )),
                           br(),
-                          dropdownButton(label = h5("Prior Attitudes"), status = "default", width = 80,
+                          dropdownButton(label = h5("Prior Attitude"), status = "default", width = 80,
                                          checkboxGroupInput(    
                                              inputId = "proimm",
                                              label = ("Pro-immigration"),
@@ -268,16 +268,24 @@ ui <- fluidPage(
                                                             "High" = "High"),
                                              selected = c("Low","Mid","High")
                                          )),
+                          
                           br(),
-
                    ),
-                    column(3, style = {'height:350px; border: 1px solid silver'},
-                          br(),
-                          h5(strong("----- SUMMARY -----"), style={'margin:11px 0; text-align: center'}),
-                          h5(textOutput("teamn"), style={'margin:9px 0;'}), 
-                          h5(textOutput("pr"), style={'margin:15px 0;'})
-                          ),
-                          br(),
+                          column(4, style={'height: 400px; border-left: 1px solid silver; border-right: 1px solid silver; border-top: 1px solid silver'},
+                                 h3("NOTES FOR USERS", style={'margin:4px 0; padding: 4px; font-size: 14px; text-align:center; background-color:#D3D3D3;'}),
+                                 h6("Hypothesis: immigration undermines support for social policy", style={'text-align: center; margin:6px 0; font-size: 11px '}),
+                                 h6("Data: International Social Survey Program, Role of Government (1985-2016)", style={'text-align: center; margin:6px 0; font-size: 11px '}),
+                                 h6("Toggle tabs above to view (1) effects, (2) p-values or (3) subjective team conclusions. Filter research designs and team characteristics in drowdown menus to the left. Not all combinations of specifications have corresponding results - only those considered appropriate test models by at least one team.", style={'margin:1.5px 0; font-size: 11px '}),
+                                 h6(uiOutput("exec"), style={'margin:1.5px 0; padding: 3px; text-align: center; font-size: 12px; font-style: italic'}),
+                                 h6(uiOutput("workp"), style={'margin:1.5px 0; padding: 3px; text-align: center; font-size: 12px; font-style: italic'}),
+                                 h6("Design: Nate Breznau & Hung H.V. Nguyen ", style={'margin:1.5px 0; font-size: 11px'}),
+                                 h6("University of Bremen", style={'margin:1.5px 0; font-size: 11px '}),
+                                 h6("Contact: breznau.nate@gmail.com", style={'margin:1.5px 0; font-size: 11px '}),
+                                 h6("     "),
+                                 h3("The button below removes all user defined parameters", style={'margin:12px 0; text-align: center; font-size: 12px; padding: 4px; background-color:#D3D3D3;'}),
+                                 h6("     "),
+                                 actionButton("resetAll", "Refresh All")),
+
                         ) ## end of third fluid row
         ), ## end of first tab panel - spec_curve
 
@@ -602,10 +610,11 @@ tabPanel("P-VALUES", plotOutput("p_val"),
                   hr()
                   ) # end FluidRow
                  
-        ) ## end of tabset panel
-) # end main panel FluidRow
+        ) ## end of third panel
+) # end tabset
 ) # end div
-) # end reset button
+) # end mainPanel
 ) # end page
+
 
 # deployApp(appDir = here::here("/CRI_shiny", sep=""))

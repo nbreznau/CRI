@@ -1007,21 +1007,21 @@ cri_shiny <- cri_shiny %>%
 
 
 
-
+# one team has some missing values from the survey, replace with "Mid" for easier visualizaiton
 cri_shiny <- cri_shiny %>%
     mutate(
          iv_type2 = ifelse(main_IV_type=="Change in Flow","Flow",main_IV_type),
          iv_type2 = as.factor(iv_type2),
-         STATISTICS_SKILL = ifelse(is.na(STATISTICS_SKILL), "No Information",STATISTICS_SKILL),
-         BELIEF_HYPOTHESIS = ifelse(is.na(BELIEF_HYPOTHESIS), "No Information",BELIEF_HYPOTHESIS),
-         TOPIC_KNOWLEDGE = ifelse(is.na(TOPIC_KNOWLEDGE), "No Information",TOPIC_KNOWLEDGE),
-         MODEL_SCORE = ifelse(is.na(MODEL_SCORE), "No Information",MODEL_SCORE),
-         PRO_IMMIGRANT = ifelse(is.na(PRO_IMMIGRANT), "No Information",PRO_IMMIGRANT),
-         STATISTICS_SKILL = factor(STATISTICS_SKILL, levels = c("Low", "Mid", "High","No Information")),
-         BELIEF_HYPOTHESIS = factor(BELIEF_HYPOTHESIS, levels = c("Low", "Mid", "High","No Information")),
-         TOPIC_KNOWLEDGE = factor(TOPIC_KNOWLEDGE, levels = c("Low", "Mid", "High","No Information")),
-         MODEL_SCORE = factor(MODEL_SCORE, levels = c("Low", "Mid", "High","No Information")),
-         PRO_IMMIGRANT = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High","No Information"))
+         STATISTICS_SKILL = ifelse(is.na(STATISTICS_SKILL), "Mid",STATISTICS_SKILL),
+         BELIEF_HYPOTHESIS = ifelse(is.na(BELIEF_HYPOTHESIS), "Mid",BELIEF_HYPOTHESIS),
+         TOPIC_KNOWLEDGE = ifelse(is.na(TOPIC_KNOWLEDGE), "Mid",TOPIC_KNOWLEDGE),
+         MODEL_SCORE = ifelse(is.na(MODEL_SCORE), "Mid",MODEL_SCORE),
+         PRO_IMMIGRANT = ifelse(is.na(PRO_IMMIGRANT), "Mid",PRO_IMMIGRANT),
+         STATISTICS_SKILL = factor(STATISTICS_SKILL, levels = c("Low", "Mid", "High")),
+         BELIEF_HYPOTHESIS = factor(BELIEF_HYPOTHESIS, levels = c("Low", "Mid", "High")),
+         TOPIC_KNOWLEDGE = factor(TOPIC_KNOWLEDGE, levels = c("Low", "Mid", "High")),
+         MODEL_SCORE = factor(MODEL_SCORE, levels = c("Low", "Mid", "High")),
+         PRO_IMMIGRANT = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"))
   ) 
 
 
@@ -1079,10 +1079,21 @@ cri_shiny <- cri_shiny %>%
          twowayfe = ifelse(twowayfe == "Yes", "twowayfe", 0),
          dichtdv = ifelse(dichotomize == 1, "dichtdv", 0),
          nonlin = ifelse(anynonlin == 1, "nonlin", 0),
-         other_other = ifelse(clustse == 0 & twowayfe == 0 & dichtdv == 0 & nonlin== 0, 1, 0))
+         other_other = ifelse(clustse == 0 & twowayfe == 0 & dichtdv == 0 & nonlin== 0, 1, 0),
+         Hrej = ifelse(Hrej == 1, 2, 0))
 
+# create identifier of neg, ns, pos; then divide for plotting different shapes by group
+cri_shiny <- cri_shiny %>%
+  mutate(sig_group = as.factor(ifelse(est < 0 & ub > 0, NA, ifelse(est > 0 & lb < 0, NA, ifelse(est < 0 & ub < 0, 1, ifelse(est > 0 & lb > 0, 3, 2))))),
+         est_sig_scl = ifelse(!is.na(sig_group), est, NA),
+         est_ns_scl = ifelse(is.na(sig_group), est, NA),
+         sig_group2 = as.factor(ifelse(is.na(sig_group), 2, sig_group)))
+
+
+cri_shiny <- cri_shiny[complete.cases(cri_shiny$est),]
 
 # Save shiny data
+saveRDS(cri_shiny, file = here::here("shiny/data/cri_shiny.Rds"))
 write.csv(cri_shiny, file = here::here("shiny/data/cri_shiny.csv"), row.names = F)
 write.csv(cri_shiny_team, file = here::here("shiny/data/cri_shiny_team.csv"), row.names = F)
 

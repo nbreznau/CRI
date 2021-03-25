@@ -171,8 +171,8 @@ ggplot(crispectest) +
   #geom_vline(xintercept = 1214, color = "grey", linetype = "dashed") +
   #geom_vline(xintercept = 52, color = "grey", linetype = "dashed") +
   #ylim(-1.8, 1.8) +
-  annotate(geom = "text", x = 340, y = 1.45, label = "NEGATIVE", color = "#66A61E", fontface = "bold", size = 3) +
-  annotate(geom = "text", x = 940, y = 1.45, label = "POSITIVE", color = "#D95F02", fontface = "bold", size = 3) +
+  annotate(geom = "text", x = 340, y = 1.45, label = "NEGATIVE (95% CI)", color = "#66A61E", fontface = "bold", size = 3) +
+  annotate(geom = "text", x = 940, y = 1.45, label = "POSITIVE (95% CI)", color = "#D95F02", fontface = "bold", size = 3) +
   annotate(geom = "text", x = 640, y = 1.45, label = "NOT STAT.\nSIGNIFICANT", fontface = "bold", color = "grey55", size = 3) +
   #annotate(geom = "text", x = 680, y = -1.5, label = "grey indicates not sig.\ndifferent from zero", color = "grey55", size = 3) +
   geom_vline(xintercept = -30) +
