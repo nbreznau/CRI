@@ -1,6 +1,5 @@
 library(shiny)
 library(ggplot2)
-library(rdfanalysis)
 library(dplyr)
 library(shinyjs)
 
@@ -49,14 +48,13 @@ ui <- fluidPage(
   tags$style(HTML("#subtitle {font-size: 20px; border-bottom: 2px solid silver; line-height: 20px; color: #3E3673; margin: 12px 0}")),
   h1(id = "subtitle", "One Dataset, One Hypothesis, 73 Teams and 1,253 Models", align = "center"),
   tags$hr(style="border-color: black;"),
-
-# FIRST MAIN COLUMN  
-    mainPanel(
-      div(id = "reset",
+  
+  # FIRST MAIN COLUMN  
+  div(id = "reset",
       tabsetPanel(
         type = "tabs",
         
-  ## FIRST TAB PANEL        
+        ## FIRST TAB PANEL        
         tabPanel("EFFECTS", 
                  fluidRow(
                    column(8, style={'height: 500px; border-left: 1px solid silver; border-bottom: 1px solid silver; border-top: 1px solid silver'},
@@ -75,545 +73,237 @@ ui <- fluidPage(
                           h6("(weighted by models per team)", style={'margin:1.5px 0; text-align:center; padding: 2px'}),
                           br(),
                           br(),
-                          h6("*Two teams had no results, one lacked convergence and other failed measurement invariance", style={'margin:1px 0; font-size: 9px'})),
+                          h6("*Two teams had no results, one lacked convergence and other failed measurement invariance", style={'margin:1px 0; font-size: 9px'}))
                  ),
-                 br(),
-
-    ### FIRST FLUID ROW                 
-                 # fluidRow( 
-                 #   column(2, style = {'height: 75px; border-left: 1px solid silver;border-bottom: 1px solid silver'},
-                 #          h6(em("In the figure above:"))),
-                 #   column(2, style = {'height: 75px; border-bottom: 1px solid silver; color: #66a61e'},
-                 #          tags$style(HTML("#gre {font-size: 11px; line-height: 11px; color: #66a61e}")),
-                 #          h6(id = "gre", strong("Green = negative at 95% CI"))),
-                 #   column(2, style = {'height: 75px; border-bottom: 1px solid silver'},
-                 #          tags$style(HTML("#grr {font-size: 11px; line-height: 11px; color: #808080}")),
-                 #          h6(id = "grr", strong("Gray = non-significant at 95% CI"))),
-                 #   column(2, style = {'height: 75px; border-bottom: 1px solid silver'},
-                 #          tags$style(HTML("#org {font-size: 11px; line-height: 11px; color: #d95f02}")),
-                 #          h6(id = "org", strong("Orange = positive at 95% CI"))),
-                 #   column(4, style = {'height: 75px; border-right: 1px solid silver; border-left: 1px solid silver; border-bottom: 1px solid silver'},
-                 #          h6(" "))), ## end of first fluid row   
-    ### Splitting Row
-                 fluidRow( 
-                          h5("Filter models by research design and team characteristics"), style = {'text-align: center; padding: 8px; background-color:#4682B433'}
-                                 ),
-    ### SECOND FLUID ROW
-                 fluidRow( 
-                   column(3, style = {'height:400px; border-left: 1px solid silver; border-top: 1px solid silver; border-bottom: 1px solid silver'},
-                          br(),
-                          dropdownButton(label = h5("Dep. Variables"), status = "default", 
-                                         checkboxGroupInput(
-                                           inputId = "mspecdv",
-                                           label = "Questions Used <government should>:", 
-                                           choices = list("Provide Jobs" = "Jobs",
-                                                          "Income Equality" = "IncDiff",
-                                                          "Unemployment" = "Unemp",
-                                                          "Old Age Care" = "OldAge",
-                                                          "Housing" = "House",
-                                                          "Health Care" = "Health",
-                                                          "(Multi-Item Scale)" = "Scaled"),
-                                           selected = c("Jobs", "IncDiff","Unemp","OldAge","House","Health","Scaled")
-                                           )),
-                          br(),
-                          dropdownButton(label = h5("Immigration Vars"), status = "default", 
-                                         checkboxGroupInput(
-                                           inputId = "mspeciv",
-                                           label = "% Foreign-Born as:", 
-                                           choices = list("Stock" = "Stock", 
-                                                          "Flow" = "Flow",
-                                                          "Change in Flow" = "ChangeFlow",
-                                                          "Stock & Flow Together" = "StockFlow"),
-                                           selected = c("Stock","Flow","ChangeFlow", "StockFlow")
-                                         )),
-                          br(),
-                          dropdownButton(label = h5("Country Controls"), status = "default", width = 80,
-                                         checkboxGroupInput(
-                                           inputId = "mspecivx",
-                                           label = NULL,
-                                           choices = list("Social Spending)" = "Soc_Spending",
-                                                          "(Un)employment Rate" = "Unemp_Rate",
-                                                          "GDP per Capita" = "GDP_Per_Capita",
-                                                          "Gini" = "Gini",
-                                                          "None of Above" = "None"),
-                                           selected = c("Soc_Spending","Unemp_Rate","Gini","GDP_Per_Capita",
-                                                        "None")
-                                         ))),
-                  column(2, style = {'height:400px; border-top: 1px solid silver; border-bottom: 1px solid silver'},
-                         br(),
-                          div( id = "cntry",
-                            dropdownButton(label = h5("Countries"), status = "default", tags$label("Must Include:"),
-                                         fluidRow(
-                                           column(width=12,
-                                                  actionButton(
-                                                    label = "Reset",
-                                                    inputId = "any")
-                                           )),
-                                         fluidRow(
-                                           column(width=3,
-                                                  checkboxGroupInput(
-                                                    label = NULL,
-                                                    inputId = "countries1a",
-                                                    choices = list("AU", "AT", "BE", "CA", "CL", "HR", "CZ", "DK", "FI", "FR", "DE"),
-                                                    selected = NULL)
-                                           ),
-                                           column(width=3,
-                                                  checkboxGroupInput(
-                                                    label = NULL,
-                                                    inputId = "countries1b",
-                                                    choices = list("HU", "IE", "IL", "IT", "JP", "KR", "LV", "LT", "NT", "NZ", "NO"),
-                                                    selected = NULL)
-                                           ),
-                                           column(width=3,
-                                                  checkboxGroupInput(
-                                                    label = NULL,
-                                                    inputId = "countries1c",
-                                                    choices = list( "PL", "PT", "RU", "SK", "SI", "ES", "SE", "CH", "UK", "US", "UY"),
-                                                    selected = NULL)
-                                           )
-                                         )    
-                          )),
-                          br(),
-                          div( id = "wave", 
-                            dropdownButton(label = h5("Waves"), status = "default", tags$label("Must include:"),
-                                         fluidRow(
-                                           column(12,
-                                                  checkboxGroupInput(
-                                                    inputId = "mwave",
-                                                    label = NULL,
-                                                    choices = list("1985" = "w1985",
-                                                                   "1990" = "w1990",
-                                                                   "1996" = "w1996",
-                                                                   "2006" = "w2006",
-                                                                   "2016" = "w2016"),
-                                                    selected = NULL)
-                                           )))
-                            ),
-                          br(),
-                          dropdownButton(label = h5("Other"), status = "default", width = 80,
-                                         fluidRow(
-                                           column(12, 
-                                                  checkboxGroupInput(    
-                                             inputId = "emator",
-                                             label = ("Choose estimators"),
-                                             choices = list("OLS" = "ols",
-                                                            "Logit" = "logit",
-                                                            "O.Logit" = "ologit",
-                                                            "GLM" = "ml_glm",
-                                                            "Bayes" = "bayes"),
-                                             selected = c("ols","logit","ologit","ml_glm","bayes")
-                                                            ))),
-                                         fluidRow(
-                                           column(12, 
-                                                  checkboxGroupInput( 
-                                             inputId = "other",
-                                             label = ("Other"),
-                                             choices = list("Clustered S.E." = "clustse",
-                                                                   "Two-Way FE" = "twowayfe",
-                                                                   "Dichotomized DV" = "dichtdv",
-                                                                   "Any Nonlinear IVs" = "nonlin"),
-                                             selected = c("clustse","dichtdv","twowayfe","nonlin")
-                                           )))
-                                         ),
-                         br(),
-                         dropdownButton(label = h5("Peer Score"), status = "default", width = 80,
-                                        checkboxGroupInput(    
-                                          inputId = "total",
-                                          label = ("Model veracity:"),
-                                          choices = list("Low" = "Low",
-                                                         "Mid" = "Mid",
-                                                         "High" = "High"),
-                                          selected = c("Low","Mid","High")
-                                        )
-                         )),
-                   column(3, style = {'height:400px; border-top: 1px solid silver; border-bottom: 1px solid silver'},
-                          br(),
-                          dropdownButton(label = h5("Methods Exp."), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                           inputId = "stat",
-                                           label = ("Statistics Experience/ Knowledge"),
-                                           choices = list("Low" = "Low",
-                                                          "Mid" = "Mid",
-                                                          "High" = "High"),
-                                           selected = c("Low","Mid","High")
-                                         )),
-                          
-                          br(),
-                          dropdownButton(label = h5("Topic Exp."), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                           inputId = "topic",
-                                           label = ("Topical Experience/ Knowledge"),
-                                           choices = list("Low" = "Low",
-                                                          "Mid" = "Mid",
-                                                          "High" = "High"),
-                                           selected = c("Low","Mid","High")
-                                         )),
-                          br(),
-                          dropdownButton(label = h5("Prior Belief"), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                             inputId = "belief",
-                                             label = ("Hyp. is true"),
-                                             choices = list("Low" = "Low",
-                                                            "Mid" = "Mid",
-                                                            "High" = "High"),
-                                             selected = c("Low","Mid","High")
-                                         )),
-                          br(),
-                          dropdownButton(label = h5("Prior Attitude"), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                             inputId = "proimm",
-                                             label = ("Pro-immigration"),
-                                             choices = list("Low" = "Low",
-                                                            "Mid" = "Mid",
-                                                            "High" = "High"),
-                                             selected = c("Low","Mid","High")
-                                         )),
-                          
-                          br(),
-                   ),
-                          column(4, style={'height: 400px; border-left: 1px solid silver; border-right: 1px solid silver; border-top: 1px solid silver'},
-                                 h3("NOTES FOR USERS", style={'margin:4px 0; padding: 4px; font-size: 14px; text-align:center; background-color:#D3D3D3;'}),
-                                 h6("Hypothesis: immigration undermines support for social policy", style={'text-align: center; margin:6px 0; font-size: 11px '}),
-                                 h6("Data: International Social Survey Program, Role of Government (1985-2016)", style={'text-align: center; margin:6px 0; font-size: 11px '}),
-                                 h6("Toggle tabs above to view (1) effects, (2) p-values or (3) subjective team conclusions. Filter research designs and team characteristics in drowdown menus to the left. Not all combinations of specifications have corresponding results - only those considered appropriate test models by at least one team.", style={'margin:1.5px 0; font-size: 11px '}),
-                                 h6(uiOutput("exec"), style={'margin:1.5px 0; padding: 3px; text-align: center; font-size: 12px; font-style: italic'}),
-                                 h6(uiOutput("workp"), style={'margin:1.5px 0; padding: 3px; text-align: center; font-size: 12px; font-style: italic'}),
-                                 h6("Design: Nate Breznau & Hung H.V. Nguyen ", style={'margin:1.5px 0; font-size: 11px'}),
-                                 h6("University of Bremen", style={'margin:1.5px 0; font-size: 11px '}),
-                                 h6("Contact: breznau.nate@gmail.com", style={'margin:1.5px 0; font-size: 11px '}),
-                                 h6("     "),
-                                 h3("The button below removes all user defined parameters", style={'margin:12px 0; text-align: center; font-size: 12px; padding: 4px; background-color:#D3D3D3;'}),
-                                 h6("     "),
-                                 actionButton("resetAll", "Refresh All")),
-
-                        ) ## end of third fluid row
+                 br()
+                 
         ), ## end of first tab panel - spec_curve
-
-
-  ## SECOND TAB PANEL     
-tabPanel("P-VALUES", plotOutput("p_val"),
-
-    ### FIRST FLUID ROW         
-                 fluidRow( 
-                   column(3,
-                          h6(em("In the figure above:"))),
-                   column(3,
-                          tags$style(HTML("#grr {font-size: 11px; line-height: 11px; color: #808080}")),
-                          h6(id = "grr", strong("Gray = non-significant"))),
-                   column(3,
-                          tags$style(HTML("#blu {font-size: 11px; line-height: 11px; color: #0000ff}")),
-                          h6(id = "blu", strong("Blue = significant")))),
-                 hr(),
-
-    ### SECOND FLUID ROW
-                 fluidRow( 
-
-                   column(3, 
-                          dropdownButton(label = h5("Dependent Variables"), status = "default", 
-                                         checkboxGroupInput(
-                                           inputId = "mspecdv2",
-                                           label = "Questions Used <government should>:", 
-                                           choices = list("Provide Jobs" = "Jobs",
-                                                          "Income Equality" = "IncDiff",
-                                                          "Unemployment" = "Unemp",
-                                                          "Old Age Care" = "OldAge",
-                                                          "Housing" = "House",
-                                                          "Health Care" = "Health",
-                                                          "*Include scales" = "Scaled"),
-                                           selected = c("Jobs", "IncDiff","Unemp","OldAge","House","Health","Scaled"))),
-                          hr(),
-                          dropdownButton(label = h5("Immigration Measures"), status = "default", 
-                                         checkboxGroupInput(
-                                           inputId = "mspeciv2",
-                                           label = "% Foreign-Born as:", 
-                                           choices = list("Stock" = "Stock", 
-                                                          "Flow" = "Flow",
-                                                          "Change in Flow" = "ChangeFlow"),
-                                           selected = c("Stock","Flow","ChangeFlow")
-                                         )),
-                          hr(),
-                          dropdownButton(label = h5("Country-Level Controls"), status = "default", width = 80,
-                                         checkboxGroupInput(
-                                           inputId = "mspecivx2",
-                                           label = NULL,
-                                           choices = list("Social Spending (%GDP)" = "Soc_Spending",
-                                                          "Unemployment Rate" = "Unemp_Rate",
-                                                          "Employment Rate" = "Emp_Rate",
-                                                          "GDP per Capita" = "GDP_Per_Capita",
-                                                          "Combination" = "Combo",
-                                                          "None" = "None"),
-                                           selected = c("Soc_Spending","Unemp_Rate","Emp_Rate","GDP_Per_Capita",
-                                                        "None", "Combo")
-                                         )),
-                          hr(),
-                          dropdownButton(label = h5("Topical Knowledge"), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                           inputId = "topic2",
-                                           label = ("Level of Topical Knowledge"),
-                                           choices = list("Low" = "Low",
-                                                          "Mid" = "Mid",
-                                                          "High" = "High",
-                                                          "No Information" = "No Information"),
-                                           selected = c("Low","Mid","High", "No Information")
-                                         )
-                          ),
-                          hr(),
-                   ),                 
-                   column(3,
-                          div(id = "cntry2",
-                            dropdownButton(label = h5("Countries Included"), status = "default", tags$label("Must include:"),
-                                         fluidRow(
-                                           column(width=12,
-                                                  actionButton(
-                                                    label = "Choose all",
-                                                    inputId = "any2")
-                                           )),
-                                         fluidRow(
-                                           column(width=3,
-                                                  checkboxGroupInput(
-                                                    label = NULL,
-                                                    inputId = "countries2a",
-                                                    choices = list("AU", "AT", "BE", "CA", "CL", "HR", "CZ", "DK", "FI", "FR", "DE"),
-                                                    selected = cntrlista)
-                                           ),
-                                           column(width=3,
-                                                  checkboxGroupInput(
-                                                    label = NULL,
-                                                    inputId = "countries2b",
-                                                    choices = list("HU", "IE", "IL", "IT", "JP", "KR", "LV", "LT", "NT", "NZ", "NO"),
-                                                    selected = cntrlistb)
-                                           ),
-                                           column(width=3,
-                                                  checkboxGroupInput(
-                                                    label = NULL,
-                                                    inputId = "countries2c",
-                                                    choices = list( "PL", "PT", "RU", "SK", "SI", "ES", "SE", "CH", "UK", "US", "UY"),
-                                                    selected = cntrlistc)
-                                           )
-                                         )    
-                          )),
-                          hr(),
-                          div( id = "wave2",
-                            dropdownButton(label = h5("Survey waves"), status = "default", tags$label("Must include:"),
-                                         fluidRow(
-                                           column(width=12,
-                                                  actionButton(
-                                                    inputId = "many2",
-                                                    label = "Choose all")
-                                           ),
-                                           column(width=12,       
-                                                  checkboxGroupInput(
-                                                    inputId = "mwave2",
-                                                    label = NULL,
-                                                    choices = list("1985" = "w1985",
-                                                                   "1990" = "w1990",
-                                                                   "1996" = "w1996",
-                                                                   "2006" = "w2006",
-                                                                   "2016" = "w2016"),
-                                                    selected = wavelist)
-                                           ),
-                                         )),
-                          hr(),
-                          dropdownButton(label = h5("Estimator"), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                           inputId = "emator2",
-                                           label = ("Choose estimators"),
-                                           choices = list("OLS" = "ols",
-                                                          "Logit" = "logit",
-                                                          "O.Logit" = "ologit",
-                                                          "GLM" = "ml_glm",
-                                                          "Bayes" = "bayes"),
-                                           selected = c("ols","logit","ologit","ml_glm","bayes")
-                                         )
-                          ),
-                          hr(),
-                          dropdownButton(label = h5("Total score"), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                           inputId = "total2",
-                                           label = ("Choose total score"),
-                                           choices = list("Low" = "Low",
-                                                          "Mid" = "Mid",
-                                                          "High" = "High",
-                                                          "No Information" = "No Information"),
-                                           selected = c("Low","Mid","High", "No Information")
-                                         )
-                          )),
-                          
-                   ),
-                   hr(),
-                   column(3,
-                          dropdownButton(label = h5("Other"), status = "default", width = 80,
-                                         fluidRow(
-                                           column(width=12,
-                                                  checkboxGroupInput( 
-                                                    inputId = "clust2",
-                                                    label = "Clustered S.E.",
-                                                    choices = list("Yes" = "Yes",
-                                                                   "No" = "No"),
-                                                    selected = c("Yes","No"))
-                                           ),
-                                           column(width=12,
-                                                  checkboxGroupInput( 
-                                                    inputId = "twoway2",
-                                                    label = "\'Two-Way FE\'",
-                                                    choices = list("Yes" = "Yes",
-                                                                   "No" = "No"),
-                                                    selected = c("Yes","No"))
-                                           ),  
-                                           column(width=12,
-                                                  checkboxGroupInput( 
-                                                    inputId = "dv_m2",
-                                                    label = "Dichotomized DV",
-                                                    choices = list("Yes" = "Yes",
-                                                                   "No" = "No"),
-                                                    selected = c("Yes","No"))
-                                           )
-                                         )
-                          ),
-                          hr(),
-                          dropdownButton(label = h5("Belief that H is true"), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                           inputId = "belief2",
-                                           label = ("Level of belief"),
-                                           choices = list("Low" = "Low",
-                                                          "Mid" = "Mid",
-                                                          "High" = "High",
-                                                          "No Information" = "No Information"),
-                                           selected = c("Low","Mid","High", "No Information")
-                                         )
-                          ),
-                          hr(),
-                          dropdownButton(label = h5("Statistical Knowledge"), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                           inputId = "stat2",
-                                           label = ("Level of Statistical Knowledge"),
-                                           choices = list("Low" = "Low",
-                                                          "Mid" = "Mid",
-                                                          "High" = "High",
-                                                          "No Information" = "No Information"),
-                                           selected = c("Low","Mid","High", "No Information")
-                                         )
-                          ),
-                          hr(),
-                          dropdownButton(label = h5("Pro-Immigration"), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                           inputId = "proimm2",
-                                           label = ("Level of Pro-Immigration"),
-                                           choices = list("Low" = "Low",
-                                                          "Mid" = "Mid",
-                                                          "High" = "High",
-                                                          "No Information" = "No Information"),
-                                           selected = c("Low","Mid","High", "No Information")
-                                         )
-                          )),
-                          hr(),
-                    column(3, 
-                          h5(strong("----- SUMMARY -----"), style={'margin:11px 0;'}),
-                          h5(textOutput("teamn2"), style={'margin:9px 0;'}), 
-                          h5(textOutput("pr2"), style={'margin:15px 0;'})
-                          ),
-                          hr(),
-                 ) 
+        
+        
+        ## SECOND TAB PANEL     
+        tabPanel("P-VALUES", 
+                fluidRow(
+                  column(8, style={'height: 500px; border-left: 1px solid silver; border-bottom: 1px solid silver; border-top: 1px solid silver'},
+                         plotOutput("p_val")),
+                  column(4, style = {'height:500px; border-left: 1px solid silver; border-right: 1px solid silver; border-top: 1px solid silver; border-bottom: 1px solid silver'},
+                         h5("SUMMARY", style={'margin:4px 0; padding: 4px; font-size: 14px; text-align:center; background-color:#D3D3D3'}),
+                         h6(strong(textOutput("modeln2")), style={'font-size: 18px; text-align:center; padding-top: 12px'}), 
+                         h6("of 1,253 models", style={'margin:1.5px 0; text-align:center; padding: 2px;'}),
+                         h6(strong(textOutput("teamn2")), style={'margin:9px 0; font-size: 18px; text-align:center; padding-top: 12px'}),
+                         h6("of 73 teams*", style={'margin:1.5px 0; text-align:center; padding: 2px;'}),
+                         h6(strong(textOutput("signeg2")), style={'font-size: 18px; text-align:center; padding-top: 12px'}), 
+                         h6("had negative effects at 95% CI", style={'margin:1.5px 0; text-align:center; padding: 2px'}),
+                         h6("(weighted by models per team)", style={'margin:1.5px 0; text-align:center; padding: 2px'}),
+                         h6(strong(textOutput("sigpos2")), style={'font-size: 18px; text-align:center; padding-top: 12px'}), 
+                         h6("had positive effects at 95% CI", style={'margin:1.5px 0; text-align:center; padding: 2px'}),
+                         h6("(weighted by models per team)", style={'margin:1.5px 0; text-align:center; padding: 2px'}),
+                         br(),
+                         br(),
+                         h6("*Two teams had no results, one lacked convergence and other failed measurement invariance", style={'margin:1px 0; font-size: 9px'}))
+                ),
+                br()
+                 
         ), 
-
-  ## THIRD TAB PANEL
+        
+        ## THIRD TAB PANEL
         tabPanel("CONCLUSIONS", plotOutput("subject"),
                  
-    ### FIRST FLUID ROW
-                 fluidRow( #first fluid row
-                   column(3,
-                          h6(em("In the figure above:"))),
-                   column(3,
-                          tags$style(HTML("#ret {font-size: 11px; line-height: 11px; color: #e60000}")),
-                          h6(id = "ret", strong("Red = Hypothesis REJECTED"))),
-                   column(3,
-                          tags$style(HTML("#grr {font-size: 11px; line-height: 11px; color: #808080}")),
-                          h6(id = "grr", strong("Gray = Hypothesis NOT TESTABLE"))),
-                   column(3,
-                          tags$style(HTML("#blu {font-size: 11px; line-height: 11px; color: #0000ff}")),
-                          h6(id = "blu", strong("Blue = Hypothesis SUPPORTED")))), ## end of first fluid row   
-                   hr(),
-    ### SECIND FLUID ROW
-                fluidRow( #for filtering
-                   column(3, 
-                          dropdownButton(label = h5("Belief that H is true"), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                           inputId = "belief3",
-                                           label = ("Level of belief"),
-                                           choices = list("Low" = "Low",
-                                                          "Mid" = "Mid",
-                                                          "High" = "High"),
-                                           selected = c("Low","Mid","High")
-                                         )
-                          ),
-                          hr(),
-                          dropdownButton(label = h5("Statistical Knowledge"), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                           inputId = "stat3",
-                                           label = ("Level of Statistical Knowledge"),
-                                           choices = list("Low" = "Low",
-                                                          "Mid" = "Mid",
-                                                          "High" = "High"),
-                                           selected = c("Low","Mid","High")
-                                         )
-                          ),
-                   ),                 
-                   column(3,
-                          dropdownButton(label = h5("Total score"), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                           inputId = "total3",
-                                           label = ("Choose total score"),
-                                           choices = list("Low" = "Low",
-                                                          "Mid" = "Mid",
-                                                          "High" = "High"),
-                                           selected = c("Low","Mid","High")
-                                         )
-                          ),
-                          hr(),
-                          dropdownButton(label = h5("Topical Knowledge"), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                           inputId = "topic3",
-                                           label = ("Level of Topical Knowledge"),
-                                           choices = list("Low" = "Low",
-                                                          "Mid" = "Mid",
-                                                          "High" = "High"),
-                                           selected = c("Low","Mid","High")
-                                         )
-                          )
-                        ),
-                   column(3,
-                          dropdownButton(label = h5("Pro-Immigration"), status = "default", width = 80,
-                                         checkboxGroupInput(    
-                                           inputId = "proimm3",
-                                           label = ("Level of Pro-Immigration"),
-                                           choices = list("Low" = "Low",
-                                                          "Mid" = "Mid",
-                                                          "High" = "High"),
-                                           selected = c("Low","Mid","High")
-                                         )
-                          ),
-                          hr(),
-                          dropdownButton(label = h5("Immigration Measures"), status = "default", 
-                                         checkboxGroupInput(
-                                           inputId = "mspeciv3",
-                                           label = "% Foreign-Born as:", 
-                                           choices = list("Stock" = "Stock", 
-                                                          "Flow" = "Flow"),
-                                           selected = c("Stock","Flow")
-                                         )
-                          )),
-                  column(3, 
-                         h5(strong("----- SUMMARY -----"), style={'margin:11px 0;'}),
-                         h5(textOutput("teamn3"), style={'margin:9px 0;'}), 
-                         h5(textOutput("pr3"), style={'margin:15px 0;'})
-                         ),
-                  hr()
-                  ) # end FluidRow
-                 
         ) ## end of third panel
-) # end tabset
-) # end div
-) # end mainPanel
+      ), # end tabset
+      ### Splitting Row
+      fluidRow( 
+        h5("Filter models by research design and team characteristics"), style = {'text-align: center; padding: 8px; background-color:#4682B433'}
+      ),
+      ### SECOND FLUID ROW
+      fluidRow( 
+        column(3, style = {'height:400px; border-left: 1px solid silver; border-top: 1px solid silver; border-bottom: 1px solid silver'},
+               br(),
+               dropdownButton(label = h5("Dep. Variables"), status = "default", 
+                              checkboxGroupInput(
+                                inputId = "mspecdv",
+                                label = "Questions Used <government should>:", 
+                                choices = list("Provide Jobs" = "Jobs",
+                                               "Income Equality" = "IncDiff",
+                                               "Unemployment" = "Unemp",
+                                               "Old Age Care" = "OldAge",
+                                               "Housing" = "House",
+                                               "Health Care" = "Health",
+                                               "(Multi-Item Scale)" = "Scaled"),
+                                selected = c("Jobs", "IncDiff","Unemp","OldAge","House","Health","Scaled")
+                              )),
+               br(),
+               dropdownButton(label = h5("Immigration Vars"), status = "default", 
+                              checkboxGroupInput(
+                                inputId = "mspeciv",
+                                label = "% Foreign-Born as:", 
+                                choices = list("Stock" = "Stock", 
+                                               "Flow" = "Flow",
+                                               "Change in Flow" = "ChangeFlow",
+                                               "Stock & Flow Together" = "StockFlow"),
+                                selected = c("Stock","Flow","ChangeFlow", "StockFlow")
+                              )),
+               br(),
+               dropdownButton(label = h5("Country Controls"), status = "default", width = 80,
+                              checkboxGroupInput(
+                                inputId = "mspecivx",
+                                label = NULL,
+                                choices = list("Social Spending)" = "Soc_Spending",
+                                               "(Un)employment Rate" = "Unemp_Rate",
+                                               "GDP per Capita" = "GDP_Per_Capita",
+                                               "Gini" = "Gini",
+                                               "None of Above" = "None"),
+                                selected = c("Soc_Spending","Unemp_Rate","Gini","GDP_Per_Capita",
+                                             "None")
+                              ))),
+        column(2, style = {'height:400px; border-top: 1px solid silver; border-bottom: 1px solid silver'},
+               br(),
+               div( id = "cntry",
+                    dropdownButton(label = h5("Countries"), status = "default", tags$label("Must Include:"),
+                                   fluidRow(
+                                     column(width=12,
+                                            actionButton(
+                                              label = "Reset",
+                                              inputId = "any")
+                                     )),
+                                   fluidRow(
+                                     column(width=3,
+                                            checkboxGroupInput(
+                                              label = NULL,
+                                              inputId = "countries1a",
+                                              choices = list("AU", "AT", "BE", "CA", "CL", "HR", "CZ", "DK", "FI", "FR", "DE"),
+                                              selected = NULL)
+                                     ),
+                                     column(width=3,
+                                            checkboxGroupInput(
+                                              label = NULL,
+                                              inputId = "countries1b",
+                                              choices = list("HU", "IE", "IL", "IT", "JP", "KR", "LV", "LT", "NT", "NZ", "NO"),
+                                              selected = NULL)
+                                     ),
+                                     column(width=3,
+                                            checkboxGroupInput(
+                                              label = NULL,
+                                              inputId = "countries1c",
+                                              choices = list( "PL", "PT", "RU", "SK", "SI", "ES", "SE", "CH", "UK", "US", "UY"),
+                                              selected = NULL)
+                                     )
+                                   )    
+                    )),
+               br(),
+               div( id = "wave", 
+                    dropdownButton(label = h5("Waves"), status = "default", tags$label("Must include:"),
+                                   fluidRow(
+                                     column(12,
+                                            checkboxGroupInput(
+                                              inputId = "mwave",
+                                              label = NULL,
+                                              choices = list("1985" = "w1985",
+                                                             "1990" = "w1990",
+                                                             "1996" = "w1996",
+                                                             "2006" = "w2006",
+                                                             "2016" = "w2016"),
+                                              selected = NULL)
+                                     )))
+               ),
+               br(),
+               dropdownButton(label = h5("Other"), status = "default", width = 80,
+                              fluidRow(
+                                column(12, 
+                                       checkboxGroupInput(    
+                                         inputId = "emator",
+                                         label = ("Choose estimators"),
+                                         choices = list("OLS" = "ols",
+                                                        "Logit" = "logit",
+                                                        "O.Logit" = "ologit",
+                                                        "GLM" = "ml_glm",
+                                                        "Bayes" = "bayes"),
+                                         selected = c("ols","logit","ologit","ml_glm","bayes")
+                                       ))),
+                              fluidRow(
+                                column(12, 
+                                       checkboxGroupInput( 
+                                         inputId = "other",
+                                         label = ("Other"),
+                                         choices = list("Clustered S.E." = "clustse",
+                                                        "Two-Way FE" = "twowayfe",
+                                                        "Dichotomized DV" = "dichtdv",
+                                                        "Any Nonlinear IVs" = "nonlin"),
+                                         selected = c("clustse","dichtdv","twowayfe","nonlin")
+                                       )))
+               ),
+               br(),
+               dropdownButton(label = h5("Peer Score"), status = "default", width = 80,
+                              checkboxGroupInput(    
+                                inputId = "total",
+                                label = ("Model veracity:"),
+                                choices = list("Low" = "Low",
+                                               "Mid" = "Mid",
+                                               "High" = "High"),
+                                selected = c("Low","Mid","High")
+                              )
+               )),
+        column(3, style = {'height:400px; border-top: 1px solid silver; border-bottom: 1px solid silver'},
+               br(),
+               dropdownButton(label = h5("Methods Exp."), status = "default", width = 80,
+                              checkboxGroupInput(    
+                                inputId = "stat",
+                                label = ("Statistics Experience/ Knowledge"),
+                                choices = list("Low" = "Low",
+                                               "Mid" = "Mid",
+                                               "High" = "High"),
+                                selected = c("Low","Mid","High")
+                              )),
+               
+               br(),
+               dropdownButton(label = h5("Topic Exp."), status = "default", width = 80,
+                              checkboxGroupInput(    
+                                inputId = "topic",
+                                label = ("Topical Experience/ Knowledge"),
+                                choices = list("Low" = "Low",
+                                               "Mid" = "Mid",
+                                               "High" = "High"),
+                                selected = c("Low","Mid","High")
+                              )),
+               br(),
+               dropdownButton(label = h5("Prior Belief"), status = "default", width = 80,
+                              checkboxGroupInput(    
+                                inputId = "belief",
+                                label = ("Hyp. is true"),
+                                choices = list("Low" = "Low",
+                                               "Mid" = "Mid",
+                                               "High" = "High"),
+                                selected = c("Low","Mid","High")
+                              )),
+               br(),
+               dropdownButton(label = h5("Prior Attitude"), status = "default", width = 80,
+                              checkboxGroupInput(    
+                                inputId = "proimm",
+                                label = ("Pro-immigration"),
+                                choices = list("Low" = "Low",
+                                               "Mid" = "Mid",
+                                               "High" = "High"),
+                                selected = c("Low","Mid","High")
+                              )),
+               
+               br()
+        ),
+        column(4, style={'height: 400px; border-left: 1px solid silver; border-right: 1px solid silver; border-top: 1px solid silver'},
+               h3("NOTES FOR USERS", style={'margin:4px 0; padding: 4px; font-size: 14px; text-align:center; background-color:#D3D3D3;'}),
+               h6("Hypothesis: immigration undermines support for social policy", style={'text-align: center; margin:6px 0; font-size: 11px '}),
+               h6("Data: International Social Survey Program, Role of Government (1985-2016)", style={'text-align: center; margin:6px 0; font-size: 11px '}),
+               h6("Toggle tabs above to view (1) effects, (2) p-values or (3) subjective team conclusions. Filter research designs and team characteristics in drowdown menus to the left. Not all combinations of specifications have corresponding results - only those considered appropriate test models by at least one team.", style={'margin:1.5px 0; font-size: 11px '}),
+               h6(uiOutput("exec"), style={'margin:1.5px 0; padding: 3px; text-align: center; font-size: 12px; font-style: italic'}),
+               h6(uiOutput("workp"), style={'margin:1.5px 0; padding: 3px; text-align: center; font-size: 12px; font-style: italic'}),
+               h6("Design: Nate Breznau & Hung H.V. Nguyen ", style={'margin:1.5px 0; font-size: 11px'}),
+               h6("University of Bremen", style={'margin:1.5px 0; font-size: 11px '}),
+               h6("Contact: breznau.nate@gmail.com", style={'margin:1.5px 0; font-size: 11px '}),
+               h6("     "),
+               h3("The button below removes all user defined parameters", style={'margin:12px 0; text-align: center; font-size: 12px; padding: 4px; background-color:#D3D3D3;'}),
+               h6("     "),
+               actionButton("resetAll", "Refresh All"))
+        
+      ) ## end of third fluid row    
+  ) # end div
 ) # end page
 
 
