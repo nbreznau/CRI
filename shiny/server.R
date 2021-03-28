@@ -159,15 +159,16 @@ server <- function(input, output, session) {
         geom_point(aes(x = count, y = est_sig_scl, color = sig_group), shape = "|", size = 4) +
         scale_color_manual(values = c("#66A61E","NA", "#D95F02"), labels = c("Negative","Not sig.","Positive", " ")) +
         labs(color = "Effect at 95% CI", x = "Model Count, Ordered by AME", y = "Average Marginal\nEffect (AME)\nXY-Standardized") +
-        annotate(geom = "text", x = (nrow(dfspec1())*.25), y = 0.3, label = "NEGATIVE (95% CI)", color = "#66A61E", fontface = "bold", size = 4) +
-        annotate(geom = "text", x = (3*(nrow(dfspec1())*.25)), y = 0.3, label = "POSITIVE (95% CI)", color = "#D95F02", fontface = "bold", size = 4) +
+        annotate(geom = "text", x = (nrow(dfspec1())*.25), y = 0.3, label = "NEGATIVE, 95% CI", color = "#66A61E", fontface = "bold", size = 4) +
+        annotate(geom = "text", x = (nrow(dfspec1())*.25), y = 0.25, label = "(same direction as hypothesis)", color = "#66A61E", size = 2.5) +
+        annotate(geom = "text", x = (3*(nrow(dfspec1())*.25)), y = 0.3, label = "POSITIVE, 95% CI", color = "#D95F02", fontface = "bold", size = 4) +
         #annotate(geom = "text", x = (2*(nrow(dfspec1())*.25)), y = 0.3, label = "NOT STAT.\nSIGNIFICANT", fontface = "bold", color = "grey55", size = 4) +
         theme_classic() +
         coord_cartesian(ylim = c(-0.32,0.32)) +
         guides(color = guide_legend(override.aes = list(size=7, color=c("#66A61E","grey55", "#D95F02","NA")))) +
         theme(
           legend.position = "none",
-          axis.title.x = element_text(size = 12),
+          axis.title.x = element_text(size = 12), 
           axis.title.y = element_text(size = 12)
         )
       p2 <- 
@@ -211,7 +212,7 @@ server <- function(input, output, session) {
     else {
       ggplot(dfspec_null(),aes(x = x, y = y)) +
         geom_blank() + 
-        annotate(geom = "text", x = 0, y = 0.8, label = "Sorry, there is no model for your combination", 
+        annotate(geom = "text", x = 0, y = 0.8, label = "No models match these filter criteria", 
                  color = "#66A61E", fontface = "bold", size = 4)+
         labs (x = "Model Count, Ordered by AME", y = "Average Marginal Effect (AME)\nXY-Standardized")
     }
@@ -293,6 +294,20 @@ server <- function(input, output, session) {
     paste0(sigpos2,"% (", sig_pos2, "%)")
   })
   
+  output$hsupp2 <- renderText({
+    # team level support of hypothesis
+    hsupp2 <- 100*round((sum(dfspec2()$inv_weight2[dfspec2()$Hsup == 1]) / 
+                          sum(dfspec2()$inv_weight2)),3)
+    paste0(hsupp2, "%")
+  })
+  
+  output$hreje2 <- renderText({
+    # team level support of hypothesis
+    hreje2 <- 100*round((sum(dfspec2()$inv_weight2[dfspec2()$Hrej == 2]) / 
+                          sum(dfspec2()$inv_weight2)),3)
+    paste0(hreje2, "%")
+  })
+  
   output$modeln2 <- renderText({
     modeln2 <- length(dfspec2()$est)
     paste0(modeln2)
@@ -310,11 +325,11 @@ server <- function(input, output, session) {
         geom_point(aes(x = count2, y = p_new, color = est_is_pos), shape = "|", size = 3) +
         scale_color_manual(values = c("#66A61E", "#D95F02")) +
         labs(x = "Model Count, Ordered by P Values", y = "  \nP-Values\n  ") +
-        annotate(geom = "text", x = (nrow(dfspec2())*.01), y = 0.8, label = "Reflects", color = "grey20", size = 4, hjust = 0) +
-        annotate(geom = "text", x = (nrow(dfspec2())*.01), y = 0.7, label = "POSITIVE", color = "#D95F02", fontface = "bold", size = 4, hjust = 0) +
-        annotate(geom = "text", x = ((nrow(dfspec2())*.01)+(nrow(dfspec2())*.16)), y = 0.7, label = "or", color = "grey20", size = 4, hjust = 0) +
-        annotate(geom = "text", x = (nrow(dfspec2())*.01), y = 0.6, label = "NEGATIVE" , color = "#66A61E", fontface = "bold", size = 4, hjust = 0) +
-        annotate(geom = "text", x = (nrow(dfspec2())*.01), y = 0.5, label = "Effects" , color = "grey20", size = 4, hjust = 0) +
+        annotate(geom = "text", x = (nrow(dfspec2())*.03), y = 0.8, label = "Color indicates", color = "grey40", size = 4, hjust = 0) +
+        annotate(geom = "text", x = (nrow(dfspec2())*.03), y = 0.7, label = "POSITIVE", color = "#D95F02", fontface = "bold", size = 4, hjust = 0) +
+        annotate(geom = "text", x = ((nrow(dfspec2())*.03)+(nrow(dfspec2())*.17)), y = 0.7, label = "or", color = "grey40", size = 4, hjust = 0) +
+        annotate(geom = "text", x = (nrow(dfspec2())*.03), y = 0.6, label = "NEGATIVE" , color = "#66A61E", fontface = "bold", size = 4, hjust = 0) +
+        annotate(geom = "text", x = (nrow(dfspec2())*.03), y = 0.5, label = "Effects" , color = "grey40", size = 4, hjust = 0) +
         
         
         #annotate(geom = "text", x = (2*(nrow(dfspec1())*.25)), y = 0.3, label = "NOT STAT.\nSIGNIFICANT", fontface = "bold", color = "grey55", size = 4) +
@@ -367,7 +382,7 @@ server <- function(input, output, session) {
     else {
       ggplot(dfspec_null(),aes(x = x, y = y)) +
         geom_blank() + 
-        annotate(geom = "text", x = 0, y = 0.8, label = "Sorry, there is no model for your combination", 
+        annotate(geom = "text", x = 0, y = 0.8, label = "No models match these filter criteria", 
                  color = "#66A61E", fontface = "bold", size = 4)+
         labs (x = "Model Count, Ordered by AME", y = "Average Marginal Effect (AME)\nXY-Standardized")
     }
@@ -382,37 +397,112 @@ server <- function(input, output, session) {
         pct_negpos = ifelse(subj_concl == "Reject", AME_neg_p05, 
                             ifelse(subj_concl == "No test", AME_ns_p05, AME_sup_p05)),
         AME_Zt = ifelse(AME_Z < -0.03, -0.03, ifelse(AME_Z > 0.02, 0.02, AME_Z)),
+        insamp = ifelse(
+          (
+          ("A" %in% input$sample3 & orig13 == 1) | 
+          ("B" %in% input$sample3 & eeurope==1) | 
+          ("C" %in% input$sample3 & allavailable == 1) | 
+          ("D" %in% input$sample3)
+          ) &
+          (
+          ("A" %in% input$sample34 & w2016 > 0.01) | 
+          ("B" %in% input$sample34 & w2006 > 0.01) |
+          ("C" %in% input$sample34 & w1996 > 0.01) | 
+          ("D" %in% input$sample34 & (w1990+w1985 > 0.01)) | ("E" %in% input$sample34)
+          ) &
+          (
+          ("A" %in% input$design3 & twowayfe == 1) |
+          ("B" %in% input$design3 & level_cyear == 1) |
+          ("C" %in% input$design3 & mlm_fe > 0.01) |
+          ("D" %in% input$design3 & anynonlin > 0.01) |
+          ("E" %in% input$design3)
+          ) &
+          (
+          ("A" %in% input$design4 & Stock > 0.01) |
+          ("B" %in% input$design4 & Flow > 0.01) |
+          ("C" %in% input$design4 & ChangeFlow > 0.01) |
+          ("D" %in% input$design4 & main_IV_as_control > 0.01) |
+          ("E" %in% input$design4)
+          )
+            , 1, 0)
+          
       ) %>%
       arrange(subj_concl,AME_Zt) %>%
       filter(
         BELIEF_HYPOTHESIS %in% input$belief3 & STATISTICS_SKILL %in% input$stat3 & TOPIC_KNOWLEDGE %in% input$topic3 &
-          MODEL_SCORE %in% input$total3 & PRO_IMMIGRANT %in% input$proimm3
+          MODEL_SCORE %in% input$total3 & PRO_IMMIGRANT %in% input$proimm3 & models_n %in% input$modelsn3
+      ) %>%
+      filter(
+         insamp == 1
       ) %>%
       mutate(
         check3 = ifelse(length(AME_Zt) == 0, 0, 1),
         count3 = ifelse(check3 == 1, 1:n(), 0),
       ) 
+    
+    
   })
+  
+  output$teamn3 <- renderText({
+    teamn3 <- length(dfsubj()$u_teamid)
+    paste0(teamn3)
+  })
+  
+  output$signeg3 <- renderText({
+    signeg3 <- round(100*mean(dfsubj()$pos_test_pct_p05),1)
+    paste0(signeg3, "%")
+  })
+  
+  output$sigpos3 <- renderText({
+    sigpos3 <- round(100*mean(dfsubj()$neg_test_pct_p05),1)
+    paste0(sigpos3, "%")
+  })
+  
   output$conclude <- renderPlot({
     if(nrow(dfsubj()) != 0){
-      ggplot(dfsubj()) +
-        geom_point(aes(x = count3, y = AME_Zt, color = subj_concl), shape = 18, size = 4) +   scale_color_manual(values = c("#D95F02", "grey55", "#66A61E"), labels = c("Rejected","Not testable","Supported")) +
-        labs(color = "Conclusion\nHypothesis is:", x = "Team Conclusions", y = "Average Effect Size\nof Team's Test Models") +
+      ps1 <- ggplot(dfsubj()) +
+        geom_point(aes(x = count3, y = AME_Zt, color = subj_concl), shape = 18, size = 4) +   
+        scale_color_manual(values = c("#D95F02", "grey55", "#66A61E"), labels = c("Rejected","Not testable","Supported")) +
+        labs(color = "Conclusion\nHypothesis is:", x = "Team Conclusions", y = "Average Effect Size\nby Team") +
         theme_classic() +
         theme(
-          plot.margin=unit(c(0.2,0.2,0.2,1.05),"cm"),
           axis.title.y = element_text(size = 12),
           axis.title.x = element_text(size = 12)
         )
+      
+
+      
+      labps2 <- c("Method\nExpertise", "Topic\nExpertise", "Prior\nAttitude", "            Prior\nBelief", "% Pos\nat 95% CI", "% Neg\nat 95% CI")
+      
+       ps2 <- 
+         ggplot(dfsubj()) +
+         geom_tile(aes(x = count3, y = 6, fill = pos_test_pct_p05), height = 0.75) +
+         geom_tile(aes(x = count3, y = 5, fill = neg_test_pct_p05), height = 0.75) +
+         geom_tile(aes(x = count3, y = 4, fill = belief_ipredm), height = 0.75) +
+         geom_tile(aes(x = count3, y = 3, fill = pro_immigrantm), height = 0.75) +
+         geom_tile(aes(x = count3, y = 2, fill = topic_ipredm), height = 0.75) +
+         geom_tile(aes(x = count3, y = 1, fill = stats_ipredm), height = 0.75) +
+       
+         scale_y_continuous(breaks = c(1,2,3,4,5,6), labels=labps2) +
+         theme_classic() +
+         labs(fill = "    Scale         ") +
+         theme(
+           #legend.position = "none",
+           axis.title.y = element_blank(),
+           axis.title.x = element_blank(),
+           #plot.margin=unit(c(0.2,0.3,0.2,0.5),"cm")
+         )
+       
+       ggarrange(ps1,ps2, nrow = 2, ncol = 1)
     }
     else{
       ggplot(dfspec_null(),aes(x = x, y = y)) +
         geom_blank() + 
-        annotate(geom = "text", x = 0, y = 0.8, label = "Sorry, there is no model for your combination", 
+        annotate(geom = "text", x = 0, y = 0.8, label = "No models match these filter criteria", 
                  color = "#66A61E", fontface = "bold", size = 4)+
         labs (x = "Model Count, Ordered by AME", y = "Average Marginal Effect (AME)\nXY-Standardized")
     }
-  }, height = 460, res = 100)
+  }, res = 96)
 
   ### Reset buttons
   observeEvent(input$resetAll,{

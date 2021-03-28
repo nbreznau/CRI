@@ -1039,13 +1039,28 @@ cri_shiny_team <- cri_shiny_team %>%
          BELIEF_HYPOTHESIS = factor(BELIEF_HYPOTHESIS, levels = c("Low", "Mid", "High"), ordered = TRUE),
          TOPIC_KNOWLEDGE = factor(TOPIC_KNOWLEDGE, levels = c("Low", "Mid", "High"), ordered = TRUE),
          MODEL_SCORE = factor(MODEL_SCORE, levels = c("Low", "Mid", "High"), ordered = TRUE),
-         PRO_IMMIGRANT = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"), ordered = TRUE)
+         PRO_IMMIGRANT = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"), ordered = TRUE),
+         models_n = ifelse(inv_weight == 1, "A", ifelse(inv_weight < 7, "B", ifelse(inv_weight < 13, "C", ifelse(inv_weight < 49, "D", "F")))),
+         # trim outliers
+         stats_ipred = ifelse(stats_ipred > 0.8, 0.8, ifelse(stats_ipred < -0.8, -0.8, stats_ipred)),
+         topic_ipred = ifelse(topic_ipred > 0.8, 0.8, topic_ipred),
+         belief_ipred = ifelse(belief_ipred > 0.8, 0.8, ifelse(belief_ipred < -0.8, -0.8, belief_ipred)),
+         pro_immigrant = ifelse(pro_immigrant  < 2.3, 2.3, pro_immigrant),
+         topic_ipredm = (topic_ipred - min(topic_ipred, na.rm = T))/(max(topic_ipred - min(topic_ipred, na.rm = T), na.rm = T)),
+         belief_ipredm = (belief_ipred - min(belief_ipred, na.rm = T))/(max(belief_ipred - min(belief_ipred, na.rm = T), na.rm = T)),
+         stats_ipredm = (stats_ipred - min(stats_ipred, na.rm = T))/(max(stats_ipred - min(stats_ipred, na.rm = T), na.rm = T)),
+         pro_immigrantm = (pro_immigrant - min(pro_immigrant, na.rm = T))/(max(pro_immigrant - min(pro_immigrant, na.rm = T), na.rm = T)),
+         topic_ipredm = ifelse(is.na(topic_ipredm), mean(topic_ipredm, na.rm=T), topic_ipredm),
+         belief_ipredm = ifelse(is.na(belief_ipredm), mean(belief_ipredm, na.rm=T), belief_ipredm),
+         stats_ipredm = ifelse(is.na(stats_ipredm), mean(stats_ipredm, na.rm=T), stats_ipredm),
+         pro_immigrantm = ifelse(is.na(pro_immigrantm), mean(pro_immigrantm, na.rm=T), pro_immigrantm),
+         
   ) %>%
   mutate(
     est = ifelse(Hresult == "Support", 0.01, ifelse(Hresult == "Reject", -0.01, 0)),
     lb = est - 0.001,
     ub = est + 0.001
-  ) 
+  )
 
 # Remove unnecessary columns, remove Brady and Finnigan study
 
