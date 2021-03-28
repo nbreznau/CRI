@@ -1080,7 +1080,9 @@ cri_shiny <- cri_shiny %>%
          dichtdv = ifelse(dichotomize == 1, "dichtdv", 0),
          nonlin = ifelse(anynonlin == 1, "nonlin", 0),
          other_other = ifelse(clustse == 0 & twowayfe == 0 & dichtdv == 0 & nonlin== 0, 1, 0),
-         Hrej = ifelse(Hrej == 1, 2, 0))
+         Hrej = ifelse(Hrej == 1, 2, 0),
+         est_is_pos = factor(ifelse(est >= 0, 1, 0)),
+         inv_weight2 = 1/inv_weight_H) # need a weight that works by conclusion, not team
 
 # create identifier of neg, ns, pos; then divide for plotting different shapes by group
 cri_shiny <- cri_shiny %>%

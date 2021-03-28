@@ -147,6 +147,8 @@ crispectest <- crispectest %>%
 Generate weighted percentage of each effect
 
 ```{r fig1_pcts}
+
+
 sig_neg <- 100*round(sum(crispectest$inv_weight[crispectest$sig_group2 == 1])/sum(crispectest$inv_weight),3)
 
 sig_pos <- 100*round(sum(crispectest$inv_weight[crispectest$sig_group2 == 3])/sum(crispectest$inv_weight),3)

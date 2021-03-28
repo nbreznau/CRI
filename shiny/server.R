@@ -6,11 +6,12 @@ library(ggpubr)
 
 
 
+
 # Load files
 
-df <- readRDS(paste0(getwd(),"/data/cri_shiny.Rds"))
+df <- readRDS(here::here("shiny/data/cri_shiny.Rds"))
 
-cri_team_combine <- read.csv(paste0(getwd(),"/data/cri_shiny_team.csv"))
+cri_team_combine <- read.csv(here::here("shiny/data/cri_shiny_team.csv"))
 
 # cntrlist and wavelist
 cntrlista <- c("AU", "AT", "BE", "CA", "CL", "HR", "CZ", "DK", "FI", "FR", "DE")
@@ -109,8 +110,8 @@ server <- function(input, output, session) {
     signeg <- round(
       ((length(which(dfspec1()$est < 0 & dfspec1()$ub < 0)) ) / (length(dfspec1()$est))*100),1)
     
-    sig_neg <- 100*round(sum(dfspec1()$inv_weight[dfspec1()$sig_group2 == 1]) / 
-                           sum(dfspec1()$inv_weight),1)
+    sig_neg <- 100*round((sum(dfspec1()$inv_weight[dfspec1()$sig_group2 == 1]) / 
+                           sum(dfspec1()$inv_weight)),3)
     
     paste0(signeg,"% (", sig_neg, "%)")
   })
@@ -131,6 +132,20 @@ server <- function(input, output, session) {
     paste0(modeln)
   })
   
+  output$hsupp <- renderText({
+    # team level support of hypothesis
+    hsupp <- 100*round((sum(dfspec1()$inv_weight2[dfspec1()$Hsup == 1]) / 
+                                     sum(dfspec1()$inv_weight2)),3)
+    paste0(hsupp, "%")
+  })
+  
+  output$hreje <- renderText({
+    # team level support of hypothesis
+    hreje <- 100*round((sum(dfspec1()$inv_weight2[dfspec1()$Hrej == 2]) / 
+                          sum(dfspec1()$inv_weight2)),3)
+    paste0(hreje, "%")
+  })
+  
   output$teamn <- renderText({
     teamn <- (length(unique(dfspec1()$u_teamid))+2)
     paste0(teamn)
@@ -143,7 +158,7 @@ server <- function(input, output, session) {
         geom_point(aes(x = count, y = est_ns_scl), color = "grey55", shape = "|", size = 2.5, show.legend =F) + 
         geom_point(aes(x = count, y = est_sig_scl, color = sig_group), shape = "|", size = 4) +
         scale_color_manual(values = c("#66A61E","NA", "#D95F02"), labels = c("Negative","Not sig.","Positive", " ")) +
-        labs(color = "Effect at 95% CI", x = "Model Count, Ordered by AME", y = "Average Marginal Effect (AME)\nXY-Standardized") +
+        labs(color = "Effect at 95% CI", x = "Model Count, Ordered by AME", y = "Average Marginal\nEffect (AME)\nXY-Standardized") +
         annotate(geom = "text", x = (nrow(dfspec1())*.25), y = 0.3, label = "NEGATIVE (95% CI)", color = "#66A61E", fontface = "bold", size = 4) +
         annotate(geom = "text", x = (3*(nrow(dfspec1())*.25)), y = 0.3, label = "POSITIVE (95% CI)", color = "#D95F02", fontface = "bold", size = 4) +
         #annotate(geom = "text", x = (2*(nrow(dfspec1())*.25)), y = 0.3, label = "NOT STAT.\nSIGNIFICANT", fontface = "bold", color = "grey55", size = 4) +
@@ -262,7 +277,7 @@ server <- function(input, output, session) {
       ((length(which(dfspec2()$est < 0 & dfspec2()$ub < 0)) ) / (length(dfspec2()$est))*100),1)
     
     sig_neg2 <- 100*round(sum(dfspec2()$inv_weight[dfspec2()$sig_group2 == 1]) / 
-                           sum(dfspec2()$inv_weight),1)
+                           sum(dfspec2()$inv_weight),3)
     
     paste0(signeg2,"% (", sig_neg2, "%)")
   })
@@ -292,11 +307,16 @@ server <- function(input, output, session) {
     if (nrow(dfspec2()) != 0){
       p1 <- ggplot(dfspec2()) +
         geom_errorbar(aes(x = count2, ymin = p_lb, ymax = p_ub), color = "grey90")+
-        geom_point(aes(x = count2, y = p_new, color = p_sig_group), shape = "|", size = 3) +
-        scale_color_manual(values = c("#D95F02", "#66A61E", "grey"), labels = c("Neg sig.", "Pos sig.", "Not sig. ")) +
-        labs(color = "Effect at 95% CI", x = "Model Count, Ordered by P Values", y = "Average Marginal Effect (AME)\nXY-Standardized") +
-        annotate(geom = "text", x = (nrow(dfspec2())*.25), y = 0.8, label = "POSITIVE SIGNIFICANT (95% CI)", color = "#66A61E", fontface = "bold", size = 4) +
-        annotate(geom = "text", x = (nrow(dfspec2())*.25), y = 0.3, label = "NEGATIVE SIGNIFICANT (95% CI)", color = "#D95F02", fontface = "bold", size = 4) +
+        geom_point(aes(x = count2, y = p_new, color = est_is_pos), shape = "|", size = 3) +
+        scale_color_manual(values = c("#66A61E", "#D95F02")) +
+        labs(x = "Model Count, Ordered by P Values", y = "  \nP-Values\n  ") +
+        annotate(geom = "text", x = (nrow(dfspec2())*.01), y = 0.8, label = "Reflects", color = "grey20", size = 4, hjust = 0) +
+        annotate(geom = "text", x = (nrow(dfspec2())*.01), y = 0.7, label = "POSITIVE", color = "#D95F02", fontface = "bold", size = 4, hjust = 0) +
+        annotate(geom = "text", x = ((nrow(dfspec2())*.01)+(nrow(dfspec2())*.16)), y = 0.7, label = "or", color = "grey20", size = 4, hjust = 0) +
+        annotate(geom = "text", x = (nrow(dfspec2())*.01), y = 0.6, label = "NEGATIVE" , color = "#66A61E", fontface = "bold", size = 4, hjust = 0) +
+        annotate(geom = "text", x = (nrow(dfspec2())*.01), y = 0.5, label = "Effects" , color = "grey20", size = 4, hjust = 0) +
+        
+        
         #annotate(geom = "text", x = (2*(nrow(dfspec1())*.25)), y = 0.3, label = "NOT STAT.\nSIGNIFICANT", fontface = "bold", color = "grey55", size = 4) +
         theme_classic() +
         coord_cartesian(ylim = c(-0.002,1)) +
