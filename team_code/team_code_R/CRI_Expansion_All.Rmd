@@ -8,6 +8,7 @@ output: html_document
 # THE CROWDSOURCED REPLICATION INITIATIVE (CRI)
 
 ## Principal Investigators:
+
    Nate Breznau
    Alexander Wuttke
    Eike Mark Rinke
@@ -74,6 +75,7 @@ output: html_document
 # Setup Workspace
 
 ## Load important packages
+
 ## Code a few user-defined functions
 
 ```{r setup, include=FALSE}
@@ -81,7 +83,7 @@ rm(list = ls())
 #install this if not installed, all other packages go automatically
 #install.packages("pacman")
 #don't forget to install JAGS (https://sourceforge.net/projects/mcmc-jags/files/latest/download) if it is not already installed, or team 104 code will not run
-library(pacman)
+library("pacman")
 pacman::p_load("magrittr","tidyverse","margins")
 
 
@@ -112,12 +114,14 @@ detachAllPackages()
 ```
 
 ### Make list of objects to keep
+
 ```{r list, echo=FALSE, include=FALSE,}
 keep <- c("keep", "team1", "team3", "team12", "team16", "team18", "team20", "team28", "team35", "team40", "team41", "team48", "team56", "team59", "team61", "team62", "team69", "team82", "team84","team87", "team94","team97","team98","team104","team105","team106", "wd", "pfunc","detachAllPackages")
 #rm(list = ls()[!ls() %in% keep])
 ```
 
 ## Team 1 - No convergence so far
+
 ### These were their 'ideal' models. If PIs understand correctly, the (emprate + foreignpct + socx + netmigpct):year:country command is trying to correct the country-year measures of these level-2 variables. We are worried that this is trying to estimate a within-effect for these variables and this is the source of the problem. There are not enough years to get a within country over-time effect. But we are not experts with brms models, so we are unsure. We are torn between asking the team to change their models (the reality of research where preferred/ideal models are not always possible) and keeping the models as they are (the reality of results, that sometimes they just don't converge or work out). However, given our goals of understanding model specifications and subjective conclusions by the teams, we would hope that the team considers updating the models so that they converge. For example, changing to gaussian is one idea, maybe separating the level-2 variables into within and between variance by hand rather than asking the program to do it.
 
 #################################################################################################################
@@ -2559,7 +2563,7 @@ unempl_WDI <- read_excel(pfunc('API_SL.UEM.TOTL.ZS_DS2_en_excel_v2_10181074.xlsx
                 unempl = unempl / 100, 
                 year = as.numeric(year))
 
-L2data <- read.dta13(pfunc("L2data_exp2.dta"), nonint.factors = T, generate.factors = T) %>% 
+L2data <- read.dta13(pfunc("L2data_exp2.dta"), nonint.factors = T, generate.factors = TRUE) %>% 
   tbl_df() %>% 
   dplyr::mutate(migstock_wb = ifelse(is.na(migstock_wb), migstock_un, migstock_wb)) %>% # if Worldbank doesn't have it, use UN
   group_by(country) %>% 
@@ -2576,7 +2580,7 @@ mylabs <- c('Definitely should be', 'Probably should be', 'Probably should not b
 agegrs <- c(18, seq(25, 65, 10), 75, 100)
 postsoc <- c('Croatia', 'Czech Republic', 'Hungary', 'Latvia', 'Poland', 'Russia', 'Slovenia')
 
-issp1985_2016_L2 <- read.dta13(pfunc("issp1985_2016_28.dta"), nonint.factors = T, generate.factors = T) %>% 
+issp1985_2016_L2 <- read.dta13(pfunc("issp1985_2016_28.dta"), nonint.factors = T, generate.factors = TRUE) %>% 
   dplyr::filter(age > 17, !country %in% c('','Taiwan'),  # there are some observations without country info
                 !(country %in% postsoc & year < 1991)) %>% # we exclude post-socialist countries before they were post-socialist
   tbl_df() %>% 
@@ -2752,7 +2756,7 @@ form1f <- d_health ~ female + age + age2 + yrsedu + empl + country + year + mign
 ################################################################################
 # two way fixed effects logit models with clustered standard errors
 reslist <- sapply(X=c(form1a, form1b, form1c, form1d, form1e, form1f),
-                  FUN=rob_clust_fun, mydat = issp1985_2016_L2, simplify = F)
+                  FUN=rob_clust_fun, mydat = issp1985_2016_L2, simplify = FALSE)
 
 resframe <- reslist %>% 
   bind_rows() %>% 
@@ -2770,7 +2774,7 @@ resframe %>%
   write.csv('OR.csv')
 
 writeFun  = function(DF) {
-  write.csv(DF,paste0("OR_",unique(DF$depvar),".csv"), row.names = F)
+  write.csv(DF,paste0("OR_",unique(DF$depvar),".csv"), row.names = FALSE)
   return(DF)
 }
 
@@ -3764,46 +3768,46 @@ issp.labels <- lapply(issp, makeVlist) # list of variables in each df
 ## Find the six dependent variables
 ids <- lapply(issp.labels, function(x)
                 x[grep("resp.*numb|numb.*res", x$label,
-                        ignore.case = T),])
+                        ignore.case = TRUE),])
 
 jobs <- lapply(issp.labels, function(x)
                 x[grep("resp.*job", x$label,
-                       ignore.case = T),])
+                       ignore.case = TRUE),])
 jobs.k <- tibble(data = names(jobs), # Key of same dv variable in each ISSP
                 job.vars = unlist(sapply(jobs, function(x) x[,"name"])),
                 id = unlist(sapply(ids, function(x) x[,"name"])))
 
 unemp <- lapply(issp.labels, function(x)
                  x[grep("resp.*une", x$label,
-                 ignore.case = T),])
+                 ignore.case = TRUE),])
 unemp.k <- tibble(data = names(unemp),
                  unemp.vars = unlist(sapply(unemp, function(x) x[,"name"])),
                  id = unlist(sapply(ids, function(x) x[,"name"])))
 
 income <- lapply(issp.labels, function(x)
                  x[grep("resp.*red.*inc", x$label,
-                 ignore.case = T),])
+                 ignore.case = TRUE),])
 income.k <- tibble(data = names(income),
                   income.vars = unlist(sapply(income, function(x) x[,"name"])),
                   id = unlist(sapply(ids, function(x) x[,"name"])))
 
 retirement <- lapply(issp.labels, function(x)
                      x[grep("elde.*|resp.*old.*|18d.*old", x$label,
-                     ignore.case = T),])
+                     ignore.case = TRUE),])
 retirement.k <- tibble(data = names(retirement),
                    retirement.vars = unlist(sapply(retirement, function(x) x[,"name"])),
                    id = unlist(sapply(ids, function(x) x[,"name"])))
 
 healthcare <- lapply(issp.labels, function(x)
                      x[grep("resp.*health", x$label,
-                     ignore.case = T),])
+                     ignore.case = TRUE),])
 healthcare.k <- tibble(data = names(healthcare),
                        healthcare.vars = unlist(sapply(healthcare, function(x) x[,"name"])),
                        id = unlist(sapply(ids, function(x) x[,"name"])))
 
 housing <- lapply(issp.labels, function(x) ## Not asked in 1985
                   x[grep("dece.*", x$label,
-                  ignore.case = T),])
+                  ignore.case = TRUE),])
 housing.k <- tibble(data = names(housing)[names(housing) != "issp85"],
                     housing.vars = unlist(sapply(housing, function(x) x[,"name"])),
                     id = unlist(sapply(ids[-1], function(x) x[,"name"]))) # rm 85
@@ -3876,7 +3880,7 @@ plain.ctry <- function(x){
 country <- tibble(ctry.reg = c(plain.ctry(issp$issp85$V3),
                                plain.ctry(issp$issp90$v3),
                                plain.ctry(issp$issp96$v3)))
-country <- merge(country, aut.id, by.x = "ctry.reg", by.y = "code", all.x = T)
+country <- merge(country, aut.id, by.x = "ctry.reg", by.y = "code", all.x = TRUE)
 
 ## Some cases by hand
 country$country[country$ctry.reg == "d-e" | country$ctry.reg == "d-w" ] <- "Germany"
@@ -3928,14 +3932,14 @@ issp.rep$year <- ifelse(issp.rep$data == "issp85", "1985",
                                       ifelse(issp.rep$data == "issp06", "2006",
                                              "2016"))))
 
-issp.rep <- merge(issp.rep, l2, by = c("country", "year"), all.x = T)
+issp.rep <- merge(issp.rep, l2, by = c("country", "year"), all.x = TRUE)
 save(issp.rep,
      file = pfunc("issp_l2.RData"))
 
 ## Level 1 independent variables IV
 sex <- lapply(issp.labels, function(x)
         x[grep("r.*sex|sex.*resp|^\\s+sex\\s+$", x$label,
-               ignore.case = T),])
+               ignore.case = TRUE),])
 sex.k <- tibble(data = names(sex),
                 sex.vars = unlist(sapply(sex, function(x) x[,"name"])),
                 id = unlist(sapply(ids, function(x) x[,"name"])))
@@ -3947,7 +3951,7 @@ sex.iv$sex <- factor(ifelse(sex.iv$sex == 1, "Male",
 
 age <- lapply(issp.labels, function(x)
         x[grep("age.*dent$|age.*dent\\s+$|r: age|^\\s+age \\s+$", x$label,
-               ignore.case = T),])
+               ignore.case = TRUE),])
 age.k <- tibble(data = names(age),
                 age.vars = unlist(sapply(age, function(x) x[,"name"])),
                 id = unlist(sapply(ids, function(x) x[,"name"])))
@@ -3958,7 +3962,7 @@ age.iv$age[age.iv$age == 999] <- NA
 ## Employment status independent variables
 lapply(issp.labels, function(x)
         x[grep("r:.*curr.*empl|*curr.*empl|^\\scurr.*empl.*\\s+$|^empl.*ship$", x$label,
-               ignore.case = T),])
+               ignore.case = TRUE),])
 
 empl.k <- tibble(data = c("issp85", "issp90", "issp96", "issp06", "issp16"),
                  empl.vars = c("V109", "v63", "v206", "wrkst", "WORK"),
@@ -4001,7 +4005,7 @@ issp.rep$brady.ctry <- factor(ifelse(issp.rep$country %in% brady.ctry, 1, 0))
 ### Country-year centered variables at grand mean
 l2.vars <- names(issp.rep[,13:32])
 issp.rep <- issp.rep %>% 
-        mutate_at(vars(l2.vars), funs(. - mean(., na.rm = T)))
+        mutate_at(vars(l2.vars), funs(. - mean(., na.rm = TRUE)))
 
 ### l1 centered variables
 issp.rep$sex.cwc <- as.character(issp.rep$sex)
@@ -6360,7 +6364,7 @@ reg_formula <- as.formula(paste0("as.factor(",dep_var[var],")",
                         "as.factor(year)"), collapse = "+")))
 for(imp in 1:5){
 tmp[[paste0("m", imp)]] <- polr(reg_formula,
-                              data = issp_imputed$imputations[[imp]], Hess = T)
+                              data = issp_imputed$imputations[[imp]], Hess = TRUE)
 cat(dep_var[var],"Imp:", imp, "\n")
 }
 res_pfb[[paste0(dep_var[var])]] <- tmp
@@ -6445,7 +6449,7 @@ for(var in 1:length(dep_var)){
                                            "as.factor(year)"), collapse = "+")))
   for(imp in 1:5){
     tmp[[paste0("m", imp)]] <- polr(reg_formula,
-                                    data = issp_imputed$imputations[[imp]], Hess = T)
+                                    data = issp_imputed$imputations[[imp]], Hess = TRUE)
     cat(dep_var[var],"Imp:", imp, "\n")
   }
   res_netmig[[paste0(dep_var[var])]] <- tmp
@@ -7595,7 +7599,7 @@ cri_macro$socx_oecd <- as.numeric(as.character(cri_macro$socx_oecd))
 colnames(cri_macro)[2] <- "year_lag"
 
 #recode
-cri_macro$iso3c <- countrycode(cri_macro$country, "country.name", "iso3c", warn = T)
+cri_macro$iso3c <- countrycode(cri_macro$country, "country.name", "iso3c", warn = TRUE)
 cri_macro <- cri_macro[,c(4,2,3)]
 
 #Merge pooled data with country data
@@ -9298,8 +9302,8 @@ datal2 <- datal2 %>%
          ### PI Note, this value is the ratio of immigrants to natives multiplied by the population divided by 1 million. This is the stock in raw numbers, not as a percentage of the population
          immgrStock_abs_m = migstock_un,
          gini_wb = gini_wb/100,                                      # gini_wb is scaled differently than the other ginis
-         gdp = apply(data.frame(gdp_oecd, gdp_wb, gdp_twn), 1, median, na.rm = T),                  #as there are multiple GDP scores that are partially missing: median
-         gini = apply(data.frame(ginim_dolt, gini_wb, gini_wid), 1, median, na.rm = T))  %>%        #as there are multiple GINI scores that are partially missing: median
+         gdp = apply(data.frame(gdp_oecd, gdp_wb, gdp_twn), 1, median, na.rm = TRUE),                  #as there are multiple GDP scores that are partially missing: median
+         gini = apply(data.frame(ginim_dolt, gini_wb, gini_wid), 1, median, na.rm = TRUE))  %>%        #as there are multiple GINI scores that are partially missing: median
   select(cntry, year, immgrStock, immgrStockCh, gdp, gini, pop_tot, immgrStock_abs, immgrStock_abs_m, migstock_un)
 
 
@@ -9597,16 +9601,16 @@ data <- subset(data, data$year != 2016)
 # unequal effect intervals.
 
 
-oldAge_mean <- mean(data$oldAge, na.rm = T)
-unemp_mean <- mean(data$unemployed, na.rm = T)
-oldAge_1n <- sum(data$oldAge[data$oldAge == 1], na.rm = T)
-oldAge_2n <- (sum(data$oldAge[data$oldAge == 2], na.rm = T))/2
-oldAge_3n <- (sum(data$oldAge[data$oldAge == 3], na.rm = T))/3
-oldAge_4n <- (sum(data$oldAge[data$oldAge == 4], na.rm = T))/4
-unemp_1n <- sum(data$unemployed[data$unemployed == 1], na.rm = T)
-unemp_2n <- (sum(data$unemployed[data$unemployed == 2], na.rm = T))/2
-unemp_3n <- (sum(data$unemployed[data$unemployed == 3], na.rm = T))/3
-unemp_4n <- (sum(data$unemployed[data$unemployed == 4], na.rm = T))/4
+oldAge_mean <- mean(data$oldAge, na.rm = TRUE)
+unemp_mean <- mean(data$unemployed, na.rm = TRUE)
+oldAge_1n <- sum(data$oldAge[data$oldAge == 1], na.rm = TRUE)
+oldAge_2n <- (sum(data$oldAge[data$oldAge == 2], na.rm = TRUE))/2
+oldAge_3n <- (sum(data$oldAge[data$oldAge == 3], na.rm = TRUE))/3
+oldAge_4n <- (sum(data$oldAge[data$oldAge == 4], na.rm = TRUE))/4
+unemp_1n <- sum(data$unemployed[data$unemployed == 1], na.rm = TRUE)
+unemp_2n <- (sum(data$unemployed[data$unemployed == 2], na.rm = TRUE))/2
+unemp_3n <- (sum(data$unemployed[data$unemployed == 3], na.rm = TRUE))/3
+unemp_4n <- (sum(data$unemployed[data$unemployed == 4], na.rm = TRUE))/4
 
 oldAge_1n_p <- oldAge_1n*(1+results[1,2])
 oldAge_2n_p <- oldAge_2n*(1+results[1,3])

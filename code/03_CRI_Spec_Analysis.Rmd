@@ -3,36 +3,27 @@ title: "Tech 3. Specification Curves"
 output: html_document
 ---
 
-
 ```{r setup, include=FALSE}
 rm(list = ls())
-library(pacman)
-
+library("pacman")
 
 pacman::p_load("devtools","ggplot2","tidyverse","readr","ExPanDaR","plotscale","lattice","tidyr","mlogit","knitr","grid","zoo","ggpubr","ragg","factoextra","cluster","kableExtra","skimr","WeightedCluster")
-
-
 ```
 
-### Load Data
+## Load Data
 
 ```{r load, warning=F,message=F}
-
-cri <- read.csv(file = here::here("data/cri.csv"), header = T)
+cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
 cri <- subset(cri, u_teamid != 0)
-cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = T)
+cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
 cri_str <- subset(cri_str, u_teamid!=0)
-cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = T)
+cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = TRUE)
 cri_team <- subset(cri_team, u_teamid!=0)
-
 ```
 
+## Specification Curves
 
-
-
-### Specification Curves
-
-#### Data Prep
+### Data Prep
 
 ```{r data_prep, warning=F, message=F, include=F}
 
@@ -53,7 +44,6 @@ crimrg <- select(crimrg, degree, id)
 
 crispectest <- left_join(crispectest, crimrg, by = "id")
 
-
 # create sample variables 
 crispectest <- crispectest %>%
   mutate(w1985 = ifelse(is.na(w1985), "Other", w1985),
@@ -69,7 +59,7 @@ crispectest <- crispectest %>%
   mutate(SURVEY_WAVES = ifelse(w1985 == "Other" & w1990 == "Other" & w1996 == "w1996" & w2006 == "w2006" & w2016 == "Other", "1996 & 2006", ifelse(w1985 == "Other" & w1990 == "Other" & w1996 == "w1996" & w2006 == "w2006" & w2016 == "w2016", "1996, 2006 & 2016", ifelse(w1985 == "Other" & w1990 == "Other" & w1996 == "Other" & w2006 == "w2006" & w2016 == "w2016", "2006 & 2016", "Other"))),
          COUNTRIES = ifelse(orig13 == "orig13", "13 Rich Democracies Only", ifelse(allavailable == "allavailable", "All Available (~26)", ifelse(eeurope == "eeurope", "Includes Eastern/CE Europe", "Other"))))
 
-#Remove NAs
+# Remove NAs
 crispectest <- subset(crispectest, !is.na(crispectest$AME_Z))
 crispectest <- subset(crispectest, !is.na(crispectest$lower_Z))
   
@@ -77,20 +67,19 @@ crispectest <- subset(crispectest, !is.na(crispectest$lower_Z))
 crispectest$lower_Z <- ifelse(crispectest$lower_Z > -0.00000001 & crispectest$lower_Z < 0.00000001, -0.0001, crispectest$lower_Z)
 crispectest$upper_Z <- ifelse(crispectest$upper_Z > -0.00000001 & crispectest$upper_Z < 0.00000001, 0.0001, crispectest$upper_Z)
 
-  #trim to have better plot range
+  # trim to have better plot range
   crispectest$lower_Z <- ifelse(crispectest$lower_Z < -0.75, -0.75, crispectest$lower_Z)
   crispectest$upper_Z <- ifelse(crispectest$upper_Z > 0.75, 0.75, crispectest$upper_Z)
   crispectest$upper_Z <- ifelse(crispectest$upper_Z < -0.75, -0.745, crispectest$upper_Z)
   crispectest$AME_Z <- ifelse(crispectest$AME_Z < -0.75, -0.747, crispectest$AME_Z)
   crispectest$AME_Z <- ifelse(crispectest$AME_Z > 0.75, 0.747, crispectest$AME_Z)
   
-  #data prep
+  # data prep
 crispectest$est <- round(crispectest$AME_Z, 6)
 crispectest$lb <- round(crispectest$lower_Z, 6)
 crispectest$ub <- round(crispectest$upper_Z, 6)
 
 # set up subjective conclusions at team level as 1 support, 0 not testable and -1 reject
-
 cri_team <- cri_team %>%
   mutate(est = ifelse(Hsup == 1, 0.1, ifelse(Hrej == 1, -0.1, ifelse(Hno == 1, 0, NA))),
          ub = est+0.01,
@@ -108,14 +97,11 @@ cri_team <- subset(cri_team, u_teamid !=0)
 # order rows to make counter
 crispectest <- crispectest[order(crispectest$est),]
 crispectest$count <- 1:nrow(crispectest)
-
 ```
 
+## Model-Level Effect Specifications
 
-
-### Model-Level Effect Specifications
-
-#### Main Plot
+### Main Plot
 
 Setup
 
@@ -127,13 +113,9 @@ crispectest <- crispectest %>%
          est_ns = ifelse(is.na(sig_group), est, NA),
          sig_group2 = as.factor(ifelse(is.na(sig_group), 2, sig_group)))
 
-
-
 #compress values for better visualization
 # 0-0.05 = 0-1
 # 0.05-0.505 = 1-2
-
-
 
 crispectest <- crispectest %>%
   mutate(est_ns_scl = abs(est_ns),
@@ -147,15 +129,11 @@ crispectest <- crispectest %>%
 Generate weighted percentage of each effect
 
 ```{r fig1_pcts}
-
-
 sig_neg <- 100*round(sum(crispectest$inv_weight[crispectest$sig_group2 == 1])/sum(crispectest$inv_weight),3)
 
 sig_pos <- 100*round(sum(crispectest$inv_weight[crispectest$sig_group2 == 3])/sum(crispectest$inv_weight),3)
 
 ns <- 100*round(sum(crispectest$inv_weight[crispectest$sig_group2 == 2])/sum(crispectest$inv_weight),3)
-
-
 ```
 
 Generate and save Fig 1
@@ -207,20 +185,17 @@ dev.off()
 knitr::include_graphics(here::here("results/Fig1.png"))
 ```
 
+### Supplementary Plots
 
-#### Supplementary Plots
-
-##### Fig 1_supplementary. 
+#### Fig 1_supplementary. 
 
 This figure combines many spec curves. Two big ones with researcher characteristics, and several small ones with the sub-domains of specifications.
 
 First two are ordered by effect size, the other by confidence interval minimum/maximum relative to the hypothesis.
 
-##### Panel A. By Effect Size
+#### Panel A. By Effect Size
 
 ```{r S6panelA}
-
-
 g1 <- ggplot(crispectest) +
   #geom_errorbar(aes(ymin = lb, ymax = ub), color = "thistle1") +
   geom_point(aes(x = count, y = est_ns), color = "grey55", shape = "|", size = 2, show.legend =F) + 
@@ -248,15 +223,11 @@ g1a <- ggplot(crispectest) +
   theme(
     legend.position = "none",
     axis.text.x = element_blank())
-
 ```
 
 ##### Panel B. By Confidence Interval
 
 ```{r S6_panelB}
-
-
-
 # create identifier of neg, ns, pos
 crispectest <- crispectest %>%
   mutate(ci = ifelse(sig_group2 == 1, ub, ifelse(sig_group2 == 3, lb, ifelse(est <= 0 & sig_group2 == 2, ub, ifelse(est > 0 & sig_group2 == 2, lb, NA)))),
@@ -308,11 +279,11 @@ g2a <- ggplot(crispectest) +
 
 ```
 
-##### Panels B & D. Researcher Characteristics
+#### Panels B & D. Researcher Characteristics
 
 Heatmap Concept
 
-we create a 'rolling average' of researcher characteristics across rows ordered by effect size. This is visually pleasing and helps identify any patterns (one tick per model for so many models is really hard visually with a continuous color scale)
+We create a 'rolling average' of researcher characteristics across rows ordered by effect size. This is visually pleasing and helps identify any patterns (one tick per model for so many models is really hard visually with a continuous color scale).
 
 ```{r rolling_average}
 # create rolling average for effect ordering
@@ -370,7 +341,6 @@ g3 <- ggplot(crispectest) +
   )
 labs_y2 <- c("Model","l","e","t","e")
 
-
 g4 <- ggplot(crispectest) +
   geom_tile(aes(x = count2, y = 5, fill = belief_roll2), height = 0.5, width = 0.25) +
   geom_tile(aes(x = count2, y = 4, fill = pro_roll2), height = 0.5, width = 0.25) +
@@ -390,10 +360,9 @@ g4 <- ggplot(crispectest) +
   )
 ```
 
-##### Fig S6. 
+#### Fig S6. 
 
 ```{r figS6, warning = F}
-
 agg_png(filename = here::here("results/FigS6.png"), res = 144, height = 900, width = 1700)
 ggarrange(g1,g2,g3,g4, labels = c("A ","B ","C ","D "))
 dev.off()
@@ -401,15 +370,13 @@ dev.off()
 knitr::include_graphics(here::here("results/FigS6.png"))
 ```
 
-
-##### Fig 1. Sub-plots
+#### Fig 1. Sub-plots
 
 We include two smaller versions of the spec-curves with four sub-domains of specifications below. This time without a rolling average.
 
-First we recode our variables of interest into 1/0s for plotting
+First we recode our variables of interest into 1/0s for plotting:
 
 ```{r recode_order}
-
 crispectest <- crispectest %>%
   mutate(DV_Jobs = ifelse(is.na(Jobs), 0, 1), # Measurement
          DV_Unemp = ifelse(is.na(Unemp), 0, 1),
@@ -441,18 +408,13 @@ crispectest <- crispectest %>%
          Est_mlglm = ifelse(mator == "ml_glm", 1, 0),
          Est_ologit = ifelse(mator == "ologit", 1, 0),
          Est_bayes = ifelse(mator == "bayes", 1, 0))
-
-
 ```
 
-
-##### Measurement Specs
+#### Measurement Specs
 
 For each set of explanatory variables we plot two versions. One ordered by effect size (point estimate) and a second by confidence interval minimum. Four columns in total.
 
-
 Test Format
-
 
 ```{r figS7d, warning = F}
 testlabs <- c("       Stock", "Flow", "Change\nFlow")
@@ -583,7 +545,6 @@ g03ci <-
 Independent Variables
 
 ```{r figS7a, warning = F}
-
 ivlabs <- c(" (Un)Emp\nRate","GDP\nper cap", "Social\nSpending","None\n/other")
 
 g04 <- ggplot(crispectest) +
@@ -613,7 +574,6 @@ g04ci <- ggplot(crispectest) +
     legend.position = "none",
     axis.title.y = element_blank(),
     axis.text.y = element_blank())
-   
 ```
 
 
@@ -624,11 +584,6 @@ dev.off()
 
 knitr::include_graphics(here::here("results/FigS7.png"))
 ```
-
-
-
-
-
 
 ```{r figS8c, warning = F}
 samplabs <- c("1996 &\n2006","2006 &\n2016","1996, 2006\n& 2016","Other")
@@ -670,13 +625,9 @@ ggplot(crispectest) +
     axis.text.x = element_blank(),
     axis.text.y = element_blank(),
   )
-
-  
 ```
 
 ```{r figS8b, warning = F}
-   
-
 clabs <- c("Rich 13"," CEE/East\nEurope","All\nAvailable","Other")
 
 g10 <-
@@ -716,13 +667,9 @@ ggplot(crispectest) +
     axis.text.x = element_blank(),
     axis.text.y = element_blank(),
   )
-
 ```
 
-
-
 ```{r figS8a, warning = F}
-
 estlabs <- c("OLS","Logit"," ML/GLM","Ordered\nlogit","Bayes")
 
 g11 <-
@@ -765,8 +712,6 @@ ggplot(crispectest) +
     axis.text.x = element_blank(),
     axis.text.y = element_blank(),
   )
-
-    
 ```
 
 ```{r figS8, warning = F}
@@ -777,8 +722,7 @@ dev.off()
 knitr::include_graphics(here::here("results/FigS8.png"))
 ```
 
-
-#### Fig S9. Team-Level Supplementary Plot
+### Fig S9. Team-Level Supplementary Plot
 
 Order results by subjective conclusion and then percent ratio of effect sizes at p05 neg/pos.
 
@@ -860,8 +804,6 @@ knitr::include_graphics(here::here("results/FigS9.png"))
 
 We find that `r round(length(cri_team$pos_test_pct_p05[cri_team$pos_test_pct_p05>0.6])/88,3)` percent of teams had a majority of positive test results (a negative effect of immigration at p<0.05) and `r round(length(cri_team$neg_test_pct_p05[cri_team$neg_test_pct_p05>0.6])/88,3)` percent had a majority negative.
 
-
 ```{r saveout}
 write.csv(crispectest, file = here::here("results/crispectest.csv"))
 ```
-

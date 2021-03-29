@@ -5,16 +5,12 @@ output:
     df_print: paged
 ---
 
-
 The participants voted on model specifications for the other teams. Due to some errors in the preliminary codes we cannot assign the subjective voting directly to the teams; however, this provided an alternate utility. Based on the variations in model descriptions given to the participants we can still estimate what features of models are seem by the participants as the most useful or 'correct' in testing the hypothesis. We can then look for those features in the actual models. Thus, the models we had participants vote on are theoretical data-generating models that mostly reflect the range of models used in the CRI. 
 
-
 ```{r setup, include=FALSE}
-rm(list = ls())
-library(pacman)
+library("pacman")
 
 pacman::p_load("readstata13","xlsx","dplyr","tidyverse","ggplot2","kableExtra","fastDummies","ragg")
-
 ```
 
 ## Load Data
@@ -22,20 +18,20 @@ pacman::p_load("readstata13","xlsx","dplyr","tidyverse","ggplot2","kableExtra","
 See 'Data Guide' in Readme (front page of repository)
 
 ```{r load}
-model_desc <- read.xlsx(here::here("data","Research Design Votes.xlsx"), sheetName = "RD Paragraph Output", header = T, stringsAsFactors = F)
+model_desc <- read.xlsx(here::here("data","Research Design Votes.xlsx"), sheetName = "RD Paragraph Output", header = TRUE, stringsAsFactors = FALSE)
 crispec <- read.xlsx(here::here("data","CRI Model Specifications and Margins.xlsx"), sheetName = "Data")
-# sometimes this imports extra rows becasue of the xlsx format, remove if so
+# sometimes this imports extra rows because of the xlsx format, remove if so
 crispec <- subset(crispec, !is.na(u_teamid))
 votes <- read.dta13(here::here("data","votes.dta"))
 ```
 
 ### Model Descriptions and Peer Voting
 
-Note that data in the file "votes.dta" is the average of participants' votes by research design presented in the survey. These designs do not perfectly match the final research designs, therefore we cannot apply them directly to the models but must identify the ranking of models based on certain components. 
+Note that data in the file `votes.dta` is the average of participants' votes by research design presented in the survey. These designs do not perfectly match the final research designs, therefore we cannot apply them directly to the models but must identify the ranking of models based on certain components.
 
 Seven CRI participants voted on each design (participants voted on 3 each), but due to non-response we had around 4-5 votes per design. We created a scale of support for each model description. Now we turn that scale into a dependent variable.
 
-Here we collect all model specifications described in the survey. See Supplementary Materials
+Here we collect all model specifications described in the survey. See Supplementary Materials for details.
 
 ```{r merge}
 # Concatenate all strings from each variable
@@ -116,18 +112,17 @@ corrplot::corrplot(cor1)
 cor2 <- cor(cord2, use = "pairwise.complete.obs")
 corrplot::corrplot(cor2)
 ```
+
 #### Average Peer Vote by Specification
 
 ```{r popularity}
 # Create a table with average votes by model components
-
 popdf <- as.data.frame(matrix(nrow= 31, ncol = 2, dimnames = list(seq(1:31), c("Feature","Avg_Score"))))
 
 popdf$Feature <- c("All 5-Waves", "2006 & 2016", "1996, 2006 & 2016", "1996 & 2006", "Includes Eastern Europe", "All Possible Countries", "Rich 17 Countries", "Rich 13 Countries", "Country-Year & Year", "Country-Year & Country", "Country", "Country & Year", "Country-Year", "Country-Year, Country & Year", "No Levels", "Year",  "Multilevel Rnd_slopes", "Two-Way FE, Clustered SE","Multilevel Rnd_ints Fix_slope", "Two-Way FE", "No Hierarchical Model", "ML","Bayes", "OLS", "Linear", "Categorical/Ordered", "Logistic",  "Employment Rate", "Social Spending", "Unemployment Rate", "Sampling Weights")
 
 # fix one column
 model_desc$ml <- ifelse(model_desc$estimate2!="" | model_desc$estimate3!="", 1, 0)
-
 
 # Populate
 popdf <- popdf %>%
@@ -191,10 +186,9 @@ popdf$label_x = popdf$xaxis+0.14
 #### Fig S4. Subjective Ranking of Model Specifications 
 
 ```{r fig1, warning=F, message=F, echo=T}
-
 agg_png(file = "results/FigS4_modelrank.png", width = 750)
-ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
 
+ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
   geom_bar(stat = "identity", aes(fill = group)) +
   geom_text(aes(y = label_y, x = label_x, fill = group, hjust = hjust), size = 4) +
   labs(fill = "MODEL FEATURES", title = "") +
@@ -212,9 +206,8 @@ ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
         axis.title.x = element_text(size = 14),
         legend.key.size = unit(1,"line"))
 dev.off()
-knitr::include_graphics("results/FigX_modelrank.png")
+knitr::include_graphics("results/FigS4_modelrank.png")
 ```
-
 
 ### Kialo Deliberation
 
@@ -255,7 +248,6 @@ https://www.kialo.com/crowdsourced-replication-initiative---research-design---cr
 The major results are that participants were in favor of clustering standard errors, and opposed to the usage of only rich democracies. We add two columns to give a bonus for studies that have these attributes. Based on the nature of the discussion we must give a positive score to **all** studies using clustered standard errors, not just Two-Way FE, therefore all nultilevle models also get this positive scoring. 
 
 ```{r kialo, message=F, warning=F}
-
 kialo <- as.data.frame(matrix(nrow = 7, ncol = 10))
 colnames(kialo) <- c("Group","Thesis","False","Improbable","Plausible","Probable","True","Average","Majority_Args_Against","Majority_Args_Support")
 
@@ -281,7 +273,6 @@ kialo <- kialo %>%
 ## Output File
 
 We import the master data, make a column for each model specification, and then create a total score by model. 
-
 
 ```{r output1, message = F, warning = F}
 # transpose scoring data to columns
@@ -316,7 +307,7 @@ popdf_out <- popdf_out %>%
          `2006 & 2016` = max(as.numeric(`2006 & 2016`), na.rm=T),
          `1996, 2006 & 2016` = max(as.numeric(`1996, 2006 & 2016`), na.rm=T),
          `1996 & 2006`= max(as.numeric(`1996 & 2006`), na.rm=T),
-         `Includes Eastern Europe` = max(as.numeric(`Includes Eastern Europe`), na.rm = T),
+         `Includes Eastern Europe` = max(as.numeric(`Includes Eastern Europe`), na.rm = TRUE),
          `All Possible Countries` = max(as.numeric(`All Possible Countries`), na.rm=T),
          `Rich 17 Countries` = max(as.numeric(`Rich 17 Countries`), na.rm=T), 
          `Rich 13 Countries`= max(as.numeric(`Rich 13 Countries`), na.rm=T), 
@@ -340,11 +331,9 @@ popdf_out <- popdf_out %>%
          Logistic = max(as.numeric(Logistic), na.rm=T),
          `Sampling Weights`= max(as.numeric(`Sampling Weights`), na.rm=T),
          `Country-Year, Country & Year` = max(as.numeric(`Country-Year, Country & Year`), na.rm=T))
-
 ```
 
 ```{r output2, message = F, warning = F}
-
 crispec <- subset(crispec, !is.na(id))
 popdf_out <- cbind(crispec, popdf_out)
 
@@ -361,14 +350,11 @@ popdf_out <- popdf_out %>%
 
 popdf_out <- select(popdf_out, id, score_waves, score_cases, score_levels, score_mlm, score_mator, score_weight)
 
-
 # Make average total score
 
 popdf_out <- popdf_out %>%
   rowwise() %>%
-  mutate(total_score = mean(c(score_waves, score_cases, score_levels, score_mlm, score_mator, score_weight), na.rm = T))
+  mutate(total_score = mean(c(score_waves, score_cases, score_levels, score_mlm, score_mator, score_weight), na.rm = TRUE))
 
 save(popdf_out, file = here::here("data","popdf_out.Rdata"))
-
-
 ```

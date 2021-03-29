@@ -4,9 +4,7 @@ author: "Nate Breznau"
 output: html_document
 ---
 
-
-This code was borrowed from Team 18, it has been altered by the PIs to produce both continuous and dichotomous dependent variables. 
-
+This code was originally provided by Team 18, it has been altered by the PIs to produce both continuous and dichotomous dependent variables. 
 
 ```{r setup, include=FALSE}
 rm(list = ls())
@@ -16,7 +14,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r dataprep, warning = F}
-
 ## ---- Data Preparation ----
 issp1996 <- read_dta(here::here("data/ZA2900.dta"))
 issp2006 <- read_dta(here::here("data/ZA4700.dta"))
@@ -515,8 +512,6 @@ cri_data <- cri_data %>%  filter(country %in% c("Australia", "Canada", "Croatia"
 # PI recode
 cri_data$netmigpct <- cri_data$netmigpct/10
 
-
 # save for multiverse analysis
 write.csv(cri_data, file = here::here("data/team18_multi.csv"))
 ```
-
