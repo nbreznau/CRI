@@ -46,7 +46,7 @@ ui <- fluidPage(
   tags$style(HTML("#title {font-size: 22px; line-height: 22px; margin: 12px 0}")),
   h1(id = "title", "The Hidden Universe of Data Analysis", align = "center"),
   tags$style(HTML("#subtitle {font-size: 20px; border-bottom: 2px solid silver; line-height: 20px; color: #3E3673; margin: 12px 0; padding-bottom: 8px}")),
-  h1(id = "subtitle", "One Dataset, One Hypothesis, 73 Teams, 1,253 Models and 88 Conclusions", align = "center"),
+  h1(id = "subtitle", "One Dataset, One Hypothesis, 73 Teams, 1,253 Models and 89 Conclusions", align = "center"),
   tags$hr(style="border-color: black;"),
   
   # FIRST MAIN COLUMN  

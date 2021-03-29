@@ -6,13 +6,12 @@ library(ggpubr)
 
 
 
-
 # Load files
 
-df <- readRDS(here::here("shiny/data/cri_shiny.Rds"))
-
-cri_team_combine <- read.csv(here::here("shiny/data/cri_shiny_team.csv"))
-
+# df <- readRDS(here::here("shiny/data/cri_shiny.Rds"))
+df <- readRDS("./data/cri_shiny.Rds")
+# cri_team_combine <- read.csv(here::here("shiny/data/cri_shiny_team.csv"))
+cri_team_combine <- read.csv("./data/cri_shiny_team.csv")
 # cntrlist and wavelist
 cntrlista <- c("AU", "AT", "BE", "CA", "CL", "HR", "CZ", "DK", "FI", "FR", "DE")
 cntrlistb <- c("HU", "IE", "IL", "IT", "JP", "KR", "LV", "LT", "NT", "NZ", "NO")
@@ -55,44 +54,44 @@ server <- function(input, output, session) {
   })
   # TAB ONE EFFECTS
   
-  ## Filter
+  ## dplyr::filter
   
   dfspec1 <- reactive({
-    filter(df, Jobs_str %in% input$mspecdv | # first filter on DV
+      dplyr::filter(df, Jobs_str %in% input$mspecdv | # first dplyr::filter on DV
              Unemp_str %in% input$mspecdv |
              IncDiff_str %in% input$mspecdv |
              OldAge_str %in% input$mspecdv |
              House_str %in% input$mspecdv |
              Health_str %in% input$mspecdv |
              Scale_str %in% input$mspecdv) %>%
-      filter(Stock_str %in% input$mspeciv | # filter on TEST
+      dplyr::filter(Stock_str %in% input$mspeciv | # dplyr::filter on TEST
                Flow_str %in% input$mspeciv |
                ChangeFlow_str %in% input$mspeciv |
                StockFlow %in% input$mspeciv) %>%
-      filter(Soc_Spending %in% input$mspecivx | # filter on IVs
+      dplyr::filter(Soc_Spending %in% input$mspecivx | # dplyr::filter on IVs
                Unemp_Rate %in% input$mspecivx |
                GDP_Per_Capita %in% input$mspecivx |
                Gini %in% input$mspecivx |
                None %in% input$mspecivx) %>%
       # make it so countries must be included by summing the true/false conditions with the length of the checkbox output
-      filter((AU %in% input$countries1a  + AT %in% input$countries1a + BE %in% input$countries1a +
+      dplyr::filter((AU %in% input$countries1a  + AT %in% input$countries1a + BE %in% input$countries1a +
                 CA %in% input$countries1a + CL %in% input$countries1a + HR %in% input$countries1a + 
                 CZ %in% input$countries1a + DK %in% input$countries1a + FI %in% input$countries1a + 
                 FR %in% input$countries1a + DE %in% input$countries1a) == length(input$countries1a)) %>%
-      filter((HU %in% input$countries1b + IE %in% input$countries1b + IL %in% input$countries1b + 
+      dplyr::filter((HU %in% input$countries1b + IE %in% input$countries1b + IL %in% input$countries1b + 
                 IT %in% input$countries1b + JP %in% input$countries1b + KR %in% input$countries1b + 
                 LV %in% input$countries1b + LT %in% input$countries1b + NT %in% input$countries1b + 
                 NZ %in% input$countries1b + NO %in% input$countries1b) == length(input$countries1b)) %>%
-      filter((PL %in% input$countries1c + PT %in% input$countries1c + RU %in% input$countries1c + 
+      dplyr::filter((PL %in% input$countries1c + PT %in% input$countries1c + RU %in% input$countries1c + 
                 SK %in% input$countries1c + SI %in% input$countries1c + ES %in% input$countries1c + 
                 SE %in% input$countries1c + CH %in% input$countries1c + UK %in% input$countries1c + 
                 US %in% input$countries1c + UY %in% input$countries1c) == length(input$countries1c)) %>%
-      filter(mator %in% input$emator &  
+      dplyr::filter(mator %in% input$emator &  
                BELIEF_HYPOTHESIS %in% input$belief & STATISTICS_SKILL %in% input$stat & TOPIC_KNOWLEDGE %in% input$topic &
                MODEL_SCORE %in% input$total & PRO_IMMIGRANT %in% input$proimm) %>%
-      filter((w1985 %in% input$mwave +  w1990 %in% input$mwave + w1996 %in% input$mwave + 
+      dplyr::filter((w1985 %in% input$mwave +  w1990 %in% input$mwave + w1996 %in% input$mwave + 
                 w2006 %in% input$mwave + w2016 %in% input$mwave) == length(input$mwave)) %>%
-      filter(other_other == 1 | clustse %in% input$other | twowayfe %in% input$other | 
+      dplyr::filter(other_other == 1 | clustse %in% input$other | twowayfe %in% input$other | 
                dichtdv %in% input$other | nonlin %in% input$other) %>%
       arrange(est) %>%
       mutate(check = ifelse(length(est) == 0, 0, 1),
@@ -212,7 +211,7 @@ server <- function(input, output, session) {
     else {
       ggplot(dfspec_null(),aes(x = x, y = y)) +
         geom_blank() + 
-        annotate(geom = "text", x = 0, y = 0.8, label = "No models match these filter criteria", 
+        annotate(geom = "text", x = 0, y = 0.8, label = "No models match these dplyr::filter criteria", 
                  color = "#66A61E", fontface = "bold", size = 4)+
         labs (x = "Model Count, Ordered by AME", y = "Average Marginal Effect (AME)\nXY-Standardized")
     }
@@ -223,41 +222,41 @@ server <- function(input, output, session) {
   
   ### P-values
   dfspec2 <- reactive({
-    filter(df, Jobs_str %in% input$mspecdv2 | # first filter on DV
+    dplyr::filter(df, Jobs_str %in% input$mspecdv2 | # first dplyr::filter on DV
              Unemp_str %in% input$mspecdv2 |
              IncDiff_str %in% input$mspecdv2 |
              OldAge_str %in% input$mspecdv2 |
              House_str %in% input$mspecdv2 |
              Health_str %in% input$mspecdv2 |
              Scale_str %in% input$mspecdv2) %>%
-      filter(Stock_str %in% input$mspeciv2 | # filter on TEST
+      dplyr::filter(Stock_str %in% input$mspeciv2 | # dplyr::filter on TEST
                Flow_str %in% input$mspeciv2 |
                ChangeFlow_str %in% input$mspeciv2 |
                StockFlow %in% input$mspeciv2) %>%
-      filter(Soc_Spending %in% input$mspecivx2 | # filter on IVs
+      dplyr::filter(Soc_Spending %in% input$mspecivx2 | # dplyr::filter on IVs
                Unemp_Rate %in% input$mspecivx2 |
                GDP_Per_Capita %in% input$mspecivx2 |
                Gini %in% input$mspecivx2 |
                None %in% input$mspecivx2) %>%
       # make it so countries must be included by summing the true/false conditions with the length of the checkbox output
-      filter((AU %in% input$countries2a  + AT %in% input$countries2a + BE %in% input$countries2a +
+      dplyr::filter((AU %in% input$countries2a  + AT %in% input$countries2a + BE %in% input$countries2a +
                 CA %in% input$countries2a + CL %in% input$countries2a + HR %in% input$countries2a + 
                 CZ %in% input$countries2a + DK %in% input$countries2a + FI %in% input$countries2a + 
                 FR %in% input$countries2a + DE %in% input$countries2a) == length(input$countries2a)) %>%
-      filter((HU %in% input$countries2b + IE %in% input$countries2b + IL %in% input$countries2b + 
+      dplyr::filter((HU %in% input$countries2b + IE %in% input$countries2b + IL %in% input$countries2b + 
                 IT %in% input$countries2b + JP %in% input$countries2b + KR %in% input$countries2b + 
                 LV %in% input$countries2b + LT %in% input$countries2b + NT %in% input$countries2b + 
                 NZ %in% input$countries2b + NO %in% input$countries2b) == length(input$countries2b)) %>%
-      filter((PL %in% input$countries2c + PT %in% input$countries2c + RU %in% input$countries2c + 
+      dplyr::filter((PL %in% input$countries2c + PT %in% input$countries2c + RU %in% input$countries2c + 
                 SK %in% input$countries2c + SI %in% input$countries2c + ES %in% input$countries2c + 
                 SE %in% input$countries2c + CH %in% input$countries2c + UK %in% input$countries2c + 
                 US %in% input$countries2c + UY %in% input$countries2c) == length(input$countries2c)) %>%
-      filter(mator %in% input$emator2 &  
+      dplyr::filter(mator %in% input$emator2 &  
                BELIEF_HYPOTHESIS %in% input$belief2 & STATISTICS_SKILL %in% input$stat2 & TOPIC_KNOWLEDGE %in% input$topic2 &
                MODEL_SCORE %in% input$total2 & PRO_IMMIGRANT %in% input$proimm2) %>%
-      filter((w1985 %in% input$mwave2 +  w1990 %in% input$mwave2 + w1996 %in% input$mwave2 + 
+      dplyr::filter((w1985 %in% input$mwave2 +  w1990 %in% input$mwave2 + w1996 %in% input$mwave2 + 
                 w2006 %in% input$mwave2 + w2016 %in% input$mwave2) == length(input$mwave2)) %>%
-      filter(other_other == 1 | clustse %in% input$other2 | twowayfe %in% input$other | 
+      dplyr::filter(other_other == 1 | clustse %in% input$other2 | twowayfe %in% input$other | 
                dichtdv %in% input$other2 | nonlin %in% input$other2) %>%
       arrange(est) %>%
       mutate(
@@ -382,7 +381,7 @@ server <- function(input, output, session) {
     else {
       ggplot(dfspec_null(),aes(x = x, y = y)) +
         geom_blank() + 
-        annotate(geom = "text", x = 0, y = 0.8, label = "No models match these filter criteria", 
+        annotate(geom = "text", x = 0, y = 0.8, label = "No models match these dplyr::filter criteria", 
                  color = "#66A61E", fontface = "bold", size = 4)+
         labs (x = "Model Count, Ordered by AME", y = "Average Marginal Effect (AME)\nXY-Standardized")
     }
@@ -428,11 +427,11 @@ server <- function(input, output, session) {
           
       ) %>%
       arrange(subj_concl,AME_Zt) %>%
-      filter(
+      dplyr::filter(
         BELIEF_HYPOTHESIS %in% input$belief3 & STATISTICS_SKILL %in% input$stat3 & TOPIC_KNOWLEDGE %in% input$topic3 &
           MODEL_SCORE %in% input$total3 & PRO_IMMIGRANT %in% input$proimm3 & models_n %in% input$modelsn3
       ) %>%
-      filter(
+      dplyr::filter(
          insamp == 1
       ) %>%
       mutate(
@@ -498,7 +497,7 @@ server <- function(input, output, session) {
     else{
       ggplot(dfspec_null(),aes(x = x, y = y)) +
         geom_blank() + 
-        annotate(geom = "text", x = 0, y = 0.8, label = "No models match these filter criteria", 
+        annotate(geom = "text", x = 0, y = 0.8, label = "No models match these dplyr::filter criteria", 
                  color = "#66A61E", fontface = "bold", size = 4)+
         labs (x = "Model Count, Ordered by AME", y = "Average Marginal Effect (AME)\nXY-Standardized")
     }
