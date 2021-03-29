@@ -1,8 +1,8 @@
 "","Specifications by Sub-Domain","AME (mean)","AME (sd)","Identical Models","No. of Teams","Support Hypothesis (mean)"
 "1","Sample Specifications",NA,NA,NA,NA,NA
-"2","13 Richest Democracies, 1996 & 2006 Waves",0.018,0.174,189,9,0.167
-"3","11 of 13 Richest Democracies, 1996, 2006 & 2016 Waves",-0.026,0.098,102,8,0.375
-"4","13 Richest Democracies, 1996, 2006 & 2016 Waves",-0.002,0.056,96,10,0.05
+"2","33",0.018,0.174,189,9,0.167
+"3","44",-0.026,0.098,102,8,0.375
+"4","48",-0.002,0.056,96,10,0.05
 "5","Variable Specifications",NA,NA,NA,NA,NA
 "6","No country-level, and 5 socio-demographic individual-level indep. variables",-0.001,0.012,53,6,0.509
 "7","No country-level, and 5 socio-demographic individual-level indep. variables + income",-0.002,0.039,38,7,0.135

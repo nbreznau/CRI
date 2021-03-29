@@ -218,6 +218,7 @@ head(cri_variables)
 ```{r ident_variables1, warning = F}
 cri_var <- cri %>%
     subset(cri$identical_variables %in% cri_variables$identical_variables)
+
 cri_var <- select(cri_var, identical_variables, main_IV_as_control, emigration_ivC:fbXleftright)
 
 
@@ -277,6 +278,6 @@ tbl_ax[c(9:20),] <- cri_estmodel
 
 rm(cri_samp, cri_sampp, cri_estm, cri_estmm, cri_var, cri_varr)
 
-write.csv(tbl_ax, file = here::here("results/TblS3.csv"))
+write.csv(tbl_ax, file = here::here("results/TblS4.csv"))
 ```
 
