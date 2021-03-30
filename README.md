@@ -31,6 +31,8 @@ You can open an interactive environment to explore and execute the analysis your
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/nbreznau/CRI/HEAD?urlpath=rstudio)
 
+The runtime environment created for the Binder uses an [MRAN](https://mran.microsoft.com/) snapshot of 2020-03-29 (see file `.binder/runtime.txt`) and installs all required R packages in the file `.binder/install.R`.
+
 The main data files include team zero, which is the results and model specifications from the study of Brady and Finnigan [(2014)](https://doi.org/10.1177/0003122413513022) providing a launching point for the CRI; team zero is dropped from our main analyses but provides a point of comparison.
 
 ### 1. Source Code Cleaning
