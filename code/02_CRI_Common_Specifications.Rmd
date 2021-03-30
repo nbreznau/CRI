@@ -12,7 +12,7 @@ pacman::p_load("devtools","ggplot2","tidyverse","readr","ExPanDaR","plotscale","
 
 ## Load Data
 
-```{r load, warning=F,message=F, include=F}
+```{r load, warning=FALSE,message=FALSE, include=FALSE}
 
 cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
 cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)

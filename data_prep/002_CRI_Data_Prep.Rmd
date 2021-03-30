@@ -252,7 +252,7 @@ The above files contain personal identifiers and are therefore not allowed for p
 
 Note that teams are now in wide format, so that each variable has up to three values, one for each team member. Also, each result is attached to each team member, thus there are N-results repeated observations of team members.
 
-```{r combine, warning=F, message=F }
+```{r combine, warning=FALSE, message=F }
 cri <- full_join(cri, cri2, by = "u_teamid")
 
 # remove teams that dropped out
@@ -320,7 +320,7 @@ cri_part <- dplyr::select(cri_part, u_teamid, belief1:pro_immigrant)
 
 Note we take the MAX for topic & statistics, MEAN for belief and pro-immigrant.
 
-```{r recodes1, warning=F, message=F}
+```{r recodes1, warning=FALSE, message=F}
 #Generate team-specific qualities
 
 # Because the CRI required teams to define the data-generating model (or at least a test of it) and use statistical competencies to carry it out, we suspect that the highest statistical and topical knowledge and experience per team will have the greatest influence on the results. Therefore, for the concepts 'Stats Level' and 'Topic Level' we take the row min or max for each team (depending on coding. 
@@ -570,7 +570,7 @@ write.csv(fit_fig, file = here::here("results/fit_measurement.csv"))
 
 The file `popdf_out.Rdata` is needed for this, see `001_CRI_Prep_Subj_Votes.Rmd`.
 
-```{r votes, message = F, warning=F}
+```{r votes, message = F, warning=FALSE}
 cri <- left_join(cri, popdf_out, by = "id")
 
 # create levels of subjective responses and voting
@@ -646,7 +646,7 @@ cri <- subset(cri, u_teamid != 105)
 
 We create an overall team average dataset, a flow models only team dataset and a stock models only team dataset.
 
-```{r team_data, message = F, warning=F}
+```{r team_data, message = F, warning=FALSE}
 cri_team <- cri
 cri_team_stock <- subset(cri, cri$Stock == 1)
 cri_team_flow <- subset(cri, cri$Flow == 1)
@@ -713,7 +713,7 @@ cri_indiv <- left_join(cri_indiv, cri_s, by = "u_teamid")
 
 Based on our survey before and during the CRI. We already did a measurement model above, but we do it here for presenting in the results.
 
-```{r sem, include=T, warning=F}
+```{r sem, include=T, warning=FALSE}
 # non-missing df
 sem <- completeFun(cri_indiv, "stat1")
 
@@ -763,7 +763,7 @@ dev.off()
 
 This chunk essentially proves that it probably doesn't matter whether we take team-level measures or individual-level measures aggregated by team as correlations are very high (0.86-0.95).
 
-```{r predict_sem, warning=F, message=F}
+```{r predict_sem, warning=FALSE, message=F}
 # predicted factor scores
 pred <- as.data.frame(lavPredict(fit2))
 sem_p <- cbind(sem_f,pred)
@@ -845,7 +845,7 @@ rm(cri_stra, cri_stra2)
 
 ## Save outputs
 
-```{r save_out, warning=F, message=F}
+```{r save_out, warning=FALSE, message=F}
 # weighting variable is inverted, fix here.
 cri$inv_weight <- 1/cri$inv_weight
 cri_str$inv_weight <- 1/cri_str$inv_weight

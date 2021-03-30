@@ -184,7 +184,7 @@ popdf$label_x = popdf$xaxis+0.14
 
 #### Fig S4. Subjective Ranking of Model Specifications 
 
-```{r fig1, warning=F, message=F, echo=T}
+```{r fig1, warning=FALSE, message=FALSE, echo=T}
 agg_png(file = "results/FigS4_modelrank.png", width = 750)
 
 ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
@@ -246,7 +246,7 @@ https://www.kialo.com/crowdsourced-replication-initiative---research-design---cr
 
 The major results are that participants were in favor of clustering standard errors, and opposed to the usage of only rich democracies. We add two columns to give a bonus for studies that have these attributes. Based on the nature of the discussion we must give a positive score to **all** studies using clustered standard errors, not just Two-Way FE, therefore all nultilevle models also get this positive scoring. 
 
-```{r kialo, message=F, warning=F}
+```{r kialo, message=FALSE, warning=FALSE}
 kialo <- as.data.frame(matrix(nrow = 7, ncol = 10))
 colnames(kialo) <- c("Group","Thesis","False","Improbable","Plausible","Probable","True","Average","Majority_Args_Against","Majority_Args_Support")
 

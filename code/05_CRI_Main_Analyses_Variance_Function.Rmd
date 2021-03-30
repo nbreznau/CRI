@@ -5,7 +5,7 @@ output: html_document
 
 Variance function regressions
 
-```{r setup, include=FALSE, warning=F}
+```{r setup, include=FALSE, warning=FALSE}
 library("pacman")
 
 #necessayr for nnet::multinom and tab_model to work together
@@ -42,7 +42,7 @@ These datasets were worked up from the file 01_CRI_Data_Prep.Rmd.
 
 ### Load Data
 
-```{r load, warning=F,message=F}
+```{r load, warning=FALSE,message=F}
 cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
 cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
 cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = TRUE)

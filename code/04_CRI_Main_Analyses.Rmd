@@ -11,7 +11,7 @@ We let the computer run all possible combinations of specifications, in case our
 
 Finally, we analyze if researcher characteristics associate with model specifications - even though we discovered that these common specifications cannot explain variance in outcomes.
 
-```{r setup, include=FALSE, warning=F}
+```{r setup, include=FALSE, warning=FALSE}
 library("pacman")
 
 #necessary for nnet::multinom and tab_model to work together
@@ -45,7 +45,7 @@ These datasets were worked up from the file `01_CRI_Data_Prep.Rmd`.
 
 ### Load Data
 
-```{r load, warning=F,message=F}
+```{r load, warning=FALSE,message=F}
 cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
 cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
 cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = TRUE)

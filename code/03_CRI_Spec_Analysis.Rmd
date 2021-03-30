@@ -12,7 +12,7 @@ pacman::p_load("devtools","ggplot2","tidyverse","readr","ExPanDaR","plotscale","
 
 ## Load Data
 
-```{r load, warning=F,message=F}
+```{r load, warning=FALSE,message=F}
 cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
 cri <- subset(cri, u_teamid != 0)
 cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
@@ -25,7 +25,7 @@ cri_team <- subset(cri_team, u_teamid!=0)
 
 ### Data Prep
 
-```{r data_prep, warning=F, message=F, include=F}
+```{r data_prep, warning=FALSE, message=FALSE, include=FALSE}
 
 # prep data
 crispectest <- dplyr::select(cri_str, id, u_teamid, dv_type, iv_type, software, indepv, mator, dichotomize, twowayfe, cluster_any, Jobs:Scale,  w1985:w2016, p, AME_Z, lower_Z, upper_Z, id, eeurope, allavailable, mlm_any, Hresult, orig13, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE, main_IV_measurement, emplrate_ivC:gdp_ivC, inv_weight)

@@ -401,7 +401,7 @@ issp2016_red <- issp2016 %>%
 # 1996
 median_income <- issp1996_red %>% 
   group_by(country) %>% 
-  summarize(median = median(income, na.rm = TRUE))
+  dplyr::summarize(median = median(income, na.rm = TRUE))
 
 issp1996_red_income <- issp1996_red %>% mutate(income = NA)
 for (i in 1:length(median_income$country)) {
@@ -494,7 +494,7 @@ l2_migration <- merge(l2_migstock, l2_netmig,
                       by = c("iso_country", "country", "year"), all = FALSE) %>%
   mutate(country = ifelse(country == "Korea, South", "South Korea", country),
          country = ifelse(country == "The Netherlands", "Netherlands", country)) %>%
-  rename(foreignpct = migstock_un, 
+  dplyr::rename(foreignpct = migstock_un, 
          netmigpct = mignet_un)
 
 # merge with level 2 data
