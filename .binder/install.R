@@ -10,6 +10,10 @@
 #)
 # and searching for 'pacman::p_load'
 
+# needed for kableExtra::as_image
+install.packages("webshot")
+webshot::install_phantomjs()
+
 # This might re-install some already available packages, but we favour clarity of efficiency here
 install.packages("Amelia")
 install.packages("brms")
