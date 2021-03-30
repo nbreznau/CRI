@@ -116,5 +116,5 @@ install.packages("xlsx")
 install.packages("xtable")
 install.packages("zoo")
 
-remotes::install_github("easystats/effectsize")
 remotes::install_github("easystats/insight")
+remotes::install_github("easystats/effectsize")
