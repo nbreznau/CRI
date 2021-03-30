@@ -68,9 +68,9 @@ model_desc <- model_desc %>%
          i = vote_id)
 
 # Here join the survey descriptions with participant votes
-model_desc <- left_join(model_desc, votes, by = "i")
+model_desc <- dplyr::left_join(model_desc, votes, by = "i")
 
-model_desc <- select(model_desc, i, vote_id, d, everything())
+model_desc <- dplyr::select(model_desc, i, vote_id, d, everything())
 
 # clean up
 
@@ -94,8 +94,7 @@ model_desc <- model_desc %>%
 We use some basic correlation analysis to reduce the complexity of vote scores and specifications.
 
 ```{r datareduction}
-
-cor <- select(model_desc, model_x, level, mator, model_spec, year, dv_dichot, dv_linear, dv_extra, dv_cat, rich13, rich17, eeurope)
+cor <- dplyr::select(model_desc, model_x, level, mator, model_spec, year, dv_dichot, dv_linear, dv_extra, dv_cat, rich13, rich17, eeurope)
 
 # make dummies
 cord <- fastDummies::dummy_cols(cor, remove_selected_columns=T)
@@ -285,7 +284,7 @@ popdf$score <- popdf$score/max(popdf$score)
 popdf[nrow(popdf)+1,] <- NA
 popdf[nrow(popdf)+1,] <- NA
 
-popdf <- select(popdf, Feature, score)
+popdf <- dplyr::select(popdf, Feature, score)
 popdf$Feature <- as.character(popdf$Feature)
 #careful, any changes above deprecate these lines
 popdf[32,1] <- "Beyond Rich Democracies"
@@ -348,7 +347,7 @@ popdf_out <- popdf_out %>%
          score_mator = ifelse(bayes==1, `Bayes`, ifelse(ols==1 | lpm==1, `OLS`, ifelse(ologit==1, `Categorical/Ordered`, ifelse(logit==1, `Logistic`, `ML`)))),
          score_weight = ifelse(weights==1, `Sampling Weights`, 0.3))
 
-popdf_out <- select(popdf_out, id, score_waves, score_cases, score_levels, score_mlm, score_mator, score_weight)
+popdf_out <- dplyr::select(popdf_out, id, score_waves, score_cases, score_levels, score_mlm, score_mator, score_weight)
 
 # Make average total score
 

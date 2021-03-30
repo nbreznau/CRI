@@ -54,13 +54,13 @@ crispectest <- read.csv(file = here::here("results/crispectest.csv"), header = T
 
 # setup multilevel dataset
 
-cri_ml <- select(cri,u_teamid, id, u_delibtreatmentgroup1, AME:main_IV_source, main_IV_measurement:package, countries, Jobs:anynonlin,AME_Z,lower_Z,upper_Z,Hsup,Hrej,Hno,AME_sup_p05:AME_ns_p05,u_expgroup1,belief_strength:belief_ipred, HresultF, STATISTICS_SKILL, BELIEF_HYPOTHESIS, TOPIC_KNOWLEDGE, MODEL_SCORE, PRO_IMMIGRANT)
+cri_ml <- dplyr::select(cri,u_teamid, id, u_delibtreatmentgroup1, AME:main_IV_source, main_IV_measurement:package, countries, Jobs:anynonlin,AME_Z,lower_Z,upper_Z,Hsup,Hrej,Hno,AME_sup_p05:AME_ns_p05,u_expgroup1,belief_strength:belief_ipred, HresultF, STATISTICS_SKILL, BELIEF_HYPOTHESIS, TOPIC_KNOWLEDGE, MODEL_SCORE, PRO_IMMIGRANT)
 
 # create a team ID variable to identify the independent tests by team. Again, 16 of 71 teams had independent conclusions - seeing stock v flow immigration measures as representative of independent tests of the hypothesis. Therefore, we have a team-test level that replaces the team level.
 
 cri_ml$team <- cri_ml %>% group_indices(u_teamid, HresultF)
 
-cri_ml <- select(cri_ml, u_teamid, id, team, AME_Z, upper_Z, lower_Z, everything())
+cri_ml <- dplyr::select(cri_ml, u_teamid, id, team, AME_Z, upper_Z, lower_Z, everything())
 
 # remove team 0
 cri_ml <- subset(cri_ml, u_teamid != 0)
@@ -110,7 +110,7 @@ cri_ml <- cri_ml %>%
 
 # u_expgroup missing from team-level data
 t1 <- aggregate(cri_ml, FUN = mean, by = list(cri_ml$u_teamid), na.rm =T)
-t1 <- select(t1, u_teamid, u_expgroup1)
+t1 <- dplyr::select(t1, u_teamid, u_expgroup1)
 
 cri_team <- left_join(cri_team, t1, by = "u_teamid")
 ```
@@ -533,7 +533,7 @@ We have 20 variables and 89 cases, this means that some of the explained devianc
 We always take one less than the number of variables.
 
 ```{r dev_adj, results = F}
-cri_team_sim <- select(cri_team, Hresult)
+cri_team_sim <- dplyr::select(cri_team, Hresult)
 
 seed <- 90210
 set.seed(seed)

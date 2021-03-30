@@ -46,7 +46,7 @@ cri <- cri %>%
 # Get data with only model specs
 cri_spec_only <- cri
          
-cri_spec_only <- select(cri_spec_only, -c(count:main_IV_measurement, num_countries, inv_weight, additionalinfo, Hsupport:HresultF, AME_sup_p05:MODEL_SCORE))
+cri_spec_only <- dplyr::select(cri_spec_only, -c(count:main_IV_measurement, num_countries, inv_weight, additionalinfo, Hsupport:HresultF, AME_sup_p05:MODEL_SCORE))
 
 # convert character to numeric
 cri_spec_only <- cri_spec_only %>%
@@ -59,8 +59,8 @@ rownames(cri_spec_only) <- cri_spec_only$id
 cri_spec_only_team <- aggregate(cri_spec_only, by = list(cri_spec_only$u_teamid), FUN = "mean")
 # our analysis below revealed we should try a subset
 cri_spec_only2 <- subset(cri_spec_only, u_teamid != 10 & u_teamid != 61 & u_teamid != 82)
-cri_spec_only <- select(cri_spec_only,-c(u_teamid, id))
-cri_spec_only2 <- select(cri_spec_only2,-c(u_teamid, id))
+cri_spec_only <- dplyr::select(cri_spec_only,-c(u_teamid, id))
+cri_spec_only2 <- dplyr::select(cri_spec_only2,-c(u_teamid, id))
 cri_sums <- colSums(Filter(is.numeric, cri_spec_only_team))
 cri_sums <- as.data.frame(c("sum",cri_sums))
 cri_sums[,1] <- as.numeric(cri_sums[,1])
@@ -84,11 +84,11 @@ A second look at these data suggests that we may want to separately cluster on d
 
 ```{r diss_1, warning = F}
 # select only country and wave variables
-cri_spec_only01 <- select(cri_spec_only, w1985:TR)
+cri_spec_only01 <- dplyr::select(cri_spec_only, w1985:TR)
 # variables in the model
-cri_spec_only02 <- select(cri_spec_only, main_IV_as_control, emigration_ivC:fbXleftright)
+cri_spec_only02 <- dplyr::select(cri_spec_only, main_IV_as_control, emigration_ivC:fbXleftright)
 # est & measurement (we provide two versions, one with DVs, one without)
-cri_spec_only03 <- select(cri_spec_only, netmig, west, nonwest, muslim, refugee, main_IV_time, main_IV_effect, Jobs:ChangeFlow, twowayfe:pseudo_pnl, dichotomize)
+cri_spec_only03 <- dplyr::select(cri_spec_only, netmig, west, nonwest, muslim, refugee, main_IV_time, main_IV_effect, Jobs:ChangeFlow, twowayfe:pseudo_pnl, dichotomize)
 cri_spec_only03 <- cri_spec_only03 %>%
   mutate(main_IV_time_1year = car::recode(main_IV_time, "1 = 1; c(2,3,4,5,6) = 0"),
          main_IV_time_10year = car::recode(main_IV_time, "2 = 1; c(1,3,4,5,6) = 0"),
@@ -100,10 +100,10 @@ cri_spec_only03 <- cri_spec_only03 %>%
          main_IV_effect_total = car::recode(main_IV_effect, "2 = 1; c(1,3,4) = 0"),
          main_IV_effect_unclear = car::recode(main_IV_effect, "3 = 1; c(1,2,4) = 0"),
          main_IV_effect_within = car::recode(main_IV_effect, "4 = 1; c(1,2,3) = 0"))
-cri_spec_only03 <- select(cri_spec_only03, -c(main_IV_time, main_IV_effect))
-cri_spec_only03_noDV <- select(cri_spec_only03, -c(Jobs:Health))
+cri_spec_only03 <- dplyr::select(cri_spec_only03, -c(main_IV_time, main_IV_effect))
+cri_spec_only03_noDV <- dplyr::select(cri_spec_only03, -c(Jobs:Health))
 #make a test for all three at once
-cri_spec_only04 <- select(cri_spec_only, w1985:TR, main_IV_as_control, emigration_ivC:fbXleftright, anynonlin)
+cri_spec_only04 <- dplyr::select(cri_spec_only, w1985:TR, main_IV_as_control, emigration_ivC:fbXleftright, anynonlin)
 cri_spec_only04 <- cbind(cri_spec_only04, cri_spec_only03)
 cri_spec_only04_noDV <- cbind(cri_spec_only04, cri_spec_only03_noDV)
 # find and merge identical cases
@@ -170,7 +170,7 @@ Identify the sample selection that goes with cases `r cri_samples$identical_samp
 ```{r ident_sample, warning = F}
 cri_samp <- cri %>%
     subset(cri$identical_samples %in% cri_samples$identical_samples)
-cri_samp <- select(cri_samp, identical_samples, w1985:TR)
+cri_samp <- dplyr::select(cri_samp, identical_samples, w1985:TR)
 
 cri_sampp<- aggregate(cri_samp, by = list(cri_samp$identical_samples), FUN = "mean")
 
@@ -205,7 +205,7 @@ head(cri_variables)
 cri_var <- cri %>%
     subset(cri$identical_variables %in% cri_variables$identical_variables)
 
-cri_var <- select(cri_var, identical_variables, main_IV_as_control, emigration_ivC:fbXleftright)
+cri_var <- dplyr::select(cri_var, identical_variables, main_IV_as_control, emigration_ivC:fbXleftright)
 
 
 cri_varr <- aggregate(cri_var, by = list(cri_var$identical_variables), FUN = "mean")
@@ -239,7 +239,7 @@ head(cri_estmodel)
 ```{r ident_variables, warning = F}
 cri_estm <- cri %>%
     subset(cri$identical_estmodel %in% cri_estmodel$identical_estmodel)
-cri_estm  <- select(cri_estm , identical_estmodel, netmig, west, nonwest, muslim, refugee, main_IV_time, main_IV_effect, Jobs:ChangeFlow, twowayfe:pseudo_pnl, dichotomize)
+cri_estm  <- dplyr::select(cri_estm , identical_estmodel, netmig, west, nonwest, muslim, refugee, main_IV_time, main_IV_effect, Jobs:ChangeFlow, twowayfe:pseudo_pnl, dichotomize)
 
 
 cri_estmm  <- aggregate(cri_estm, by = list(cri_estm$identical_estmodel), FUN = "mean")

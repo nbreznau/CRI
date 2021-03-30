@@ -34,24 +34,24 @@ A descriptives table is far too large to add, therefore we simply append some su
 ```{r codebook, include = F, warning = F}
 codebook <- subset(cri_str, u_teamid != 0)
 codebook$DV[grepl("Scale",codebook$DV)] <- "Scale"
-codebook <- select(codebook, DV, main_IV_type, main_IV_measurement, main_IV_time, num_countries, main_IV_as_control, software, mator, indepv, inv_weight) %>%
-    mutate(num_countries = factor(num_countries),
-           main_IV_as_control = factor(main_IV_as_control))
+codebook <- dplyr::select(codebook, DV, main_IV_type, main_IV_measurement, main_IV_time, num_countries, main_IV_as_control, software, mator, indepv, inv_weight) %>%
+    dplyr::mutate(num_countries = factor(num_countries),
+                  main_IV_as_control = factor(main_IV_as_control))
 
 # Get weighted proportions
-codebook1 <- gather(codebook, "var", "value", DV:indepv) %>%
-  count(var, value, wt = inv_weight) %>%
-  group_by(var) %>%    
-  mutate(propw = prop.table(n)) %>%
-  ungroup() %>%
-  select(., propw)
+codebook1 <- tidyr::gather(codebook, "var", "value", DV:indepv) %>%
+  dplyr::count(var, value, wt = inv_weight) %>%
+  dplyr::group_by(var) %>%    
+  dplyr::mutate(propw = prop.table(n)) %>%
+  dplyr::ungroup() %>%
+  dplyr::select(., propw)
 
 # Get unweighted proportions plus n cases
-codebook2 <- gather(codebook, "var", "value", DV:indepv) %>%
-  count(var, value) %>%
-  group_by(var) %>%             
-  mutate(prop = prop.table(n)) %>%
-  ungroup()
+codebook2 <- tidyr::gather(codebook, "var", "value", DV:indepv) %>%
+  dplyr::count(var, value) %>%
+  dplyr::group_by(var) %>%             
+  dplyr::mutate(prop = prop.table(n)) %>%
+  dplyr::ungroup()
 
 codebook1 <- cbind(codebook2, codebook1)
 
@@ -81,11 +81,9 @@ codebook1 <- codebook1[order(codebook1$var, codebook1$n, decreasing = TRUE),]
 codebook1 <- codebook1 %>%
     mutate(value = ifelse(n == 1000, var, ifelse(n == 0, "total", value)))
 
-codebook1 <- select(codebook1, -var)
+codebook1 <- dplyr::select(codebook1, -var)
 
 write.csv(codebook1, file = here::here("results/codebook1.csv"))
-
-
 ```
 
 ## Descriptives
@@ -123,7 +121,7 @@ cri_sum <- as.data.frame(t(cri_sum))
 
 colnames(cri_sum) <- c("mean","variable", "sd","N","min","max")
 
-cri_sum <- select(cri_sum, variable, mean, everything())
+cri_sum <- dplyr::select(cri_sum, variable, mean, everything())
 
 cri_sum$mean <- round(as.numeric(cri_sum$mean), 4)
 cri_sum$sd <- round(as.numeric(cri_sum$sd), 4)
@@ -153,7 +151,7 @@ cri_sum <- as.data.frame(t(cri_sum))
 
 colnames(cri_sum) <- c("mean","variable", "sd","N","min","max")
 
-cri_sum <- select(cri_sum, variable, mean, everything())
+cri_sum <- dplyr::select(cri_sum, variable, mean, everything())
 
 colnames(cri_sum) <- c("variable (team average scores)","mean", "sd","N","min","max")
 
@@ -241,7 +239,7 @@ write.csv(tbl1, file = here::here("results/tbl1.csv"))
 ### Correlation heatmap for Tbl1 obj and subj results
 
 ```{r}
-cor_team <- select(cri_team0, Hsup, Hno, Hrej, pos_test_pct_p05, ns_test_pct_p05, neg_test_pct_p05)
+cor_team <- dplyr::select(cri_team0, Hsup, Hno, Hrej, pos_test_pct_p05, ns_test_pct_p05, neg_test_pct_p05)
 cormat <- round(cor(cor_team),2)
 
 sq_cormat <- cormat[-c(4:6),-c(1:3)]
@@ -311,7 +309,7 @@ knitr::include_graphics(here::here("results/FigS5.png"))
 
 # Colophon
 
-This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI).
+This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*The Crowdsourced Replication Initiative: Investigating Immigration and Social Policy Preferences*](https://doi.org/10.31235/osf.io/6j9qb).
 
 ```{r colophon, echo=FALSE}
 sessionInfo()

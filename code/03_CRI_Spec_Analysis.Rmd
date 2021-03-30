@@ -40,7 +40,7 @@ crimrg <- cri %>%
          # if any methods, then make methods for team
          )
 
-crimrg <- select(crimrg, degree, id)
+crimrg <- dplyr::select(crimrg, degree, id)
 
 crispectest <- left_join(crispectest, crimrg, by = "id")
 
@@ -86,7 +86,7 @@ cri_team <- cri_team %>%
          lb = est-0.01)
 
 # import researcher aspects to crispectest
-cri_merge <- select(cri, id, belief_ipred, pro_immigrant, topic_ipred, stats_ipred, total_score)
+cri_merge <- dplyr::select(cri, id, belief_ipred, pro_immigrant, topic_ipred, stats_ipred, total_score)
 
 crispectest <- left_join(crispectest, cri_merge, by = "id")
 

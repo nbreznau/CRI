@@ -73,7 +73,7 @@ cri_str <- cri_str %>%
          lower_Z = ifelse(main_IV_type == "Flow", lower_Z, lower),
          upper_Z = ifelse(main_IV_type == "Flow", upper_Z, upper))
 
-cri_str <- select(cri_str, -c(AMEssd,AMEfsd))
+cri_str <- dplyr::select(cri_str, -c(AMEssd,AMEfsd))
 ```
 
 Recalibrate some variables. Respondents sometimes reported two conclusions because they concluded that they were conducting independent hypothesis tests (seperate for 'flow' and 'stock' models). Adjust strings. 
@@ -150,20 +150,20 @@ Remove some unused 'countries'.
 
 ```{r string_encode, warning = F, message = F}
 #replace all 1's with the column name for all variable
-w <- select(cri_str, Jobs:anynonlin, id)
+w <- dplyr::select(cri_str, Jobs:anynonlin, id)
 
 for (i in 1:length(w)) {
     w[[i]] <- ifelse(w[[i]]=="1", colnames(w)[i], w[[i]])
 }
 
 # country divisions not used
-w <- select(w, -c(germany_west, germany_east, n_ireland))
-cri <- select(cri, -c(germany_west, germany_east, n_ireland))
+w <- dplyr::select(w, -c(germany_west, germany_east, n_ireland))
+cri <- dplyr::select(cri, -c(germany_west, germany_east, n_ireland))
 
-crispeca <- select(cri_str, -c(Jobs:anynonlin))
+crispeca <- dplyr::select(cri_str, -c(Jobs:anynonlin))
 cri_str <- merge(crispeca, w , by = "id")
 
-cri_str <- select(cri_str, Jobs:anynonlin, everything())
+cri_str <- dplyr::select(cri_str, Jobs:anynonlin, everything())
 
 # replace 0's with NA
 cri_str[c(1:161)][cri_str[c(1:161)] == 0] <- NA
@@ -182,7 +182,7 @@ cri_str <- cri_str %>%
          )
 
 # send to numerical data for use as factor variables
-cri_strT <- select(cri_str, id, iv_type, mator, software, indepv)
+cri_strT <- dplyr::select(cri_str, id, iv_type, mator, software, indepv)
 
 cri <- left_join(cri, cri_strT, by = "id")
 
@@ -198,8 +198,8 @@ criT <- cri %>%
       dichotomize = ifelse(dichotomize == 1,"dichotomous","continuous")
       )
 
-criT <- select(criT, id, twowayfe, cluster_any, mlm_re, mlm_fe, logit, dichotomize)
-cri_str <- select(cri_str, -c(twowayfe, cluster_any, mlm_re, mlm_fe, logit, dichotomize))
+criT <- dplyr::select(criT, id, twowayfe, cluster_any, mlm_re, mlm_fe, logit, dichotomize)
+cri_str <- dplyr::select(cri_str, -c(twowayfe, cluster_any, mlm_re, mlm_fe, logit, dichotomize))
 cri_str <- left_join(cri_str, criT, by = "id")
 
 rm(criT, cri_strT)
@@ -259,7 +259,7 @@ cri <- full_join(cri, cri2, by = "u_teamid")
 # Column no missing function
 cri <- completeFun(cri, "id")
 
-cri <- select(cri, u_teamid, id, everything())
+cri <- dplyr::select(cri, u_teamid, id, everything())
 ```
 
 ### Individual Measurement Method
@@ -312,7 +312,7 @@ cri_part$stat7 <- as.numeric(cri_part$v_21)
 cri_part$pro_immigrant <- as.numeric(cri_part$attitude_immigration_1)
 cri_part$pro_immigrant <- (cri_part$pro_immigrant*-1)+7
 
-cri_part <- select(cri_part, u_teamid, belief1:pro_immigrant)
+cri_part <- dplyr::select(cri_part, u_teamid, belief1:pro_immigrant)
 # cri_indiv.csv
 ```
 
@@ -452,7 +452,7 @@ Aggregated by team
 
 ```{r f3}
 # make a dataset for correlation
-cor <- select(cri, stat1,stat2,stat3,stat4,stat5,stat6,stat7,topic1,topic2,topic3,topic4,topic5,topic6,topic7,topic8,topic9,belief1,belief2,belief3,belief4,belief5,belief6,belief7,belief_strength,pro_immigrant,u_teamid)
+cor <- dplyr::select(cri, stat1,stat2,stat3,stat4,stat5,stat6,stat7,topic1,topic2,topic3,topic4,topic5,topic6,topic7,topic8,topic9,belief1,belief2,belief3,belief4,belief5,belief6,belief7,belief_strength,pro_immigrant,u_teamid)
 
 cor <- aggregate(cor, by=list(cor$u_teamid), FUN=mean, na.rm=T)
 cor <- replace(cor, cor=="-Inf",NA)
@@ -527,7 +527,7 @@ cor1$label <- c("(stat1)",
                     "(belief7)",
                     "(belief_strength)", 
                     "(pro_immigrant)")
-cor1 <- select(cor1, label, everything())
+cor1 <- dplyr::select(cor1, label, everything())
 write.csv(cor1, file = here::here("results/TblS3_measrement.csv"))
 ```
 
@@ -551,7 +551,7 @@ cor2 <- as.data.frame(lavPredict(fit))
 cor <- cbind(cor,cor2)
 
 # put them back into the main data
-cor2 <- select(cor, u_teamid, stat, topic, belief)
+cor2 <- dplyr::select(cor, u_teamid, stat, topic, belief)
 
 cri <- left_join(cri,cor2,by = "u_teamid")
 
@@ -580,7 +580,7 @@ criT <- cri %>%
          topic_cat = ifelse(topic > 0.4, "Highest", ifelse(topic > 0, "High", ifelse(topic > -0.4, "Low", "Lowest"))),
          total_score_cat = ifelse(total_score > 0.53, "Highest", ifelse(total_score > 0.41, "High", ifelse(total_score > 0.32, "Low", "Lowest"))))
 
-criT <- select(criT, stat_cat, belief_cat, topic_cat, total_score_cat, id)
+criT <- dplyr::select(criT, stat_cat, belief_cat, topic_cat, total_score_cat, id)
 
 cri_str <- left_join(cri_str, criT, by = "id")
 
@@ -685,7 +685,7 @@ cri_team_stock <- Filter(function(x) !all(is.na(x)), cri_team_stock)
 cri_team_flow <- Filter(function(x) !all(is.na(x)), cri_team_flow)
 
 # add missing variable
-cri_stra <- select(cri_str, dv_type, id)
+cri_stra <- dplyr::select(cri_str, dv_type, id)
 df <- left_join(cri, cri_stra, by = "id")
 rm(cri_stra)
 ```
@@ -701,9 +701,9 @@ write.csv(cri_part, file = here::here("data","cri_indv.csv"), row.names = FALSE)
 cri_indiv <- read.csv(file = here::here("data","cri_indv.csv"), header = TRUE)
 
 
-cri_subj <- select(cri, u_teamid, Hsupport, Hmixed)
+cri_subj <- dplyr::select(cri, u_teamid, Hsupport, Hmixed)
 cri_subj$Hsup <- ifelse(cri_subj$Hsupport == 1, 1, ifelse(cri_subj$Hmixed == 1, 0.5, 0))
-cri_subj <- select(cri, u_teamid, Hsup)
+cri_subj <- dplyr::select(cri, u_teamid, Hsup)
 cri_s <- aggregate(cri_subj, by = list(cri_subj$u_teamid), FUN = mean, na.rm = TRUE)
 
 cri_indiv <- left_join(cri_indiv, cri_s, by = "u_teamid")
@@ -724,7 +724,7 @@ sem <- sem %>%
          topic4 = ifelse(u_teamid == 27,4,topic4))
 
 # correlations
-cor3 <- select(sem, -c(u_teamid,Group.1))
+cor3 <- dplyr::select(sem, -c(u_teamid,Group.1))
 cor3 <- round(cor(cor3, use = "pairwise.complete.obs"),2)
 
 sem_f <- completeFun(sem, c("Hsup","belief1","topic2"))
@@ -769,10 +769,10 @@ pred <- as.data.frame(lavPredict(fit2))
 sem_p <- cbind(sem_f,pred)
 
 # put them back into the main data
-sem_p <- select(sem_p, u_teamid, stats, topic, belief)
+sem_p <- dplyr::select(sem_p, u_teamid, stats, topic, belief)
 sem_pa <- aggregate(x = sem_p, by = list(sem_p$u_teamid), FUN = "mean", na.rm = TRUE)
 colnames(sem_pa) <- c("", "u_teamid","stats_ipred","topic_ipred","belief_ipred")
-sem_pa <- select(sem_pa, u_teamid, stats_ipred, topic_ipred, belief_ipred)
+sem_pa <- dplyr::select(sem_pa, u_teamid, stats_ipred, topic_ipred, belief_ipred)
 cri <- left_join(cri,sem_pa,by = "u_teamid")
 
 cri_team <- left_join(cri_team, sem_pa, by = "u_teamid")
@@ -780,18 +780,18 @@ cri_team <- left_join(cri_team, sem_pa, by = "u_teamid")
 rm(fit,fit1,pred,sem_f,sem_out,sem_p,sem_pa)
 
 # compare with previous team-level predicted version
-cri_test_mean <- select(cri,u_teamid, belief, belief_ipred)
-cri_test_max <- select(cri, u_teamid, stat, topic, stats_ipred, topic_ipred)
+cri_test_mean <- dplyr::select(cri,u_teamid, belief, belief_ipred)
+cri_test_max <- dplyr::select(cri, u_teamid, stat, topic, stats_ipred, topic_ipred)
 
 cri_team_test1 <- aggregate(cri_test_mean, by = list(cri$u_teamid), FUN = mean, na.rm=T)
 cri_team_test2 <- aggregate(cri_test_max, by = list(cri$u_teamid), FUN = max, na.rm=T)
 cri_team_test <- left_join(cri_team_test1,cri_team_test2, by = "u_teamid")
-cri_team_test <- select(cri_team_test, -c(Group.1.x,Group.1.y))
+cri_team_test <- dplyr::select(cri_team_test, -c(Group.1.x,Group.1.y))
 cri_team_test$belief_ipred <- ifelse(cri_team_test$belief_ipred == "NaN", NA, cri_team_test$belief_ipred)
 cri_team_test <- completeFun(cri_team_test, "belief_ipred")
 
 # correlatinos
-cor4 <- select(cri_team_test, -c(u_teamid))
+cor4 <- dplyr::select(cri_team_test, -c(u_teamid))
 cor4 <- round(cor(cor4, use = "pairwise.complete.obs"),2)
 
 kable(cor4)
@@ -813,14 +813,14 @@ cri <- cri %>%
          STATISTICS_SKILL = ifelse(stats_ipred > 0.38, "High", ifelse(stats_ipred < -0.3, "Low", "Mid")),
          MODEL_SCORE = ifelse(total_score > 0.55, "High", ifelse(total_score < 0.35, "Low", "Mid")))
         
-cri_stra <- select(cri, id, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
+cri_stra <- dplyr::select(cri, id, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
 cri_stra <- subset(cri_stra, !is.na(PRO_IMMIGRANT))
 
 cri_str <- left_join(cri_str, cri_stra, by = "id")
 rm(cri_stra)
 
 # now repeat for the team level
-cri_stra <- select(cri_team, u_teamid, belief_ipred, pro_immigrant, topic_ipred, stats_ipred, total_score)
+cri_stra <- dplyr::select(cri_team, u_teamid, belief_ipred, pro_immigrant, topic_ipred, stats_ipred, total_score)
 
 cri_stra2 <- aggregate(cri_stra, by = list(cri_stra$u_teamid), FUN = mean, na.rm = TRUE)
 
@@ -831,7 +831,7 @@ cri_stra2 <- cri_stra2 %>%
          STATISTICS_SKILL = ifelse(stats_ipred > 0.2, "High", ifelse(stats_ipred < -0.2, "Low", "Mid")),
          MODEL_SCORE = ifelse(total_score > 0.55, "High", ifelse(total_score < 0.35, "Low", "Mid")))
 cri_stra2 <- subset(cri_stra2, !is.na(PRO_IMMIGRANT))
-cri_stra2 <- select(cri_stra2, u_teamid, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
+cri_stra2 <- dplyr::select(cri_stra2, u_teamid, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
 
 cri_team <- left_join(cri_team, cri_stra2, by = "u_teamid")
 
@@ -975,10 +975,10 @@ cri_shiny_team <- cri_shiny_team %>%
 # Remove unnecessary columns, remove Brady and Finnigan study
 cri_shiny <- cri_shiny %>%
   subset(u_teamid != 0) %>%
-  select(-c(additionalinfo, fbXnet:fbXleftright,backgr_degree_other1:belief_2_avg))
+  dplyr::select(-c(additionalinfo, fbXnet:fbXleftright,backgr_degree_other1:belief_2_avg))
 cri_shiny_team <- cri_shiny_team %>%
   subset(u_teamid != 0) %>%
-  select(-c(fbXnet:fbXleftright,backgr_degree1:model_eval3))
+  dplyr::select(-c(fbXnet:fbXleftright,backgr_degree1:model_eval3))
 
 # Need text versions for filtering
 cri_shiny <- cri_shiny %>%
