@@ -1,0 +1,3 @@
+jags
+default-jdk
+libmagick++-dev

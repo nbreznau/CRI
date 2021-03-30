@@ -1,7 +1,6 @@
 # The Hidden Universe of Data-Analysis
 
-
-### Research Design and Analysis:
+## Research Design and Analysis:
 
 **Nate Breznau**
 
@@ -28,6 +27,9 @@ The workflow is provided in a literate programming format, R Markdown notebooks 
 Next to the `.Rmd` files, there are also `.html` files of the same name. The latter contain HTML renderings of the notebooks with the created figures and tables, so that non-R users may view the workflow results more easily with any regular browser software.
 For example, the file `01_CRI_Descriptives.Rmd` has a corresponding `01_CRI_Descriptives.html` file in the same folder for easy viewing without the need for running any R code.
 Paths in the notebooks are handled with the `here` package and the paths are all relative to the projects root directory (where this README.md file is located).
+You can open an interactive environment to explore and execute the analysis yourself based on [Binder](https://mybinder.org) ([Project Jupyter, 2018](https://doi.org/10.25080/Majora-4af1f417-011)):
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/nbreznau/CRI/HEAD?urlpath=rstudio)
 
 The main data files include team zero, which is the results and model specifications from the study of Brady and Finnigan [(2014)](https://doi.org/10.1177/0003122413513022) providing a launching point for the CRI; team zero is dropped from our main analyses but provides a point of comparison.
 
@@ -55,10 +57,13 @@ Our primary analyses and results are in the [`code`](code/) folder. It contains 
 6. `06_CRI_Multiverse.Rmd` - uses a function to test all possible combinations of model specifications to explain variance
 7. `07_CRI_DVspecific_Analyses-Rmd` - re-running main models separately by dependent variable (out of the 6 ISSP survey questions)
 
+### Run All Code
 
-### Source Data
+The following scripts runs _all_ notebook files in order to check there are no code issues.
 
-The data preparation code is in the sub-folder CRI/data_prep. After the data prep files, all necessary data analysis files are in the CRI/data folder. These files are many because participants' code often requires special files to run properly. The data files needed to reproduce the data anlysis. These files are:
+```r
+source("all.R")
+```
 
 ## Source Data
 
@@ -85,6 +90,10 @@ The data preparation code is in the sub-folder [`data_prep`](data_prep/). After 
 
 [Executive Report - describing the full study](https://osf.io/preprints/socarxiv/6j9qb/)
 
+### Start local Binder
 
+Install [`repo2docker`](https://github.com/jupyterhub/repo2docker) and then run
 
-
+```bash
+repo2docker --editable .
+```
