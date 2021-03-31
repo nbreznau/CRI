@@ -12,7 +12,7 @@ pacman::p_load("devtools","ggplot2","tidyverse","readr","ExPanDaR","plotscale","
 
 ## Load Data
 
-```{r load, warning=FALSE,message=F}
+```{r load, warning=FALSE,message=FALSE}
 cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
 cri <- subset(cri, u_teamid != 0)
 cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
@@ -362,7 +362,7 @@ g4 <- ggplot(crispectest) +
 
 #### Fig S6. 
 
-```{r figS6, warning = F}
+```{r figS6, warning = FALSE}
 agg_png(filename = here::here("results/FigS6.png"), res = 144, height = 900, width = 1700)
 ggarrange(g1,g2,g3,g4, labels = c("A ","B ","C ","D "))
 dev.off()
@@ -416,7 +416,7 @@ For each set of explanatory variables we plot two versions. One ordered by effec
 
 Test Format
 
-```{r figS7d, warning = F}
+```{r figS7d, warning = FALSE}
 testlabs <- c("       Stock", "Flow", "Change\nFlow")
 g01 <- 
   ggplot(crispectest) +
@@ -456,7 +456,7 @@ g01ci <-
 
 Measurement of Immigration
 
-```{r figS7c, warning = F}
+```{r figS7c, warning = FALSE}
 mlabs <- c("  Immigra-\nnts (%)", "Net\nMigration")
 g02 <- 
   ggplot(crispectest) +
@@ -494,7 +494,7 @@ g02ci <-
 
 Dependent Variables
 
-```{r figS7b, warning = F}
+```{r figS7b, warning = FALSE}
 # set labels
 dvlabs = c("             Jobs","Unemp","IncDiff","OldAge","House","Health","Scale")
 
@@ -544,7 +544,7 @@ g03ci <-
 
 Independent Variables
 
-```{r figS7a, warning = F}
+```{r figS7a, warning = FALSE}
 ivlabs <- c(" (Un)Emp\nRate","GDP\nper cap", "Social\nSpending","None\n/other")
 
 g04 <- ggplot(crispectest) +
@@ -577,7 +577,7 @@ g04ci <- ggplot(crispectest) +
 ```
 
 
-```{r figS7, warning = F}
+```{r figS7, warning = FALSE}
 agg_png(filename = here::here("results/FigS7.png"), height = 800, width = 800, res = 72)
 ggarrange(g1a, g2a, g01, g01ci, g02, g02ci, g03, g03ci, g04, g04ci, nrow = 5, ncol = 2, heights = c(0.6,.75,0.5,1.75,1.2), widths = c(1,0.9))
 dev.off()
@@ -585,7 +585,7 @@ dev.off()
 knitr::include_graphics(here::here("results/FigS7.png"))
 ```
 
-```{r figS8c, warning = F}
+```{r figS8c, warning = FALSE}
 samplabs <- c("1996 &\n2006","2006 &\n2016","1996, 2006\n& 2016","Other")
 
  g9 <-
@@ -627,7 +627,7 @@ ggplot(crispectest) +
   )
 ```
 
-```{r figS8b, warning = F}
+```{r figS8b, warning = FALSE}
 clabs <- c("Rich 13"," CEE/East\nEurope","All\nAvailable","Other")
 
 g10 <-
@@ -669,7 +669,7 @@ ggplot(crispectest) +
   )
 ```
 
-```{r figS8a, warning = F}
+```{r figS8a, warning = FALSE}
 estlabs <- c("OLS","Logit"," ML/GLM","Ordered\nlogit","Bayes")
 
 g11 <-
@@ -714,7 +714,7 @@ ggplot(crispectest) +
   )
 ```
 
-```{r figS8, warning = F}
+```{r figS8, warning = FALSE}
 agg_png(filename = here::here("results/FigS8.png"), height = 600, width = 800, res = 72)
 ggarrange(g1a, g2a, g9, g9ci, g10, g10ci, g11, g11ci, nrow = 4, ncol = 2, heights = c(0.6,1,1,1.2), widths = c(1,0.9))
 dev.off()
@@ -726,7 +726,7 @@ knitr::include_graphics(here::here("results/FigS8.png"))
 
 Order results by subjective conclusion and then percent ratio of effect sizes at p05 neg/pos.
 
-```{r figS9a, warning = F}
+```{r figS9a, warning = FALSE}
 cri_team <- cri_team %>%
   mutate(subj_concl = factor(Hresult, levels = c("Reject","No test","Support")),
          pct_negpos = ifelse(subj_concl == "Reject", AME_neg_p05, 
@@ -765,7 +765,7 @@ labs_y_new <- c("Model Score","Stats-Skill","Topic\nKnowledge","Pro Immigrant","
 
 #### Figure S9
 
-```{r figS9, warning = F}
+```{r figS9, warning = FALSE}
 g5a_new <- 
   ggplot(cri_team) +
   geom_point(aes(x = count2, y = AME_Zt, color = subj_concl), shape = 18, size = 4) +   scale_color_manual(values = c("#D95F02", "grey55", "#66A61E"), labels = c("Rejected","Not testable","Supported")) +

@@ -13,7 +13,7 @@ pacman::p_load("tidyverse","haven","foreign","textreg","xtable","MASS")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r dataprep, warning = F}
+```{r dataprep, warning = FALSE}
 ## ---- Data Preparation ----
 issp1996 <- read_dta(here::here("data/ZA2900.dta"))
 issp2006 <- read_dta(here::here("data/ZA4700.dta"))

@@ -34,7 +34,7 @@ A) 'net migration' based measures from 'stock' based measures, even when both ar
 
 B) 'west' form 'non-western' immigration & 'muslim' from 'non-muslim' & 'refugee'.
 
-```{r qual_codes, warning = F}
+```{r qual_codes, warning = FALSE}
 # Add 'net migration' dummy for measurement
 cri <- cri %>%
     mutate(netmig = ifelse(main_IV_measurement == "Net Migration", 1, 0),
@@ -82,7 +82,7 @@ A second look at these data suggests that we may want to separately cluster on d
 3) Estimation, measurement, model structure
 4) All at once
 
-```{r diss_1, warning = F}
+```{r diss_1, warning = FALSE}
 # select only country and wave variables
 cri_spec_only01 <- dplyr::select(cri_spec_only, w1985:TR)
 # variables in the model
@@ -144,7 +144,7 @@ When considering three sub-domains of specification:
 
 #### Sample Sub-Domain
 
-```{r desc_samples, warning = F}
+```{r desc_samples, warning = FALSE}
 cri_samples <- cri %>%
     subset(!is.na(AME_Z)) %>%
     subset(identical_samples != 0) %>%
@@ -167,7 +167,7 @@ head(cri_samples)
  
 Identify the sample selection that goes with cases `r cri_samples$identical_samples`.
  
-```{r ident_sample, warning = F}
+```{r ident_sample, warning = FALSE}
 cri_samp <- cri %>%
     subset(cri$identical_samples %in% cri_samples$identical_samples)
 cri_samp <- dplyr::select(cri_samp, identical_samples, w1985:TR)
@@ -201,7 +201,7 @@ cri_variables <- cri_variables[order(cri_variables$cases, decreasing = TRUE),]
 head(cri_variables)
 ```
 
-```{r ident_variables1, warning = F}
+```{r ident_variables1, warning = FALSE}
 cri_var <- cri %>%
     subset(cri$identical_variables %in% cri_variables$identical_variables)
 
@@ -217,7 +217,7 @@ cri_variables$identical_variables <- c("No country-level, and 5 socio-demographi
 
 #### Model Components Sub-Domain
 
-```{r desc_estmodel, warning = F}
+```{r desc_estmodel, warning = FALSE}
 cri_estmodel <- cri %>%
     subset(!is.na(AME_Z)) %>%
     subset(identical_estmodel != 0) %>%
@@ -236,7 +236,7 @@ cri_estmodel <- subset(cri_estmodel, teams > 5)
 cri_estmodel <- cri_estmodel[order(cri_estmodel$cases, decreasing = TRUE),]
 head(cri_estmodel)
 ```
-```{r ident_variables, warning = F}
+```{r ident_variables, warning = FALSE}
 cri_estm <- cri %>%
     subset(cri$identical_estmodel %in% cri_estmodel$identical_estmodel)
 cri_estm  <- dplyr::select(cri_estm , identical_estmodel, netmig, west, nonwest, muslim, refugee, main_IV_time, main_IV_effect, Jobs:ChangeFlow, twowayfe:pseudo_pnl, dichotomize)
@@ -251,7 +251,7 @@ cri_estmodel$identical_estmodel <- c("DV: Jobs, Test var: Stock of immigrants, l
 
 ### Appendix Table S3. Selected Frequencies of Model Specifications out of 1,261 Models
 
-```{r combine, warning = F}
+```{r combine, warning = FALSE}
 
 tbl_ax <- as.data.frame(matrix(nrow = 20, ncol = 6))
 

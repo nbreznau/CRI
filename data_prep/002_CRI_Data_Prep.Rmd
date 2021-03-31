@@ -27,7 +27,7 @@ CRI Model Specifications and Margins in the file `CRI Model Specifications and M
 
 We set up two versions of the model specifications here: *cri* and *cri_str*. One is for dichotomous numerical values and the other is for string names of each variable (good for spec curve plotting). The participant survey is also used here.
 
-```{r load, warning = F}
+```{r load, warning = FALSE}
 # Data generated from qualitative model specification coding
 cri_str <- read_excel(here::here("data","CRI Model Specifications and Margins.xlsx"), sheet = "Data")
 
@@ -51,7 +51,7 @@ We face a problem that a one percent change in net migration (within-country) is
 
 Standardization will produce some extreme outliers, so a 'better' strategy is to adjust the standard deviation of 'flow' to be equal to that of 'stock'. However, there are some wide outliers in 'stock' that bunches up the dispersion of 'flow', therefore we need the standard deviation without these extreme outliers.
 
-```{r standardizeDV, warning = F, message = F}
+```{r standardizeDV, warning = FALSE, message = FALSE}
 rm(teamsize)
 
 # Team 104 is massive outlier, trim estimates
@@ -78,7 +78,7 @@ cri_str <- dplyr::select(cri_str, -c(AMEssd,AMEfsd))
 
 Recalibrate some variables. Respondents sometimes reported two conclusions because they concluded that they were conducting independent hypothesis tests (seperate for 'flow' and 'stock' models). Adjust strings. 
 
-```{r recodes, warning = F, message = F}
+```{r recodes, warning = FALSE, message = FALSE}
 cri_str <- cri_str %>%
   mutate(Hresult = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hnotest_stock==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hsupport_stock==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hreject_stock==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hreject_net==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hreject_net==1, "Reject", NA)))))))))))),
          Hsup = ifelse(Hresult=="Support",1,0),
@@ -148,7 +148,7 @@ cri <- cri_str
 
 Remove some unused 'countries'. 
 
-```{r string_encode, warning = F, message = F}
+```{r string_encode, warning = FALSE, message = FALSE}
 #replace all 1's with the column name for all variable
 w <- dplyr::select(cri_str, Jobs:anynonlin, id)
 
@@ -173,7 +173,7 @@ cri_str[c(1:161)][cri_str[c(1:161)] == 0] <- NA
 
 We take the dichotomous variables and merge them into categorical variables for each type of model component.
 
-```{r cat_vars, message = F, warning = F}
+```{r cat_vars, message = FALSE, warning = FALSE}
 cri_str <- cri_str %>%
   mutate(iv_type = coalesce(Stock,Flow,ChangeFlow), # main test var
          mator = coalesce(ols,logit,bayes,ologit,mlogit,ml_glm), # Estimator
@@ -320,7 +320,7 @@ cri_part <- dplyr::select(cri_part, u_teamid, belief1:pro_immigrant)
 
 Note we take the MAX for topic & statistics, MEAN for belief and pro-immigrant.
 
-```{r recodes1, warning=FALSE, message=F}
+```{r recodes1, warning=FALSE, message=FALSE}
 #Generate team-specific qualities
 
 # Because the CRI required teams to define the data-generating model (or at least a test of it) and use statistical competencies to carry it out, we suspect that the highest statistical and topical knowledge and experience per team will have the greatest influence on the results. Therefore, for the concepts 'Stats Level' and 'Topic Level' we take the row min or max for each team (depending on coding. 
@@ -570,7 +570,7 @@ write.csv(fit_fig, file = here::here("results/fit_measurement.csv"))
 
 The file `popdf_out.Rdata` is needed for this, see `001_CRI_Prep_Subj_Votes.Rmd`.
 
-```{r votes, message = F, warning=FALSE}
+```{r votes, message = FALSE, warning=FALSE}
 cri <- left_join(cri, popdf_out, by = "id")
 
 # create levels of subjective responses and voting
@@ -591,7 +591,7 @@ rm(fit, popdf_out, criT)
 
 Here we need to divide the `inv_weight` (number of models per team) in half for all teams who considered 'stock' and 'flow' independently.
 
-```{r postest, warning = F}
+```{r postest, warning = FALSE}
 # fix weight for 89 independent team-level tests
 
 cri <- cri %>%
@@ -646,7 +646,7 @@ cri <- subset(cri, u_teamid != 105)
 
 We create an overall team average dataset, a flow models only team dataset and a stock models only team dataset.
 
-```{r team_data, message = F, warning=FALSE}
+```{r team_data, message = FALSE, warning=FALSE}
 cri_team <- cri
 cri_team_stock <- subset(cri, cri$Stock == 1)
 cri_team_flow <- subset(cri, cri$Flow == 1)
@@ -763,7 +763,7 @@ dev.off()
 
 This chunk essentially proves that it probably doesn't matter whether we take team-level measures or individual-level measures aggregated by team as correlations are very high (0.86-0.95).
 
-```{r predict_sem, warning=FALSE, message=F}
+```{r predict_sem, warning=FALSE, message=FALSE}
 # predicted factor scores
 pred <- as.data.frame(lavPredict(fit2))
 sem_p <- cbind(sem_f,pred)
@@ -845,7 +845,7 @@ rm(cri_stra, cri_stra2)
 
 ## Save outputs
 
-```{r save_out, warning=FALSE, message=F}
+```{r save_out, warning=FALSE, message=FALSE}
 # weighting variable is inverted, fix here.
 cri$inv_weight <- 1/cri$inv_weight
 cri_str$inv_weight <- 1/cri_str$inv_weight
@@ -868,7 +868,7 @@ write.csv(cri_team_combine, file = here::here("data","cri_team_combine.csv"), ro
 
 In the folder `shiny` we deploy a Shiny app to allow users to interact with the results by model specification types. 
 
-```{r shiny, warning= F, message = F}
+```{r shiny, warning = FALSE, message = FALSE}
 ### Transform values from 1 to column names for all countries 
 cri_shiny <- read.csv(here::here("data","cri.csv"), header = TRUE)
 cri_shiny <- cri_shiny %>%

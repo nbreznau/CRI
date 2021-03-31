@@ -36,7 +36,7 @@ These datasets were worked up from the file 01_CRI_Data_Prep.Rmd.
 
 ### Load Data
 
-```{r load, warning=FALSE,message=F}
+```{r load, warning=FALSE,message=FALSE}
 cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
 cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
 cri_indiv <- read.csv(file = here::here("data/cri_indv.csv"), header = TRUE)
@@ -57,7 +57,7 @@ cri_ml <- subset(cri_ml, u_teamid != 0)
 
 ### Within and Between Variables
 
-```{r wandb, warning = F, message = F}
+```{r wandb, warning = FALSE, message = FALSE}
 cri_ml <- cri_ml %>%
   group_by(team) %>%
   mutate(AME_Z_b = mean(AME_Z, na.rm = TRUE),
@@ -117,7 +117,7 @@ note that logit is the only one that seems to matter, surprisingly the 'type' of
 
 In the DV specific case there is often only one model per team, thus the multilevel structure is not helpful (mostly singular identification as a result). Therefore we switch to an lm (results are nearly identical because the random-intercepts at the team-level were zero)
 
-```{r subj_measurement_mlms, warning = F, message = F}
+```{r subj_measurement_mlms, warning = FALSE, message = FALSE}
 
 dvs <- c("Jobs","Unemp","IncDiff","OldAge","House","Health")
 #run regressions across all datasets
@@ -155,7 +155,7 @@ dv_var_table[8:13,6] <- c(sum_cases(m04_dv,1),sum_cases(m04_dv,2),sum_cases(m04_
 
 ##### Data and Sample
 
-```{r subj_datasamp_mlms, warning = F}
+```{r subj_datasamp_mlms, warning = FALSE}
 # m05_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow)
 
 m06_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow + w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable)
@@ -172,7 +172,7 @@ dv_var_table[14:19,6] <- c(sum_cases(m06_dv,1),sum_cases(m06_dv,2),sum_cases(m06
 
 Given such fewer cases we adjust the number of variables.
 
-```{r subj_model_mlms, warning = F, message = F}
+```{r subj_model_mlms, warning = FALSE, message = FALSE}
 m08_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow + twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin)
 
 dv_var_table[20:25,1] <- "m08x"
@@ -195,7 +195,7 @@ dv_var_table[20:25,6] <- c(sum_cases(m08_dv,1),sum_cases(m08_dv,2),sum_cases(m08
 
 Again we use a modified version, dropping many variables from m08x.
 
-```{r res_aspects_mlms, warning = F, message = F}
+```{r res_aspects_mlms, warning = FALSE, message = FALSE}
 m12_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow + twowayfe + mlm_fe + belief_ipred + pro_immigrant + stats_ipred + topic_ipred + total_score)
 
 dv_var_table[26:31,1] <- "m12x"

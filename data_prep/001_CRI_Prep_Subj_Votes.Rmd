@@ -273,7 +273,7 @@ kialo <- kialo %>%
 
 We import the master data, make a column for each model specification, and then create a total score by model. 
 
-```{r output1, message = F, warning = F}
+```{r output1, message = FALSE, warning = FALSE}
 # transpose scoring data to columns
 
 # first create a variable coded 0 (worst score) to 1 (highest)
@@ -332,7 +332,7 @@ popdf_out <- popdf_out %>%
          `Country-Year, Country & Year` = max(as.numeric(`Country-Year, Country & Year`), na.rm=T))
 ```
 
-```{r output2, message = F, warning = F}
+```{r output2, message = FALSE, warning = FALSE}
 crispec <- subset(crispec, !is.na(id))
 popdf_out <- cbind(crispec, popdf_out)
 

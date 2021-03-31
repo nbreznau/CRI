@@ -45,7 +45,7 @@ These datasets were worked up from the file `01_CRI_Data_Prep.Rmd`.
 
 ### Load Data
 
-```{r load, warning=FALSE,message=F}
+```{r load, warning=FALSE,message=FALSE}
 cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
 cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
 cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = TRUE)
@@ -75,7 +75,7 @@ cri_team <- cri_team %>%
 
 ### Within and Between Variables
 
-```{r wandb, warning = F, message = F}
+```{r wandb, warning = FALSE, message = FALSE}
 cri_ml <- cri_ml %>%
   group_by(team) %>%
   mutate(AME_Z_b = mean(AME_Z, na.rm = TRUE),
@@ -127,7 +127,7 @@ We consider random assignment to the opaque or transparent replication group (va
 
 The problem we face is that there is only an average of roughly 13 models per team, and 87 teams. This means we start to lose the ability to explain variance. A degrees of freedom problem. Therefore, in this process we have to reduce complexity. 
 
-```{r obj_mlms, warning = F}
+```{r obj_mlms, warning = FALSE}
 m00 <- lmer(AME_Z ~ (1 | team), data = cri_ml)
 #m01a <- lmer(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + (1 | team), data = cri_ml)
 
@@ -150,7 +150,7 @@ The teams had several possibilities to measure the DV (or DVs) including linear,
 
 note that logit is the only one that seems to matter, surprisingly the 'type' of measure does not matter (foreign-born, non-western, refugee, etc.; although there are far fewer models that do not simply use foreign-born)
 
-```{r subj_measurement_mlms, warning = F}
+```{r subj_measurement_mlms, warning = FALSE}
 
 m03 <- lmer(paste0(m01vars, "+ logit + ologit + lpm + mlogit + ols + (1 | team)"), data = cri_ml)
 
@@ -168,7 +168,7 @@ m04vars <- "+ logit + ols + Stock + ChangeFlow"
 
 #### Data and Sample
 
-```{r subj_datasamp_mlms, warning = F}
+```{r subj_datasamp_mlms, warning = FALSE}
 m05 <- lmer(paste0(m01vars, m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + (1 | team)"), data = cri_ml)
 
 # several interactions were tried here that seemed useful in the single-level equation, but they just wash out the results, many making the variance worse
@@ -189,7 +189,7 @@ main IVs in same model or not (this causes one team to get dropped so we don't u
 
 m08 independent vars l2 selection
 
-```{r subj_model_mlms, warning = F}
+```{r subj_model_mlms, warning = FALSE}
 
 m07 <- lmer(paste0(m01vars, m04vars, m06vars, " + twowayfe + level_cyear + mlm_fe + mlm_re  + (1 | team)"), data = cri_ml)
 m08 <- lmer(paste0(m01vars, m04vars, m06vars, " + twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin + (1 | team) "), data = cri_ml)
@@ -222,7 +222,7 @@ Using the R^2 'hacking' tool we found some combinations of these variables that 
 
 These probably need to be run independently, so that we see the reduction for each one.
 
-```{r res_aspects_mlms, warning = F}
+```{r res_aspects_mlms, warning = FALSE}
 m09 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ belief_ipred + (1 | team)"), data = cri_ml)
 
 m10 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ pro_immigrant +  (1 | team)"), data = cri_ml) 
@@ -251,7 +251,7 @@ m14v <- as.data.frame(VarCorr(m14))
 
 ### Combine All
 
-```{r comb_tbl, warning = F}
+```{r comb_tbl, warning = FALSE}
 tab_model(m00,m01,m02,m04,m06,m07,m09,m10,m11,m12,m13, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = here::here("results/reg11.htm"))
 
 reg11 <- as.data.frame(read_html(here::here("results/reg11.htm")) %>% html_table(fill=TRUE))
@@ -308,7 +308,7 @@ write.csv(aiclog, file = here::here("results/Tbl_S5.csv"))
 write.csv(reg11, file = here::here("results/Tbl_S5.csv"))
 ```
 
-```{r residual_var, warning = F}
+```{r residual_var, warning = FALSE}
 # identify cases used in m13
 cri_ml$in_m13 <- TRUE
 cri_ml$in_m13[na.action(m13)] <- FALSE
@@ -319,7 +319,7 @@ cri_ml_in <- subset(cri_ml, cri_ml$in_m13 == TRUE)
 cri_ml_in$m13_p <- as.data.frame(predict(m13), newdata = cri_ml_in)
 ```
 
-```{r variance_explained_table, warning = F}
+```{r variance_explained_table, warning = FALSE}
 tbl2_m <- as.data.frame(t(reg11))
 
 tbl2 <- as.data.frame((matrix(nrow = 22, ncol = 5)))
@@ -362,7 +362,7 @@ Only at the team level, n = 88
 
 Multinomial: support, not testable, reject
 
-```{r obj_mlmsm, results = F, warning = F}
+```{r obj_mlmsm, results = F, warning = FALSE}
 cri_team$Hresult <- relevel(as.factor(cri_team$Hresult), ref = "Support")
 
 m00m <- multinom(Hresult ~ 1 , data = cri_team)
@@ -376,7 +376,7 @@ m02d <- summary(m02m)
 m01vars <- "Hresult ~ Jobs + IncDiff + House"
 ```
 
-```{r subj_measurement_mlmsm, results = F}
+```{r subj_measurement_mlmsm, results = FALSE}
 m03m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols, data = cri_team)
 m04m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols + Stock + ChangeFlow, data = cri_team)
 
@@ -388,7 +388,7 @@ m04d <- summary(m04m)
 
 #### Data and Sample
 
-```{r subj_datasamp_mlmsm, warning = F, results = F}
+```{r subj_datasamp_mlmsm, warning = FALSE, results = FALSE}
 m05m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols + Stock + ChangeFlow + w2006 + w2016, data = cri_team)
 m06m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable, data = cri_team)
 
@@ -406,7 +406,7 @@ m08 independent vars l2 selection
 
 had to remove mlm_fe, it uniquely identifes team in the multinomial removed mlm_re and House, we are pushing the limit with variables and these were harming AIC fit
 
-```{r subj_model_mlmsm, results = F}
+```{r subj_model_mlmsm, results = FALSE}
 m07m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe , data = cri_team)
 m08m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin , data = cri_team)
 
@@ -435,7 +435,7 @@ These probably need to be run independently, so that we see the reduction for ea
 
 Mean replacement for team 27
 
-```{r res_aspects_mlmsm,  results=F, warning = F}
+```{r res_aspects_mlmsm,  results=F, warning = FALSE}
 m09m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + belief_ipred  , data = cri_team)
 
 m10m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + pro_immigrant , data = cri_team) 
@@ -532,7 +532,7 @@ We have 20 variables and 89 cases, this means that some of the explained devianc
 
 We always take one less than the number of variables.
 
-```{r dev_adj, results = F}
+```{r dev_adj, results = FALSE}
 cri_team_sim <- dplyr::select(cri_team, Hresult)
 
 seed <- 90210
@@ -674,7 +674,7 @@ for(i in 1:20){
 
 #### Add simulation results
 
-```{r tbl2, warning = F}
+```{r tbl2, warning = FALSE}
 # add adjusted deviance
 
 # Tabulate average deviance
@@ -723,7 +723,7 @@ rm(sim_3_vars,sim_7_vars,sim_13_vars,sim_16_vars,sims,rr,t1,avar,avg_dev_sim)
 
 #### Add adjusted deviance 
 
-```{r devto2, warning = F}
+```{r devto2, warning = FALSE}
 tbl2_m22 <- as.data.frame(t(reg22))
 tbl2_m23 <- as.data.frame(t(reg23))
 
@@ -887,7 +887,7 @@ twowayfe
 SURVEY_WAVES
 COUNTRIES
 
-```{r rchar, warning = F}
+```{r rchar, warning = FALSE}
 rchars <- "belief_ipredm + pro_immigrantm + topic_ipredm + stats_ipred + factor(u_teamid)"
 
 #set reference levels, add degree types

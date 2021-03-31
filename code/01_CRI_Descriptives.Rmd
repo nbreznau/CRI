@@ -18,7 +18,7 @@ The datasets in here were worked up starting in the sub-folder [`team_code`](../
 2. `cri_team.csv` = team-level data
 3. `cri_str.csv` = model-level data, string values
 
-```{r load, warning=FALSE,message=FALSE, include =F}
+```{r load, warning=FALSE,message=FALSE, include = FALSE}
 cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
 cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = TRUE)
 cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
@@ -31,7 +31,7 @@ cri_count <- aggregate(cri_team, by = list(cri_team$u_teamid), FUN = "mean", na.
 
 A descriptives table is far too large to add, therefore we simply append some summary statistics to the codebook and place this in the Supplementary Materials Appendix II. Model Specification Coding and Distribution.
 
-```{r codebook, include = F, warning = F}
+```{r codebook, include = FALSE, warning = FALSE}
 codebook <- subset(cri_str, u_teamid != 0)
 codebook$DV[grepl("Scale",codebook$DV)] <- "Scale"
 codebook <- dplyr::select(codebook, DV, main_IV_type, main_IV_measurement, main_IV_time, num_countries, main_IV_as_control, software, mator, indepv, inv_weight) %>%
@@ -101,7 +101,7 @@ We no longer use this approach but leave these tables here in case of interest. 
 
 Note that the N of 89 reflects the number of conclusions provided in total from 73 teams, with one of those conclusions having no results attached to it because the team concluded through measurement testing that the data were inappropriate. Thus, 88 is our team-level-results N for comparison.
 
-```{r descriptive, warning = F, message = F, include = F}
+```{r descriptive, warning = FALSE, message = FALSE, include = FALSE}
 sum1 <- summarise_at(cri, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(mean), na.rm = TRUE)
 
 sum1.1 <- summarise_at(cri,vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(sd), na.rm = TRUE)
@@ -178,7 +178,7 @@ knitr::include_graphics(here::here("results/Tbl_codebook.png"))
 
 ### Table 2. Model-Level Descriptive Statistics
 
-```{r descriptive1, warning = F, message = F, include=FALSE}
+```{r descriptive1, warning = FALSE, message = FALSE, include=FALSE}
 kable_styling(t2) %>%
   as_image(width = 4, file = here::here("results/Tbl_codebook2.png"))
 ```
@@ -281,7 +281,7 @@ w_mean <- round(weighted.mean(cri$AME_Z, w = cri$inv_weight, na.rm = TRUE),4)
 w_var <- round(wtd.var(cri$AME_Z, weights = cri$inv_weight, na.rm = TRUE),4)
 ```
 
-```{r hist_results_basic, warning = F}
+```{r hist_results_basic, warning = FALSE}
 g1 <-  ggplot(data = cri0) +
   geom_histogram(aes(x = AME_Zc), breaks = c(-0.15,-0.125,-0.0625,-0.03125,-0.015625,-0.0078125,-0.00390625,0,0.00390625,0.0078125,0.015625,0.03125,0.0625,0.125,0.15)) +
   labs(x = "Model Results as Average Marginal Effects") +

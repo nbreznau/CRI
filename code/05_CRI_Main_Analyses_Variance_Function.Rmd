@@ -42,7 +42,7 @@ These datasets were worked up from the file 01_CRI_Data_Prep.Rmd.
 
 ### Load Data
 
-```{r load, warning=FALSE,message=F}
+```{r load, warning=FALSE,message=FALSE}
 cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
 cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
 cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = TRUE)
@@ -72,7 +72,7 @@ cri_team <- cri_team %>%
 
 ### Within and Between Variables
 
-```{r wandb, warning = F, message = F}
+```{r wandb, warning = FALSE, message = FALSE}
 cri_ml <- cri_ml %>%
   group_by(team) %>%
   mutate(AME_Z_b = mean(AME_Z, na.rm = TRUE),
@@ -309,7 +309,7 @@ g1 <-
   geom_flat_violin(aes(x = group, fill = high), 
                    position = position_nudge(x = .1, y = 0), 
                    adjust = 1.5, 
-                   trim = F, 
+                   trim = FALSE, 
                    alpha = .5, 
                    colour = NA) +
   geom_point(aes(x = as.numeric(group) - 0.05, y = AME_team_int, colour = high), position = position_jitter(width = 0.05), size = 0.25, shape = 20) +
@@ -349,7 +349,7 @@ g2 <- ggplot(cri_team_g, aes(x = group, y = AME_team_var)) +
   geom_flat_violin(aes(x = group, fill = high), 
                    position = position_nudge(x = .1, y = 0), 
                    adjust = 1.5, 
-                   trim = F, 
+                   trim = FALSE, 
                    alpha = .5, 
                    colour = NA) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey70", size = 0.5, show.legend = FALSE) +
@@ -392,7 +392,7 @@ g3 <-
   geom_flat_violin(aes(x = group, fill = high), 
                    position = position_nudge(x = .1, y = 0), 
                    adjust = 1.5, 
-                   trim = F, 
+                   trim = FALSE, 
                    alpha = .5, 
                    colour = NA) +
   geom_point(aes(x = as.numeric(group) - 0.05, y = AME_Z_int, colour = high), position = position_jitter(width = 0.05), size = 0.25, shape = 20) +
@@ -432,7 +432,7 @@ g4 <- ggplot(cri_team_g, aes(x = group, y = AME_Z_var)) +
   geom_flat_violin(aes(x = group, fill = high), 
                    position = position_nudge(x = .1, y = 0), 
                    adjust = 1.5, 
-                   trim = F, 
+                   trim = FALSE, 
                    alpha = .5, 
                    colour = NA) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey70", size = 0.5, show.legend = FALSE) +
