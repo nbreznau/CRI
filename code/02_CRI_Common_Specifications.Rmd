@@ -1,5 +1,5 @@
 ---
-title: "02.Common Specifications"
+title: "02. Common Specifications"
 output: html_document
 ---
 
@@ -249,7 +249,7 @@ head(cri_estmm)
 cri_estmodel$identical_estmodel <- c("DV: Jobs, Test var: Stock of immigrants, logistic regression, \'two-way fixed effects\'","DV: Unemployment, Test var: Stock of immigrants, logistic regression, \'two-way fixed effects\'","DV: Income Differences, Test var: Stock of immigrants, logistic regression, \'two-way fixed effects\'","DV: Old-age Care, Test var: Stock of immigrants, logistic regression, \'two-way fixed effects\'","DV: House, Test var: Stock of immigrants, logistic regression, \'two-way fixed effects\'","DV: Health, Test var: Stock of immigrants, logistic regression, \'two-way fixed effects\'","DV: Jobs, Test var: Net migration, logistic regression, \'two-way fixed effects\'","DV: Unemployment, Test var: Net migration, logistic regression, \'two-way fixed effects\'","DV: Income Differences, Test var: Net migration, logistic regression, \'two-way fixed effects\'","DV: Old-age Care, Test var: Net migration, logistic regression, \'two-way fixed effects\'","DV: House, Test var: Net migration, logistic regression, \'two-way fixed effects\'","DV: Health, Test var: Net migration, logistic regression, \'two-way fixed effects\'")
 ```
 
-### Appendix Table S3. Selected Frequencies of Model Specifications out of 1,261 Models
+### Appendix Table S4. Selected Frequencies of Model Specifications out of 1,261 Models
 
 ```{r combine, warning = FALSE}
 

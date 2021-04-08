@@ -183,7 +183,7 @@ popdf$label_x = popdf$xaxis+0.14
 #### Fig S4. Subjective Ranking of Model Specifications 
 
 ```{r fig1, warning=FALSE, message=FALSE, echo=T}
-agg_png(here::here("CRI/results/FigS4.png"), width = 750)
+agg_png(here::here("results/FigS4.png"), width = 750)
 
 ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
   geom_bar(stat = "identity", aes(fill = group)) +
@@ -203,7 +203,7 @@ ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
         axis.title.x = element_text(size = 14),
         legend.key.size = unit(1,"line"))
 dev.off()
-knitr::include_graphics(here::here("CRI/results/FigS4.png"))
+knitr::include_graphics(here::here("results/FigS4.png"))
 ```
 
 ### Kialo Deliberation

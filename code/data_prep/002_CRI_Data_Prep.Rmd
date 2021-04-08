@@ -1,9 +1,6 @@
 ---
-title: "Tech 002. Data Preparation"
-output:
-  html_document:
-    df_print: paged
-  pdf_document: default
+title: "002. Data Preparation"
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -528,7 +525,7 @@ cor1$label <- c("(stat1)",
                     "(belief_strength)", 
                     "(pro_immigrant)")
 cor1 <- dplyr::select(cor1, label, everything())
-write.csv(cor1, file = here::here("results/TblS3_measrement.csv"))
+write.csv(cor1, file = here::here("results/TblS3.csv"))
 ```
 
 #### Measurement Model
@@ -756,12 +753,13 @@ labels = list(stats = "Statistics Skill", topic = "Topic Knowledge", belief = "B
 sem_out <- lavaanPlot::lavaanPlot(model = fit2, labels = labels, coefs = TRUE, covs = TRUE, stand = TRUE)
 pacman::p_load("DiagrammeR")
 
-png(filename = here::here("results","SEM.png"), width = 720, height = 620, res = 144)
+png(filename = here::here("results/FigS3.png"), width = 720, height = 620, res = 144)
 sem_out
 dev.off()
+
 ```
 
-This chunk essentially proves that it probably doesn't matter whether we take team-level measures or individual-level measures aggregated by team as correlations are very high (0.86-0.95).
+This chunk proves that it doesn't matter whether we take team-level measures or individual-level measures aggregated by team as correlations are very high (0.86-0.95).
 
 ```{r predict_sem, warning=FALSE, message=FALSE}
 # predicted factor scores
@@ -799,7 +797,7 @@ kable(cor4)
 rm(cor,cor1,cor2,cri_team_test,cri_team_test1,cri_team_test2)
 ```
 
-For the Shiny app and some of our initial specification curve probing we used the package [rdfanalysis](https://joachim-gassen.github.io/rdfanalysis/) which requires discrete choice variables. Therefore we code continuous researcher characteristics into categories here.
+For development of our interactive shinyapp we needed to categorize continuous researcher characteristics for easy subsetting.
 
 ```{r spec_cats}
 # The team qualities data were originally coded into 4 categories, "Highest, High, Mid and 
@@ -1020,4 +1018,12 @@ cri_shiny <- cri_shiny[complete.cases(cri_shiny$est),]
 saveRDS(cri_shiny, file = here::here("shiny/data/cri_shiny.Rds"))
 write.csv(cri_shiny, file = here::here("shiny/data/cri_shiny.csv"), row.names = FALSE)
 write.csv(cri_shiny_team, file = here::here("shiny/data/cri_shiny_team.csv"), row.names = FALSE)
+```
+
+## Colophon
+
+This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*Observing Many Researchers using the Same Data and Hypothesis Reveals a Hidden Universe of Uncertainty*](https://osf.io/preprints/metaarxiv/cd5j9/).
+
+```{r colophon, echo=FALSE}
+sessionInfo()
 ```
