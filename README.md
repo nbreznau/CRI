@@ -61,7 +61,7 @@ Our primary analyses and results are in the [`code`](code/) folder. It contains 
 
 ### Run All Code
 
-The following scripts runs _all_ notebook files in order to check there are no code issues.
+The following scripts run _all_ notebook files in order to check there are no code issues.
 
 ```r
 source("all.R")

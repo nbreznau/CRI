@@ -1,5 +1,5 @@
 ---
-title: "Tech 2. Common Specifications"
+title: "02.Common Specifications"
 output: html_document
 ---
 
@@ -32,7 +32,7 @@ We also need variables to distinguish:
 
 A) 'net migration' based measures from 'stock' based measures, even when both are used to reflect a change over time, the variable definitions are slightly different.
 
-B) 'west' form 'non-western' immigration & 'muslim' from 'non-muslim' & 'refugee'.
+B) 'west' from 'non-western' immigration & 'muslim' from 'non-muslim' & 'refugee'.
 
 ```{r qual_codes, warning = FALSE}
 # Add 'net migration' dummy for measurement
@@ -265,4 +265,12 @@ tbl_ax[c(9:20),] <- cri_estmodel
 rm(cri_samp, cri_sampp, cri_estm, cri_estmm, cri_var, cri_varr)
 
 write.csv(tbl_ax, file = here::here("results/TblS4.csv"))
+```
+
+## Colophon
+
+This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*Observing Many Researchers using the Same Data and Hypothesis Reveals a Hidden Universe of Uncertainty*](https://osf.io/preprints/metaarxiv/cd5j9/).
+
+```{r colophon, echo=FALSE}
+sessionInfo()
 ```

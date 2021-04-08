@@ -1,5 +1,5 @@
 ---
-title: "Tech 1. Descriptives"
+title: "01.Descriptives"
 output: html_document
 ---
 
@@ -247,7 +247,7 @@ colnames(sq_cormat) <- c("Positive","Not Sig.","Negative")
 rownames(sq_cormat) <- c("Supported","Inconclusive","Rejected")
 sq_cormat_melted <- melt(sq_cormat)
 
-agg_png(filename = here::here("results/Tbl1_cor.png"), res = 144, height = 600, width = 700)
+agg_png(filename = here::here("results/FigS10.png"), res = 144, height = 600, width = 700)
 ggplot(data = sq_cormat_melted, aes(X1, X2, fill = value))+
  geom_tile(color = "white")+
  scale_fill_gradient2(low = "maroon", high = "green", mid = "grey", 
@@ -265,7 +265,7 @@ ggplot(data = sq_cormat_melted, aes(X1, X2, fill = value))+
       axis.ticks = element_blank())
 dev.off()
 
-knitr::include_graphics(here::here("results/Tbl1_cor.png"))
+knitr::include_graphics(here::here("results/FigS10.png"))
 
 ```
 
@@ -307,9 +307,9 @@ dev.off()
 knitr::include_graphics(here::here("results/FigS5.png"))
 ```
 
-# Colophon
+## Colophon
 
-This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*The Crowdsourced Replication Initiative: Investigating Immigration and Social Policy Preferences*](https://doi.org/10.31235/osf.io/6j9qb).
+This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*Observing Many Researchers using the Same Data and Hypothesis Reveals a Hidden Universe of Uncertainty*](https://osf.io/preprints/metaarxiv/cd5j9/).
 
 ```{r colophon, echo=FALSE}
 sessionInfo()

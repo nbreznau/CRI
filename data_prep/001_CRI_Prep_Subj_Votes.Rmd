@@ -185,7 +185,7 @@ popdf$label_x = popdf$xaxis+0.14
 #### Fig S4. Subjective Ranking of Model Specifications 
 
 ```{r fig1, warning=FALSE, message=FALSE, echo=T}
-agg_png(file = "results/FigS4_modelrank.png", width = 750)
+agg_png(file = "results/FigS4.png", width = 750)
 
 ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
   geom_bar(stat = "identity", aes(fill = group)) +
@@ -205,7 +205,7 @@ ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
         axis.title.x = element_text(size = 14),
         legend.key.size = unit(1,"line"))
 dev.off()
-knitr::include_graphics("results/FigS4_modelrank.png")
+knitr::include_graphics("results/FigS4.png")
 ```
 
 ### Kialo Deliberation
@@ -236,15 +236,11 @@ In this data frame the majority arguments against or for the thesis are only lis
 
 The participants were split into two groups, both groups participated in post design deliberation and voting.
 
-*Deliberation Group* (participated in a deliberation before designing their research)
+[*Deliberation Group* (participated in a deliberation before designing their research)](https://www.kialo.com/crowdsourced-replication-initiative---research-design-critical-arguments-24397)
 
-https://www.kialo.com/crowdsourced-replication-initiative---research-design-critical-arguments-24397
+[*Control Group* (did not participate in pre-design deliberation)](https://www.kialo.com/crowdsourced-replication-initiative---research-design---critical-arguments-24289)
 
-*Control Group* (did not participate in pre-design deliberation)
-
-https://www.kialo.com/crowdsourced-replication-initiative---research-design---critical-arguments-24289
-
-The major results are that participants were in favor of clustering standard errors, and opposed to the usage of only rich democracies. We add two columns to give a bonus for studies that have these attributes. Based on the nature of the discussion we must give a positive score to **all** studies using clustered standard errors, not just Two-Way FE, therefore all nultilevle models also get this positive scoring. 
+The major results are that participants were in favor of clustering standard errors, and opposed to the usage of only rich democracies. We add two columns to give a bonus for studies that have these attributes. Based on the nature of the discussion we must give a positive score to **all** studies using clustered standard errors, not just Two-Way FE, therefore all multilevel models also get this positive scoring. 
 
 ```{r kialo, message=FALSE, warning=FALSE}
 kialo <- as.data.frame(matrix(nrow = 7, ncol = 10))
@@ -356,4 +352,12 @@ popdf_out <- popdf_out %>%
   mutate(total_score = mean(c(score_waves, score_cases, score_levels, score_mlm, score_mator, score_weight), na.rm = TRUE))
 
 save(popdf_out, file = here::here("data","popdf_out.Rdata"))
+```
+
+## Colophon
+
+This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*Observing Many Researchers using the Same Data and Hypothesis Reveals a Hidden Universe of Uncertainty*](https://osf.io/preprints/metaarxiv/cd5j9/).
+
+```{r colophon, echo=FALSE}
+sessionInfo()
 ```
