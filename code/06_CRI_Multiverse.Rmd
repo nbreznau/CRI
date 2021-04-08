@@ -3,7 +3,6 @@ title: "Tech 6. Multiverse/Dredge"
 output: html_document
 ---
 
-
 This code has two purposes. 
 
 The first is to determine how much variance we should reasonably expect to explain using a 'static' multiverse approach where we use a single worked up data set from one of the teams and then apply a range of possible model specifications to it. Then we predict the outcomes using the model specifications. 
@@ -11,24 +10,22 @@ The first is to determine how much variance we should reasonably expect to expla
 The second is to run a multiverse analysis of the real data and real model specifications to see if we 'missed' anything or combinations of things that could explain the outcomes.
 
 ```{r setup, include=FALSE}
-rm(list = ls())
-library(pacman)
+library("pacman")
 
 options(scipen = 999)
 
 pacman::p_load("ggplot2","tidyverse","MuMIn","ggpubr","ragg","factoextra","lme4","dplyr","lmerTest","margins","rvest","nnet")
-
 ```
 
-### Expected Explained Variance (a simulation)
+## Expected Explained Variance (a simulation)
 
 We take a team whose results were derived using R and used three waves of the ISSP - Team 18. Their DV is dichotomized, the has pluses and minuses in our multiverse analysis.
 
-```{r team18_sim, warning = F, message = F}
-t18m <- read.csv(file = here::here("data/team18_multi.csv"), header = T)
+```{r team18_sim, warning = FALSE, message = FALSE}
+t18m <- read.csv(file = here::here("data/team18_multi.csv"), header = TRUE)
 
 # doesn't include all macro-indicators, merge in here
-cri_macro <- read.csv(file = here::here("data/cri_macro.csv"), header = T)
+cri_macro <- read.csv(file = here::here("data/cri_macro.csv"), header = TRUE)
 
 # merge on country
 t18m <- left_join(t18m, cri_macro, by = c("iso_country","year"))
@@ -42,13 +39,11 @@ t18m <- t18m %>%
            migstock_un = as.numeric(migstock_un),
            netmigpct = as.numeric(netmigpct)) %>%
     dplyr::select(., year, female:health_c, migstock_un, netmigpct, wdi_unempilo, socx_oecd, gdp_oecd, iso_country)
-
-
 ```
 
-#### Data Frame Prep
+### Data Frame Prep
 
-```{r models, warning = F}
+```{r models, warning = FALSE}
 dvs <- c("jobs","unemployed","reduce_income_diff","old_age_care","housing","health")
 
 dvs_c <- c("jobs_c","unemp_c","incdiff_c","oldage_c","housing_c","health_c")
@@ -93,14 +88,13 @@ colnames(m1_results) <- c("mname", "dv","AME", "p", "mator", "sample", "unemp", 
 colnames(m2_results) <- colnames(m1_results)
 colnames(m3_results) <- colnames(m1_results)
 colnames(m4_results) <- colnames(m1_results)
-
-
 ```
 
-### OLS Models
+## OLS Models
 
-#### Stock Models, OLS, All years
-```{r models1, warning = F}
+### Stock Models, OLS, All years
+
+```{r models1, warning = FALSE}
 i = 1
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -115,19 +109,20 @@ m1_results[i,2] <- dv
 m1_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m1_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m1_results[i,5:6] <- c("ols","All")
-m1_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m1_results[i,10] <- 1
-m1_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m1_results[i,12:17] <- c("Stock",1,0,0,0,0)
 i <- i + 1
     }
 }
 ```
 
-#### Net Models, OLS, All years
-```{r models2, warning = F}
+### Net Models, OLS, All years
+
+```{r models2, warning = FALSE}
 i = 97
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -142,10 +137,10 @@ m1_results[i,2] <- dv
 m1_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m1_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m1_results[i,5:6] <- c("ols","All")
-m1_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = TRUE) == TRUE, 1, 0)
 m1_results[i,11] <- 1
 m1_results[i,12:17] <- c("Flow",1,0,0,0,0)
 i <- i + 1
@@ -153,8 +148,9 @@ i <- i + 1
 }
 ```
 
-#### Stock Models, OLS, 1996 & 2006 only
-```{r models3, warning = F}
+### Stock Models, OLS, 1996 & 2006 only
+
+```{r models3, warning = FALSE}
 t18m_9606 <- subset(t18m, year != 2016)
 
 i = 1
@@ -172,21 +168,20 @@ m2_results[i,2] <- dv
 m2_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m2_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m2_results[i,5:6] <- c("ols","w96_06")
-m2_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m2_results[i,10] <- 1
-m2_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m2_results[i,12:17] <- c("Stock",1,0,0,0,0)
 i <- i + 1
     }
 }
 ```
 
+### Net Models, OLS, 1996 & 2006 only
 
-
-#### Net Models, OLS, 1996 & 2006 only
-```{r models4, warning = F}
+```{r models4, warning = FALSE}
 
 i = 97
 for (dv in dvs_c) {
@@ -203,10 +198,10 @@ m2_results[i,2] <- dv
 m2_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m2_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m2_results[i,5:6] <- c("ols","w96_06")
-m2_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = TRUE) == TRUE, 1, 0)
 m2_results[i,11] <- 1
 m2_results[i,12:17] <- c("Flow",1,0,0,0,0)
 i <- i + 1
@@ -214,8 +209,9 @@ i <- i + 1
 }
 ```
 
-#### Stock Models, OLS, 2006 & 2016 only
-```{r models5, warning = F}
+### Stock Models, OLS, 2006 & 2016 only
+
+```{r models5, warning = FALSE}
 t18m_0616 <- subset(t18m, year != 1996)
 
 i = 1
@@ -233,19 +229,20 @@ m3_results[i,2] <- dv
 m3_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m3_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m3_results[i,5:6] <- c("ols","w06_16")
-m3_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m3_results[i,10] <- 1
-m3_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m3_results[i,12:17] <- c("Stock",1,0,0,0,0)
 i <- i + 1
     }
 }
 ```
 
-#### Net Models, OLS, 1996 & 2006 only
-```{r models6, warning = F}
+### Net Models, OLS, 1996 & 2006 only
+
+```{r models6, warning = FALSE}
 
 i = 97
 for (dv in dvs_c) {
@@ -262,10 +259,10 @@ m3_results[i,2] <- dv
 m3_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m3_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m3_results[i,5:6] <- c("ols","w06_16")
-m3_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = TRUE) == TRUE, 1, 0)
 m3_results[i,11] <- 1
 m3_results[i,12:17] <- c("Flow",1,0,0,0,0)
 i <- i + 1
@@ -273,9 +270,9 @@ i <- i + 1
 }
 ```
 
+### Stock Models, OLS, All years, Year dummies only (no country FE)
 
-#### Stock Models, OLS, All years, Year dummies only (no country FE)
-```{r models7, warning = F}
+```{r models7, warning = FALSE}
 i = 1
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -290,19 +287,20 @@ m4_results[i,2] <- dv
 m4_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m4_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m4_results[i,5:6] <- c("ols","All")
-m4_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m4_results[i,10] <- 1
-m4_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m4_results[i,12:17] <- c("Stock",0,0,1,0,0)
 i <- i + 1
     }
 }
 ```
 
-#### Net Models, OLS, All years, Year dummies only (no country FE)
-```{r models8, warning = F}
+### Net Models, OLS, All years, Year dummies only (no country FE)
+
+```{r models8, warning = FALSE}
 i = 97
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -317,10 +315,10 @@ m4_results[i,2] <- dv
 m4_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m4_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m4_results[i,5:6] <- c("ols","All")
-m4_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = TRUE) == TRUE, 1, 0)
 m4_results[i,11] <- 1
 m4_results[i,12:17] <- c("Flow",0,0,1,0,0)
 i <- i + 1
@@ -328,10 +326,11 @@ i <- i + 1
 }
 ```
 
-### Logit Models
+## Logit Models
 
-#### Stock Models, logit, All years
-```{r model9, warning = F}
+### Stock Models, logit, All years
+
+```{r model9, warning = FALSE}
 i = 385
 for (dv in dvs) {
     for (var in 1:16) {
@@ -346,19 +345,20 @@ m1_results[i,2] <- dv
 m1_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("migstock_un")))[2]),5)
 m1_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m1_results[i,5:6] <- c("logit","All")
-m1_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m1_results[i,10] <- 1
-m1_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m1_results[i,12:17] <- c("Stock",1,0,0,0,1)
 i <- i + 1
     }
 }
 ```
 
-#### Net Models, logit, All years
-```{r models10, warning = F}
+### Net Models, logit, All years
+
+```{r models10, warning = FALSE}
 i = 481
 for (dv in dvs) {
     for (var in 1:16) {
@@ -373,10 +373,10 @@ m1_results[i,2] <- dv
 m1_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("netmigpct")))[2]),5)
 m1_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m1_results[i,5:6] <- c("logit","All")
-m1_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = TRUE) == TRUE, 1, 0)
 m1_results[i,11] <- 1
 m1_results[i,12:17] <- c("Flow",1,0,0,0,1)
 i <- i + 1
@@ -384,8 +384,9 @@ i <- i + 1
 }
 ```
 
-#### Stock Models, logit, 1996 & 2006 only
-```{r models11, warning = F}
+### Stock Models, logit, 1996 & 2006 only
+
+```{r models11, warning = FALSE}
 t18m_9606 <- subset(t18m, year != 2016)
 
 i = 385
@@ -403,22 +404,20 @@ m2_results[i,2] <- dv
 m2_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("migstock_un")))[2]),5)
 m2_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m2_results[i,5:6] <- c("logit","w96_06")
-m2_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m2_results[i,10] <- 1
-m2_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m2_results[i,12:17] <- c("Stock",1,0,0,0,1)
 i <- i + 1
     }
 }
 ```
 
+### Net Models, logit, 1996 & 2006 only
 
-
-#### Net Models, logit, 1996 & 2006 only
-```{r models12, warning = F}
-
+```{r models12, warning = FALSE}
 i = 481
 for (dv in dvs) {
     for (var in 1:16) {
@@ -434,10 +433,10 @@ m2_results[i,2] <- dv
 m2_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("netmigpct")))[2]),5)
 m2_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m2_results[i,5:6] <- c("logit","w96_06")
-m2_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = TRUE) == TRUE, 1, 0)
 m2_results[i,11] <- 1
 m2_results[i,12:17] <- c("Flow",1,0,0,0,1)
 i <- i + 1
@@ -445,8 +444,9 @@ i <- i + 1
 }
 ```
 
-#### Stock Models, logit, 2006 & 2016 only
-```{r models13, warning = F}
+### Stock Models, logit, 2006 & 2016 only
+
+```{r models13, warning = FALSE}
 t18m_0616 <- subset(t18m, year != 1996)
 
 i = 385
@@ -464,20 +464,20 @@ m3_results[i,2] <- dv
 m3_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("migstock_un")))[2]),5)
 m3_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m3_results[i,5:6] <- c("logit","w06_16")
-m3_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m3_results[i,10] <- 1
-m3_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m3_results[i,12:17] <- c("Stock",1,0,0,0,1)
 i <- i + 1
     }
 }
 ```
 
-#### Net Models, logit, 1996 & 2006 only
-```{r models14, warning = F}
+### Net Models, logit, 1996 & 2006 only
 
+```{r models14, warning = FALSE}
 i = 481
 for (dv in dvs) {
     for (var in 1:16) {
@@ -493,10 +493,10 @@ m3_results[i,2] <- dv
 m3_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("netmigpct")))[2]),5)
 m3_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m3_results[i,5:6] <- c("logit","w06_16")
-m3_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = TRUE) == TRUE, 1, 0)
 m3_results[i,11] <- 1
 m3_results[i,12:17] <- c("Flow",1,0,0,0,1)
 i <- i + 1
@@ -504,9 +504,9 @@ i <- i + 1
 }
 ```
 
+### Stock Models, logit, All years, Year dummies only (no country FE)
 
-#### Stock Models, logit, All years, Year dummies only (no country FE)
-```{r models15, warning = F}
+```{r models15, warning = FALSE}
 i = 385
 for (dv in dvs) {
     for (var in 1:16) {
@@ -521,19 +521,20 @@ m4_results[i,2] <- dv
 m4_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("migstock_un")))[2]),5)
 m4_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m4_results[i,5:6] <- c("logit","All")
-m4_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m4_results[i,10] <- 1
-m4_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m4_results[i,12:17] <- c("Stock",0,0,1,0,1)
 i <- i + 1
     }
 }
 ```
 
-#### Net Models, logit, All years, Year dummies only (no country FE)
-```{r models16, warning = F}
+### Net Models, logit, All years, Year dummies only (no country FE)
+
+```{r models16, warning = FALSE}
 i = 481
 for (dv in dvs) {
     for (var in 1:16) {
@@ -548,10 +549,10 @@ m4_results[i,2] <- dv
 m4_results[i,3] <- round(as.numeric(summary(margins(x, variables = c("netmigpct")))[2]),5)
 m4_results[i,4] <- round(summary(x)$coefficients[2,4],5)
 m4_results[i,5:6] <- c("logit","All")
-m4_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = TRUE) == TRUE, 1, 0)
 m4_results[i,11] <- 1
 m4_results[i,12:17] <- c("Flow",0,0,1,0,1)
 i <- i + 1
@@ -559,11 +560,11 @@ i <- i + 1
 }
 ```
 
+## GLM Models
 
-### GLM Models
+### Stock Models, GLM, All years, country-level, year dummy
 
-#### Stock Models, GLM, All years, country-level, year dummy
-```{r models17, warning = F}
+```{r models17, warning = FALSE}
 i = 193
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -578,19 +579,20 @@ m1_results[i,2] <- dv
 m1_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m1_results[i,4] <- round(summary(x)$coefficients[2,5],5)
 m1_results[i,5:6] <- c("glm","All")
-m1_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m1_results[i,10] <- 1
-m1_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m1_results[i,12:17] <- c("Stock",0,0,1,1,0)
 i <- i + 1
     }
 }
 ```
 
-#### Net Models, GLM, All years, country-level, year dummy
-```{r models18, warning = F}
+### Net Models, GLM, All years, country-level, year dummy
+
+```{r models18, warning = FALSE}
 i = 289
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -605,10 +607,10 @@ m1_results[i,2] <- dv
 m1_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m1_results[i,4] <- round(summary(x)$coefficients[2,5],5)
 m1_results[i,5:6] <- c("glm","All")
-m1_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
-m1_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m1_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m1_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = TRUE) == TRUE, 1, 0)
 m1_results[i,11] <- 1
 m1_results[i,12:17] <- c("Flow",0,0,1,1,0)
 i <- i + 1
@@ -616,8 +618,9 @@ i <- i + 1
 }
 ```
 
-#### Stock Models, GLM, country-level, year dummy, 1996 & 2006 only
-```{r models19, warning = F}
+### Stock Models, GLM, country-level, year dummy, 1996 & 2006 only
+
+```{r models19, warning = FALSE}
 t18m_9606 <- subset(t18m, year != 2016)
 
 i = 193
@@ -635,20 +638,20 @@ m2_results[i,2] <- dv
 m2_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m2_results[i,4] <- round(summary(x)$coefficients[2,5],5)
 m2_results[i,5:6] <- c("glm","w96_06")
-m2_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m2_results[i,10] <- 1
-m2_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m2_results[i,12:17] <- c("Stock",0,0,1,1,0)
 i <- i + 1
     }
 }
 ```
 
-#### Net Models, GLM, country-level, year dummy, 1996 & 2006 only
-```{r models20, warning = F}
+### Net Models, GLM, country-level, year dummy, 1996 & 2006 only
 
+```{r models20, warning = FALSE}
 i = 289
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -664,10 +667,10 @@ m2_results[i,2] <- dv
 m2_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m2_results[i,4] <- round(summary(x)$coefficients[2,5],5)
 m2_results[i,5:6] <- c("glm","w96_06")
-m2_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
-m2_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m2_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m2_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = TRUE) == TRUE, 1, 0)
 m2_results[i,11] <- 1
 m2_results[i,12:17] <- c("Flow",0,0,1,1,0)
 i <- i + 1
@@ -675,8 +678,9 @@ i <- i + 1
 }
 ```
 
-#### Stock Models, GLM, country-level, year dummy, 2006 & 2016 only
-```{r models21, warning = F}
+### Stock Models, GLM, country-level, year dummy, 2006 & 2016 only
+
+```{r models21, warning = FALSE}
 t18m_0616 <- subset(t18m, year != 1996)
 
 i = 193
@@ -694,20 +698,20 @@ m3_results[i,2] <- dv
 m3_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m3_results[i,4] <- round(summary(x)$coefficients[2,5],5)
 m3_results[i,5:6] <- c("glm","w06_16")
-m3_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m3_results[i,10] <- 1
-m3_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m3_results[i,12:17] <- c("Stock",0,0,1,1,0)
 i <- i + 1
     }
 }
 ```
 
-#### Net Models, GLM, country-level, year dummy, 2006 & 2016 only
-```{r models22, warning = F}
+### Net Models, GLM, country-level, year dummy, 2006 & 2016 only
 
+```{r models22, warning = FALSE}
 i = 289
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -723,10 +727,10 @@ m3_results[i,2] <- dv
 m3_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m3_results[i,4] <- round(summary(x)$coefficients[2,5],5)
 m3_results[i,5:6] <- c("glm","w06_16")
-m3_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
-m3_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m3_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m3_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = TRUE) == TRUE, 1, 0)
 m3_results[i,11] <- 1
 m3_results[i,12:17] <- c("Flow",0,0,1,1,0)
 i <- i + 1
@@ -734,9 +738,9 @@ i <- i + 1
 }
 ```
 
+### Stock Models, GLM, All years, no year dummy
 
-#### Stock Models, GLM, All years, no year dummy
-```{r models23, warning = F}
+```{r models23, warning = FALSE}
 i = 193
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -751,19 +755,20 @@ m4_results[i,2] <- dv
 m4_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m4_results[i,4] <- round(summary(x)$coefficients[2,5],5)
 m4_results[i,5:6] <- c("glm","All")
-m4_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,7] <- ifelse(grepl("unemp",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,8] <- ifelse(grepl("socx",vars[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,9] <- ifelse(grepl("gdp",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m4_results[i,10] <- 1
-m4_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,11] <- ifelse(grepl("netmig",vars[var], fixed = TRUE) == TRUE, 1, 0)
 m4_results[i,12:17] <- c("Stock",0,0,0,1,0)
 i <- i + 1
     }
 }
 ```
 
-#### Net Models, GLM, All years, no year dummy
-```{r models24, warning = F}
+### Net Models, GLM, All years, no year dummy
+
+```{r models24, warning = FALSE}
 i = 289
 for (dv in dvs_c) {
     for (var in 1:16) {
@@ -778,10 +783,10 @@ m4_results[i,2] <- dv
 m4_results[i,3] <- round(summary(x)$coefficients[2,1],5)
 m4_results[i,4] <- round(summary(x)$coefficients[2,5],5)
 m4_results[i,5:6] <- c("glm","All")
-m4_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = T) == TRUE, 1, 0)
-m4_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = T) == TRUE, 1, 0)
+m4_results[i,7] <- ifelse(grepl("unemp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,8] <- ifelse(grepl("socx",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,9] <- ifelse(grepl("gdp",vars2[var], fixed = TRUE) == TRUE, 1, 0)
+m4_results[i,10] <- ifelse(grepl("stock",vars2[var], fixed = TRUE) == TRUE, 1, 0)
 m4_results[i,11] <- 1
 m4_results[i,12:17] <- c("Flow",0,0,0,1,0)
 i <- i + 1
@@ -789,9 +794,9 @@ i <- i + 1
 }
 ```
 
-### Explaining Variance in Multiverse
+## Explaining Variance in Multiverse
 
-```{r dataprep, warning = F}
+```{r dataprep, warning = FALSE}
 multi_df <- as.data.frame(rbind(m1_results, m2_results, m3_results, m4_results))
 
 multi_df <- multi_df %>%
@@ -801,14 +806,10 @@ multi_df <- multi_df %>%
            AME = as.numeric(AME))
 
 save(multi_df, file = here::here("results/multi_df.Rda"))
-
 ```
 
-
-```{r multimodels, warning = F}
-
+```{r multimodels, warning = FALSE}
 load(file = here::here("results/multi_df.Rda"))
-
 
 # m0 <- lm(AME ~ 1, data = multi_df)
 m1 <- lm(AME ~ factor(dv) + factor(AME_type), data = multi_df)
@@ -826,18 +827,17 @@ expvar[,3] <- c(summary(m1)[["r.squared"]], summary(m2)[["r.squared"]], summary(
 write.csv(expvar, file = here::here("results/TblS8.csv"))
 ```
 
-
 ```{r plotms}
-sjPlot::tab_model(m3, m4, m5, show.ci = F, p.style = "stars")
+sjPlot::tab_model(m3, m4, m5, show.ci = FALSE, p.style = "stars")
 ```
 
-# Dredge Function
+## Dredge Function
 
 Given computing times, we start with smaller sets of variables and then eliminate those that do not appear in the top fitting models (AIC/LL).
 
-```{r newloads, warning = F}
+```{r newloads, warning = FALSE}
 
-cri_ml <- read.csv(file = here::here("results/cri_ml.csv"), header = T)
+cri_ml <- read.csv(file = here::here("results/cri_ml.csv"), header = TRUE)
 
 # remove NAs
 cri_ml <- cri_ml[!is.na(cri_ml$AME_Z),]
@@ -846,63 +846,45 @@ cri_ml <- cri_ml[!is.na(cri_ml$AME_Z),]
 options(na.action = "na.fail")
 ```
 
-## DVs and Measurement
+### DVs and Measurement
 
-```{r dredge1, warning = F}
-
-
+```{r dredge1, warning = FALSE}
 dredge1 <- lm(AME_Z ~ Jobs + IncDiff + House + Unemp + Health + OldAge + Flow + Stock + ChangeFlow + Stock*Jobs + Stock*House + Stock*IncDiff , data = cri_ml)
 
 models1 <- dredge(dredge1)
 ```
 
-```{r dredge2, warning = F}
-
-
+```{r dredge2, warning = FALSE}
 dredge2 <- lm(AME_Z ~ Jobs + IncDiff + House + Health +  Flow + Stock + ChangeFlow + Stock*IncDiff , data = cri_ml)
 
 models2 <- dredge(dredge2)
 ```
-```{r dredge3, warning = F}
+```{r dredge3, warning = FALSE}
 
 dredge3 <- lm(AME_Z ~ Jobs + IncDiff + House + Health +  Flow + Stock + ChangeFlow + Stock*IncDiff + w1996 + w2006 + w2016 + w2006*w2016 + orig13 + orig13*Jobs + eeurope + allavailable, data = cri_ml)
 
 models3 <- dredge(dredge3)
-
-
 ```
 
-```{r dredge4, warning = F}
-
+```{r dredge4, warning = FALSE}
 dredge4 <- lm(AME_Z ~ Jobs + IncDiff + House + Flow + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + allavailable + twowayfe + level_cyear + mlm_fe + mlm_re, data = cri_ml)
 
 models4 <- dredge(dredge4)
-
-
 ```
 
-```{r dredge5, warning = F}
-
+```{r dredge5, warning = FALSE}
 dredge5 <- lm(AME_Z ~ Jobs + IncDiff + House + Flow + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + mlm_re + pro_immigrant + stats_ipred + belief_ipred, data = cri_ml)
 
 models5 <- dredge(dredge5)
-
-
 ```
 
-```{r dredge6, warning = F}
-
+```{r dredge6, warning = FALSE}
 dredge6 <- lm(AME_Z ~ Jobs + IncDiff + House + Flow + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + mlm_re + stats_ipred + twowayfe*Jobs + twowayfe*Stock, data = cri_ml)
 
 models6 <- dredge(dredge6)
-
-
 ```
 
-
-
-```{r dredge7, warning = F}
-
+```{r dredge7, warning = FALSE}
 dredge7 <- lm(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock, data = cri_ml)
 
 models7 <- dredge(dredge7)
@@ -912,15 +894,13 @@ models7 <- dredge(dredge7)
 dredge8 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock + (1 | u_teamid), data = cri_ml)
 
 models8 <- dredge(dredge8)
-
-
 ```
 
-Final Model
+## Final Model
 
 Used to explain variance reduction - compare with Fig 2 in the main text and Table S6.
 
-```{r final, warning = F}
+```{r final, warning = FALSE}
 m_dredged <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + (1 | u_teamid), data = cri_ml)
 
 sjPlot::tab_model(m_dredged, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = here::here("results/reg_dredge.htm"))

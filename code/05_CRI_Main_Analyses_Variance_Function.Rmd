@@ -1,26 +1,22 @@
 ---
-title: "Tech 5, Main Variance Analyses"
+title: "Tech 5. Main Variance Analyses"
 output: html_document
 ---
 
 Variance function regressions
 
-```{r setup, include=FALSE, warning=F}
-
-rm(list = ls())
-library(pacman)
+```{r setup, include=FALSE, warning=FALSE}
+library("pacman")
 
 #necessayr for nnet::multinom and tab_model to work together
 # install.packages("devtools")
 # devtools::install_github("easystats/insight")
 # devtools::install_github("easystats/effectsize")
 
-
 pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools","rvest","nnet","parameters","insight","effectsize","ggtext","mdthemes","ragg", "ggpubr","readr","cowplot")
 
 source(file = "script/R_rainclouds.R")
 source(file = "script/summarySE.R")
-
 
 # add in variance estimates (more than 2-digits)
 # disable scientific notation
@@ -37,21 +33,21 @@ completeFun <- function(data, desiredCols) {
 
 These datasets were worked up from the file 01_CRI_Data_Prep.Rmd. 
 
-cri = numerical values
-cri_str = string values
-cri_team = team-level data (by conclusion)
-cri_team_combine = team-level data parsed by type of test variable (stock and flow)
-cri_indiv = participant-level data from our survey, identifying characteristics redacted
-crispectest = datafile created in the file 03_Spec_Analysis
+- `cri` = numerical values
+- `cri_str` = string values
+- `cri_team` = team-level data (by conclusion)
+- `cri_team_combine` = team-level data parsed by type of test variable ('stock' and 'flow')
+- `cri_indiv` = participant-level data from our survey, identifying characteristics redacted
+- `crispectest` = datafile created in the file `03_CRI_Spec_Analysis.Rmd`
 
 ### Load Data
 
-```{r load, warning=F,message=F}
-cri <- read.csv(file = here::here("data/cri.csv"), header = T)
-cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = T)
-cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = T)
-cri_indiv <- read.csv(file = here::here("data/cri_indv.csv"), header = T)
-crispectest <- read.csv(file = here::here("results/crispectest.csv"), header = T)
+```{r load, warning=FALSE,message=FALSE}
+cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
+cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
+cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = TRUE)
+cri_indiv <- read.csv(file = here::here("data/cri_indv.csv"), header = TRUE)
+crispectest <- read.csv(file = here::here("results/crispectest.csv"), header = TRUE)
 
 # setup multilevel dataset
 
@@ -69,32 +65,31 @@ cri_team <- subset(cri_team, u_teamid != 0)
 
 #mean replace team 27
 cri_team <- cri_team %>%
-  mutate(belief_ipred = ifelse(is.na(belief_ipred), mean(belief_ipred, na.rm = T), belief_ipred),
-         topic_ipred = ifelse(is.na(topic_ipred), mean(topic_ipred, na.rm = T), topic_ipred),
-         stats_ipred = ifelse(is.na(stats_ipred), mean(stats_ipred, na.rm = T), stats_ipred),)
-
+  mutate(belief_ipred = ifelse(is.na(belief_ipred), mean(belief_ipred, na.rm = TRUE), belief_ipred),
+         topic_ipred = ifelse(is.na(topic_ipred), mean(topic_ipred, na.rm = TRUE), topic_ipred),
+         stats_ipred = ifelse(is.na(stats_ipred), mean(stats_ipred, na.rm = TRUE), stats_ipred),)
 ```
 
 ### Within and Between Variables
 
-```{r wandb, warning = F, message = F}
+```{r wandb, warning = FALSE, message = FALSE}
 cri_ml <- cri_ml %>%
   group_by(team) %>%
-  mutate(AME_Z_b = mean(AME_Z, na.rm = T),
+  mutate(AME_Z_b = mean(AME_Z, na.rm = TRUE),
          AME_Z_w =AME_Z-AME_Z_b,
-         jobs_b = mean(Jobs, na.rm = T),
-         unemp_b = mean(Unemp, na.rm = T),
-         incdiff_b = mean(IncDiff, na.rm = T),
-         oldage_b = mean(OldAge, na.rm = T),
-         house_b = mean(House, na.rm = T),
-         health_b = mean(Health, na.rm = T),
+         jobs_b = mean(Jobs, na.rm = TRUE),
+         unemp_b = mean(Unemp, na.rm = TRUE),
+         incdiff_b = mean(IncDiff, na.rm = TRUE),
+         oldage_b = mean(OldAge, na.rm = TRUE),
+         house_b = mean(House, na.rm = TRUE),
+         health_b = mean(Health, na.rm = TRUE),
          jobs_w = Jobs-jobs_b,
          unemp_w = Unemp-unemp_b,
          incdiff_w = IncDiff-incdiff_b,
          oldage_w = OldAge-oldage_b,
          house_w = House-house_b,
          health_w = Health-health_b,
-         scale_b = mean(Scale, na.rm = T),
+         scale_b = mean(Scale, na.rm = TRUE),
          scale_w = Scale-scale_b,
          un_emp_rate_ivC = ifelse(emplrate_ivC == 1 | unemprate_ivC == 1, 1, 0)) %>%
   ungroup()
@@ -121,7 +116,7 @@ cri_team <- left_join(cri_team, t1, by = "u_teamid")
 
 ## Variance Plots
 
-Here we identify the residual variance within each team and then attempt to explain this with our idiosyncratic and subjective variables
+Here we identify the residual variance within each team and then attempt to explain this with our idiosyncratic and subjective variables.
 
 ```{r variance_plots}
 cri_ml <- cri_ml[complete.cases(cri_ml$AME_Z),]
@@ -189,29 +184,23 @@ cri_teams <- cri_teams %>%
            AME_Z_var2 = ifelse(AME_Z_var > 0.03, 0.03, AME_Z_var),
            AME_team_var = ifelse(AME_team_var > 0.004, 0.004, AME_team_var),  # three teams are outliers
            AME_Z_var = ifelse(AME_Z_var > 0.004, 0.004, AME_Z_var))
-
 ```
-
 
 ## Plots of Variance and Intercepts - Adjusted
 
-First we use an adjusted version of Model 7 (see 04_CRI_Main_Analyses.Rmd) to estimate the residual, unexplained intercepts and variances. We compare these to our researcher characteristics under the potential threat that random luck/noise has led some researchers with certain characteristics to select use certain models that lead to the appearance of variance in results by characteristic. Thus, the comparisons are 'all else equal'. They are the most conservative test, because they remove the likelihood that reseracher characteristics lead to certain model specification choices, and that these choices lead to certain outcomes. 
+First we use an adjusted version of Model 7 (see `04_CRI_Main_Analyses.Rmd`) to estimate the residual, unexplained intercepts and variances. We compare these to our researcher characteristics under the potential threat that random luck/noise has led some researchers with certain characteristics to select use certain models that lead to the appearance of variance in results by characteristic. Thus, the comparisons are 'all else equal'. They are the most conservative test, because they remove the likelihood that researcher characteristics lead to certain model specification choices, and that these choices lead to certain outcomes. 
 
 ### Linear plots. Supplementary.
 
 Here we plot linearly the within-team and between-team unexplained variance. Within-team variance scores zero when there is only one model.
 
-
-
-
 ```{r plots}
-
 agg_png(filename = here::here("results/FigS12_belief.png"), height = 600, width = 800, res = 144)
 ggplot(cri_teams, ) +
     geom_point(aes(y = scale(AME_team_var), x = belief_ipred), color = "goldenrod", shape = 2) +
     geom_point(aes(y = scale(AME_team_int), x = belief_ipred), color = "royalblue1", shape = 4) +
-    geom_smooth(aes(y = scale(AME_team_var), x = belief_ipred), color = "goldenrod", method = "lm", se = F) +
-    geom_smooth(aes(y = scale(AME_team_int), x = belief_ipred), color = "royalblue1", method = "lm", se = F) +
+    geom_smooth(aes(y = scale(AME_team_var), x = belief_ipred), color = "goldenrod", method = "lm", se = FALSE) +
+    geom_smooth(aes(y = scale(AME_team_int), x = belief_ipred), color = "royalblue1", method = "lm", se = FALSE) +
     ylim(-2,2) +
     annotate(geom = "text", x = -1.4, y = -0.6, label = "Variances by Team (\u0394)", hjust = 0, color = "goldenrod") +
     annotate(geom = "text", x = -1.4, y = 0.2, label = "Intercepts by Team (X)", hjust = 0, color = "royalblue1") +
@@ -225,8 +214,8 @@ agg_png(filename = here::here("results/FigS12_stats.png"), height = 600, width =
 ggplot(cri_teams, ) +
     geom_point(aes(y = scale(AME_team_var), x = stats_ipred), color = "goldenrod", shape = 2) +
     geom_point(aes(y = scale(AME_team_int), x = stats_ipred), color = "royalblue1", shape = 4) +
-    geom_smooth(aes(y = scale(AME_team_var), x = stats_ipred), color = "goldenrod", method = "lm", se = F) +
-    geom_smooth(aes(y = scale(AME_team_int), x = stats_ipred), color = "royalblue1", method = "lm", se = F) +
+    geom_smooth(aes(y = scale(AME_team_var), x = stats_ipred), color = "goldenrod", method = "lm", se = FALSE) +
+    geom_smooth(aes(y = scale(AME_team_int), x = stats_ipred), color = "royalblue1", method = "lm", se = FALSE) +
     ylim(-2,2) +
     annotate(geom = "text", x = -1.5, y = -0.3, label = "Variances by Team (\u0394)", hjust = 0, color = "goldenrod") +
     annotate(geom = "text", x = -1.5, y = 0.65, label = "Intercepts by Team (X)", hjust = 0, color = "royalblue1") +
@@ -240,8 +229,8 @@ agg_png(filename = here::here("results/FigS12_attitude.png"), height = 600, widt
 ggplot(cri_teams, ) +
     geom_point(aes(y = scale(AME_team_var), x = pro_immigrant), color = "goldenrod", shape = 2) +
     geom_point(aes(y = scale(AME_team_int), x = pro_immigrant), color = "royalblue1", shape = 4) +
-    geom_smooth(aes(y = scale(AME_team_var), x = pro_immigrant), color = "goldenrod", method = "lm", se = F) +
-    geom_smooth(aes(y = scale(AME_team_int), x = pro_immigrant), color = "royalblue1", method = "lm", se = F) +
+    geom_smooth(aes(y = scale(AME_team_var), x = pro_immigrant), color = "goldenrod", method = "lm", se = FALSE) +
+    geom_smooth(aes(y = scale(AME_team_int), x = pro_immigrant), color = "royalblue1", method = "lm", se = FALSE) +
     ylim(-2,2) +
     annotate(geom = "text", x = 1, y = -1, label = "Variances by Team (\u0394)", hjust = 0, color = "goldenrod") +
     annotate(geom = "text", x = 1, y = 0.5, label = "Intercepts by Team (X)", hjust = 0, color = "royalblue1") +
@@ -255,8 +244,8 @@ agg_png(filename = here::here("results/FigS12_topic.png"), height = 600, width =
 ggplot(cri_teams, ) +
     geom_point(aes(y = scale(AME_team_var), x = topic_ipred), color = "goldenrod", shape = 2) +
     geom_point(aes(y = scale(AME_team_int), x = topic_ipred), color = "royalblue1", shape = 4) +
-    geom_smooth(aes(y = scale(AME_team_var), x = topic_ipred), color = "goldenrod", method = "lm", se = F) +
-    geom_smooth(aes(y = scale(AME_team_int), x = topic_ipred), color = "royalblue1", method = "lm", se = F) +
+    geom_smooth(aes(y = scale(AME_team_var), x = topic_ipred), color = "goldenrod", method = "lm", se = FALSE) +
+    geom_smooth(aes(y = scale(AME_team_int), x = topic_ipred), color = "royalblue1", method = "lm", se = FALSE) +
     ylim(-2,2) +
     annotate(geom = "text", x = 0.5, y = 0.1, label = "Variances by Team (\u0394)", hjust = 0, color = "goldenrod") +
     annotate(geom = "text", x = 0.4, y = -1.8, label = "Intercepts by Team (X)", hjust = 0, color = "royalblue1") +
@@ -306,24 +295,21 @@ cri_team_g <- rbind(cri_team_groups1, cri_team_groups2, cri_team_groups3, cri_te
 cri_team_g <- subset(cri_team_g, !is.na(AME_team_int))
 cri_team_g$group <- as.factor(cri_team_g$group)
 cri_team_g$high <- as.factor(cri_team_g$high)
-
 ```
 
 ### Rainclouds. Residuals M7. Supplementary
 
-Allen M, Poggiali D, Whitaker K et al. Raincloud plots: a multi-platform tool for robust data visualization [version 2; peer review: 2 approved]. Wellcome Open Res ([2021](https://doi.org/10.12688/wellcomeopenres.15191.2)), 4:63.
+See also:
 
-
-
+> Allen M, Poggiali D, Whitaker K et al. Raincloud plots: a multi-platform tool for robust data visualization [version 2; peer review: 2 approved]. Wellcome Open Res ([2021](https://doi.org/10.12688/wellcomeopenres.15191.2)), 4:63.
 
 ```{r rainclouds_b}
 g1 <- 
-  
   ggplot(cri_team_g, aes(x = group, y = AME_team_int)) +
   geom_flat_violin(aes(x = group, fill = high), 
                    position = position_nudge(x = .1, y = 0), 
                    adjust = 1.5, 
-                   trim = F, 
+                   trim = FALSE, 
                    alpha = .5, 
                    colour = NA) +
   geom_point(aes(x = as.numeric(group) - 0.05, y = AME_team_int, colour = high), position = position_jitter(width = 0.05), size = 0.25, shape = 20) +
@@ -356,9 +342,6 @@ g1 <-
         axis.text.y = element_text(hjust = 0, color = "black"),
         axis.title.y = element_blank(),
         axis.title.x = element_text(size = 10))
-
-
-
 ```
 
 ```{r rainclouds_w}
@@ -366,7 +349,7 @@ g2 <- ggplot(cri_team_g, aes(x = group, y = AME_team_var)) +
   geom_flat_violin(aes(x = group, fill = high), 
                    position = position_nudge(x = .1, y = 0), 
                    adjust = 1.5, 
-                   trim = F, 
+                   trim = FALSE, 
                    alpha = .5, 
                    colour = NA) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey70", size = 0.5, show.legend = FALSE) +
@@ -391,11 +374,7 @@ g2 <- ggplot(cri_team_g, aes(x = group, y = AME_team_var)) +
         axis.title.y = element_blank(),
         axis.title.x = element_text(size = 10),
         axis.line.y = element_blank())
-
-
-
 ```
-
 
 ```{r combine}
 agg_png(filename = here::here("results/FigS11.png"), width = 1000, height = 800, res = 144)
@@ -407,16 +386,13 @@ knitr::include_graphics(here::here("results/FigS11.png"))
 
 ### Rainclouds. Figure 2. Main
 
-
-
 ```{r fig2a}
 g3 <- 
-  
   ggplot(cri_team_g, aes(x = group, y = AME_Z_int)) +
   geom_flat_violin(aes(x = group, fill = high), 
                    position = position_nudge(x = .1, y = 0), 
                    adjust = 1.5, 
-                   trim = F, 
+                   trim = FALSE, 
                    alpha = .5, 
                    colour = NA) +
   geom_point(aes(x = as.numeric(group) - 0.05, y = AME_Z_int, colour = high), position = position_jitter(width = 0.05), size = 0.25, shape = 20) +
@@ -449,9 +425,6 @@ g3 <-
         axis.text.y = element_text(hjust = 0, color = "black"),
         axis.title.y = element_blank(),
         axis.title.x = element_text(size = 10))
-
-
-
 ```
 
 ```{r fig2b}
@@ -459,7 +432,7 @@ g4 <- ggplot(cri_team_g, aes(x = group, y = AME_Z_var)) +
   geom_flat_violin(aes(x = group, fill = high), 
                    position = position_nudge(x = .1, y = 0), 
                    adjust = 1.5, 
-                   trim = F, 
+                   trim = FALSE, 
                    alpha = .5, 
                    colour = NA) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey70", size = 0.5, show.legend = FALSE) +
@@ -484,9 +457,6 @@ g4 <- ggplot(cri_team_g, aes(x = group, y = AME_Z_var)) +
         axis.title.y = element_blank(),
         axis.title.x = element_text(size = 10),
         axis.line.y = element_blank())
-
-
-
 ```
 
 
@@ -500,15 +470,13 @@ knitr::include_graphics(here::here("results/Fig2.png"))
 
 ## Variance Function Regression
 
-Following the technique of Western and Bloome [(2009)](https://doi.org/10.1111/j.1467-9531.2009.01222.x)
+Following the technique of Western and Bloome [(2009)](https://doi.org/10.1111/j.1467-9531.2009.01222.x).
 
-Adapted to predict variance across teams following Christoph Spörlein's [multi_varfun](https://github.com/chspoerlein/multi.varfun/blob/master/multi.varfun/R/multi_varfun.R)
-
+Adapted to predict variance across teams following Christoph Spörlein's [multi_varfun](https://github.com/chspoerlein/multi.varfun/blob/master/multi.varfun/R/multi_varfun.R).
 
 First runs of the model suggest too many variables, we had to pair down those that were less of interest. 
 
 ```{r multivarfun}
-
 # setup macros
 
 ## we tried all variables from m07adj but it had poor convergence, so we paired it down
@@ -531,7 +499,7 @@ datanomiss <- mod$model
 form <- paste0(outcome,"~",indep,"+(1 |",level2,")")
 form2 <- paste0("resmod~",indep,"+(1 |",level2,")")
 
-  
+
 meanmodel <- lmer(formula=form, data=datanomiss, REML=F)
   
 datanomiss$resmod <- residuals(meanmodel)^2
@@ -580,6 +548,4 @@ write.csv(Tbl11, file = here::here("results/TblS11.csv"))
 # summary(varmod)
 # summary(meanmod)
 # summary(model)
-
 ```
-

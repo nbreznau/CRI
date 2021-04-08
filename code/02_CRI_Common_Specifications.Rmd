@@ -3,30 +3,24 @@ title: "Tech 2. Common Specifications"
 output: html_document
 ---
 
-
 ```{r setup, include=FALSE}
 rm(list = ls())
-library(pacman)
-
+library("pacman")
 
 pacman::p_load("devtools","ggplot2","tidyverse","readr","ExPanDaR","plotscale","lattice","tidyr","mlogit","knitr","grid","zoo","ggpubr","ragg","factoextra","cluster","kableExtra","skimr","WeightedCluster","Hmisc")
-
-
 ```
 
 ## Load Data
 
-```{r load, warning=F,message=F, include=F}
+```{r load, warning=FALSE,message=FALSE, include=FALSE}
 
-cri <- read.csv(file = here::here("data/cri.csv"), header = T)
-cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = T)
-cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = T)
+cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
+cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
+cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = TRUE)
 
 #remove B&F study
 cri <- subset(cri, u_teamid != 0)
-
 ```
-
 
 ## Dissimilarity Analysis
 
@@ -38,9 +32,9 @@ We also need variables to distinguish:
 
 A) 'net migration' based measures from 'stock' based measures, even when both are used to reflect a change over time, the variable definitions are slightly different.
 
-B) 'west' form 'non-western' immigration & 'muslim' from 'non-muslim' & 'refugee'
+B) 'west' form 'non-western' immigration & 'muslim' from 'non-muslim' & 'refugee'.
 
-```{r qual_codes, warning = F}
+```{r qual_codes, warning = FALSE}
 # Add 'net migration' dummy for measurement
 cri <- cri %>%
     mutate(netmig = ifelse(main_IV_measurement == "Net Migration", 1, 0),
@@ -52,8 +46,7 @@ cri <- cri %>%
 # Get data with only model specs
 cri_spec_only <- cri
          
-cri_spec_only <- select(cri_spec_only, -c(count:main_IV_measurement, num_countries, inv_weight, additionalinfo, Hsupport:HresultF, AME_sup_p05:MODEL_SCORE))
-
+cri_spec_only <- dplyr::select(cri_spec_only, -c(count:main_IV_measurement, num_countries, inv_weight, additionalinfo, Hsupport:HresultF, AME_sup_p05:MODEL_SCORE))
 
 # convert character to numeric
 cri_spec_only <- cri_spec_only %>%
@@ -66,8 +59,8 @@ rownames(cri_spec_only) <- cri_spec_only$id
 cri_spec_only_team <- aggregate(cri_spec_only, by = list(cri_spec_only$u_teamid), FUN = "mean")
 # our analysis below revealed we should try a subset
 cri_spec_only2 <- subset(cri_spec_only, u_teamid != 10 & u_teamid != 61 & u_teamid != 82)
-cri_spec_only <- select(cri_spec_only,-c(u_teamid, id))
-cri_spec_only2 <- select(cri_spec_only2,-c(u_teamid, id))
+cri_spec_only <- dplyr::select(cri_spec_only,-c(u_teamid, id))
+cri_spec_only2 <- dplyr::select(cri_spec_only2,-c(u_teamid, id))
 cri_sums <- colSums(Filter(is.numeric, cri_spec_only_team))
 cri_sums <- as.data.frame(c("sum",cri_sums))
 cri_sums[,1] <- as.numeric(cri_sums[,1])
@@ -76,31 +69,26 @@ cri_sums_uncommon <- subset(cri_sums, cri_sums[,1] < 3)
 # remove zero variance columns
 cri_spec_only <- cri_spec_only[ - as.numeric(which(apply(cri_spec_only, 2, var) == 0))]
 cri_spec_only2 <- cri_spec_only2[ - as.numeric(which(apply(cri_spec_only2, 2, var) == 0))]
-
 ```
 
-
 We identified `r nrow(cri_sums) - 2` model specifications in our qualitative coding of the team's submitted code. Of these, `r ((nrow(cri_sums) - 2) - length(cri_sums_uncommon[,1]))` were *common* across teams (occurred in three or more) and `r length(cri_sums_uncommon[,1])` were *idiosyncratic* specifications (occurred in two or less teams). Of these model specifications, `r nrow(cri_spec_only)` have variance (the remainder refer to specifications in models that were dropped before the final preferred models; usually those that were seen as sensitivity models rather than main models, or those that the team in the end decided against through correspondence and error checking - remember teams could change their models at any point if they desired or had new information although this was rare).
-
-
-
-
 
 ### Dissimilarity in Decision Realms
 
 A second look at these data suggests that we may want to separately cluster on different decisions.
+
 1) Countries and waves
 2) Variables
 3) Estimation, measurement, model structure
 4) All at once
 
-```{r diss_1, warning = F}
+```{r diss_1, warning = FALSE}
 # select only country and wave variables
-cri_spec_only01 <- select(cri_spec_only, w1985:TR)
+cri_spec_only01 <- dplyr::select(cri_spec_only, w1985:TR)
 # variables in the model
-cri_spec_only02 <- select(cri_spec_only, main_IV_as_control, emigration_ivC:fbXleftright)
+cri_spec_only02 <- dplyr::select(cri_spec_only, main_IV_as_control, emigration_ivC:fbXleftright)
 # est & measurement (we provide two versions, one with DVs, one without)
-cri_spec_only03 <- select(cri_spec_only, netmig, west, nonwest, muslim, refugee, main_IV_time, main_IV_effect, Jobs:ChangeFlow, twowayfe:pseudo_pnl, dichotomize)
+cri_spec_only03 <- dplyr::select(cri_spec_only, netmig, west, nonwest, muslim, refugee, main_IV_time, main_IV_effect, Jobs:ChangeFlow, twowayfe:pseudo_pnl, dichotomize)
 cri_spec_only03 <- cri_spec_only03 %>%
   mutate(main_IV_time_1year = car::recode(main_IV_time, "1 = 1; c(2,3,4,5,6) = 0"),
          main_IV_time_10year = car::recode(main_IV_time, "2 = 1; c(1,3,4,5,6) = 0"),
@@ -112,10 +100,10 @@ cri_spec_only03 <- cri_spec_only03 %>%
          main_IV_effect_total = car::recode(main_IV_effect, "2 = 1; c(1,3,4) = 0"),
          main_IV_effect_unclear = car::recode(main_IV_effect, "3 = 1; c(1,2,4) = 0"),
          main_IV_effect_within = car::recode(main_IV_effect, "4 = 1; c(1,2,3) = 0"))
-cri_spec_only03 <- select(cri_spec_only03, -c(main_IV_time, main_IV_effect))
-cri_spec_only03_noDV <- select(cri_spec_only03, -c(Jobs:Health))
+cri_spec_only03 <- dplyr::select(cri_spec_only03, -c(main_IV_time, main_IV_effect))
+cri_spec_only03_noDV <- dplyr::select(cri_spec_only03, -c(Jobs:Health))
 #make a test for all three at once
-cri_spec_only04 <- select(cri_spec_only, w1985:TR, main_IV_as_control, emigration_ivC:fbXleftright, anynonlin)
+cri_spec_only04 <- dplyr::select(cri_spec_only, w1985:TR, main_IV_as_control, emigration_ivC:fbXleftright, anynonlin)
 cri_spec_only04 <- cbind(cri_spec_only04, cri_spec_only03)
 cri_spec_only04_noDV <- cbind(cri_spec_only04, cri_spec_only03_noDV)
 # find and merge identical cases
@@ -152,11 +140,11 @@ When considering three sub-domains of specification:
 
 1) **Sample** specifications only produces `r length(cri$identical_samples[cri$identical_samples == 0])` unique models
 2) **Variable** specifications only produces `r length(cri$identical_variables[cri$identical_variables == 0])` unique models
-3) **Measurement, Estimation & Equation** specifications only produces `r length(cri$identical_estmodel[cri$identical_estmodel == 0])`
+3) **Measurement, Estimation & Equation** specifications only produces `r length(cri$identical_estmodel[cri$identical_estmodel == 0])` unique models
 
 #### Sample Sub-Domain
 
-```{r desc_samples, warning = F}
+```{r desc_samples, warning = FALSE}
 cri_samples <- cri %>%
     subset(!is.na(AME_Z)) %>%
     subset(identical_samples != 0) %>%
@@ -172,18 +160,17 @@ cri_samples <- cri_samples %>%
               Hsupm = round(stats::weighted.mean(Hsup, team_sum),3))
 #exclude unique cases and cases where there are less than 5 teams that used identical specifications
 cri_samples <- subset(cri_samples, teams > 5)
-cri_samples <- cri_samples[order(cri_samples$cases, decreasing = T),]
+cri_samples <- cri_samples[order(cri_samples$cases, decreasing = TRUE),]
 head(cri_samples)
 
 ```
  
 Identify the sample selection that goes with cases `r cri_samples$identical_samples`.
  
-```{r ident_sample, warning = F}
+```{r ident_sample, warning = FALSE}
 cri_samp <- cri %>%
     subset(cri$identical_samples %in% cri_samples$identical_samples)
-cri_samp <- select(cri_samp, identical_samples, w1985:TR)
-
+cri_samp <- dplyr::select(cri_samp, identical_samples, w1985:TR)
 
 cri_sampp<- aggregate(cri_samp, by = list(cri_samp$identical_samples), FUN = "mean")
 
@@ -191,7 +178,6 @@ head(cri_sampp)
 
 cri_samples$identical_samples <- c("13 Richest Democracies, 1996 & 2006 Waves","11 of 13 Richest Democracies, 1996, 2006 & 2016 Waves","13 Richest Democracies, 1996, 2006 & 2016 Waves")
 ```
-
 
 #### Variables Sub-Domain
 
@@ -205,21 +191,21 @@ cri_variables <- cri %>%
 cri_variables <- cri_variables %>%
     group_by(identical_variables) %>%
     dplyr::summarize(AME_Zm = round(stats::weighted.mean(AME_Z, team_sum),3),
-              AME_Zsd = round(sqrt(Hmisc::wtd.var(AME_Z, na.rm = T)),3),
+              AME_Zsd = round(sqrt(Hmisc::wtd.var(AME_Z, na.rm = TRUE)),3),
               cases = n(),
               teams = length(unique(u_teamid)),
               Hsupm = round(stats::weighted.mean(Hsup, team_sum),3))
 
 cri_variables <- subset(cri_variables, teams > 5)
-cri_variables <- cri_variables[order(cri_variables$cases, decreasing = T),]
+cri_variables <- cri_variables[order(cri_variables$cases, decreasing = TRUE),]
 head(cri_variables)
 ```
 
-```{r ident_variables1, warning = F}
+```{r ident_variables1, warning = FALSE}
 cri_var <- cri %>%
     subset(cri$identical_variables %in% cri_variables$identical_variables)
 
-cri_var <- select(cri_var, identical_variables, main_IV_as_control, emigration_ivC:fbXleftright)
+cri_var <- dplyr::select(cri_var, identical_variables, main_IV_as_control, emigration_ivC:fbXleftright)
 
 
 cri_varr <- aggregate(cri_var, by = list(cri_var$identical_variables), FUN = "mean")
@@ -231,7 +217,7 @@ cri_variables$identical_variables <- c("No country-level, and 5 socio-demographi
 
 #### Model Components Sub-Domain
 
-```{r desc_estmodel, warning = F}
+```{r desc_estmodel, warning = FALSE}
 cri_estmodel <- cri %>%
     subset(!is.na(AME_Z)) %>%
     subset(identical_estmodel != 0) %>%
@@ -241,19 +227,19 @@ cri_estmodel <- cri %>%
 cri_estmodel <- cri_estmodel %>%
     group_by(identical_estmodel) %>%
     dplyr::summarize(AME_Zm = round(stats::weighted.mean(AME_Z, team_sum),3),
-              AME_Zsd = round(sqrt(Hmisc::wtd.var(AME_Z, na.rm = T)),3),
+              AME_Zsd = round(sqrt(Hmisc::wtd.var(AME_Z, na.rm = TRUE)),3),
               cases = n(),
               teams = length(unique(u_teamid)),
               Hsupm = round(stats::weighted.mean(Hsup, team_sum),3))
 
 cri_estmodel <- subset(cri_estmodel, teams > 5)
-cri_estmodel <- cri_estmodel[order(cri_estmodel$cases, decreasing = T),]
+cri_estmodel <- cri_estmodel[order(cri_estmodel$cases, decreasing = TRUE),]
 head(cri_estmodel)
 ```
-```{r ident_variables, warning = F}
+```{r ident_variables, warning = FALSE}
 cri_estm <- cri %>%
     subset(cri$identical_estmodel %in% cri_estmodel$identical_estmodel)
-cri_estm  <- select(cri_estm , identical_estmodel, netmig, west, nonwest, muslim, refugee, main_IV_time, main_IV_effect, Jobs:ChangeFlow, twowayfe:pseudo_pnl, dichotomize)
+cri_estm  <- dplyr::select(cri_estm , identical_estmodel, netmig, west, nonwest, muslim, refugee, main_IV_time, main_IV_effect, Jobs:ChangeFlow, twowayfe:pseudo_pnl, dichotomize)
 
 
 cri_estmm  <- aggregate(cri_estm, by = list(cri_estm$identical_estmodel), FUN = "mean")
@@ -265,7 +251,7 @@ cri_estmodel$identical_estmodel <- c("DV: Jobs, Test var: Stock of immigrants, l
 
 ### Appendix Table S3. Selected Frequencies of Model Specifications out of 1,261 Models
 
-```{r combine, warning = F}
+```{r combine, warning = FALSE}
 
 tbl_ax <- as.data.frame(matrix(nrow = 20, ncol = 6))
 
@@ -280,4 +266,3 @@ rm(cri_samp, cri_sampp, cri_estm, cri_estmm, cri_var, cri_varr)
 
 write.csv(tbl_ax, file = here::here("results/TblS4.csv"))
 ```
-

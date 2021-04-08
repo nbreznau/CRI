@@ -23,15 +23,13 @@ wavelist <- c("w1985","w1990","w1996","w2006","w2016")
 
 server <- function(input, output, session) {
   
-  
-  
   output$exec <- renderUI({
     url <- a("Original Study Description", href="https://osf.io/preprints/socarxiv/6j9qb/")
     tagList(url)
   })
   
   output$workp <- renderUI({
-    url <- a("Replication Materials", href="https://github.com/nbreznau/CRI")
+    url <- a("Reproduction Materials", href="https://github.com/nbreznau/CRI")
     tagList(url)
   })
   output$exec2 <- renderUI({
@@ -40,7 +38,7 @@ server <- function(input, output, session) {
   })
   
   output$workp2 <- renderUI({
-    url <- a("Replication Materials", href="https://github.com/nbreznau/CRI")
+    url <- a("Reproduction Materials", href="https://github.com/nbreznau/CRI")
     tagList(url)
   })
   output$exec3 <- renderUI({
@@ -49,7 +47,7 @@ server <- function(input, output, session) {
   })
   
   output$workp3 <- renderUI({
-    url <- a("Replication Materials", href="https://github.com/nbreznau/CRI")
+    url <- a("Reproduction Materials", href="https://github.com/nbreznau/CRI")
     tagList(url)
   })
   # TAB ONE EFFECTS

@@ -1,0 +1,40 @@
+name: Render all R Markdown notebooks
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  render:
+    runs-on: ubuntu-20.04
+    container:
+      image: "rocker/verse:4.0.4"
+      #volumes: GH by default mounts workdir to /__w/, and sets "--workdir /__w/reponame/reponame"
+      options: --user root
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Install apt packages
+        run: |
+            apt-get update
+            apt-get install -y $(grep -vE "^\s*#" .binder/apt.txt  | tr "\n" " ")
+      
+      - name: Install R packages
+        run: |
+          Rscript .binder/install.R
+      
+      - name: Run script
+        run: |
+          Rscript all.R
+      
+      - name: Upload HTMLs
+        uses: actions/upload-artifact@v2
+        with:
+          name: notebooks
+          path: |
+            data_prep/*.html
+            code/*.html
+            results/

@@ -3,61 +3,55 @@ title: "Tech 1. Descriptives"
 output: html_document
 ---
 
-
 ```{r setup, include=FALSE}
 rm(list = ls())
-library(pacman)
+library("pacman")
 
 pacman::p_load("tidyverse","knitr","kableExtra","reshape","ggplot2","ragg","summarytools", "Hmisc")
-
 ```
 
-### Data
+## Data
 
-The datasets in here were worked up starting in the sub-folder 'team_code' in the 'team_code_R.Rmd' file and then in the project sub-folder 'CRI/data_prep' 
+The datasets in here were worked up starting in the sub-folder [`team_code`](../team_code) in the  `team_code_R.Rmd` file and then in the project sub-folder [`data_prep`](../data_prep).
 
-1. *cri.csv* = model-level data, numerical values
-2. *cri_team.csv* = team-level data
-3. *cri_str.csv* = model-level data, string values
+1. `cri.csv` = model-level data, numerical values
+2. `cri_team.csv` = team-level data
+3. `cri_str.csv` = model-level data, string values
 
-
-```{r load, warning=F,message=F, include =F}
-cri <- read.csv(file = here::here("data/cri.csv"), header = T)
-cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = T)
-cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = T)
+```{r load, warning=FALSE,message=FALSE, include = FALSE}
+cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
+cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = TRUE)
+cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
 
 # team stats
-cri_count <- aggregate(cri_team, by = list(cri_team$u_teamid), FUN = "mean", na.rm = T)
+cri_count <- aggregate(cri_team, by = list(cri_team$u_teamid), FUN = "mean", na.rm = TRUE)
 ```
 
-
-### Model Specification Codebook
+## Model Specification Codebook
 
 A descriptives table is far too large to add, therefore we simply append some summary statistics to the codebook and place this in the Supplementary Materials Appendix II. Model Specification Coding and Distribution.
 
-```{r codebook, include = F, warning = F}
+```{r codebook, include = FALSE, warning = FALSE}
 codebook <- subset(cri_str, u_teamid != 0)
 codebook$DV[grepl("Scale",codebook$DV)] <- "Scale"
-codebook <- select(codebook, DV, main_IV_type, main_IV_measurement, main_IV_time, num_countries, main_IV_as_control, software, mator, indepv, inv_weight) %>%
-    mutate(num_countries = factor(num_countries),
-           main_IV_as_control = factor(main_IV_as_control))
-
-# summarytools::freq(codebook, order = "freq", style = "grid")
+codebook <- dplyr::select(codebook, DV, main_IV_type, main_IV_measurement, main_IV_time, num_countries, main_IV_as_control, software, mator, indepv, inv_weight) %>%
+    dplyr::mutate(num_countries = factor(num_countries),
+                  main_IV_as_control = factor(main_IV_as_control))
 
 # Get weighted proportions
-codebook1 <- gather(codebook, "var", "value", DV:indepv) %>%
-  count(var, value, wt = inv_weight) %>%
-  group_by(var) %>%    
-  mutate(propw = prop.table(n)) %>%
-  ungroup() %>%
-  select(., propw)
+codebook1 <- tidyr::gather(codebook, "var", "value", DV:indepv) %>%
+  dplyr::count(var, value, wt = inv_weight) %>%
+  dplyr::group_by(var) %>%    
+  dplyr::mutate(propw = prop.table(n)) %>%
+  dplyr::ungroup() %>%
+  dplyr::select(., propw)
 
 # Get unweighted proportions plus n cases
-codebook2 <- gather(codebook, "var", "value", DV:indepv) %>%
-  count(var, value) %>%
-  group_by(var) %>%             
-  mutate(prop = prop.table(n)) %>%
-  ungroup()
+codebook2 <- tidyr::gather(codebook, "var", "value", DV:indepv) %>%
+  dplyr::count(var, value) %>%
+  dplyr::group_by(var) %>%             
+  dplyr::mutate(prop = prop.table(n)) %>%
+  dplyr::ungroup()
 
 codebook1 <- cbind(codebook2, codebook1)
 
@@ -65,13 +59,11 @@ percent <- function(x, digits = 2, format = "f", ...) {      # Create user-defin
   paste0(formatC(x * 100, format = format, digits = digits, ...), "%")
 }
 
-
 # add a single row to each group
 codebook1 <- codebook1 %>%
   split(.$var) %>% 
   map(~add_row(., var=unique(.$var), value=NA, n=1000, prop=NA, propw=NA)) %>%
   bind_rows()
-
 
 codebook1$prop <- percent(codebook1$prop)
 codebook1$propw <- percent(codebook1$propw)
@@ -83,46 +75,43 @@ codebook1 <- codebook1 %>%
   bind_rows()
 
 #reorder decreasing
-codebook1 <- codebook1[order(codebook1$var, codebook1$n, decreasing = T),]
+codebook1 <- codebook1[order(codebook1$var, codebook1$n, decreasing = TRUE),]
 
 # add labels
 codebook1 <- codebook1 %>%
     mutate(value = ifelse(n == 1000, var, ifelse(n == 0, "total", value)))
 
-codebook1 <- select(codebook1, -var)
+codebook1 <- dplyr::select(codebook1, -var)
 
 write.csv(codebook1, file = here::here("results/codebook1.csv"))
-
-
 ```
 
+## Descriptives
 
-### Descriptives
+### Sample 
 
-#### Sample 
-
-Our final sample is `r length(unique(cri_str$u_teamid))` teams including `r sum(cri_count$team_size[cri_count$u_teamid != 0]) + 1` researhers that submitted `r length(cri_str$u_teamid[cri_str$u_teamid != 0]) + 1` models. Of those teams, one did not conduct the hypothesis test based on a failed measurement invariance test, another had all their `r length(cri_str$u_teamid[cri_str$u_teamid == 1])` models fail to converge and one other had one model out of several fail to converge. The result was `r length(unique(cri_str$u_teamid)) - 2` teams with numeric results of their hypothesis tests derived from `r length(cri_str$u_teamid[!is.na(cri_str$AME) & cri_str$u_teamid != 0])` models produced by `r sum(cri_count$team_size[cri_count$u_teamid != 0]) - 3` researchers in total with an average of `r round(sum(cri_str$team_size[cri_str$u_teamid != 0])/length(cri_str$id[cri_str$u_teamid != 0]),3)` researchers per team.
+Our final sample is `r length(unique(cri_str$u_teamid))` teams including `r sum(cri_count$team_size[cri_count$u_teamid != 0]) + 1` researchers that submitted `r length(cri_str$u_teamid[cri_str$u_teamid != 0]) + 1` models. Of those teams, one did not conduct the hypothesis test based on a failed measurement invariance test, another had all their `r length(cri_str$u_teamid[cri_str$u_teamid == 1])` models fail to converge and one other had one model out of several fail to converge. The result was `r length(unique(cri_str$u_teamid)) - 2` teams with numeric results of their hypothesis tests derived from `r length(cri_str$u_teamid[!is.na(cri_str$AME) & cri_str$u_teamid != 0])` models produced by `r sum(cri_count$team_size[cri_count$u_teamid != 0]) - 3` researchers in total with an average of `r round(sum(cri_str$team_size[cri_str$u_teamid != 0])/length(cri_str$id[cri_str$u_teamid != 0]),3)` researchers per team.
 There were `r sum(cri_count$team_size)-2` participants in `r length(unique(cri$u_teamid))` teams that produced `r length(cri$u_teamid[cri$u_teamid > 0])` models, average of `r round(length(cri$u_teamid[cri$u_teamid > 0])/length(unique(cri$u_teamid)),3)` models per team.
 
 There were `r sum(duplicated(cri_team$u_teamid))` teams that came to more than one conclusion. For example, finding support of the hypothesis for immigration stock models, but finding rejection of the hypothesis for immigration flow models. Therefore, we have `r length(cri_team$u_teamid)` observations ('results') in the team-level data that derive from `r length(unique(cri_team$u_teamid))-1` teams. We also have the conclusion from the study by Brady and Finnigan ([2014](https://doi.org/10.1177/000312240607100306)) that provides an example of a state of the art study for testing this hypothesis included as team number '0' for comparison purposes.
 
-#### Summary Stats
+### Summary Stats
 
 We no longer use this approach but leave these tables here in case of interest. The codebook is now our main summary statistics location.
 
 Note that the N of 89 reflects the number of conclusions provided in total from 73 teams, with one of those conclusions having no results attached to it because the team concluded through measurement testing that the data were inappropriate. Thus, 88 is our team-level-results N for comparison.
 
-```{r descriptive, warning = F, message = F, include = F}
-sum1 <- summarise_at(cri, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(mean), na.rm = T)
+```{r descriptive, warning = FALSE, message = FALSE, include = FALSE}
+sum1 <- summarise_at(cri, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(mean), na.rm = TRUE)
 
-sum1.1 <- summarise_at(cri,vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(sd), na.rm = T)
+sum1.1 <- summarise_at(cri,vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(sd), na.rm = TRUE)
 
 # need to fix to get accurate N counts at some point
 sum2 <- summarise_at(cri, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(n()))
 
-sum3 <- summarise_at(cri, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(min), na.rm = T)
+sum3 <- summarise_at(cri, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(min), na.rm = TRUE)
 
-sum4 <- summarise_at(cri, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(max), na.rm = T)
+sum4 <- summarise_at(cri, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(max), na.rm = TRUE)
 
 sum1[2,] <- c("AME, standardized","Confidence Interval","Support Hypothesis", "Reject Hypothesis", "Not testable Hypothesis", "DV: Jobs", "DV: Unemp", "DV: Income Diffs","DV: Old Age", "Dv: Housing", "DV: Health care", "DV: Constructed Scale", "Test IV: Stock of Immigrants", "Test IV: Flow of Immigrants", "Test IV: Change in Flow", "ISSP Wave: 1985", "ISSP Wave: 1990", "ISSP Wave: 1996", "ISSP Wave: 2006", "ISSP Wave: 2016", "# of countries used", "Dichotomized DV", "Both Test IVs included","Two-Way FEs (year & country dummies", "Used a Multilevel Model", "Used any form of SE clutering","Number of Models (by team)","Team size","Software: Stata","software: R","Software: SPSS","Software: Mplus","software: MLwin", "Belief that Hypothesis is true (by team)", "Positive affect to immigrants/immigration","Interst in the research topic (by team)","Statistics skills (by team)", "Subjective model score")
 
@@ -132,30 +121,27 @@ cri_sum <- as.data.frame(t(cri_sum))
 
 colnames(cri_sum) <- c("mean","variable", "sd","N","min","max")
 
-cri_sum <- select(cri_sum, variable, mean, everything())
+cri_sum <- dplyr::select(cri_sum, variable, mean, everything())
 
 cri_sum$mean <- round(as.numeric(cri_sum$mean), 4)
 cri_sum$sd <- round(as.numeric(cri_sum$sd), 4)
 cri_sum$min <- round(as.numeric(cri_sum$min), 4)
 cri_sum$max <- round(as.numeric(cri_sum$max), 4)
 
-t2 <- kable(cri_sum, row.names = F)
+t2 <- kable(cri_sum, row.names = FALSE)
 ```
 
+```{r desc_team, warning=FALSE, message=FALSE, include=FALSE}
+sum1 <- summarise_at(cri_team, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(mean), na.rm = TRUE)
 
-
-
-```{r desc_team, warning=F, message=F, include=F}
-sum1 <- summarise_at(cri_team, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(mean), na.rm = T)
-
-sum1.1 <- summarise_at(cri_team, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(sd), na.rm = T)
+sum1.1 <- summarise_at(cri_team, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(sd), na.rm = TRUE)
 
 # need to fix to get accurate N counts at some point
 sum2 <- summarise_at(cri_team, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(n()))
 
-sum3 <- summarise_at(cri_team, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(min), na.rm = T)
+sum3 <- summarise_at(cri_team, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(min), na.rm = TRUE)
 
-sum4 <- summarise_at(cri_team, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(max), na.rm = T)
+sum4 <- summarise_at(cri_team, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(max), na.rm = TRUE)
 
 sum1[2,] <- c("AME, standardized","Confidence Interval","Support Hypothesis", "Reject Hypothesis", "Not testable Hypothesis", "DV: Jobs ", "DV: Unemp ", "DV: Income Diffs ","DV: Old Age ", "Dv: Housing ", "DV: Health care ", "DV: Constructed Scale ", "Test IV: Stock of Immigrants ", "Test IV: Flow of Immigrants ", "Test IV: Change in Flow ", "ISSP Wave: 1985 ", "ISSP Wave: 1990 ", "ISSP Wave: 1996 ", "ISSP Wave: 2006 ", "ISSP Wave: 2016 ", "# of countries used ", "Dichotomized DV ", "Both Test IVs included ","Two-Way FEs (year & country dummies ", "Use a Multilevel Model ", "Any form of SE clutering ","Number of Models ","Team size","Software: Stata","software: R","Software: SPSS","Software: Mplus","software: MLwin","Belief that Hypothesis is true", "Positive affect to immigrants/immigration","Interst in the research topic","Statistics skills", "Subjective model score")
 
@@ -165,7 +151,7 @@ cri_sum <- as.data.frame(t(cri_sum))
 
 colnames(cri_sum) <- c("mean","variable", "sd","N","min","max")
 
-cri_sum <- select(cri_sum, variable, mean, everything())
+cri_sum <- dplyr::select(cri_sum, variable, mean, everything())
 
 colnames(cri_sum) <- c("variable (team average scores)","mean", "sd","N","min","max")
 
@@ -176,37 +162,34 @@ cri_sum$max <- round(as.numeric(cri_sum$max), 4)
 
 rm(sum1,sum1.1,sum2,sum3,sum4)
 
-
-t1 <- kable(cri_sum, row.names = F)
+t1 <- kable(cri_sum, row.names = FALSE)
 ```
 
-#### Table 1. Team-Results-Level Descriptive Statistics
+### Table 1. Team-Results-Level Descriptive Statistics
 
-```{r desc_team1, warning=F, message=F, include=F}
+```{r desc_team1, warning=FALSE, message=FALSE, include=FALSE}
 kable_styling(t1) %>%
   as_image(width = 4, file = here::here("results/Tbl_codebook.png"))
 ```
 
-```{r table1, warning=F, message=F, echo=T}
+```{r table1, warning=FALSE, message=FALSE, echo=T}
 knitr::include_graphics(here::here("results/Tbl_codebook.png"))
 ```
 
-#### Table 2. Model-Level Descriptive Statistics
+### Table 2. Model-Level Descriptive Statistics
 
-```{r descriptive1, warning = F, message = F, include=F}
-
+```{r descriptive1, warning = FALSE, message = FALSE, include=FALSE}
 kable_styling(t2) %>%
   as_image(width = 4, file = here::here("results/Tbl_codebook2.png"))
-
 ```
 
-```{r table2, warning=F, message=F, echo=T}
+```{r table2, warning=FALSE, message=FALSE, echo=T}
 knitr::include_graphics(here::here("results/Tbl_codebook2.png"))
 ```
 
-### Main Findings - Tables 1-3
+## Main Findings - Tables 1-3
 
-This chunk preps some of the stats for Tables 1-3, these tables will be completed in 05_CRI_Main_Analyses.Rmd
+This chunk preps some of the stats for Tables 1-3, these tables will be completed in `05_CRI_Main_Analyses.Rmd`.
 
 ```{r Tbl1_3_data_prep}
 # remove original study and non-conclusive results
@@ -219,12 +202,9 @@ tm_min <- min(cri_team0$inv_weight, na.rm=T)
 tm_max <- max(cri_team0$inv_weight, na.rm=T)
 ```
 
-
 This chunk creates the matrix and exports it to csv for hand formatting and inserting into Supplementary Materials template. 
 
-
 ```{r Tbl_1}
-
 # create table frame
 tbl1 <- matrix(nrow = 14, ncol = 3)
 tbl1[1:14,1] <- c("","","Test Results","Positive","Insignificant","Negative","(test failed)",	"TOTAL","Sujective Conclusion: Hypothesis is?","Supported",	"Not testable/inconclusive",	"Rejected",	"TOTAL","")
@@ -237,30 +217,29 @@ tbl1[14,1] <- paste0("Of the ", length(unique(cri_team0$u_teamid)), " teams in t
 
 # need to calculate rate carefully because teams 1 and 105 had failed tests
 
-tbl1[4,2] <- mean(cri_team0$pos_test_pct_p05, na.rm = T)
-tbl1[4,3] <- mean(cri0$AME_sup_p05, na.rm = T)
-tbl1[5,2] <- mean(cri_team0$ns_test_pct_p05, na.rm = T)
-tbl1[5,3] <- mean(cri0$AME_ns_p05, na.rm = T)
-tbl1[6,2] <- mean(cri_team0$neg_test_pct_p05, na.rm = T)
-tbl1[6,3] <- mean(cri0$AME_neg_p05, na.rm = T)
-tbl1[7,2] <- 1- (sum(as.numeric(tbl1[4:6,2]), na.rm = T))
-tbl1[7,3] <- 1- (sum(as.numeric(tbl1[4:6,3]), na.rm = T))
+tbl1[4,2] <- mean(cri_team0$pos_test_pct_p05, na.rm = TRUE)
+tbl1[4,3] <- mean(cri0$AME_sup_p05, na.rm = TRUE)
+tbl1[5,2] <- mean(cri_team0$ns_test_pct_p05, na.rm = TRUE)
+tbl1[5,3] <- mean(cri0$AME_ns_p05, na.rm = TRUE)
+tbl1[6,2] <- mean(cri_team0$neg_test_pct_p05, na.rm = TRUE)
+tbl1[6,3] <- mean(cri0$AME_neg_p05, na.rm = TRUE)
+tbl1[7,2] <- 1- (sum(as.numeric(tbl1[4:6,2]), na.rm = TRUE))
+tbl1[7,3] <- 1- (sum(as.numeric(tbl1[4:6,3]), na.rm = TRUE))
 
 tbl1[8,2:3] <- 1
 
-tbl1[10,2] <- (mean(cri_team0$Hsup, na.rm = T)*87)/89
-tbl1[11,2] <- ((mean(cri_team0$Hnotest, na.rm = T)*87)+2)/89
-tbl1[12,2] <- (mean(cri_team0$Hrej, na.rm = T)*87)/89
+tbl1[10,2] <- (mean(cri_team0$Hsup, na.rm = TRUE)*87)/89
+tbl1[11,2] <- ((mean(cri_team0$Hnotest, na.rm = TRUE)*87)+2)/89
+tbl1[12,2] <- (mean(cri_team0$Hrej, na.rm = TRUE)*87)/89
 tbl1[13,2] <- 1
 
 write.csv(tbl1, file = here::here("results/tbl1.csv"))
-  
 ```
 
-#### Correlation heatmap for Tbl1 obj and subj results
+### Correlation heatmap for Tbl1 obj and subj results
 
 ```{r}
-cor_team <- select(cri_team0, Hsup, Hno, Hrej, pos_test_pct_p05, ns_test_pct_p05, neg_test_pct_p05)
+cor_team <- dplyr::select(cri_team0, Hsup, Hno, Hrej, pos_test_pct_p05, ns_test_pct_p05, neg_test_pct_p05)
 cormat <- round(cor(cor_team),2)
 
 sq_cormat <- cormat[-c(4:6),-c(1:3)]
@@ -290,7 +269,7 @@ knitr::include_graphics(here::here("results/Tbl1_cor.png"))
 
 ```
 
-#### Basic Descriptive Visualization of Outcomes
+### Basic Descriptive Visualization of Outcomes
 
 ```{r recodes}
 cri0 <- subset(cri, u_teamid != 0) %>%
@@ -298,14 +277,12 @@ cri0 <- subset(cri, u_teamid != 0) %>%
   mutate(AME_Zc = ifelse(AME_Z > 0.125, 0.15, ifelse(AME_Z < -0.125, -0.15, AME_Z)))
 
 # add weighted mean & variance to plot
-w_mean <- round(weighted.mean(cri$AME_Z, w = cri$inv_weight, na.rm = T),4)
-w_var <- round(wtd.var(cri$AME_Z, weights = cri$inv_weight, na.rm = T),4)
+w_mean <- round(weighted.mean(cri$AME_Z, w = cri$inv_weight, na.rm = TRUE),4)
+w_var <- round(wtd.var(cri$AME_Z, weights = cri$inv_weight, na.rm = TRUE),4)
 ```
 
-
-```{r hist_results_basic, warning = F}
+```{r hist_results_basic, warning = FALSE}
 g1 <-  ggplot(data = cri0) +
-  #geom_density(aes(x = AME)) +
   geom_histogram(aes(x = AME_Zc), breaks = c(-0.15,-0.125,-0.0625,-0.03125,-0.015625,-0.0078125,-0.00390625,0,0.00390625,0.0078125,0.015625,0.03125,0.0625,0.125,0.15)) +
   labs(x = "Model Results as Average Marginal Effects") +
   annotate("text", x = -0.15, y = 55, label = "AME < -0.15\ncombined", size = 2.5, hjust = 0) +
@@ -330,3 +307,10 @@ dev.off()
 knitr::include_graphics(here::here("results/FigS5.png"))
 ```
 
+# Colophon
+
+This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*The Crowdsourced Replication Initiative: Investigating Immigration and Social Policy Preferences*](https://doi.org/10.31235/osf.io/6j9qb).
+
+```{r colophon, echo=FALSE}
+sessionInfo()
+```

@@ -1,26 +1,23 @@
 ---
-title: "Tech 4, Main Analyses"
+title: "Tech 4. Main Analyses"
 output: html_document
 ---
 
 We first analyze sources of variance in average marginal effects (standardized) at the model level and then subjective team conclusions at the team-conclusion level. We enter common model specifications and researcher characteristics. Our first analyses are based on logic - our expectations that wave and countries choices in the data sample, strategies of testing the hypothesis and measuring the dependent and test variables of interest, estimation method, independent variables and equation components should explain a major portion of the variance.
 
-We also ask if and why researchers come to more consensus in their models and conclusions. For this we use variance function regressions to explain variance-as-outcomes. This is done in **05_CRI_Main_Analyses_Variance_Function.Rmd**
+We also ask if and why researchers come to more consensus in their models and conclusions. For this we use variance function regressions to explain variance-as-outcomes. This is done in `05_CRI_Main_Analyses_Variance_Function.Rmd`.
 
-We let the computer run all possible combinations of specifications, in case our models missed something important. This is done in **06_CRI_Multiverse.Rmd**
+We let the computer run all possible combinations of specifications, in case our models missed something important. This is done in `06_CRI_Multiverse.Rmd`.
 
 Finally, we analyze if researcher characteristics associate with model specifications - even though we discovered that these common specifications cannot explain variance in outcomes.
 
-```{r setup, include=FALSE, warning=F}
+```{r setup, include=FALSE, warning=FALSE}
+library("pacman")
 
-rm(list = ls())
-library(pacman)
-
-#necessayr for nnet::multinom and tab_model to work together
+#necessary for nnet::multinom and tab_model to work together
 # install.packages("devtools")
 # devtools::install_github("easystats/insight")
 # devtools::install_github("easystats/effectsize")
-
 
 pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools","rvest","nnet","parameters","insight","effectsize","ggtext","mdthemes","ragg")
 
@@ -37,33 +34,33 @@ completeFun <- function(data, desiredCols) {
 
 ## Data Prep
 
-These datasets were worked up from the file 01_CRI_Data_Prep.Rmd. 
+These datasets were worked up from the file `01_CRI_Data_Prep.Rmd`.
 
-cri = numerical values
-cri_str = string values
-cri_team = team-level data (by conclusion)
-cri_team_combine = team-level data parsed by type of test variable (stock and flow)
-cri_indiv = participant-level data from our survey, identifying characteristics redacted
-crispectest = datafile created in the file 03_Spec_Analysis
+- `cri` = numerical values
+- `cri_str = string values
+- `cri_team` = team-level data (by conclusion)
+- `cri_team_combine` = team-level data parsed by type of test variable ('stock' and 'flow')
+- `cri_indiv` = participant-level data from our survey, identifying characteristics redacted
+- `crispectest` = datafile created in the file `03_CRI_Spec_Analysis.Rmd`
 
 ### Load Data
 
-```{r load, warning=F,message=F}
-cri <- read.csv(file = here::here("data/cri.csv"), header = T)
-cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = T)
-cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = T)
-cri_indiv <- read.csv(file = here::here("data/cri_indv.csv"), header = T)
-crispectest <- read.csv(file = here::here("results/crispectest.csv"), header = T)
+```{r load, warning=FALSE,message=FALSE}
+cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
+cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
+cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = TRUE)
+cri_indiv <- read.csv(file = here::here("data/cri_indv.csv"), header = TRUE)
+crispectest <- read.csv(file = here::here("results/crispectest.csv"), header = TRUE)
 
 # setup multilevel dataset
 
-cri_ml <- select(cri,u_teamid, id, u_delibtreatmentgroup1, AME:main_IV_source, main_IV_measurement:package, countries, Jobs:anynonlin,AME_Z,lower_Z,upper_Z,Hsup,Hrej,Hno,AME_sup_p05:AME_ns_p05,u_expgroup1,belief_strength:belief_ipred, HresultF, STATISTICS_SKILL, BELIEF_HYPOTHESIS, TOPIC_KNOWLEDGE, MODEL_SCORE, PRO_IMMIGRANT)
+cri_ml <- dplyr::select(cri,u_teamid, id, u_delibtreatmentgroup1, AME:main_IV_source, main_IV_measurement:package, countries, Jobs:anynonlin,AME_Z,lower_Z,upper_Z,Hsup,Hrej,Hno,AME_sup_p05:AME_ns_p05,u_expgroup1,belief_strength:belief_ipred, HresultF, STATISTICS_SKILL, BELIEF_HYPOTHESIS, TOPIC_KNOWLEDGE, MODEL_SCORE, PRO_IMMIGRANT)
 
 # create a team ID variable to identify the independent tests by team. Again, 16 of 71 teams had independent conclusions - seeing stock v flow immigration measures as representative of independent tests of the hypothesis. Therefore, we have a team-test level that replaces the team level.
 
 cri_ml$team <- cri_ml %>% group_indices(u_teamid, HresultF)
 
-cri_ml <- select(cri_ml, u_teamid, id, team, AME_Z, upper_Z, lower_Z, everything())
+cri_ml <- dplyr::select(cri_ml, u_teamid, id, team, AME_Z, upper_Z, lower_Z, everything())
 
 # remove team 0
 cri_ml <- subset(cri_ml, u_teamid != 0)
@@ -71,32 +68,31 @@ cri_team <- subset(cri_team, u_teamid != 0)
 
 #mean replace team 27
 cri_team <- cri_team %>%
-  mutate(belief_ipred = ifelse(is.na(belief_ipred), mean(belief_ipred, na.rm = T), belief_ipred),
-         topic_ipred = ifelse(is.na(topic_ipred), mean(topic_ipred, na.rm = T), topic_ipred),
-         stats_ipred = ifelse(is.na(stats_ipred), mean(stats_ipred, na.rm = T), stats_ipred),)
-
+  mutate(belief_ipred = ifelse(is.na(belief_ipred), mean(belief_ipred, na.rm = TRUE), belief_ipred),
+         topic_ipred = ifelse(is.na(topic_ipred), mean(topic_ipred, na.rm = TRUE), topic_ipred),
+         stats_ipred = ifelse(is.na(stats_ipred), mean(stats_ipred, na.rm = TRUE), stats_ipred),)
 ```
 
 ### Within and Between Variables
 
-```{r wandb, warning = F, message = F}
+```{r wandb, warning = FALSE, message = FALSE}
 cri_ml <- cri_ml %>%
   group_by(team) %>%
-  mutate(AME_Z_b = mean(AME_Z, na.rm = T),
+  mutate(AME_Z_b = mean(AME_Z, na.rm = TRUE),
          AME_Z_w =AME_Z-AME_Z_b,
-         jobs_b = mean(Jobs, na.rm = T),
-         unemp_b = mean(Unemp, na.rm = T),
-         incdiff_b = mean(IncDiff, na.rm = T),
-         oldage_b = mean(OldAge, na.rm = T),
-         house_b = mean(House, na.rm = T),
-         health_b = mean(Health, na.rm = T),
+         jobs_b = mean(Jobs, na.rm = TRUE),
+         unemp_b = mean(Unemp, na.rm = TRUE),
+         incdiff_b = mean(IncDiff, na.rm = TRUE),
+         oldage_b = mean(OldAge, na.rm = TRUE),
+         house_b = mean(House, na.rm = TRUE),
+         health_b = mean(Health, na.rm = TRUE),
          jobs_w = Jobs-jobs_b,
          unemp_w = Unemp-unemp_b,
          incdiff_w = IncDiff-incdiff_b,
          oldage_w = OldAge-oldage_b,
          house_w = House-house_b,
          health_w = Health-health_b,
-         scale_b = mean(Scale, na.rm = T),
+         scale_b = mean(Scale, na.rm = TRUE),
          scale_w = Scale-scale_b,
          un_emp_rate_ivC = ifelse(emplrate_ivC == 1 | unemprate_ivC == 1, 1, 0)) %>%
   ungroup()
@@ -114,11 +110,10 @@ cri_ml <- cri_ml %>%
 
 # u_expgroup missing from team-level data
 t1 <- aggregate(cri_ml, FUN = mean, by = list(cri_ml$u_teamid), na.rm =T)
-t1 <- select(t1, u_teamid, u_expgroup1)
+t1 <- dplyr::select(t1, u_teamid, u_expgroup1)
 
 cri_team <- left_join(cri_team, t1, by = "u_teamid")
 ```
-
 
 ## Regresssion Approach to Explaining Variance
 
@@ -128,13 +123,11 @@ cri_team <- left_join(cri_team, t1, by = "u_teamid")
 
 Here we consider that the design of the CRI has an influence on the findings of the researchers. This includes the 6 variables to potentially use for the DV and the experimental conditions. We do not include the variable 'Scale' here because this required a conscious choice by the teams to deviate from the observed DVs that were provided.
 
-We consider random assignment to the opaque or transparent replication group (variable = u_expgroup1) and the deliberation group (variable = u_delibtreatmentgroup1) as objectively imposed conditions (not a choice by the teams).
+We consider random assignment to the opaque or transparent replication group (variable = `u_expgroup1`) and the deliberation group (variable = `u_delibtreatmentgroup1`) as objectively imposed conditions (not a choice by the teams).
 
 The problem we face is that there is only an average of roughly 13 models per team, and 87 teams. This means we start to lose the ability to explain variance. A degrees of freedom problem. Therefore, in this process we have to reduce complexity. 
 
-
-
-```{r obj_mlms, warning = F}
+```{r obj_mlms, warning = FALSE}
 m00 <- lmer(AME_Z ~ (1 | team), data = cri_ml)
 #m01a <- lmer(AME_Z ~ Jobs + Unemp + IncDiff + OldAge + House + Health + (1 | team), data = cri_ml)
 
@@ -147,7 +140,6 @@ m01v <- as.data.frame(VarCorr(m01))
 m02v <- as.data.frame(VarCorr(m02))
 
 m01vars <- "AME_Z ~ Jobs + IncDiff + House"
-
 ```
 
 ### Subjective Decisions
@@ -158,7 +150,7 @@ The teams had several possibilities to measure the DV (or DVs) including linear,
 
 note that logit is the only one that seems to matter, surprisingly the 'type' of measure does not matter (foreign-born, non-western, refugee, etc.; although there are far fewer models that do not simply use foreign-born)
 
-```{r subj_measurement_mlms, warning = F}
+```{r subj_measurement_mlms, warning = FALSE}
 
 m03 <- lmer(paste0(m01vars, "+ logit + ologit + lpm + mlogit + ols + (1 | team)"), data = cri_ml)
 
@@ -172,14 +164,11 @@ m03v <- as.data.frame(VarCorr(m03))
 m04v <- as.data.frame(VarCorr(m04))
 
 m04vars <- "+ logit + ols + Stock + ChangeFlow"
-
 ```
-
 
 #### Data and Sample
 
-```{r subj_datasamp_mlms, warning = F}
-
+```{r subj_datasamp_mlms, warning = FALSE}
 m05 <- lmer(paste0(m01vars, m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + (1 | team)"), data = cri_ml)
 
 # several interactions were tried here that seemed useful in the single-level equation, but they just wash out the results, many making the variance worse
@@ -189,11 +178,8 @@ m06 <- lmer(paste0(m01vars, m04vars, "+ w1996 + w2006 + w2016 + w2006*w2016 + or
 m05v <- as.data.frame(VarCorr(m05))
 m06v <- as.data.frame(VarCorr(m06))
 
-
 m06vars <- "+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable"
-
 ```
-
 
 #### Model Design
 
@@ -203,7 +189,7 @@ main IVs in same model or not (this causes one team to get dropped so we don't u
 
 m08 independent vars l2 selection
 
-```{r subj_model_mlms, warning = F}
+```{r subj_model_mlms, warning = FALSE}
 
 m07 <- lmer(paste0(m01vars, m04vars, m06vars, " + twowayfe + level_cyear + mlm_fe + mlm_re  + (1 | team)"), data = cri_ml)
 m08 <- lmer(paste0(m01vars, m04vars, m06vars, " + twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin + (1 | team) "), data = cri_ml)
@@ -219,27 +205,26 @@ m08vars <- "+ twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin"
 m07adj_vars <- " + twowayfe + level_cyear"
 ```
 
-
 ### Researcher Aspects
 
-*belief_ipred* - Belief that Hypothesis is true (that immigration reduces support), team average of predicted factor scores
-*pro_immigrant* - Support laws to better integrate immigrants, team average, single question
-*topic_ipred* - Knowledge and experience with the topic of immigration and welfare state preferences, team average of predicted factor scores
-*stats_ipred* - Knowledge and experience with quantiative statistical analysis, team average of predicted factor scores
-*total_score* - Average score of each model from subjective voting amongst participants, each participant reviewed 3 to 4 models
+- `belief_ipred` - Belief that Hypothesis is true (that immigration reduces support), team average of predicted factor scores
+- `pro_immigrant` - Support laws to better integrate immigrants, team average, single question
+- `topic_ipred` - Knowledge and experience with the topic of immigration and welfare state preferences, team average of predicted factor scores
+- `stats_ipred` - Knowledge and experience with quantiative statistical analysis, team average of predicted factor scores
+- `total_score` - Average score of each model from subjective voting amongst participants, each participant reviewed 3 to 4 models
 
 Maximum variance explained
 
 It becomes clear that models 7 and 8 are detrimental to the variance explained,
-therefore the following results combine only with m06
+therefore the following results combine only with m06.
 
-Using the R^2 'hacking' tool we found some combinations of these variables that maximized r^2 (m11)
+Using the R^2 'hacking' tool we found some combinations of these variables that maximized r^2 (m11).
 
 These probably need to be run independently, so that we see the reduction for each one.
 
-```{r res_aspects_mlms, warning = F}
-
+```{r res_aspects_mlms, warning = FALSE}
 m09 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ belief_ipred + (1 | team)"), data = cri_ml)
+
 m10 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ pro_immigrant +  (1 | team)"), data = cri_ml) 
 
 m11 <- lmer(paste0(m01vars, m04vars, m06vars, m07adj_vars, "+ topic_ipred + (1 | team)"), data = cri_ml) 
@@ -262,13 +247,11 @@ m12v <- as.data.frame(VarCorr(m12))
 m13v <- as.data.frame(VarCorr(m13))
 m14v <- as.data.frame(VarCorr(m14))
 # m15v <- as.data.frame(VarCorr(m15))
-
-
 ```
 
 ### Combine All
 
-```{r comb_tbl, warning = F}
+```{r comb_tbl, warning = FALSE}
 tab_model(m00,m01,m02,m04,m06,m07,m09,m10,m11,m12,m13, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = here::here("results/reg11.htm"))
 
 reg11 <- as.data.frame(read_html(here::here("results/reg11.htm")) %>% html_table(fill=TRUE))
@@ -322,27 +305,21 @@ kable_styling(kable(reg11))
 # Added AIC,LL later = separate file
 write.csv(aiclog, file = here::here("results/Tbl_S5.csv"))
 
-
 write.csv(reg11, file = here::here("results/Tbl_S5.csv"))
 ```
 
-```{r residual_var, warning = F}
-
+```{r residual_var, warning = FALSE}
 # identify cases used in m13
 cri_ml$in_m13 <- TRUE
 cri_ml$in_m13[na.action(m13)] <- FALSE
 
-cri_ml_in <- subset(cri_ml, cri_ml$in_m13 == T)
+cri_ml_in <- subset(cri_ml, cri_ml$in_m13 == TRUE)
 
 # predicted values with country-level intercepts, exclude RE?
 cri_ml_in$m13_p <- as.data.frame(predict(m13), newdata = cri_ml_in)
-
-
 ```
 
-
-```{r variance_explained_table, warning = F}
-
+```{r variance_explained_table, warning = FALSE}
 tbl2_m <- as.data.frame(t(reg11))
 
 tbl2 <- as.data.frame((matrix(nrow = 22, ncol = 5)))
@@ -350,7 +327,6 @@ tbl2 <- as.data.frame((matrix(nrow = 22, ncol = 5)))
 tbl2[1,2:5] <- c("Average Marginal Effect, or equivalent","","","Subjective Conclusion about Hypothesis")
 tbl2[2,2:5] <- c("Team-Levela (n=87)","Model-Level (n=1,253)a","Total","Team-Levelb")
 tbl2[3:22,1] <- c("Observed Outcome Variance","% Variance Explained By:c","Objective Conditions","Structure of Materials Provided","Group Assignment","Researcher Decisions", "Measurement","Data and Sample","Model Specification","Researcher Attributes","Prior Belief in Hypothesis", "Pro-Immigration Attitude","Knowledge of Topic","Statistical Skills","Peer Model Ranking","","Unexplained Variance","aOf the 71 teams, 16 had independent tests and conclusions for stock and flow models leading to 87 team-level results. Of the 1,261 models submitted, 8 had convergence problems","bA team conclusion of 'Reject' is the reference category","cIn the case of team-level subjective hypothesis conclusion, the outcome is multinomial therefore the 'variance explained' is technically residual deviance")
-
 
 tbl2[3,2:4] <- as.numeric(tbl2_m[2,29:31])
 tbl2[6:7,2:4] <- tbl2_m[3:4,33:35]
@@ -378,9 +354,7 @@ tbl2[19,4] <- 1 - max(as.numeric(tbl2[6:17,4]))
 tbl2[18,] <- ""
 
 rm(tbl2_m)
-
 ```
-
 
 ## Explaining Subjective Hypothesis Conclusions
 
@@ -388,7 +362,7 @@ Only at the team level, n = 88
 
 Multinomial: support, not testable, reject
 
-```{r obj_mlmsm, results = F, warning = F}
+```{r obj_mlmsm, results = F, warning = FALSE}
 cri_team$Hresult <- relevel(as.factor(cri_team$Hresult), ref = "Support")
 
 m00m <- multinom(Hresult ~ 1 , data = cri_team)
@@ -400,38 +374,27 @@ m01d <- summary(m01m)
 m02d <- summary(m02m)
 
 m01vars <- "Hresult ~ Jobs + IncDiff + House"
-
-
 ```
 
-```{r subj_measurement_mlmsm, results = F}
-
+```{r subj_measurement_mlmsm, results = FALSE}
 m03m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols, data = cri_team)
-
 m04m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols + Stock + ChangeFlow, data = cri_team)
 
 m03d <- summary(m03m)
 m04d <- summary(m04m)
 
-# tab_model(m03m, show.dev = T, show.aic = T)
-
+# tab_model(m03m, show.dev = T, show.aic = TRUE)
 ```
-
 
 #### Data and Sample
 
-```{r subj_datasamp_mlmsm, warning = F, results = F}
-
+```{r subj_datasamp_mlmsm, warning = FALSE, results = FALSE}
 m05m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols + Stock + ChangeFlow + w2006 + w2016, data = cri_team)
-
 m06m <- multinom(Hresult ~ Jobs + IncDiff + House + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable, data = cri_team)
 
 m05d <- summary(m05m)
 m06d <- summary(m06m)
-
-
 ```
-
 
 #### Model Design
 
@@ -443,28 +406,23 @@ m08 independent vars l2 selection
 
 had to remove mlm_fe, it uniquely identifes team in the multinomial removed mlm_re and House, we are pushing the limit with variables and these were harming AIC fit
 
-```{r subj_model_mlmsm, results = F}
-
-
+```{r subj_model_mlmsm, results = FALSE}
 m07m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe , data = cri_team)
 m08m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin , data = cri_team)
 
-
 m07d <- summary(m07m)
 m08d <- summary(m08m)
-
 ```
-
 
 ### Researcher Characteristics
 
-Here we also add in **percent of models that are significant pos/neg** because this should obviously explain the researchers conclusions. We thought specifications would explain test reults, but as they mostly do not, we expect the test results are relevant. 
+Here we also add in **percent of models that are significant pos/neg** because this should obviously explain the researchers conclusions. We thought specifications would explain test results, but as they mostly do not, we expect the test results are relevant. 
 
-*belief_ipred* - Belief that Hypothesis is true (that immigration reduces support), team average of predicted factor scores
-*pro_immigrant* - Support laws to better integrate immigrants, team average, single question
-*topic_ipred* - Knowledge and experience with the topic of immigration and welfare state preferences, team average of predicted factor scores
-*stats_ipred* - Knowledge and experience with quantiative statistical analysis, team average of predicted factor scores
-*total_score* - Average score of each model from subjective voting amongst participants, each participant reviewed 3 to 4 models
+- `belief_ipred` - Belief that Hypothesis is true (that immigration reduces support), team average of predicted factor scores
+- `pro_immigrant` - Support laws to better integrate immigrants, team average, single question
+- `topic_ipred` - Knowledge and experience with the topic of immigration and welfare state preferences, team average of predicted factor scores
+- `stats_ipred` - Knowledge and experience with quantiative statistical analysis, team average of predicted factor scores
+- `total_score` - Average score of each model from subjective voting amongst participants, each participant reviewed 3 to 4 models
 
 Maximum variance explained
 
@@ -477,7 +435,7 @@ These probably need to be run independently, so that we see the reduction for ea
 
 Mean replacement for team 27
 
-```{r res_aspects_mlmsm,  results=F, warning = F}
+```{r res_aspects_mlmsm,  results=F, warning = FALSE}
 m09m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + belief_ipred  , data = cri_team)
 
 m10m <- multinom(Hresult ~ Jobs + IncDiff  + logit + ols + Stock + ChangeFlow + w2006 + w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear + mlm_fe + gdp_ivC + anynonlin + pro_immigrant , data = cri_team) 
@@ -496,7 +454,6 @@ m11d <- summary(m11m)
 m12d <- summary(m12m)
 m13d <- summary(m13m)
 m14d <- summary(m14m)
-
 ```
 
 ### Combine All
@@ -506,7 +463,6 @@ tab_model(m00m,m01m,m02m,m04m,m06m,m08m, digits = 3, p.style = "stars", show.ci 
 
 tab_model(m00m,m09m,m10m,m11m,m12m,m13m,m14m, digits = 3, p.style = "stars", show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = here::here("results/reg23.htm"))
 ```
-
 
 ```{r comb_tblm2}
 # First part of table (table too big to be in one)
@@ -562,15 +518,12 @@ reg23a[nrow(reg23a),2:(ncol(reg23a))] <- ""
 
 colnames(reg23) <- c("Effect","m00m_coef","m01m_chc", "m09m_coef","m09m_chc","m10m_coef","m10m_chc","m11m_coef","m11m_chc","m12m_coef","m12m_chc","m13m_coef","m13m_chc","m14m_coef","m14m_chc")
 
-
 # Prep for deviance reduction, but calculate it later as adjusted
 
 reg22[nrow(reg22)+1,1] <- "Pct Dev Reduction"
 reg23[nrow(reg23)+1,1] <- "Pct Dev Reduction"
 
 write.csv(reg23a, file = here::here("results/TblS7.2.csv"))
-
-#kable_styling(kable())
 ```
 
 ### Adjusted Deviance Reduction
@@ -579,13 +532,11 @@ We have 20 variables and 89 cases, this means that some of the explained devianc
 
 We always take one less than the number of variables.
 
+```{r dev_adj, results = FALSE}
+cri_team_sim <- dplyr::select(cri_team, Hresult)
 
-```{r dev_adj, results = F}
-
-cri_team_sim <- select(cri_team, Hresult)
-
-set.seed(90210)
 seed <- 90210
+set.seed(seed)
 
 for(i in 1:200) {
   assign(paste0("a",i), as.data.frame(round(runif(88, min = 0, max = 1),0)))
@@ -603,8 +554,6 @@ rm(list = avarl)
 
 f <- c("Hresult",paste0("a",as.character(1:200)))
 
-
-
 cri_team_sim <- cbind(cri_team_sim,avar)
 colnames(cri_team_sim) <- f
 
@@ -616,7 +565,6 @@ sim_3_vars <- matrix(nrow = 20, ncol = 1)
 
 b <- 5
 for(i in 1:20){
-  
   rr <- multinom(Hresult ~ get(avarl[i]) + get(avarl[b]), data = cri_team_sim)
   sim_3_vars[i,1] <- summary(rr)[["deviance"]]
   b <- b + 1
@@ -634,7 +582,6 @@ f <- 28
 g <- 33
 
 for(i in 1:20){
-  
   rr <- multinom(Hresult ~ get(avarl[i]) + get(avarl[b]) + get(avarl[c]) + get(avarl[d]) + get(avarl[e]) + get(avarl[f]), data = cri_team_sim)
   sim_7_vars[i,1] <- summary(rr)[["deviance"]]
   b <- b + 1
@@ -662,7 +609,6 @@ l <- 59
 m <- 64
 
 for(i in 1:20){
-  
   rr <- multinom(Hresult ~ get(avarl[i]) + get(avarl[b]) + get(avarl[c]) + get(avarl[d]) + get(avarl[e]) + get(avarl[f]) + get(avarl[g]) + get(avarl[h]) + get(avarl[ii]) + get(avarl[j]) + get(avarl[k]) + get(avarl[l]) + get(avarl[m]), data = cri_team_sim)
   sim_13_vars[i,1] <- summary(rr)[["deviance"]]
   b <- b + 1
@@ -701,7 +647,6 @@ p <- 71
 q <- 76
 
 for(i in 1:20){
-  
   rr <- multinom(Hresult ~ get(avarl[i]) + get(avarl[b]) + get(avarl[c]) + get(avarl[d]) + get(avarl[e]) + get(avarl[f]) + get(avarl[g]) + get(avarl[h]) + get(avarl[ii]) + get(avarl[j]) + get(avarl[k]) + get(avarl[l]) + get(avarl[m]) + get(avarl[n]) + get(avarl[o]) + get(avarl[p]), data = cri_team_sim)
   sim_16_vars[i,1] <- summary(rr)[["deviance"]]
   b <- b + 1
@@ -720,23 +665,22 @@ for(i in 1:20){
   o <- o + 1
   p <- p + 1
 }
-
 ```
 
 
 ### Compile Table 2
 
-20 runs of randomly distributed dichotomous variables determines how much deviance reduction on average is possible due to the number of variables. We subtract this from the deviance reduction
+20 runs of randomly distributed dichotomous variables determines how much deviance reduction on average is possible due to the number of variables. We subtract this from the deviance reduction.
 
 #### Add simulation results
 
-```{r tbl2, warning = F}
+```{r tbl2, warning = FALSE}
 # add adjusted deviance
 
 # Tabulate average deviance
 sims <- list(sim_3_vars, sim_7_vars, sim_13_vars, sim_16_vars)
 
-avg_dev_sim <- lapply(sims, function(x) mean(x, na.rm = T))
+avg_dev_sim <- lapply(sims, function(x) mean(x, na.rm = TRUE))
 
 # a vector for each model
 # we adjust the first model's values upwards to prevent negative percentage
@@ -779,7 +723,7 @@ rm(sim_3_vars,sim_7_vars,sim_13_vars,sim_16_vars,sims,rr,t1,avar,avg_dev_sim)
 
 #### Add adjusted deviance 
 
-```{r devto2, warning = F}
+```{r devto2, warning = FALSE}
 tbl2_m22 <- as.data.frame(t(reg22))
 tbl2_m23 <- as.data.frame(t(reg23))
 
@@ -808,10 +752,7 @@ tbl2[c(5,8),5] <- tbl2[c(7,11),5]
 tbl2[19,5] <- 1 - as.numeric(tbl2[12,5])
 
 write.csv(tbl2, file = here::here("results/Fig2.csv"))
-
 ```
-
-
 
 ```{r write_tbl2}
 #make a version for plotting
@@ -854,15 +795,9 @@ fig2[17,3] <- (fig2[17,3] - fig2[16,3])
 fig2[18,3] <- (fig2[18,3] - fig2[17,3])
 fig2[19,3] <- (fig2[19,3] - fig2[18,3])
 fig2[20,3] <- 1 - (fig2[19,3] + fig2[18,3] + fig2[17,3] + fig2[16,3])
-
-
-
 ```
 
-
 ## Figure 3. Variance Reduction by Level
-
-
 
 ```{r fig3_recode}
 #reorder categories to match the order presented in the text
@@ -887,7 +822,7 @@ ggplot(fig3, aes(x = level, y = percent, fill = type)) +
   labs(x = "", y = "", fill = "Percent\nexplained by") +
   md_theme_classic() +
   labs(title = "<span style = \"font-size: 18px\">**Factors Explaining Variance in Results**</span>") +
-  scale_x_discrete(labels = fig3_labs, drop = F) +
+  scale_x_discrete(labels = fig3_labs, drop = FALSE) +
   scale_y_reverse() +
   geom_rect(aes(xmin = 2, xmax = 4.1, ymin = 0.005, ymax = 0.24), color = "#E6AB02", size = 1.5, fill = "transparent") +
   geom_rect(aes(xmin = 2, xmax = 4.1, ymin = 0.26, ymax = 0.49), color = "#7570B3", size = 1.5, fill = "transparent") +
@@ -928,10 +863,7 @@ ggplot(fig3, aes(x = level, y = percent, fill = type)) +
 dev.off()
 
 knitr::include_graphics(here::here("results/Fig3.png"))
-
 ```
-
-
 
 ### Save output for multiverse analysis
 
@@ -944,8 +876,7 @@ write.csv(cri_team, file = here::here("results/cri_team.csv"))
 
 Do researcher characteristics explain model specifications?
 
-For this we use the data crispectest, worked up in 03_CRI_Spec_Analysis. For simplicity we use a multinomial model and calculate deviance reduction using dummies.
-
+For this we use the data `crispectest`, worked up in `03_CRI_Spec_Analysis.Rmd`. For simplicity we use a multinomial model and calculate deviance reduction using dummies.
 
 iv_type
 IV_None
@@ -956,7 +887,7 @@ twowayfe
 SURVEY_WAVES
 COUNTRIES
 
-```{r rchar, warning = F}
+```{r rchar, warning = FALSE}
 rchars <- "belief_ipredm + pro_immigrantm + topic_ipredm + stats_ipred + factor(u_teamid)"
 
 #set reference levels, add degree types
@@ -974,7 +905,4 @@ m103 <- multinom(paste0("iv_type ~", rchars, "+ degree + software"), data = cris
 
 # 
 tab_model(m103, digits = 3, p.style = "stars", rm.terms = c("factor(u_teamid)10","factor(u_teamid)101","factor(u_teamid)104","factor(u_teamid)106","factor(u_teamid)12","factor(u_teamid)13","factor(u_teamid)16","factor(u_teamid)17","factor(u_teamid)18","factor(u_teamid)19","factor(u_teamid)20","factor(u_teamid)21","factor(u_teamid)23","factor(u_teamid)22","factor(u_teamid)26","factor(u_teamid)27","factor(u_teamid)28","factor(u_teamid)29","factor(u_teamid)3","factor(u_teamid)30","factor(u_teamid)31","factor(u_teamid)32","factor(u_teamid)33","factor(u_teamid)34","factor(u_teamid)35","factor(u_teamid)36","factor(u_teamid)37","factor(u_teamid)38","factor(u_teamid)39","factor(u_teamid)40","factor(u_teamid)41","factor(u_teamid)42","factor(u_teamid)43","factor(u_teamid)44","factor(u_teamid)45","factor(u_teamid)46","factor(u_teamid)47","factor(u_teamid)48","factor(u_teamid)49","factor(u_teamid)5","factor(u_teamid)52","factor(u_teamid)53","factor(u_teamid)54","factor(u_teamid)55","factor(u_teamid)56","factor(u_teamid)57","factor(u_teamid)58","factor(u_teamid)59","factor(u_teamid)6","factor(u_teamid)60","factor(u_teamid)61","factor(u_teamid)62","factor(u_teamid)63","factor(u_teamid)64","factor(u_teamid)65","factor(u_teamid)66","factor(u_teamid)67","factor(u_teamid)68","factor(u_teamid)69","factor(u_teamid)70","factor(u_teamid)71","factor(u_teamid)7","factor(u_teamid)72","factor(u_teamid)73","factor(u_teamid)75","factor(u_teamid)77","factor(u_teamid)8","factor(u_teamid)82","factor(u_teamid)83","factor(u_teamid)84","factor(u_teamid)86","factor(u_teamid)87","factor(u_teamid)93","factor(u_teamid)94","factor(u_teamid)95","factor(u_teamid)96","factor(u_teamid)97","factor(u_teamid)98"), show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = here::here("results/reg103.htm"))
-
-
 ```
-

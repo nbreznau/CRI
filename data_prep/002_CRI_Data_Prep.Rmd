@@ -6,12 +6,9 @@ output:
   pdf_document: default
 ---
 
-
-   
-
 ```{r setup, include=FALSE}
 rm(list = ls())
-library(pacman)
+library("pacman")
 
 pacman::p_load("readstata13","dplyr","readr","lattice","tidyr","readxl","knitr","boot","ragg","kableExtra","lavaan","lavaanPlot")
 
@@ -22,19 +19,15 @@ completeFun <- function(data, desiredCols) {
 }
 ```
 
-
 ## Data Prep
-
 
 ### CRI Margins & Model Specs
 
-CRI Model Specifications and Margins in the file "CRI Model Specifications and Margins.xlsx". This model specification file was qualitatively coded by hand from each team's code and the margins came from `CRI_Expansion_All.Rmd` command file located in the folder **team_code\team_code_R**.
+CRI Model Specifications and Margins in the file `CRI Model Specifications and Margins.xlsx`. This model specification file was qualitatively coded by hand from each team's code and the margins came from `CRI_Expansion_All.Rmd` command file located in the folder [`team_code/team_code_R`](../team_code/team_code_R).
 
-We set up two versions of the model specifications here: *cri* and *cri_str*. One is for dichotomous numerical values and the other is for string names of each variable (good for spec curve plotting). Participant survey also used here.
+We set up two versions of the model specifications here: *cri* and *cri_str*. One is for dichotomous numerical values and the other is for string names of each variable (good for spec curve plotting). The participant survey is also used here.
 
-
-
-```{r load, warning = F}
+```{r load, warning = FALSE}
 # Data generated from qualitative model specification coding
 cri_str <- read_excel(here::here("data","CRI Model Specifications and Margins.xlsx"), sheet = "Data")
 
@@ -45,23 +38,20 @@ load(file = here::here("data","popdf_out.Rdata"))
 cri_part <- readstata13::read.dta13(here::here("data","cri_survey_long_public.dta"))
 
 # datafile merged into within-team wide format
-
 cri2 <- readstata13::read.dta13(here::here("data","cri_survey_wide_public_nolabs.dta"))
 
 # replace p values of 0.000000 with 0.00001
 cri_str <- cri_str %>%
-  mutate(p = ifelse(p < 0.00001, 0.00001,p))
+  mutate(p = ifelse(p < 0.00001, 0.00001, p))
 ```
-
-
 
 ### Standardization
 
-We face a problem that a one percent change in net migration (within-country) is huge relative to a 1% difference in percent foreign-born across countries.
+We face a problem that a one percent change in net migration (within-country) is huge relative to a 1% difference in percentage of foreign-born across countries.
 
-Standardization will produce some extreme outliers, so a 'better' strategy is to adjust the sd of Flow to be equal to that of Stock. However, there are some wide outliers in stock that bunches up the dispersion of flow, therefore we need the sd without these extreme outliers
+Standardization will produce some extreme outliers, so a 'better' strategy is to adjust the standard deviation of 'flow' to be equal to that of 'stock'. However, there are some wide outliers in 'stock' that bunches up the dispersion of 'flow', therefore we need the standard deviation without these extreme outliers.
 
-```{r standardizeDV, warning = F, message = F}
+```{r standardizeDV, warning = FALSE, message = FALSE}
 rm(teamsize)
 
 # Team 104 is massive outlier, trim estimates
@@ -74,8 +64,8 @@ cri_str <- cri_str %>%
 cri_str <- cri_str %>%
   mutate(AMEssd = ifelse(main_IV_type == "Stock", AME, NA),
          AMEfsd = ifelse(main_IV_type == "Flow", AME, NA),
-         AMEssd = sd(AMEssd, na.rm = T),
-         AMEfsd = sd(AMEfsd, na.rm = T),
+         AMEssd = sd(AMEssd, na.rm = TRUE),
+         AMEfsd = sd(AMEfsd, na.rm = TRUE),
          AME_Z = AME*(AMEssd/AMEfsd),
          lower_Z = lower*(AMEssd/AMEfsd),
          upper_Z = upper*(AMEssd/AMEfsd),
@@ -83,13 +73,12 @@ cri_str <- cri_str %>%
          lower_Z = ifelse(main_IV_type == "Flow", lower_Z, lower),
          upper_Z = ifelse(main_IV_type == "Flow", upper_Z, upper))
 
-cri_str <- select(cri_str, -c(AMEssd,AMEfsd))
-
+cri_str <- dplyr::select(cri_str, -c(AMEssd,AMEfsd))
 ```
 
-Recalibrate some variables. Respondents sometimes reported two conclusions because they concluded that they were conducting independent hypothesis tests (separte for 'flow' and 'stock' models). Adjust strings. 
+Recalibrate some variables. Respondents sometimes reported two conclusions because they concluded that they were conducting independent hypothesis tests (seperate for 'flow' and 'stock' models). Adjust strings. 
 
-```{r recodes, warning = F, message = F}
+```{r recodes, warning = FALSE, message = FALSE}
 cri_str <- cri_str %>%
   mutate(Hresult = ifelse(Hnotest==1, "No test", ifelse(Hsupport==1, "Support", ifelse(Hreject==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hnotest_stock==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hsupport_stock==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Stock" & Hreject_stock==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Flow" & Hreject_net==1, "Reject", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hnotest_net==1, "No test", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hsupport_net==1, "Support", ifelse(Hmixed==1 & main_IV_type == "Change in Flow" & Hreject_net==1, "Reject", NA)))))))))))),
          Hsup = ifelse(Hresult=="Support",1,0),
@@ -102,8 +91,6 @@ cri_str <- cri_str %>%
          AME_neg_p05 = ifelse(u_teamid != 0, ifelse(AME > 0 & p < 0.05, 1, 0), NA),
          AME_ns_p05 = ifelse(u_teamid != 0, ifelse(p > 0.04999999, 1, 0), NA)
          )
-
-# remove team 0 from results
 
 # easier country names (for string version)
 cri_str <- cri_str %>%
@@ -161,22 +148,22 @@ cri <- cri_str
 
 Remove some unused 'countries'. 
 
-```{r string_encode, warning = F, message = F}
+```{r string_encode, warning = FALSE, message = FALSE}
 #replace all 1's with the column name for all variable
-w <- select(cri_str, Jobs:anynonlin, id)
+w <- dplyr::select(cri_str, Jobs:anynonlin, id)
 
 for (i in 1:length(w)) {
     w[[i]] <- ifelse(w[[i]]=="1", colnames(w)[i], w[[i]])
 }
 
 # country divisions not used
-w <- select(w, -c(germany_west, germany_east, n_ireland))
-cri <- select(cri, -c(germany_west, germany_east, n_ireland))
+w <- dplyr::select(w, -c(germany_west, germany_east, n_ireland))
+cri <- dplyr::select(cri, -c(germany_west, germany_east, n_ireland))
 
-crispeca <- select(cri_str, -c(Jobs:anynonlin))
+crispeca <- dplyr::select(cri_str, -c(Jobs:anynonlin))
 cri_str <- merge(crispeca, w , by = "id")
 
-cri_str <- select(cri_str, Jobs:anynonlin, everything())
+cri_str <- dplyr::select(cri_str, Jobs:anynonlin, everything())
 
 # replace 0's with NA
 cri_str[c(1:161)][cri_str[c(1:161)] == 0] <- NA
@@ -186,8 +173,7 @@ cri_str[c(1:161)][cri_str[c(1:161)] == 0] <- NA
 
 We take the dichotomous variables and merge them into categorical variables for each type of model component.
 
-```{r cat_vars, message = F, warning = F}
-
+```{r cat_vars, message = FALSE, warning = FALSE}
 cri_str <- cri_str %>%
   mutate(iv_type = coalesce(Stock,Flow,ChangeFlow), # main test var
          mator = coalesce(ols,logit,bayes,ologit,mlogit,ml_glm), # Estimator
@@ -196,8 +182,7 @@ cri_str <- cri_str %>%
          )
 
 # send to numerical data for use as factor variables
-
-cri_strT <- select(cri_str, id, iv_type, mator, software, indepv)
+cri_strT <- dplyr::select(cri_str, id, iv_type, mator, software, indepv)
 
 cri <- left_join(cri, cri_strT, by = "id")
 
@@ -213,8 +198,8 @@ criT <- cri %>%
       dichotomize = ifelse(dichotomize == 1,"dichotomous","continuous")
       )
 
-criT <- select(criT, id, twowayfe, cluster_any, mlm_re, mlm_fe, logit, dichotomize)
-cri_str <- select(cri_str, -c(twowayfe, cluster_any, mlm_re, mlm_fe, logit, dichotomize))
+criT <- dplyr::select(criT, id, twowayfe, cluster_any, mlm_re, mlm_fe, logit, dichotomize)
+cri_str <- dplyr::select(cri_str, -c(twowayfe, cluster_any, mlm_re, mlm_fe, logit, dichotomize))
 cri_str <- left_join(cri_str, criT, by = "id")
 
 rm(criT, cri_strT)
@@ -240,13 +225,13 @@ cri_str$software <- car::recode(cri_str$software,
                              'spss' = 'SPSS';
                              'mplus' = 'Mplus';
                              'mlwin' = 'MLwiN'")
-
 ```
+
 ### Merge in UniPark Survey
 
-Original work up of individual/team researcher qualities done in Stata
+Original work up of individual/team researcher qualities done in Stata.
 
-NOTE: These Stata files include identifying information breaking the anonymity of the teams, so we have to clean them before making them public. We have provided a file with the cleaned and merged data "cri_survey_wide_public.dta" and its raw data (without labels) version with "cri_survey_wide_public_nolabs.dta"
+*NOTE:* These Stata files include identifying information breaking the anonymity of the teams, so we have to clean them before making them public. We have provided a file with the cleaned and merged data, `cri_survey_wide_public.dta`, and its raw data (without labels) version with `cri_survey_wide_public_nolabs.dta`.
 
 This was created from the following:
 
@@ -264,30 +249,23 @@ Required SPSS data files:
   W4_export.sav
   
 The above files contain personal identifiers and are therefore not allowed for public use. 
-  
+
 Note that teams are now in wide format, so that each variable has up to three values, one for each team member. Also, each result is attached to each team member, thus there are N-results repeated observations of team members.
 
-
-
-```{r combine, warning=F, message=F }
+```{r combine, warning=FALSE, message=F }
 cri <- full_join(cri, cri2, by = "u_teamid")
 
 # remove teams that dropped out
 # Column no missing function
 cri <- completeFun(cri, "id")
 
-cri <- select(cri, u_teamid, id, everything())
-
-
+cri <- dplyr::select(cri, u_teamid, id, everything())
 ```
-
 
 ### Individual Measurement Method
 
-```{r}
-
+```{r indiv_method}
 # Stata data has labels, have to get original codes instead
-
 l1 <- get.label(cri_part, "v_98")
 l2 <- get.label(cri_part, "v_34")
 l3 <- get.label(cri_part, "v_17")
@@ -305,7 +283,6 @@ cri_part$belief6 <- get.origin.codes(cri_part$belief_labour_1, l4)
 cri_part$belief7 <- get.origin.codes(cri_part$belief_health_1, l4)
 
 # Topical knowledge/experience
-
 cri_part$topic1 <- as.numeric(cri_part$v_17)
 cri_part$topic2 <- as.numeric(cri_part$v_19)
 cri_part$topic3 <- as.numeric(cri_part$v_20)
@@ -318,7 +295,6 @@ cri_part$topic8 <- get.origin.codes(cri_part$v_39, l6)
 cri_part$topic9 <- get.origin.codes(cri_part$v_40, l6)
 
 # Statistics skills/experience
-
 cri_part$stat1 <- get.origin.codes(cri_part$v_100, l1) # higher values = restricted by lack of methods skills, reverse the coding
 cri_part$stat1 <- (cri_part$stat1*-1)+5
 cri_part$stat2 <- get.origin.codes(cri_part$v_101, l1) # higher values = restricted by lack of methods skills, reverse the coding
@@ -336,54 +312,50 @@ cri_part$stat7 <- as.numeric(cri_part$v_21)
 cri_part$pro_immigrant <- as.numeric(cri_part$attitude_immigration_1)
 cri_part$pro_immigrant <- (cri_part$pro_immigrant*-1)+7
 
-cri_part <- select(cri_part, u_teamid, belief1:pro_immigrant)
+cri_part <- dplyr::select(cri_part, u_teamid, belief1:pro_immigrant)
 # cri_indiv.csv
-             
 ```
 
 ### Team Measurement Method
 
-Note we take the MAX for topic & statistics, MEAN for belief and pro-immigrant
+Note we take the MAX for topic & statistics, MEAN for belief and pro-immigrant.
 
-
-```{r recodes1, warning=F, message=F}
-
+```{r recodes1, warning=FALSE, message=FALSE}
 #Generate team-specific qualities
 
 # Because the CRI required teams to define the data-generating model (or at least a test of it) and use statistical competencies to carry it out, we suspect that the highest statistical and topical knowledge and experience per team will have the greatest influence on the results. Therefore, for the concepts 'Stats Level' and 'Topic Level' we take the row min or max for each team (depending on coding. 
 
 cri <- cri %>%
   rowwise() %>%
-      mutate(stat1 = 4+(-1*min(v_1001, v_1002, v_1003, na.rm = T)), #lower is less constrained
-             stat2 = 4+(-1*min(v_1011, v_1012, v_1013, na.rm = T)), #lower is less constrained
-             stat3 = max(v_341, v_342, v_343, na.rm = T), #higher is less dificult
-             stat4 = max(backgr_exp_teach_stat1, backgr_exp_teach_stat2, backgr_exp_teach_stat3, na.rm = T), #higher more courses taught
-             stat5 = max(backgr_exp_famil_mlm1, backgr_exp_famil_mlm2, backgr_exp_famil_mlm3, na.rm = T), #higher more MLM familiarity
-             stat6 = max(v_181, v_182, v_183, na.rm = T), #higher is more stat publications
-             stat7 = max(v_211, v_212, v_213, na.rm = T), #higher is more MLM publications
-             topic1 = max(v_171, v_172, v_173, na.rm = T), #higher is more Imm pubs
-             topic2 = max(v_191, v_192, v_193, na.rm = T), #higher is more Policy pubs
-             topic3 = max(v_201, v_202, v_203, na.rm = T), #higher is more Policy/Opinion pubs
-             topic4 = max(v_881, v_882, v_883, na.rm = T), #higher is more interest in topic
-             topic5 = 1+(-1*min(v_351, v_352, v_353, na.rm = T)), #lower not relevant
-             topic6 = max(v_371, v_372, v_373, na.rm = T), #Higher relevant
-             topic7 = max(v_381, v_382, v_383, na.rm = T), #Higher relevant
-             topic8 = max(v_391, v_392, v_393, na.rm = T), #Higher relevant
-             topic9 = max(v_401, v_402, v_403, na.rm = T), #Higher relevant
-             belief1 = mean(c(belief_H1_11,belief_H1_12,belief_H1_13), na.rm = T), # higher more belief
-             belief2 = mean(c(belief_agecare_11,belief_agecare_12,belief_agecare_13), na.rm = T), # higher more belief
-             belief3 = mean(c(belief_unempl_11,belief_unempl_12,belief_unempl_13), na.rm = T), # higher more belief
-             belief4 = mean(c(belief_income_11,belief_income_12,belief_income_13), na.rm = T), # higher more belief
-             belief5 = mean(c(belief_housing_11,belief_housing_12,belief_housing_13), na.rm = T), # higher more belief
-             belief6 = mean(c(belief_labour_11,belief_labour_12,belief_labour_13), na.rm = T), # higher more belief
-             belief7 = mean(c(belief_health_11,belief_health_12,belief_health_13), na.rm = T), # higher more belief
-             belief_strength = max(belief_certainty_11,belief_certainty_12,belief_certainty_13, na.rm = T),
-             pro_immigrant = mean(c(attitude_immigration_11,attitude_immigration_12,attitude_immigration_13), na.rm = T),
+      mutate(stat1 = 4+(-1*min(v_1001, v_1002, v_1003, na.rm = TRUE)), #lower is less constrained
+             stat2 = 4+(-1*min(v_1011, v_1012, v_1013, na.rm = TRUE)), #lower is less constrained
+             stat3 = max(v_341, v_342, v_343, na.rm = TRUE), #higher is less dificult
+             stat4 = max(backgr_exp_teach_stat1, backgr_exp_teach_stat2, backgr_exp_teach_stat3, na.rm = TRUE), #higher more courses taught
+             stat5 = max(backgr_exp_famil_mlm1, backgr_exp_famil_mlm2, backgr_exp_famil_mlm3, na.rm = TRUE), #higher more MLM familiarity
+             stat6 = max(v_181, v_182, v_183, na.rm = TRUE), #higher is more stat publications
+             stat7 = max(v_211, v_212, v_213, na.rm = TRUE), #higher is more MLM publications
+             topic1 = max(v_171, v_172, v_173, na.rm = TRUE), #higher is more Imm pubs
+             topic2 = max(v_191, v_192, v_193, na.rm = TRUE), #higher is more Policy pubs
+             topic3 = max(v_201, v_202, v_203, na.rm = TRUE), #higher is more Policy/Opinion pubs
+             topic4 = max(v_881, v_882, v_883, na.rm = TRUE), #higher is more interest in topic
+             topic5 = 1+(-1*min(v_351, v_352, v_353, na.rm = TRUE)), #lower not relevant
+             topic6 = max(v_371, v_372, v_373, na.rm = TRUE), #Higher relevant
+             topic7 = max(v_381, v_382, v_383, na.rm = TRUE), #Higher relevant
+             topic8 = max(v_391, v_392, v_393, na.rm = TRUE), #Higher relevant
+             topic9 = max(v_401, v_402, v_403, na.rm = TRUE), #Higher relevant
+             belief1 = mean(c(belief_H1_11,belief_H1_12,belief_H1_13), na.rm = TRUE), # higher more belief
+             belief2 = mean(c(belief_agecare_11,belief_agecare_12,belief_agecare_13), na.rm = TRUE), # higher more belief
+             belief3 = mean(c(belief_unempl_11,belief_unempl_12,belief_unempl_13), na.rm = TRUE), # higher more belief
+             belief4 = mean(c(belief_income_11,belief_income_12,belief_income_13), na.rm = TRUE), # higher more belief
+             belief5 = mean(c(belief_housing_11,belief_housing_12,belief_housing_13), na.rm = TRUE), # higher more belief
+             belief6 = mean(c(belief_labour_11,belief_labour_12,belief_labour_13), na.rm = TRUE), # higher more belief
+             belief7 = mean(c(belief_health_11,belief_health_12,belief_health_13), na.rm = TRUE), # higher more belief
+             belief_strength = max(belief_certainty_11,belief_certainty_12,belief_certainty_13, na.rm = TRUE),
+             pro_immigrant = mean(c(attitude_immigration_11,attitude_immigration_12,attitude_immigration_13), na.rm = TRUE),
              pro_immigrant = (pro_immigrant*-1)+7, # question is wether immigration laws should be made tougher (higher scores) versus laxer (lower), need to reverse code
-             changemind_delib = max(delib_changemind1,delib_changemind2,delib_changemind3, na.rm = T),
+             changemind_delib = max(delib_changemind1,delib_changemind2,delib_changemind3, na.rm = TRUE),
              topic_interest = max(v_881,v_882,v_883, na.rm=T),
              pub_interest = max(v_901,v_902,v_903, na.rm=T))
-
 
 cri <- cri %>%
          mutate(belief_strength = ifelse(belief_strength == "Inf", NA, belief_strength),
@@ -396,87 +368,81 @@ cri <- cri %>%
                 pub_interest = ifelse(pub_interest == "-Inf", NA, pub_interest),
                 changemind_delib = ifelse(changemind_delib == "Inf", NA, changemind_delib),
                 changemind_delib = ifelse(changemind_delib == "-Inf", NA, changemind_delib))
-
 ```
-
-
-
 
 ## Researcher Characteristics
 
 ### Overview. Table S1
 
-We create a table of selected characteristics to allow the readers to familiarize themselves with the researcher Participants. 
+We create a table of selected characteristics to allow the readers to familiarize themselves with the researcher Participants.
 
 ```{r aspect_overview}
 cri <- cri %>%
-  mutate(belief_1_avg = mean(c(belief_H1_11,belief_H1_12,belief_H1_13), na.rm = T),
-         belief_2_avg = mean(c(belief_H1_21,belief_H1_22,belief_H1_23), na.rm = T),
+  mutate(belief_1_avg = mean(c(belief_H1_11,belief_H1_12,belief_H1_13), na.rm = TRUE),
+         belief_2_avg = mean(c(belief_H1_21,belief_H1_22,belief_H1_23), na.rm = TRUE),
          belief_1_avg = ifelse(belief_1_avg == "NaN", NA, belief_1_avg),
          belief_2_avg = ifelse(belief_2_avg == "NaN", NA, belief_2_avg),
          topic4 = ifelse(topic4 == "-Inf", NA, topic4))
 
-
 cri_r_aspects1 <- cri %>%
   subset(., u_teamid != 0) %>%
   ungroup() %>%
-  summarise(belief_1 = round(mean(belief_1_avg, na.rm = T),1),
-          belief_2 = round(mean(belief_2_avg, na.rm = T),1),
-          pro_immigrant_mean = round(mean(pro_immigrant, na.rm = T),1),
-          taught_stat_courses = round(mean(stat4, na.rm = T),1),
-          mlm_familiarity = round(mean(stat5, na.rm = T),1),
-          stat_pubs = round(mean(stat6, na.rm = T),1),
-          topic_interest = round(mean(topic4, na.rm = T),1),
-          topic_imm_pubs = round(mean(topic1, na.rm = T),1),
-          topic_policy_pubs = round(mean(topic2, na.rm = T),1))
+  summarise(belief_1 = round(mean(belief_1_avg, na.rm = TRUE),1),
+          belief_2 = round(mean(belief_2_avg, na.rm = TRUE),1),
+          pro_immigrant_mean = round(mean(pro_immigrant, na.rm = TRUE),1),
+          taught_stat_courses = round(mean(stat4, na.rm = TRUE),1),
+          mlm_familiarity = round(mean(stat5, na.rm = TRUE),1),
+          stat_pubs = round(mean(stat6, na.rm = TRUE),1),
+          topic_interest = round(mean(topic4, na.rm = TRUE),1),
+          topic_imm_pubs = round(mean(topic1, na.rm = TRUE),1),
+          topic_policy_pubs = round(mean(topic2, na.rm = TRUE),1))
 
 cri_r_aspects2 <- cri %>%
   subset(., u_teamid != 0) %>%
   ungroup() %>%
-  summarise(belief_1_sd = round(sd(belief_1_avg, na.rm = T),1),
-          belief_2_sd = round(sd(belief_2_avg, na.rm = T),1),
-          pro_immigrant_sd = round(sd(pro_immigrant, na.rm = T),1),
-          taught_stat_courses_sd = round(sd(stat4, na.rm = T),1),
-          mlm_familiarity_sd = round(sd(stat5, na.rm = T),1),
-          stat_pubs_sd = round(sd(stat6, na.rm = T),1),
-          topic_interest_sd = round(sd(topic4, na.rm = T),1),
-          topic_imm_pubs_sd = round(sd(topic1, na.rm = T),1),
-          topic_policy_pubs_sd = round(sd(topic2, na.rm = T),1))
+  summarise(belief_1_sd = round(sd(belief_1_avg, na.rm = TRUE),1),
+          belief_2_sd = round(sd(belief_2_avg, na.rm = TRUE),1),
+          pro_immigrant_sd = round(sd(pro_immigrant, na.rm = TRUE),1),
+          taught_stat_courses_sd = round(sd(stat4, na.rm = TRUE),1),
+          mlm_familiarity_sd = round(sd(stat5, na.rm = TRUE),1),
+          stat_pubs_sd = round(sd(stat6, na.rm = TRUE),1),
+          topic_interest_sd = round(sd(topic4, na.rm = TRUE),1),
+          topic_imm_pubs_sd = round(sd(topic1, na.rm = TRUE),1),
+          topic_policy_pubs_sd = round(sd(topic2, na.rm = TRUE),1))
 
 cri_r_aspects3 <- cri %>%
   subset(., u_teamid != 0) %>%
   ungroup() %>%
   summarise(belief_1_min = 1,
           belief_2_min = 1,
-          pro_immigrant_min = min(pro_immigrant, na.rm = T),
-          taught_stat_courses_min = min(stat4, na.rm = T),
-          mlm_familiarity_min = min(stat5, na.rm = T),
-          stat_pubs_min = min(stat6, na.rm = T),
-          topic_interest_min = min(topic4, na.rm = T),
-          topic_imm_pubs_min = min(topic1, na.rm = T),
-          topic_policy_pubs_min = min(topic2, na.rm = T))
+          pro_immigrant_min = min(pro_immigrant, na.rm = TRUE),
+          taught_stat_courses_min = min(stat4, na.rm = TRUE),
+          mlm_familiarity_min = min(stat5, na.rm = TRUE),
+          stat_pubs_min = min(stat6, na.rm = TRUE),
+          topic_interest_min = min(topic4, na.rm = TRUE),
+          topic_imm_pubs_min = min(topic1, na.rm = TRUE),
+          topic_policy_pubs_min = min(topic2, na.rm = TRUE))
 
 cri_r_aspects4 <- cri %>%
   subset(., u_teamid != 0) %>%
   ungroup() %>%
   summarise(belief_1_max = 5,
           belief_2_max = 5,
-          pro_immigrant_max = max(pro_immigrant, na.rm = T),
-          taught_stat_courses_max = max(stat4, na.rm = T),
-          mlm_familiarity_max = max(stat5, na.rm = T),
-          stat_pubs_max = max(stat6, na.rm = T),
-          topic_interest_max = max(topic4, na.rm = T),
-          topic_imm_pubs_max = max(topic1, na.rm = T),
-          topic_policy_pubs_max = max(topic2, na.rm = T))
+          pro_immigrant_max = max(pro_immigrant, na.rm = TRUE),
+          taught_stat_courses_max = max(stat4, na.rm = TRUE),
+          mlm_familiarity_max = max(stat5, na.rm = TRUE),
+          stat_pubs_max = max(stat6, na.rm = TRUE),
+          topic_interest_max = max(topic4, na.rm = TRUE),
+          topic_imm_pubs_max = max(topic1, na.rm = TRUE),
+          topic_policy_pubs_max = max(topic2, na.rm = TRUE))
 
 cri_r_aspects <- cbind(t(cri_r_aspects1), t(cri_r_aspects2), t(cri_r_aspects3), t(cri_r_aspects4))
 
 kable(cri_r_aspects)
 
 write.csv(cri_r_aspects, file = here::here("results/TblS1.csv"))
-          
+        
 ```
-
 
 ### Mesaurement of Participant Team Qualities
 
@@ -486,8 +452,7 @@ Aggregated by team
 
 ```{r f3}
 # make a dataset for correlation
-
-cor <- select(cri, stat1,stat2,stat3,stat4,stat5,stat6,stat7,topic1,topic2,topic3,topic4,topic5,topic6,topic7,topic8,topic9,belief1,belief2,belief3,belief4,belief5,belief6,belief7,belief_strength,pro_immigrant,u_teamid)
+cor <- dplyr::select(cri, stat1,stat2,stat3,stat4,stat5,stat6,stat7,topic1,topic2,topic3,topic4,topic5,topic6,topic7,topic8,topic9,belief1,belief2,belief3,belief4,belief5,belief6,belief7,belief_strength,pro_immigrant,u_teamid)
 
 cor <- aggregate(cor, by=list(cor$u_teamid), FUN=mean, na.rm=T)
 cor <- replace(cor, cor=="-Inf",NA)
@@ -562,15 +527,13 @@ cor1$label <- c("(stat1)",
                     "(belief7)",
                     "(belief_strength)", 
                     "(pro_immigrant)")
-cor1 <- select(cor1, label, everything())
+cor1 <- dplyr::select(cor1, label, everything())
 write.csv(cor1, file = here::here("results/TblS3_measrement.csv"))
-
 ```
 
 #### Measurement Model
 
 ```{r SEM}
-
 pacman::p_load("lavaan")
 
 cfa <- ' stat =~ stat1 + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
@@ -588,7 +551,7 @@ cor2 <- as.data.frame(lavPredict(fit))
 cor <- cbind(cor,cor2)
 
 # put them back into the main data
-cor2 <- select(cor, u_teamid, stat, topic, belief)
+cor2 <- dplyr::select(cor, u_teamid, stat, topic, belief)
 
 cri <- left_join(cri,cor2,by = "u_teamid")
 
@@ -601,16 +564,13 @@ fit_fig[1:4,1] <- c("CLI","TFI","RMSEA","chi-test p")
 fit_fig[1:4,2] <- round(c(fitsi[["FIT"]][["cfi"]],fitsi[["FIT"]][["tli"]],fitsi[["FIT"]][["rmsea"]],fitsi[["FIT"]][["pvalue"]]),3)
 
 write.csv(fit_fig, file = here::here("results/fit_measurement.csv"))
-
 ```
-
 
 ### Merge in Subjective Voting
 
-The file popdf_out.Rdata is needed for this, see 001_CRI_Prep_Subj_Votes.Rmd 
+The file `popdf_out.Rdata` is needed for this, see `001_CRI_Prep_Subj_Votes.Rmd`.
 
-```{r votes, message = F, warning=F}
-
+```{r votes, message = FALSE, warning=FALSE}
 cri <- left_join(cri, popdf_out, by = "id")
 
 # create levels of subjective responses and voting
@@ -620,21 +580,18 @@ criT <- cri %>%
          topic_cat = ifelse(topic > 0.4, "Highest", ifelse(topic > 0, "High", ifelse(topic > -0.4, "Low", "Lowest"))),
          total_score_cat = ifelse(total_score > 0.53, "Highest", ifelse(total_score > 0.41, "High", ifelse(total_score > 0.32, "Low", "Lowest"))))
 
-criT <- select(criT, stat_cat, belief_cat, topic_cat, total_score_cat, id)
+criT <- dplyr::select(criT, stat_cat, belief_cat, topic_cat, total_score_cat, id)
 
 cri_str <- left_join(cri_str, criT, by = "id")
 
-# cri <- select(cri, -c(u_expgroup1:belief7))
-
 rm(fit, popdf_out, criT)
-
 ```
 
 ### Test results per team
 
-Here we need to divide the inv_weight (number of models per team) in half for all teams who considered stock and flow independently.
+Here we need to divide the `inv_weight` (number of models per team) in half for all teams who considered 'stock' and 'flow' independently.
 
-```{r postest, warning = F}
+```{r postest, warning = FALSE}
 # fix weight for 89 independent team-level tests
 
 cri <- cri %>%
@@ -670,40 +627,35 @@ t105[1,5] <- as.numeric(0)
 
 cri <- bind_rows(cri, t105)
 
-
 cri <- cri %>%
   group_by(u_teamid,Hresult) %>%
-  mutate(pos_test_team_p05 = sum(AME_sup_p05, na.rm = T),
-         neg_test_team_p05 = sum(AME_neg_p05, na.rm = T),
-         ns_test_team_p05 = sum(AME_ns_p05, na.rm = T),
-         pos_test_pct_p05 = sum(AME_sup_p05, na.rm = T)/inv_weight_H,
-         pos_test_pct_p10 = sum(AME_sup_p10, na.rm = T)/inv_weight_H,
-         neg_test_pct_p05 = sum(AME_neg_p05, na.rm = T)/inv_weight_H,
-         ns_test_pct_p05 = sum(AME_ns_p05, na.rm = T)/inv_weight_H) %>%
+  mutate(pos_test_team_p05 = sum(AME_sup_p05, na.rm = TRUE),
+         neg_test_team_p05 = sum(AME_neg_p05, na.rm = TRUE),
+         ns_test_team_p05 = sum(AME_ns_p05, na.rm = TRUE),
+         pos_test_pct_p05 = sum(AME_sup_p05, na.rm = TRUE)/inv_weight_H,
+         pos_test_pct_p10 = sum(AME_sup_p10, na.rm = TRUE)/inv_weight_H,
+         neg_test_pct_p05 = sum(AME_neg_p05, na.rm = TRUE)/inv_weight_H,
+         ns_test_pct_p05 = sum(AME_ns_p05, na.rm = TRUE)/inv_weight_H) %>%
   ungroup()
 
 # now remove t105 again
-
 cri <- subset(cri, u_teamid != 105)
 ```
-
 
 #### Team Level Datasets
 
 We create an overall team average dataset, a flow models only team dataset and a stock models only team dataset.
 
-```{r team_data, message = F, warning=F}
-
+```{r team_data, message = FALSE, warning=FALSE}
 cri_team <- cri
 cri_team_stock <- subset(cri, cri$Stock == 1)
 cri_team_flow <- subset(cri, cri$Flow == 1)
 
-cri_team <- aggregate(cri_team, by = list(cri_team$u_teamid, cri_team$Hresult), FUN = mean, na.rm = T)
-cri_team_stock <- aggregate(cri_team_stock, by = list(cri_team_stock$u_teamid, cri_team_stock$Hresult), FUN = mean, na.rm = T)
-cri_team_flow <- aggregate(cri_team_flow, by = list(cri_team_flow$u_teamid, cri_team_flow$Hresult), FUN = mean, na.rm = T)
+cri_team <- aggregate(cri_team, by = list(cri_team$u_teamid, cri_team$Hresult), FUN = mean, na.rm = TRUE)
+cri_team_stock <- aggregate(cri_team_stock, by = list(cri_team_stock$u_teamid, cri_team_stock$Hresult), FUN = mean, na.rm = TRUE)
+cri_team_flow <- aggregate(cri_team_flow, by = list(cri_team_flow$u_teamid, cri_team_flow$Hresult), FUN = mean, na.rm = TRUE)
 
 # can't aggregate strings so we have to run recodes again
-
 cri_team <- cri_team %>%
   mutate(stat_cat = ifelse(stat > 0.75, "Highest", ifelse(stat > .25, "High", ifelse(stat > -0.25, "Low", "Lowest"))),
          belief_cat = ifelse(belief > 0.6, "Highest", ifelse(belief > 0.25, "High", ifelse(belief > -0.25, "Low", "Lowest"))),
@@ -733,56 +685,46 @@ cri_team_stock <- Filter(function(x) !all(is.na(x)), cri_team_stock)
 cri_team_flow <- Filter(function(x) !all(is.na(x)), cri_team_flow)
 
 # add missing variable
-cri_stra <- select(cri_str, dv_type, id)
+cri_stra <- dplyr::select(cri_str, dv_type, id)
 df <- left_join(cri, cri_stra, by = "id")
 rm(cri_stra)
 ```
 
-
-
-
-
 ## Individual Level Data Work
 
-### Add Subjective conclusion to Indiv data
+### Add Subjective conclusion to Individual data
 
 ```{r subj_merge}
 # fast way to strip attributes
-write.csv(cri_part, file = here::here("data","cri_indv.csv"), row.names = F)
+write.csv(cri_part, file = here::here("data","cri_indv.csv"), row.names = FALSE)
 
-cri_indiv <- read.csv(file = here::here("data","cri_indv.csv"), header = T)
+cri_indiv <- read.csv(file = here::here("data","cri_indv.csv"), header = TRUE)
 
 
-cri_subj <- select(cri, u_teamid, Hsupport, Hmixed)
+cri_subj <- dplyr::select(cri, u_teamid, Hsupport, Hmixed)
 cri_subj$Hsup <- ifelse(cri_subj$Hsupport == 1, 1, ifelse(cri_subj$Hmixed == 1, 0.5, 0))
-cri_subj <- select(cri, u_teamid, Hsup)
-cri_s <- aggregate(cri_subj, by = list(cri_subj$u_teamid), FUN = mean, na.rm = T)
+cri_subj <- dplyr::select(cri, u_teamid, Hsup)
+cri_s <- aggregate(cri_subj, by = list(cri_subj$u_teamid), FUN = mean, na.rm = TRUE)
 
 cri_indiv <- left_join(cri_indiv, cri_s, by = "u_teamid")
 ```
 
-
 ## Measurement Model
 
-Based on our survey before and during the CRI. We already did a measurement model in chunk 01, but we do it here for presenting in the results.
+Based on our survey before and during the CRI. We already did a measurement model above, but we do it here for presenting in the results.
 
-
-```{r sem, include=T, warning=F}
-
-
+```{r sem, include=T, warning=FALSE}
 # non-missing df
-
 sem <- completeFun(cri_indiv, "stat1")
 
 # team 27 missing 3 values, fill for consistency
-
 sem <- sem %>%
   mutate(stat1 = ifelse(u_teamid == 27,3,stat1),
          stat2 = ifelse(u_teamid == 27,3,stat2),
          topic4 = ifelse(u_teamid == 27,4,topic4))
 
-# correlatinos
-cor3 <- select(sem, -c(u_teamid,Group.1))
+# correlations
+cor3 <- dplyr::select(sem, -c(u_teamid,Group.1))
 cor3 <- round(cor(cor3, use = "pairwise.complete.obs"),2)
 
 sem_f <- completeFun(sem, c("Hsup","belief1","topic2"))
@@ -797,29 +739,21 @@ cfa <- ' stats =~ stat1 + + stat2 + stat3 + stat4 + stat5 + stat6 + stat7
          concl =~ Hsup         
 '
 fit2 <- cfa(cfa, data = sem_f)
-
-
-
 ```
-
 
 ### Table X. Correlation Matrix of Researcher Backgrouds, Individual-Level
 
 ```{r sem_cor}
-# kable(cor1)
-
 cor3[upper.tri(cor3)] <- ""
-
 kable(cor3)
 ```
 
-
 ```{r sem_fit}
-fit_out <- summary(fit2, fit.measures=TRUE, standardized = T)
+fit_out <- summary(fit2, fit.measures=TRUE, standardized = TRUE)
 
 labels = list(stats = "Statistics Skill", topic = "Topic Knowledge", belief = "Belief in Hypothesis", immig = "Pro Immigration", concl = "Results Supported")
 
-sem_out <- lavaanPlot(model = fit2, labels = labels, coefs = TRUE, covs = TRUE, stand = TRUE)
+sem_out <- lavaanPlot::lavaanPlot(model = fit2, labels = labels, coefs = TRUE, covs = TRUE, stand = TRUE)
 pacman::p_load("DiagrammeR")
 
 png(filename = here::here("results","SEM.png"), width = 720, height = 620, res = 144)
@@ -827,19 +761,18 @@ sem_out
 dev.off()
 ```
 
+This chunk essentially proves that it probably doesn't matter whether we take team-level measures or individual-level measures aggregated by team as correlations are very high (0.86-0.95).
 
-This chunk essentially proves that it probably doesn't matter whether we take team-level measures or individual-level measures aggregated by team as correlations are very high (0.86-0.95). 
-
-```{r predict_sem, warning=F, message=F}
+```{r predict_sem, warning=FALSE, message=FALSE}
 # predicted factor scores
 pred <- as.data.frame(lavPredict(fit2))
 sem_p <- cbind(sem_f,pred)
 
 # put them back into the main data
-sem_p <- select(sem_p, u_teamid, stats, topic, belief)
-sem_pa <- aggregate(x = sem_p, by = list(sem_p$u_teamid), FUN = "mean", na.rm = T)
+sem_p <- dplyr::select(sem_p, u_teamid, stats, topic, belief)
+sem_pa <- aggregate(x = sem_p, by = list(sem_p$u_teamid), FUN = "mean", na.rm = TRUE)
 colnames(sem_pa) <- c("", "u_teamid","stats_ipred","topic_ipred","belief_ipred")
-sem_pa <- select(sem_pa, u_teamid, stats_ipred, topic_ipred, belief_ipred)
+sem_pa <- dplyr::select(sem_pa, u_teamid, stats_ipred, topic_ipred, belief_ipred)
 cri <- left_join(cri,sem_pa,by = "u_teamid")
 
 cri_team <- left_join(cri_team, sem_pa, by = "u_teamid")
@@ -847,19 +780,18 @@ cri_team <- left_join(cri_team, sem_pa, by = "u_teamid")
 rm(fit,fit1,pred,sem_f,sem_out,sem_p,sem_pa)
 
 # compare with previous team-level predicted version
-
-cri_test_mean <- select(cri,u_teamid, belief, belief_ipred)
-cri_test_max <- select(cri, u_teamid, stat, topic, stats_ipred, topic_ipred)
+cri_test_mean <- dplyr::select(cri,u_teamid, belief, belief_ipred)
+cri_test_max <- dplyr::select(cri, u_teamid, stat, topic, stats_ipred, topic_ipred)
 
 cri_team_test1 <- aggregate(cri_test_mean, by = list(cri$u_teamid), FUN = mean, na.rm=T)
 cri_team_test2 <- aggregate(cri_test_max, by = list(cri$u_teamid), FUN = max, na.rm=T)
 cri_team_test <- left_join(cri_team_test1,cri_team_test2, by = "u_teamid")
-cri_team_test <- select(cri_team_test, -c(Group.1.x,Group.1.y))
+cri_team_test <- dplyr::select(cri_team_test, -c(Group.1.x,Group.1.y))
 cri_team_test$belief_ipred <- ifelse(cri_team_test$belief_ipred == "NaN", NA, cri_team_test$belief_ipred)
 cri_team_test <- completeFun(cri_team_test, "belief_ipred")
 
 # correlatinos
-cor4 <- select(cri_team_test, -c(u_teamid))
+cor4 <- dplyr::select(cri_team_test, -c(u_teamid))
 cor4 <- round(cor(cor4, use = "pairwise.complete.obs"),2)
 
 kable(cor4)
@@ -867,7 +799,7 @@ kable(cor4)
 rm(cor,cor1,cor2,cri_team_test,cri_team_test1,cri_team_test2)
 ```
 
-For the shiny app and some of our initial specification curve probing we used the package [rdfanalysis](https://joachim-gassen.github.io/rdfanalysis/) which requires discrete chocie variables. Therefore we code continuous researcher characteristics into categories here.
+For the Shiny app and some of our initial specification curve probing we used the package [rdfanalysis](https://joachim-gassen.github.io/rdfanalysis/) which requires discrete choice variables. Therefore we code continuous researcher characteristics into categories here.
 
 ```{r spec_cats}
 # The team qualities data were originally coded into 4 categories, "Highest, High, Mid and 
@@ -881,16 +813,16 @@ cri <- cri %>%
          STATISTICS_SKILL = ifelse(stats_ipred > 0.38, "High", ifelse(stats_ipred < -0.3, "Low", "Mid")),
          MODEL_SCORE = ifelse(total_score > 0.55, "High", ifelse(total_score < 0.35, "Low", "Mid")))
         
-cri_stra <- select(cri, id, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
+cri_stra <- dplyr::select(cri, id, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
 cri_stra <- subset(cri_stra, !is.na(PRO_IMMIGRANT))
 
 cri_str <- left_join(cri_str, cri_stra, by = "id")
 rm(cri_stra)
 
 # now repeat for the team level
-cri_stra <- select(cri_team, u_teamid, belief_ipred, pro_immigrant, topic_ipred, stats_ipred, total_score)
+cri_stra <- dplyr::select(cri_team, u_teamid, belief_ipred, pro_immigrant, topic_ipred, stats_ipred, total_score)
 
-cri_stra2 <- aggregate(cri_stra, by = list(cri_stra$u_teamid), FUN = mean, na.rm = T)
+cri_stra2 <- aggregate(cri_stra, by = list(cri_stra$u_teamid), FUN = mean, na.rm = TRUE)
 
 cri_stra2 <- cri_stra2 %>%
   mutate(BELIEF_HYPOTHESIS = ifelse(belief_ipred < -0.2, "Low", ifelse(belief_ipred > 0.2, "High", "Mid")),
@@ -899,57 +831,46 @@ cri_stra2 <- cri_stra2 %>%
          STATISTICS_SKILL = ifelse(stats_ipred > 0.2, "High", ifelse(stats_ipred < -0.2, "Low", "Mid")),
          MODEL_SCORE = ifelse(total_score > 0.55, "High", ifelse(total_score < 0.35, "Low", "Mid")))
 cri_stra2 <- subset(cri_stra2, !is.na(PRO_IMMIGRANT))
-cri_stra2 <- select(cri_stra2, u_teamid, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
-
+cri_stra2 <- dplyr::select(cri_stra2, u_teamid, BELIEF_HYPOTHESIS, PRO_IMMIGRANT, TOPIC_KNOWLEDGE, STATISTICS_SKILL, MODEL_SCORE)
 
 cri_team <- left_join(cri_team, cri_stra2, by = "u_teamid")
 
 # merge flow and stock team-level results for plotting
-
 cri_team_combine <- bind_rows(cri_team_stock, cri_team_flow)
+
 # now add to cri_team_combine
 cri_team_combine <- left_join(cri_team_combine, cri_stra2, by = "u_teamid")
 rm(cri_stra, cri_stra2)
 ```
 
+## Save outputs
 
-Save Point
-
-
-
-```{r save_out, warning=F,message=F}
-
+```{r save_out, warning=FALSE, message=FALSE}
 # weighting variable is inverted, fix here.
 cri$inv_weight <- 1/cri$inv_weight
 cri_str$inv_weight <- 1/cri_str$inv_weight
 
 # save as csv to ensure no attributes carry over
-write.csv(cri, file = here::here("data","cri.csv"), row.names = F)
-write.csv(cri_str, file = here::here("data","cri_str.csv"), row.names = F)
-write.csv(cri_team, file = here::here("data","cri_team.csv"), row.names = F)
-write.csv(cri_indiv, file = here::here("data","cri_indv.csv"), row.names = F)
+write.csv(cri, file = here::here("data","cri.csv"), row.names = FALSE)
+write.csv(cri_str, file = here::here("data","cri_str.csv"), row.names = FALSE)
+write.csv(cri_team, file = here::here("data","cri_team.csv"), row.names = FALSE)
+write.csv(cri_indiv, file = here::here("data","cri_indv.csv"), row.names = FALSE)
 
 # remove missing
 cri_team_combine <- subset(cri_team_combine, !is.na(AME))
 cri_team_combine <- subset(cri_team_combine, !is.na(stat_cat))
 
 
-write.csv(cri_team_combine, file = here::here("data","cri_team_combine.csv"), row.names = F)
-
-
-
-
+write.csv(cri_team_combine, file = here::here("data","cri_team_combine.csv"), row.names = FALSE)
 ```
 
+## Prep Data for Shiny App
 
-#### Prep Data for Shiny App
+In the folder `shiny` we deploy a Shiny app to allow users to interact with the results by model specification types. 
 
-In the folder **/CRI/CRI_shiny** we deploy a 'shiny app' to allow users to interact with the results by model specification types. 
-
-```{r shiny, warning= F, message = F}
+```{r shiny, warning = FALSE, message = FALSE}
 ### Transform values from 1 to column names for all countries 
-
-cri_shiny <- read.csv(here::here("data","cri.csv"), header = T)
+cri_shiny <- read.csv(here::here("data","cri.csv"), header = TRUE)
 cri_shiny <- cri_shiny %>%
   mutate_at(
     vars(AU:VE),
@@ -982,10 +903,7 @@ cri_shiny$upper_Z <- ifelse(cri_shiny$upper_Z < -0.75, -0.745, cri_shiny$upper_Z
 cri_shiny$AME_Z <- ifelse(cri_shiny$AME_Z < -0.75, -0.747, cri_shiny$AME_Z)
 cri_shiny$AME_Z <- ifelse(cri_shiny$AME_Z > 0.75, 0.747, cri_shiny$AME_Z)
 
-
-
 ## Transform variables to the right coding scheme 
-
 cri_shiny <- cri_shiny %>%
   mutate(
     twowayfe = if_else(twowayfe == 1, "Yes", "No"),
@@ -1005,8 +923,6 @@ cri_shiny <- cri_shiny %>%
     ub = round(upper_Z,6)
   )
 
-
-
 # one team has some missing values from the survey, replace with "Mid" for easier visualizaiton
 cri_shiny <- cri_shiny %>%
     mutate(
@@ -1024,14 +940,8 @@ cri_shiny <- cri_shiny %>%
          PRO_IMMIGRANT = factor(PRO_IMMIGRANT, levels = c("Low","Mid","High"))
   ) 
 
-
-
-  
-
 # Team-level 
-cri_shiny_team <- read.csv(file = here::here("data","cri_team.csv"), header = T)
-
-
+cri_shiny_team <- read.csv(file = here::here("data","cri_team.csv"), header = TRUE)
 cri_shiny_team <- cri_shiny_team %>%
   mutate(iv_type2 = ifelse(Stock == 1, "Stock", "Flow"),
          iv_type2 = as.factor(iv_type2),
@@ -1046,10 +956,10 @@ cri_shiny_team <- cri_shiny_team %>%
          topic_ipred = ifelse(topic_ipred > 0.8, 0.8, topic_ipred),
          belief_ipred = ifelse(belief_ipred > 0.8, 0.8, ifelse(belief_ipred < -0.8, -0.8, belief_ipred)),
          pro_immigrant = ifelse(pro_immigrant  < 2.3, 2.3, pro_immigrant),
-         topic_ipredm = (topic_ipred - min(topic_ipred, na.rm = T))/(max(topic_ipred - min(topic_ipred, na.rm = T), na.rm = T)),
-         belief_ipredm = (belief_ipred - min(belief_ipred, na.rm = T))/(max(belief_ipred - min(belief_ipred, na.rm = T), na.rm = T)),
-         stats_ipredm = (stats_ipred - min(stats_ipred, na.rm = T))/(max(stats_ipred - min(stats_ipred, na.rm = T), na.rm = T)),
-         pro_immigrantm = (pro_immigrant - min(pro_immigrant, na.rm = T))/(max(pro_immigrant - min(pro_immigrant, na.rm = T), na.rm = T)),
+         topic_ipredm = (topic_ipred - min(topic_ipred, na.rm = TRUE))/(max(topic_ipred - min(topic_ipred, na.rm = TRUE), na.rm = TRUE)),
+         belief_ipredm = (belief_ipred - min(belief_ipred, na.rm = TRUE))/(max(belief_ipred - min(belief_ipred, na.rm = TRUE), na.rm = TRUE)),
+         stats_ipredm = (stats_ipred - min(stats_ipred, na.rm = TRUE))/(max(stats_ipred - min(stats_ipred, na.rm = TRUE), na.rm = TRUE)),
+         pro_immigrantm = (pro_immigrant - min(pro_immigrant, na.rm = TRUE))/(max(pro_immigrant - min(pro_immigrant, na.rm = TRUE), na.rm = TRUE)),
          topic_ipredm = ifelse(is.na(topic_ipredm), mean(topic_ipredm, na.rm=T), topic_ipredm),
          belief_ipredm = ifelse(is.na(belief_ipredm), mean(belief_ipredm, na.rm=T), belief_ipredm),
          stats_ipredm = ifelse(is.na(stats_ipredm), mean(stats_ipredm, na.rm=T), stats_ipredm),
@@ -1063,14 +973,12 @@ cri_shiny_team <- cri_shiny_team %>%
   )
 
 # Remove unnecessary columns, remove Brady and Finnigan study
-
 cri_shiny <- cri_shiny %>%
   subset(u_teamid != 0) %>%
-  select(-c(additionalinfo, fbXnet:fbXleftright,backgr_degree_other1:belief_2_avg))
-  
+  dplyr::select(-c(additionalinfo, fbXnet:fbXleftright,backgr_degree_other1:belief_2_avg))
 cri_shiny_team <- cri_shiny_team %>%
   subset(u_teamid != 0) %>%
-  select(-c(fbXnet:fbXleftright,backgr_degree1:model_eval3))
+  dplyr::select(-c(fbXnet:fbXleftright,backgr_degree1:model_eval3))
 
 # Need text versions for filtering
 cri_shiny <- cri_shiny %>%
@@ -1106,12 +1014,10 @@ cri_shiny <- cri_shiny %>%
          est_ns_scl = ifelse(is.na(sig_group), est, NA),
          sig_group2 = as.factor(ifelse(is.na(sig_group), 2, sig_group)))
 
-
 cri_shiny <- cri_shiny[complete.cases(cri_shiny$est),]
 
 # Save shiny data
 saveRDS(cri_shiny, file = here::here("shiny/data/cri_shiny.Rds"))
-write.csv(cri_shiny, file = here::here("shiny/data/cri_shiny.csv"), row.names = F)
-write.csv(cri_shiny_team, file = here::here("shiny/data/cri_shiny_team.csv"), row.names = F)
-
+write.csv(cri_shiny, file = here::here("shiny/data/cri_shiny.csv"), row.names = FALSE)
+write.csv(cri_shiny_team, file = here::here("shiny/data/cri_shiny_team.csv"), row.names = FALSE)
 ```

@@ -1,21 +1,15 @@
 ---
-title: "Tech 6, DV-Specific Analyses"
+title: "Tech 7. DV-Specific Analyses"
 output: html_document
 ---
 
+```{r setup, include=FALSE, warning=FALSE}
+library("pacman")
 
-   
-
-```{r setup, include=FALSE, warning=F}
-
-rm(list = ls())
-library(pacman)
-
-#necessayr for nnet::multinom and tab_model to work together
+#necessary for nnet::multinom and tab_model to work together
 # install.packages("devtools")
 # devtools::install_github("easystats/insight")
 # devtools::install_github("easystats/effectsize")
-
 
 pacman::p_load("ggplot2","dplyr","readr","plotscale","lattice","tidyr","readxl","mlogit","jtools","sjPlot","sjmisc","sjlabelled","knitr","kableExtra","lavaan","reshape2","semPlot","lavaanPlot","leaps","lme4","multilevelTools","rvest","nnet","parameters","insight","effectsize","ggtext","mdthemes","ragg")
 
@@ -34,18 +28,18 @@ completeFun <- function(data, desiredCols) {
 
 These datasets were worked up from the file 01_CRI_Data_Prep.Rmd. 
 
-cri = numerical values
-cri_str = string values
-cri_team = team-level data (by conclusion)
-cri_team_combine = team-level data parsed by type of test variable (stock and flow)
-cri_indiv = participant-level data from our survey, identifying characteristics redacted
+- `cri` = numerical values
+- `cri_str` = string values
+- `cri_team` = team-level data (by conclusion)
+- `cri_team_combine` = team-level data parsed by type of test variable (stock and flow)
+- `cri_indiv` = participant-level data from our survey, identifying characteristics redacted
 
 ### Load Data
 
-```{r load, warning=F,message=F}
-cri <- read.csv(file = here::here("data/cri.csv"), header = T)
-cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = T)
-cri_indiv <- read.csv(file = here::here("data/cri_indv.csv"), header = T)
+```{r load, warning=FALSE,message=FALSE}
+cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
+cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
+cri_indiv <- read.csv(file = here::here("data/cri_indv.csv"), header = TRUE)
 
 # setup multilevel dataset
 
@@ -59,30 +53,28 @@ cri_ml <- select(cri_ml, u_teamid, id, team, AME_Z, upper_Z, lower_Z, everything
 
 # remove team 0
 cri_ml <- subset(cri_ml, u_teamid != 0)
-
-
 ```
 
 ### Within and Between Variables
 
-```{r wandb, warning = F, message = F}
+```{r wandb, warning = FALSE, message = FALSE}
 cri_ml <- cri_ml %>%
   group_by(team) %>%
-  mutate(AME_Z_b = mean(AME_Z, na.rm = T),
+  mutate(AME_Z_b = mean(AME_Z, na.rm = TRUE),
          AME_Z_w =AME_Z-AME_Z_b,
-         jobs_b = mean(Jobs, na.rm = T),
-         unemp_b = mean(Unemp, na.rm = T),
-         incdiff_b = mean(IncDiff, na.rm = T),
-         oldage_b = mean(OldAge, na.rm = T),
-         house_b = mean(House, na.rm = T),
-         health_b = mean(Health, na.rm = T),
+         jobs_b = mean(Jobs, na.rm = TRUE),
+         unemp_b = mean(Unemp, na.rm = TRUE),
+         incdiff_b = mean(IncDiff, na.rm = TRUE),
+         oldage_b = mean(OldAge, na.rm = TRUE),
+         house_b = mean(House, na.rm = TRUE),
+         health_b = mean(Health, na.rm = TRUE),
          jobs_w = Jobs-jobs_b,
          unemp_w = Unemp-unemp_b,
          incdiff_w = IncDiff-incdiff_b,
          oldage_w = OldAge-oldage_b,
          house_w = House-house_b,
          health_w = Health-health_b,
-         scale_b = mean(Scale, na.rm = T),
+         scale_b = mean(Scale, na.rm = TRUE),
          scale_w = Scale-scale_b,
          un_emp_rate_ivC = ifelse(emplrate_ivC == 1 | unemprate_ivC == 1, 1, 0)) %>%
   ungroup()
@@ -105,22 +97,19 @@ cri_ml_incdiff <- subset(cri_ml, IncDiff == 1 & Scale != 1)
 cri_ml_unemp <- subset(cri_ml, Unemp == 1 & Scale != 1)
 cri_ml_house <- subset(cri_ml, House == 1 & Scale != 1)
 cri_ml_health <- subset(cri_ml, Health == 1 & Scale != 1)
-
 ```
 
+## Regresssion Approach to Explaining Variance by DV
 
-# Regresssion Approach to Explaining Variance by DV
+### Explaining Average Marginal Effects
 
-## Explaining Average Marginal Effects
+#### Objective Conditions
 
-### Objective Conditions
+Here we consider re-run our main analyses independently by DV.
 
-Here we consider re-run our main analyses independently by DV
+#### Subjective Decisions
 
-
-### Subjective Decisions
-
-#### Measurement
+##### Measurement
 
 The teams had several possibilities to measure the DV (or DVs) including linear, logit or multinomial. Also, immigration could be stock or flow and some teams elected for change in flow. A few teams used measures like refugee or non-western instead of simply foreign-born. These decisions are reflected here.
 
@@ -128,7 +117,7 @@ note that logit is the only one that seems to matter, surprisingly the 'type' of
 
 In the DV specific case there is often only one model per team, thus the multilevel structure is not helpful (mostly singular identification as a result). Therefore we switch to an lm (results are nearly identical because the random-intercepts at the team-level were zero)
 
-```{r subj_measurement_mlms, warning = F, message = F}
+```{r subj_measurement_mlms, warning = FALSE, message = FALSE}
 
 dvs <- c("Jobs","Unemp","IncDiff","OldAge","House","Health")
 #run regressions across all datasets
@@ -162,15 +151,11 @@ dv_var_table[8:13,3] <- rep("~ logit + ols + Stock + ChangeFlow",6)
 dv_var_table[8:13,4] <- c(sum_r(m04_dv,1),sum_r(m04_dv,2),sum_r(m04_dv,3),sum_r(m04_dv,4),sum_r(m04_dv,5),sum_r(m04_dv,6))
 dv_var_table[8:13,5] <- c(sum_adjr(m04_dv,1),sum_adjr(m04_dv,2),sum_adjr(m04_dv,3),sum_adjr(m04_dv,4),sum_adjr(m04_dv,5),sum_adjr(m04_dv,6))
 dv_var_table[8:13,6] <- c(sum_cases(m04_dv,1),sum_cases(m04_dv,2),sum_cases(m04_dv,3),sum_cases(m04_dv,4),sum_cases(m04_dv,5),sum_cases(m04_dv,6))
-
-
-
 ```
 
+##### Data and Sample
 
-#### Data and Sample
-
-```{r subj_datasamp_mlms, warning = F}
+```{r subj_datasamp_mlms, warning = FALSE}
 # m05_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow)
 
 m06_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow + w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable)
@@ -181,16 +166,13 @@ dv_var_table[14:19,3] <- rep("~ logit + ols + Stock + ChangeFlow + w1996 + w2006
 dv_var_table[14:19,4] <- c(sum_r(m06_dv,1),sum_r(m06_dv,2),sum_r(m06_dv,3),sum_r(m06_dv,4),sum_r(m06_dv,5),sum_r(m06_dv,6))
 dv_var_table[14:19,5] <- c(sum_adjr(m06_dv,1),sum_adjr(m06_dv,2),sum_adjr(m06_dv,3),sum_adjr(m06_dv,4),sum_adjr(m06_dv,5),sum_adjr(m06_dv,6))
 dv_var_table[14:19,6] <- c(sum_cases(m06_dv,1),sum_cases(m06_dv,2),sum_cases(m06_dv,3),sum_cases(m06_dv,4),sum_cases(m06_dv,5),sum_cases(m06_dv,6))
-
-
 ```
 
+##### Model Design
 
-#### Model Design
+Given such fewer cases we adjust the number of variables.
 
-Given such fewer cases we adjust the numbmer of variables
-
-```{r subj_model_mlms, warning = F, message = F}
+```{r subj_model_mlms, warning = FALSE, message = FALSE}
 m08_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow + twowayfe + mlm_fe + level_cyear  + mlm_re  + gdp_ivC + anynonlin)
 
 dv_var_table[20:25,1] <- "m08x"
@@ -199,24 +181,21 @@ dv_var_table[20:25,3] <- rep("~ logit + ols + Stock + ChangeFlow + twowayfe + ml
 dv_var_table[20:25,4] <- c(sum_r(m08_dv,1),sum_r(m08_dv,2),sum_r(m08_dv,3),sum_r(m08_dv,4),sum_r(m08_dv,5),sum_r(m08_dv,6))
 dv_var_table[20:25,5] <- c(sum_adjr(m08_dv,1),sum_adjr(m08_dv,2),sum_adjr(m08_dv,3),sum_adjr(m08_dv,4),sum_adjr(m08_dv,5),sum_adjr(m08_dv,6))
 dv_var_table[20:25,6] <- c(sum_cases(m08_dv,1),sum_cases(m08_dv,2),sum_cases(m08_dv,3),sum_cases(m08_dv,4),sum_cases(m08_dv,5),sum_cases(m08_dv,6))
-
-
 ```
 
+#### Researcher Aspects
 
-### Researcher Aspects
+- `belief_ipred` - Belief that Hypothesis is true (that immigration reduces support), team average of predicted factor scores
+- `pro_immigrant` - Support laws to better integrate immigrants, team average, single question
+- `topic_ipred` - Knowledge and experience with the topic of immigration and welfare state preferences, team average of predicted factor scores
+- `stats_ipred` - Knowledge and experience with quantiative statistical analysis, team average of predicted factor scores
+- `total_score` - Average score of each model from subjective voting amongst participants, each participant reviewed 3 to 4 models
 
-*belief_ipred* - Belief that Hypothesis is true (that immigration reduces support), team average of predicted factor scores
-*pro_immigrant* - Support laws to better integrate immigrants, team average, single question
-*topic_ipred* - Knowledge and experience with the topic of immigration and welfare state preferences, team average of predicted factor scores
-*stats_ipred* - Knowledge and experience with quantiative statistical analysis, team average of predicted factor scores
-*total_score* - Average score of each model from subjective voting amongst participants, each participant reviewed 3 to 4 models
+##### Maximum variance explained
 
-Maximum variance explained
+Again we use a modified version, dropping many variables from m08x.
 
-Again we use a modified version, dropping many variables from m08x
-
-```{r res_aspects_mlms, warning = F, message = F}
+```{r res_aspects_mlms, warning = FALSE, message = FALSE}
 m12_dv <- lapply(list(cri_ml_jobs, cri_ml_unemp, cri_ml_incdiff, cri_ml_oldage, cri_ml_house, cri_ml_health), lm, formula = AME_Z ~ logit + ols + Stock + ChangeFlow + twowayfe + mlm_fe + belief_ipred + pro_immigrant + stats_ipred + topic_ipred + total_score)
 
 dv_var_table[26:31,1] <- "m12x"
@@ -225,13 +204,10 @@ dv_var_table[26:31,3] <- rep("~ logit + ols + Stock + ChangeFlow + twowayfe + ml
 dv_var_table[26:31,4] <- c(sum_r(m12_dv,1),sum_r(m12_dv,2),sum_r(m12_dv,3),sum_r(m12_dv,4),sum_r(m12_dv,5),sum_r(m12_dv,6))
 dv_var_table[26:31,5] <- c(sum_adjr(m12_dv,1),sum_adjr(m12_dv,2),sum_adjr(m12_dv,3),sum_adjr(m12_dv,4),sum_adjr(m12_dv,5),sum_adjr(m12_dv,6))
 dv_var_table[26:31,6] <- c(sum_cases(m12_dv,1),sum_cases(m12_dv,2),sum_cases(m12_dv,3),sum_cases(m12_dv,4),sum_cases(m12_dv,5),sum_cases(m12_dv,6))
-
-
 ```
 
-Save as table
+##### Save as table
 
 ```{r output}
 write.csv(dv_var_table, file = here::here("results/TblS9.csv"))
 ```
-

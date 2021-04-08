@@ -4,9 +4,7 @@ author: "Nate Breznau"
 output: html_document
 ---
 
-
-This code was borrowed from Team 18, it has been altered by the PIs to produce both continuous and dichotomous dependent variables. 
-
+This code was originally provided by Team 18, it has been altered by the PIs to produce both continuous and dichotomous dependent variables. 
 
 ```{r setup, include=FALSE}
 rm(list = ls())
@@ -15,8 +13,7 @@ pacman::p_load("tidyverse","haven","foreign","textreg","xtable","MASS")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r dataprep, warning = F}
-
+```{r dataprep, warning = FALSE}
 ## ---- Data Preparation ----
 issp1996 <- read_dta(here::here("data/ZA2900.dta"))
 issp2006 <- read_dta(here::here("data/ZA4700.dta"))
@@ -404,7 +401,7 @@ issp2016_red <- issp2016 %>%
 # 1996
 median_income <- issp1996_red %>% 
   group_by(country) %>% 
-  summarize(median = median(income, na.rm = TRUE))
+  dplyr::summarize(median = median(income, na.rm = TRUE))
 
 issp1996_red_income <- issp1996_red %>% mutate(income = NA)
 for (i in 1:length(median_income$country)) {
@@ -497,7 +494,7 @@ l2_migration <- merge(l2_migstock, l2_netmig,
                       by = c("iso_country", "country", "year"), all = FALSE) %>%
   mutate(country = ifelse(country == "Korea, South", "South Korea", country),
          country = ifelse(country == "The Netherlands", "Netherlands", country)) %>%
-  rename(foreignpct = migstock_un, 
+  dplyr::rename(foreignpct = migstock_un, 
          netmigpct = mignet_un)
 
 # merge with level 2 data
@@ -515,8 +512,6 @@ cri_data <- cri_data %>%  filter(country %in% c("Australia", "Canada", "Croatia"
 # PI recode
 cri_data$netmigpct <- cri_data$netmigpct/10
 
-
 # save for multiverse analysis
 write.csv(cri_data, file = here::here("data/team18_multi.csv"))
 ```
-
