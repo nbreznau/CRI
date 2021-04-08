@@ -69,9 +69,9 @@ The data preparation code is in the sub-folder CRI/data_prep. After the data pre
 
 ### Important Documents
 
-[Current Working Paper Version](https://drive.google.com/file/d/11Y3ebvEKjbdyQ9TDtM4uoJYcHeRgYXbx/view?usp=sharing)
+[Current Working Paper Version](https://osf.io/preprints/metaarxiv/cd5j9/)
 
-[Current Supplementary Materials](https://drive.google.com/file/d/1COLKFvQlRGDd25cxAnHLNReAiiDNBbj2/view?usp=sharing)
+[Current Supplementary Materials](https://osf.io/d4zqy/)
 
 [Executive Report - describing the full study](https://osf.io/preprints/socarxiv/6j9qb/)
 
