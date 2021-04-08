@@ -9,7 +9,7 @@ The datasets analyzed:
 3. `cri_str.csv` = model-level data, string values
 
 ## List of Command Code Files and their Functions
-|------|-------------|----------------|
+|---------|------|------------------------|----------------|
 |Filename|Location|Description|Output|
 |001_CRI_Prep_Subj_Votes.Rmd|[`data_prep`](../data_prep)|Compile peer ranking of models|FigS4|
 |01_CRI_Descriptives.Rmd|[`code`](../code)|Descriptive statistics; codebook of 107 model design steps|[`FigS5.png`](../results/FigS5.png);FigS10.png|
