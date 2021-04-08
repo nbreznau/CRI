@@ -855,7 +855,7 @@ ggplot(fig3, aes(x = level, y = percent, fill = type)) +
                                 "Research design" = "#1B9E77",
                                 "Researcher characteristics" = "#7570B3",
                                 "Results" = "lightpink1",
-                                "Unexplained variance" = "#E6AB02")) +
+                                "Unexplained variance" = "#E6AB02")) + 
   theme(axis.line = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks = element_blank(),
