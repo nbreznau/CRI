@@ -1,8 +1,6 @@
 ---
-title: "Tech 001. Subjective Model Scoring"
-output:
-  html_document:
-    df_print: paged
+title: "001. Subjective Model Scoring"
+output: html_document
 ---
 
 The participants voted on model specifications for the other teams. Due to some errors in the preliminary codes we cannot assign the subjective voting directly to the teams; however, this provided an alternate utility. Based on the variations in model descriptions given to the participants we can still estimate what features of models are seem by the participants as the most useful or 'correct' in testing the hypothesis. We can then look for those features in the actual models. Thus, the models we had participants vote on are theoretical data-generating models that mostly reflect the range of models used in the CRI. 
@@ -205,7 +203,7 @@ ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
         axis.title.x = element_text(size = 14),
         legend.key.size = unit(1,"line"))
 dev.off()
-knitr::include_graphics(here::here("results/FigS4.png"))
+knitr::include_graphics(here::here("CRI/results/FigS4.png"))
 ```
 
 ### Kialo Deliberation
@@ -216,7 +214,7 @@ Based on critical differences in research designs we provided the following main
 Brady and Finnigan (2014) argue that rich democracies are appropriate for testing their hypothesis. They identify seventeen in particular (AUS, CAN, DEN, FIN, FRA, DEU, IRE, JPN, NET, NZL, NOR, PRT, ESP, SWE, CHE, UK and US). They analyzed a sub-sample of thirteen due to data availability. Research designs testing our hypothesis should only include some or all of these seventeen countries. Any additional countries are inappropriate for testing the hypothesis. 
 
 *CLUSTERED STANDARD ERRORS*
-Brady & Finnigan did not use clustered standard errors in the two-way FE models at the country-level. Therefore, coefficient significance tests use thousands of cases when there are only 13 countries. Therefore, to truly test the CRI hypothesis every study must cluster the standardd errors for all country-level independent variable coefficients. Otherwise the estimates are untrustworthy.
+Brady & Finnigan did not use clustered standard errors in the two-way FE models at the country-level. Therefore, coefficient significance tests use thousands of cases when there are only 13 countries. Therefore, to truly test the CRI hypothesis every study must cluster the standard errors for all country-level independent variable coefficients. Otherwise the estimates are untrustworthy.
 
 *POWER*
 One team did a power analysis of a 2x13 case bivariate regression, to thest the greatest possible power Brady & Finnigan had in their two-way FE models. If the true effect of immigration on social policy preferences is <0.16 standardized units (i.e., Cohen's d=0.16 assuming standardized scales), they concluded <80% power (at .05 alpha). If similar power analyses were conducted for each research design, those with <80% power must be excluded from the CRI results.

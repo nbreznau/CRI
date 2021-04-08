@@ -41,23 +41,19 @@ We collected the code from 73 teams and cleaned it for public sharing. This invo
 
 ### 2. Data Pre-Preparation
 
-Prior to our main analyses we import data from the Participant Survey including subjective voting on model quality, and the voting during the post-result deliberation. The code for these files are contained in the folder [`data_prep`](data_prep/). It is not necessary to run these scripts as their output is already saved in the [`data`](data/) folder. The folder [`data_prep`](data_prep/) contains three R Markdown documents:
+Prior to our main analyses we import data from the Participant Survey including subjective voting on model quality, and the voting during the post-result deliberation. The code for these files are contained in the folder [`data_prep`](data_prep/). It is not necessary to run these scripts as their output is already saved in the [`data`](data/) folder. The folder [`data_prep`](code/data_prep/) contains three R Markdown documents:
 
 1. `001_CRI_Prep_Subj_Votes.Rmd` - prepares the subjective voting on the quality of models
 2. `002_CRI_Data_Prep.Rmd` - cleans up the variables into workable formats, prepares data for the interactive Shiny app, provides correlations, and runs a measurement model to estimate researcher characteristics
 3. `003_CRI_Multiverse_Simulation.Rmd` - sets up data to analyze how much variance we should expect to explain via model specifications
 
-### 3. Workflow
+### 3. Code
 
-Our primary analyses and results are in the [`code`](code/) folder. It contains the following R Markdown documents:
+Our primary analyses and results are in the [`code`](code/) folder. Many of the results in this folder depend on data preparation done in the [`data_prep`](code/data_prep/) folder.
 
-1. `01_CRI_Descriptives.Rmd` - final cleaning and descriptive analysis
-2. `02_CRI_Common_Specifications.Rmd` - identifying and counting model specifications and dissimilarities
-3. `03_CRI_Spec_Analysis.Rmd` - plotting specification curves
-4. `04_CRI_Main_Analyses.Rmd` - main regression models aiming to explain variance within and between teams in both effects and subjective conclusions
-5. `05_CRI_Main_Analyses_Variance_Function.Rmd` - variance function regressions that additionally aim to explain variation in variance by team, also contains plots of intercepts and variance against researcher characteristics
-6. `06_CRI_Multiverse.Rmd` - uses a function to test all possible combinations of model specifications to explain variance
-7. `07_CRI_DVspecific_Analyses-Rmd` - re-running main models separately by dependent variable (out of the 6 ISSP survey questions)
+#### 
+
+
 
 ### Run All Code
 
