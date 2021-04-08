@@ -327,9 +327,9 @@ g1 <-
                    alpha = .5, 
                    colour = NA) +
   geom_point(aes(x = as.numeric(group) - 0.05, y = AME_team_int, colour = high), position = position_jitter(width = 0.05), size = 0.25, shape = 20) +
-  scale_colour_brewer(palette = "Dark2", breaks = c(0,1),
+  scale_colour_manual(values = c("#E6AB02","#7570B3"), breaks = c(0,1),
                    labels = c("Higher","Lower"), name = "") +
-  scale_fill_brewer(palette = "Dark2", breaks = c(0,1),
+  scale_fill_manual(values = c("#E6AB02","#7570B3"), breaks = c(0,1),
                    labels = c("Higher","Lower"), name = "") +
   scale_x_discrete(breaks = c(1,2,3,4),
                    labels = c("Prior\nbeliefs","Prior\nattitudes","Topical\nexpertise","Method-\nological\nexpertise")) +
@@ -340,16 +340,16 @@ g1 <-
   stat_cor(aes(x = topic_ipred, y = AME_team_int), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 4.15, label.y = -0.011, size = 2, data = cri_team_groups2) +
   annotate(geom = "text", x = 4.4, y = -0.023, 
            label = "LOWER\nSCORE\nGROUP", 
-           color = "#D95F02",
+           color = "#7570B3",
            size = 2.3
            ) +
   annotate(geom = "text", x = 4.49, y = 0.018, 
            label = "HIGHER SCORE\nGROUP", 
-           color = "#1B9E77",
+           color = "#E6AB02",
            size = 2.3
            ) +
-  annotate(geom = "segment", x = 4.3, xend = 4.25, y = -0.0148, yend = -0.0143, color = "#D95F02", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
-  annotate(geom = "segment", x = 4.5, xend = 4.455, y = 0.0058, yend = 0.0042, color = "#1B9E77", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
+  annotate(geom = "segment", x = 4.3, xend = 4.25, y = -0.0148, yend = -0.0143, color = "#7570B3", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
+  annotate(geom = "segment", x = 4.5, xend = 4.455, y = 0.0058, yend = 0.0042, color = "#E6AB02", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
   coord_flip(ylim = c(-0.04,0.04)) + 
   theme_classic() +
   theme(legend.position = "none",
@@ -375,9 +375,9 @@ g2 <- ggplot(cri_team_g, aes(x = group, y = AME_team_var)) +
   stat_cor(aes(x = pro_immigrant, y = AME_team_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 2.15, label.y = 1, size = 2, data = cri_team_groups2) +
   stat_cor(aes(x = stats_ipred, y = AME_team_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 3.15, label.y = 1, size = 2, data = cri_team_groups2) +
   stat_cor(aes(x = topic_ipred, y = AME_team_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 4.15, label.y = 1, size = 2, data = cri_team_groups2) +
-  scale_colour_brewer(palette = "Dark2", breaks = c(0,1),
+  scale_colour_manual(values = c("#E6AB02","#7570B3"), breaks = c(0,1),
                    labels = c("Higher","Lower"), name = "") +
-  scale_fill_brewer(palette = "Dark2", breaks = c(0,1),
+  scale_fill_manual(values = c("#E6AB02","#7570B3"), breaks = c(0,1),
                    labels = c("Higher","Lower"), name = "", expand = c(0, 0)) +
   scale_x_discrete(breaks = c(1,2,3,4), 
                    labels = c("Prior\nbeliefs","Prior\nattitudes","Topical\nexpertise","Method-\nological\nexpertise")) +
@@ -420,9 +420,9 @@ g3 <-
                    alpha = .5, 
                    colour = NA) +
   geom_point(aes(x = as.numeric(group) - 0.05, y = AME_Z_int, colour = high), position = position_jitter(width = 0.05), size = 0.25, shape = 20) +
-  scale_colour_brewer(palette = "Dark2", breaks = c(0,1),
+  scale_colour_manual(values = c("#E6AB02","#7570B3"), breaks = c(0,1),
                    labels = c("Higher","Lower"), name = "") +
-  scale_fill_brewer(palette = "Dark2", breaks = c(0,1),
+  scale_fill_manual(values = c("#E6AB02","#7570B3"), breaks = c(0,1),
                    labels = c("Higher","Lower"), name = "") +
   scale_x_discrete(breaks = c(1,2,3,4),
                    labels = c("Prior\nbeliefs","Prior\nattitudes","Topical\nexpertise","Method-\nological\nexpertise")) +
@@ -433,16 +433,16 @@ g3 <-
   stat_cor(aes(x = topic_ipred, y = AME_Z_int), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 4.15, label.y = -0.011, size = 2, data = cri_team_groups2) +
   annotate(geom = "text", x = 4.45, y = -0.023, 
            label = "LOWER\nSCORE\nGROUP", 
-           color = "#D95F02",
+           color = "#7570B3",
            size = 2.3
            ) +
   annotate(geom = "text", x = 4.45, y = 0.018, 
            label = "HIGHER\nSCORE\nGROUP", 
-           color = "#1B9E77",
+           color = "#E6AB02",
            size = 2.3
            ) +
-  annotate(geom = "segment", x = 4.43, xend = 4.37, y = -0.0155, yend = -0.015, color = "#D95F02", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
-  annotate(geom = "segment", x = 4.413, xend = 4.368, y = 0.0118, yend = 0.0102, color = "#1B9E77", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
+  annotate(geom = "segment", x = 4.43, xend = 4.37, y = -0.0155, yend = -0.015, color = "#7570B3", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
+  annotate(geom = "segment", x = 4.413, xend = 4.368, y = 0.0118, yend = 0.0102, color = "#E6AB02", arrow = arrow(length=unit(0.18,"cm"), type = "closed")) +
   coord_flip(ylim = c(-0.04,0.04)) + 
   theme_classic() +
   theme(legend.position = "none",
@@ -468,9 +468,9 @@ g4 <- ggplot(cri_team_g, aes(x = group, y = AME_Z_var)) +
   stat_cor(aes(x = pro_immigrant, y = AME_Z_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 2.15, label.y = 1, size = 2, data = cri_team_groups2) +
   stat_cor(aes(x = stats_ipred, y = AME_Z_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 3.15, label.y = 1, size = 2, data = cri_team_groups2) +
   stat_cor(aes(x = topic_ipred, y = AME_Z_var), r.digits = 3, r.accuracy = 0.01, p.accuracy = 0.01, label.x = 4.15, label.y = 1, size = 2, data = cri_team_groups2) +
-  scale_colour_brewer(palette = "Dark2", breaks = c(0,1),
+  scale_colour_manual(values = c("#E6AB02","#7570B3"), breaks = c(0,1),
                    labels = c("Higher","Lower"), name = "") +
-  scale_fill_brewer(palette = "Dark2", breaks = c(0,1),
+  scale_fill_manual(values = c("#E6AB02","#7570B3"), breaks = c(0,1),
                    labels = c("Higher","Lower"), name = "", expand = c(0, 0)) +
   scale_x_discrete(breaks = c(1,2,3,4), 
                    labels = c("Prior\nbeliefs","Prior\nattitudes","Topical\nexpertise","Method-\nological\nexpertise")) +
