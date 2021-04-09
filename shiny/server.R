@@ -22,9 +22,18 @@ wavelist <- c("w1985","w1990","w1996","w2006","w2016")
 ### Server 
 
 server <- function(input, output, session) {
+  output$exec4 <- renderUI({
+    url <- a("Paper and Supplementary Materials", href="https://osf.io/preprints/metaarxiv/cd5j9/")
+    tagList(url)
+  })
   
+  output$workp4 <- renderUI({
+    url <- a("Study Materials Repository", href="https://github.com/nbreznau/CRI")
+    tagList(url)
+  })
+    
   output$exec <- renderUI({
-    url <- a("Original Study Description", href="https://osf.io/preprints/socarxiv/6j9qb/")
+    url <- a("Original Study Description", href="https://osf.io/preprints/metaarxiv/cd5j9/")
     tagList(url)
   })
   
@@ -33,7 +42,7 @@ server <- function(input, output, session) {
     tagList(url)
   })
   output$exec2 <- renderUI({
-    url <- a("Original Study Description", href="https://osf.io/preprints/socarxiv/6j9qb/")
+    url <- a("Original Study Description", href="https://osf.io/preprints/metaarxiv/cd5j9/")
     tagList(url)
   })
   
@@ -42,7 +51,7 @@ server <- function(input, output, session) {
     tagList(url)
   })
   output$exec3 <- renderUI({
-    url <- a("Original Study Description", href="https://osf.io/preprints/socarxiv/6j9qb/")
+    url <- a("Original Study Description", href="https://osf.io/preprints/metaarxiv/cd5j9/")
     tagList(url)
   })
   
@@ -50,6 +59,8 @@ server <- function(input, output, session) {
     url <- a("Reproduction Materials", href="https://github.com/nbreznau/CRI")
     tagList(url)
   })
+  
+
   # TAB ONE EFFECTS
   
   ## dplyr::filter
@@ -154,15 +165,15 @@ server <- function(input, output, session) {
         geom_errorbar(aes(x = count, ymin = lb, ymax = ub), color = "grey90") +
         geom_point(aes(x = count, y = est_ns_scl), color = "grey55", shape = "|", size = 2.5, show.legend =F) + 
         geom_point(aes(x = count, y = est_sig_scl, color = sig_group), shape = "|", size = 4) +
-        scale_color_manual(values = c("#66A61E","NA", "#D95F02"), labels = c("Negative","Not sig.","Positive", " ")) +
+        scale_color_manual(values = c("#E6AB02","NA", "#7570B3"), labels = c("Negative","Not sig.","Positive", " ")) +
         labs(color = "Effect at 95% CI", x = "Model Count, Ordered by AME", y = "Average Marginal\nEffect (AME)\nXY-Standardized") +
-        annotate(geom = "text", x = (nrow(dfspec1())*.25), y = 0.3, label = "NEGATIVE, 95% CI", color = "#66A61E", fontface = "bold", size = 4) +
-        annotate(geom = "text", x = (nrow(dfspec1())*.25), y = 0.25, label = "(same direction as hypothesis)", color = "#66A61E", size = 2.5) +
-        annotate(geom = "text", x = (3*(nrow(dfspec1())*.25)), y = 0.3, label = "POSITIVE, 95% CI", color = "#D95F02", fontface = "bold", size = 4) +
+        annotate(geom = "text", x = (nrow(dfspec1())*.25), y = 0.3, label = "NEGATIVE, 95% CI", color = "#E6AB02", fontface = "bold", size = 4) +
+        annotate(geom = "text", x = (nrow(dfspec1())*.25), y = 0.25, label = "(same direction as hypothesis)", color = "#E6AB02", size = 2.5) +
+        annotate(geom = "text", x = (3*(nrow(dfspec1())*.25)), y = 0.3, label = "POSITIVE, 95% CI", color = "#7570B3", fontface = "bold", size = 4) +
         #annotate(geom = "text", x = (2*(nrow(dfspec1())*.25)), y = 0.3, label = "NOT STAT.\nSIGNIFICANT", fontface = "bold", color = "grey55", size = 4) +
         theme_classic() +
         coord_cartesian(ylim = c(-0.32,0.32)) +
-        guides(color = guide_legend(override.aes = list(size=7, color=c("#66A61E","grey55", "#D95F02","NA")))) +
+        guides(color = guide_legend(override.aes = list(size=7, color=c("#E6AB02","grey55", "#7570B3","NA")))) +
         theme(
           legend.position = "none",
           axis.title.x = element_text(size = 12), 
@@ -173,7 +184,7 @@ server <- function(input, output, session) {
         geom_tile(aes(x = count, y = 0.4, fill = factor(Hsup), height = 0.133, width = 0.25)) +
         geom_tile(aes(x = count, y = 0.2, fill = factor(Hrej), height = 0.133, width = 0.25)) +
         scale_y_continuous(breaks = c(0.4,0.2), labels = c("Support\n   ", "Reject")) +
-        scale_fill_manual(values = c("white","#66A61E","#D95F02")) +
+        scale_fill_manual(values = c("white","#E6AB02","#7570B3")) +
         ylab("Team\nConclusion") +
         theme_classic() +
         theme(
@@ -210,7 +221,7 @@ server <- function(input, output, session) {
       ggplot(dfspec_null(),aes(x = x, y = y)) +
         geom_blank() + 
         annotate(geom = "text", x = 0, y = 0.8, label = "No models match these dplyr::filter criteria", 
-                 color = "#66A61E", fontface = "bold", size = 4)+
+                 color = "#E6AB02", fontface = "bold", size = 4)+
         labs (x = "Model Count, Ordered by AME", y = "Average Marginal Effect (AME)\nXY-Standardized")
     }
     
@@ -320,19 +331,19 @@ server <- function(input, output, session) {
       p1 <- ggplot(dfspec2()) +
         geom_errorbar(aes(x = count2, ymin = p_lb, ymax = p_ub), color = "grey90")+
         geom_point(aes(x = count2, y = p_new, color = est_is_pos), shape = "|", size = 3) +
-        scale_color_manual(values = c("#66A61E", "#D95F02")) +
+        scale_color_manual(values = c("#E6AB02", "#7570B3")) +
         labs(x = "Model Count, Ordered by P Values", y = "  \nP-Values\n  ") +
         annotate(geom = "text", x = (nrow(dfspec2())*.03), y = 0.8, label = "Color indicates", color = "grey40", size = 4, hjust = 0) +
-        annotate(geom = "text", x = (nrow(dfspec2())*.03), y = 0.7, label = "POSITIVE", color = "#D95F02", fontface = "bold", size = 4, hjust = 0) +
+        annotate(geom = "text", x = (nrow(dfspec2())*.03), y = 0.7, label = "POSITIVE", color = "#7570B3", fontface = "bold", size = 4, hjust = 0) +
         annotate(geom = "text", x = ((nrow(dfspec2())*.03)+(nrow(dfspec2())*.17)), y = 0.7, label = "or", color = "grey40", size = 4, hjust = 0) +
-        annotate(geom = "text", x = (nrow(dfspec2())*.03), y = 0.6, label = "NEGATIVE" , color = "#66A61E", fontface = "bold", size = 4, hjust = 0) +
+        annotate(geom = "text", x = (nrow(dfspec2())*.03), y = 0.6, label = "NEGATIVE" , color = "#E6AB02", fontface = "bold", size = 4, hjust = 0) +
         annotate(geom = "text", x = (nrow(dfspec2())*.03), y = 0.5, label = "Effects" , color = "grey40", size = 4, hjust = 0) +
         
         
         #annotate(geom = "text", x = (2*(nrow(dfspec1())*.25)), y = 0.3, label = "NOT STAT.\nSIGNIFICANT", fontface = "bold", color = "grey55", size = 4) +
         theme_classic() +
         coord_cartesian(ylim = c(-0.002,1)) +
-        guides(color = guide_legend(override.aes = list(size=7, color=c("#66A61E","grey55", "#D95F02","NA")))) +
+        guides(color = guide_legend(override.aes = list(size=7, color=c("#E6AB02","grey55", "#7570B3","NA")))) +
         theme(
           legend.position = "none",
           axis.title.x = element_text(size = 12),
@@ -343,7 +354,7 @@ server <- function(input, output, session) {
         geom_tile(aes(x = count2, y = 0.4, fill = factor(Hsup), height = 0.133, width = 0.25)) +
         geom_tile(aes(x = count2, y = 0.2, fill = factor(Hrej), height = 0.133, width = 0.25)) +
         scale_y_continuous(breaks = c(0.4,0.2), labels = c("Support\n   ", "Reject")) +
-        scale_fill_manual(values = c("white","#66A61E","#D95F02")) +
+        scale_fill_manual(values = c("white","#E6AB02","#7570B3")) +
         ylab("Team\nConclusion") +
         theme_classic() +
         theme(
@@ -380,7 +391,7 @@ server <- function(input, output, session) {
       ggplot(dfspec_null(),aes(x = x, y = y)) +
         geom_blank() + 
         annotate(geom = "text", x = 0, y = 0.8, label = "No models match these dplyr::filter criteria", 
-                 color = "#66A61E", fontface = "bold", size = 4)+
+                 color = "#E6AB02", fontface = "bold", size = 4)+
         labs (x = "Model Count, Ordered by AME", y = "Average Marginal Effect (AME)\nXY-Standardized")
     }
     
@@ -459,7 +470,7 @@ server <- function(input, output, session) {
     if(nrow(dfsubj()) != 0){
       ps1 <- ggplot(dfsubj()) +
         geom_point(aes(x = count3, y = AME_Zt, color = subj_concl), shape = 18, size = 4) +   
-        scale_color_manual(values = c("#D95F02", "grey55", "#66A61E"), labels = c("Rejected","Not testable","Supported")) +
+        scale_color_manual(values = c("#7570B3", "grey55", "#E6AB02"), labels = c("Rejected","Not testable","Supported")) +
         labs(color = "Conclusion\nHypothesis is:", x = "Team Conclusions", y = "Average Effect Size\nby Team") +
         theme_classic() +
         theme(
@@ -496,7 +507,7 @@ server <- function(input, output, session) {
       ggplot(dfspec_null(),aes(x = x, y = y)) +
         geom_blank() + 
         annotate(geom = "text", x = 0, y = 0.8, label = "No models match these dplyr::filter criteria", 
-                 color = "#66A61E", fontface = "bold", size = 4)+
+                 color = "#E6AB02", fontface = "bold", size = 4)+
         labs (x = "Model Count, Ordered by AME", y = "Average Marginal Effect (AME)\nXY-Standardized")
     }
   }, res = 96)
