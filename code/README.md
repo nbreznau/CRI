@@ -23,11 +23,10 @@ The folder [`script`](../code/script/) contains two helper functions for plottin
 |[`003_CRI_Multiverse_Simulation.Rmd`](../code/data_prep/003_CRI_Multiverse_Simulation)|[`data_prep`](..code/data_prep/)|Sets up multiverse data| |
 |[`01_CRI_Descriptives.Rmd`](../code/01_CRI_Descriptives.Rmd)|[`code`](../code/)|Descriptive statistics; codebook of 107 model design steps|[`FigS5`](../results/FigS5.png);[`FigS10`](../results/FigS10.png)|
 |[`02_CRI_Common_Specifications.Rmd`](../code/02_CRI_Common_Specifications.Rmd)|[`code`](../code/)|identifying (dis)similarities across models|[`TblS4`](../results/TblS4.csv)|
+|[`03_CRI_Spec_Analysis.Rmd`](../code/03_CRI_Spec_Analysis.Rmd)|[`code`](../code/)|Plotting specification curves|
 
 
 
-1. `01_CRI_Descriptives.Rmd` - final cleaning and descriptive analysis
-2. `02_CRI_Common_Specifications.Rmd` - identifying and counting model specifications and dissimilarities
 3. `03_CRI_Spec_Analysis.Rmd` - plotting specification curves
 4. `04_CRI_Main_Analyses.Rmd` - main regression models aiming to explain variance within and between teams in both effects and subjective conclusions
 5. `05_CRI_Main_Analyses_Variance_Function.Rmd` - variance function regressions that additionally aim to explain variation in variance by team, also contains plots of intercepts and variance against researcher characteristics
