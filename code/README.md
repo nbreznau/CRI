@@ -22,7 +22,7 @@ The folder [`script`](../code/script/) contains two helper functions for plottin
 |[`002_CRI_Data_Prep.Rmd`](../code/data_prep/002_CRI_Data_Prep.Rmd)|[`data_prep`](..code/data_prep/)|Primary data cleaning and merging; measurement of researcher characteristics|[`TblS1`](../results/TblS1.xlsx);|
 |[`003_CRI_Multiverse_Simulation.Rmd`](../code/data_prep/003_CRI_Multiverse_Simulation)|[`data_prep`](..code/data_prep/)|Sets up multiverse data| |
 |[`01_CRI_Descriptives.Rmd`](../code/01_CRI_Descriptives.Rmd)|[`code`](../code/)|Descriptive statistics; codebook of 107 model design steps|[`FigS5`](../results/FigS5.png);[`FigS10`](../results/FigS10.png)|
-|[`02_CRI_Common_Specifications.Rmd`](../code/02_CRI_Common_Specifications.Rmd)|[`code`](../code/)|identifying (dis)similarities across models|[`TblS4`](../results/TblS4.csv)
+|[`02_CRI_Common_Specifications.Rmd`](../code/02_CRI_Common_Specifications.Rmd)|[`code`](../code/)|identifying (dis)similarities across models|[`TblS4`](../results/TblS4.csv)|
 
 
 
