@@ -43,10 +43,12 @@ dropdownButton <- function(label = "", status = c("default", "primary", "success
 
 ui <- fluidPage(
   useShinyjs(),
-  tags$style(HTML("#title {font-size: 22px; line-height: 22px; margin: 12px 0}")),
+  tags$style(HTML("#title {font-size: 22px; line-height: 20px; margin: 12px 0}")),
   h1(id = "title", "The Hidden Universe of Data Analysis", align = "center"),
-  tags$style(HTML("#subtitle {font-size: 20px; border-bottom: 2px solid silver; line-height: 20px; color: #3E3673; margin: 12px 0; padding-bottom: 8px}")),
-  h1(id = "subtitle", "One Dataset, One Hypothesis, 73 Teams, 1,253 Models and 89 Conclusions", align = "center"),
+  tags$style(HTML("#subtitle {font-size: 18px; line-height: 16px; color: #3E3673; margin: 12px 0}")),
+  h1(id = "subtitle", "Seventy-Three Research Teams and One Dataset", align = "center"),
+  tags$style(HTML("#subtitle2 {font-style: italic; font-size: 16px; border-bottom: 2px solid silver; line-height: 18px; color: #3E3673; margin: 12px 0}")),
+  h3(id = "subtitle2", "Testing the hypothesis that immigration reduces support for social policy", align = "center"),
   tags$hr(style="border-color: black;"),
   
   # FIRST MAIN COLUMN  
