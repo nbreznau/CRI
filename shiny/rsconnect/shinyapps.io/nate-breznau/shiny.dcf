@@ -5,6 +5,7 @@ account: nate-breznau
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3875840
-bundleId: 4405174
+bundleId: 4450589
 url: https://nate-breznau.shinyapps.io/shiny/
-when: 1616965393.18548
+when: 1617973590.35628
+lastSyncTime: 1617973590.35628

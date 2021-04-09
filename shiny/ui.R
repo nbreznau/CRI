@@ -725,4 +725,3 @@ ui <- fluidPage(
   ) # end div
 ) # end page
 
-# deployApp(appDir = here::here("/CRI_shiny", sep=""))
