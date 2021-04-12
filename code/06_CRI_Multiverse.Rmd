@@ -1,5 +1,5 @@
 ---
-title: "Tech 6. Multiverse/Dredge"
+title: "06. Multiverse/Dredge"
 output: html_document
 ---
 
@@ -833,72 +833,18 @@ sjPlot::tab_model(m3, m4, m5, show.ci = FALSE, p.style = "stars")
 
 ## Dredge Function
 
-Given computing times, we start with smaller sets of variables and then eliminate those that do not appear in the top fitting models (AIC/LL).
+Given computing times, we start with smaller sets of variables and then eliminate those that do not appear in the top fitting models (AIC/LL). 
 
-```{r newloads, warning = FALSE}
+We also import results from the dredge script to reduce reproduction computing times from [`dredge.R`](../code/script/). 
 
-cri_ml <- read.csv(file = here::here("results/cri_ml.csv"), header = TRUE)
-
-# remove NAs
-cri_ml <- cri_ml[!is.na(cri_ml$AME_Z),]
-
-# set global option
-options(na.action = "na.fail")
+```{r loaddredge}
+load(file = here::here("code/script/dredge.Rdata"))
 ```
 
-### DVs and Measurement
-
-```{r dredge1, warning = FALSE}
-dredge1 <- lm(AME_Z ~ Jobs + IncDiff + House + Unemp + Health + OldAge + Flow + Stock + ChangeFlow + Stock*Jobs + Stock*House + Stock*IncDiff , data = cri_ml)
-
-models1 <- dredge(dredge1)
-```
-
-```{r dredge2, warning = FALSE}
-dredge2 <- lm(AME_Z ~ Jobs + IncDiff + House + Health +  Flow + Stock + ChangeFlow + Stock*IncDiff , data = cri_ml)
-
-models2 <- dredge(dredge2)
-```
-```{r dredge3, warning = FALSE}
-
-dredge3 <- lm(AME_Z ~ Jobs + IncDiff + House + Health +  Flow + Stock + ChangeFlow + Stock*IncDiff + w1996 + w2006 + w2016 + w2006*w2016 + orig13 + orig13*Jobs + eeurope + allavailable, data = cri_ml)
-
-models3 <- dredge(dredge3)
-```
-
-```{r dredge4, warning = FALSE}
-dredge4 <- lm(AME_Z ~ Jobs + IncDiff + House + Flow + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + allavailable + twowayfe + level_cyear + mlm_fe + mlm_re, data = cri_ml)
-
-models4 <- dredge(dredge4)
-```
-
-```{r dredge5, warning = FALSE}
-dredge5 <- lm(AME_Z ~ Jobs + IncDiff + House + Flow + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + mlm_re + pro_immigrant + stats_ipred + belief_ipred, data = cri_ml)
-
-models5 <- dredge(dredge5)
-```
-
-```{r dredge6, warning = FALSE}
-dredge6 <- lm(AME_Z ~ Jobs + IncDiff + House + Flow + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + mlm_re + stats_ipred + twowayfe*Jobs + twowayfe*Stock, data = cri_ml)
-
-models6 <- dredge(dredge6)
-```
-
-```{r dredge7, warning = FALSE}
-dredge7 <- lm(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock, data = cri_ml)
-
-models7 <- dredge(dredge7)
-
-# Interestingly the 'best' models (via AICc) have only one variable. But this indicates the low explanatory power of each additional variable.
-
-dredge8 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock + (1 | u_teamid), data = cri_ml)
-
-models8 <- dredge(dredge8)
-```
 
 ## Final Model
 
-Used to explain variance reduction - compare with Fig 2 in the main text and Table S6.
+Used to explain variance reduction - compare with Fig 3 in the main text and Table S6.
 
 ```{r final, warning = FALSE}
 m_dredged <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + (1 | u_teamid), data = cri_ml)
@@ -918,7 +864,15 @@ m_d_out[c(15:17),2] <- c(round(((0.062 - (m_d_out_v[1,4]*100))/0.062)*100,3),
                          round(((0.550 - (m_d_out_v[1,4]*100) - (m_d_out_v[2,4]*100))/0.550)*100,3))
 
 # Save table
-write.csv(m_d_out, file = here::here("results/TblS10_dredge.csv"))
+write.csv(m_d_out, file = here::here("results/TblS10.csv"))
 ```
 
 Computer selected model can explain `r m_d_out[18,2]` of the total variance.
+
+## Colophon
+
+This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*Observing Many Researchers using the Same Data and Hypothesis Reveals a Hidden Universe of Uncertainty*](https://osf.io/preprints/metaarxiv/cd5j9/).
+
+```{r colophon, echo=FALSE}
+sessionInfo()
+```

@@ -1,5 +1,5 @@
 ---
-title: "Tech 5. Main Variance Analyses"
+title: "05. Main Variance Analyses"
 output: html_document
 ---
 
@@ -190,7 +190,7 @@ cri_teams <- cri_teams %>%
 
 First we use an adjusted version of Model 7 (see `04_CRI_Main_Analyses.Rmd`) to estimate the residual, unexplained intercepts and variances. We compare these to our researcher characteristics under the potential threat that random luck/noise has led some researchers with certain characteristics to select use certain models that lead to the appearance of variance in results by characteristic. Thus, the comparisons are 'all else equal'. They are the most conservative test, because they remove the likelihood that researcher characteristics lead to certain model specification choices, and that these choices lead to certain outcomes. 
 
-### Linear plots. Supplementary.
+### FigS12. Supplementary.
 
 Here we plot linearly the within-team and between-team unexplained variance. Within-team variance scores zero when there is only one model.
 
@@ -255,6 +255,17 @@ ggplot(cri_teams, ) +
     theme_classic()
 dev.off()
 ```
+```{r knitS12}
+knitr::include_graphics(path = here::here("results/FigS12_belief.png"))
+
+knitr::include_graphics(path = here::here("results/FigS12_stats.png"))
+
+knitr::include_graphics(path = here::here("results/FigS12_topic.png"))
+
+knitr::include_graphics(path = here::here("results/FigS12_attitude.png"))
+
+```
+
 
 Here we group and stack the data for plotting. One row for each team and characteristic (data repeated 4 times).
 
@@ -384,7 +395,7 @@ dev.off()
 knitr::include_graphics(here::here("results/FigS11.png"))
 ```
 
-### Rainclouds. Figure 2. Main
+### Figure 2. Main Paper. Rainclouds
 
 ```{r fig2a}
 g3 <- 

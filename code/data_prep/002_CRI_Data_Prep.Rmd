@@ -560,7 +560,7 @@ colnames(fit_fig) <- c("Index/Test","Score")
 fit_fig[1:4,1] <- c("CLI","TFI","RMSEA","chi-test p")
 fit_fig[1:4,2] <- round(c(fitsi[["FIT"]][["cfi"]],fitsi[["FIT"]][["tli"]],fitsi[["FIT"]][["rmsea"]],fitsi[["FIT"]][["pvalue"]]),3)
 
-write.csv(fit_fig, file = here::here("results/fit_measurement.csv"))
+write.csv(fit_fig, file = here::here("results/FigS3_fit.csv"))
 ```
 
 ### Merge in Subjective Voting

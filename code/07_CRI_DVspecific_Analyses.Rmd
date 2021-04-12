@@ -211,3 +211,11 @@ dv_var_table[26:31,6] <- c(sum_cases(m12_dv,1),sum_cases(m12_dv,2),sum_cases(m12
 ```{r output}
 write.csv(dv_var_table, file = here::here("results/TblS9.csv"))
 ```
+
+## Colophon
+
+This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*Observing Many Researchers using the Same Data and Hypothesis Reveals a Hidden Universe of Uncertainty*](https://osf.io/preprints/metaarxiv/cd5j9/).
+
+```{r colophon, echo=FALSE}
+sessionInfo()
+```

@@ -668,7 +668,7 @@ for(i in 1:20){
 ```
 
 
-### Compile Table 2
+### Compile Figure 3
 
 20 runs of randomly distributed dichotomous variables determines how much deviance reduction on average is possible due to the number of variables. We subtract this from the deviance reduction.
 
@@ -751,7 +751,6 @@ tbl2[c(5,8),5] <- tbl2[c(7,11),5]
 # calculate unexplained dev
 tbl2[19,5] <- 1 - as.numeric(tbl2[12,5])
 
-write.csv(tbl2, file = here::here("results/Fig2.csv"))
 ```
 
 ```{r write_tbl2}
@@ -872,9 +871,11 @@ write.csv(cri_ml, file = here::here("results/cri_ml.csv"))
 write.csv(cri_team, file = here::here("results/cri_team.csv"))
 ```
 
-## Researcher Characteristics
+### Researcher Characteristics
 
-Do researcher characteristics explain model specifications?
+Additional research question: Do researcher characteristics explain model specifications?
+
+Not used in our main results, but left here for future research/researchers.
 
 For this we use the data `crispectest`, worked up in `03_CRI_Spec_Analysis.Rmd`. For simplicity we use a multinomial model and calculate deviance reduction using dummies.
 
@@ -905,4 +906,12 @@ m103 <- multinom(paste0("iv_type ~", rchars, "+ degree + software"), data = cris
 
 # 
 tab_model(m103, digits = 3, p.style = "stars", rm.terms = c("factor(u_teamid)10","factor(u_teamid)101","factor(u_teamid)104","factor(u_teamid)106","factor(u_teamid)12","factor(u_teamid)13","factor(u_teamid)16","factor(u_teamid)17","factor(u_teamid)18","factor(u_teamid)19","factor(u_teamid)20","factor(u_teamid)21","factor(u_teamid)23","factor(u_teamid)22","factor(u_teamid)26","factor(u_teamid)27","factor(u_teamid)28","factor(u_teamid)29","factor(u_teamid)3","factor(u_teamid)30","factor(u_teamid)31","factor(u_teamid)32","factor(u_teamid)33","factor(u_teamid)34","factor(u_teamid)35","factor(u_teamid)36","factor(u_teamid)37","factor(u_teamid)38","factor(u_teamid)39","factor(u_teamid)40","factor(u_teamid)41","factor(u_teamid)42","factor(u_teamid)43","factor(u_teamid)44","factor(u_teamid)45","factor(u_teamid)46","factor(u_teamid)47","factor(u_teamid)48","factor(u_teamid)49","factor(u_teamid)5","factor(u_teamid)52","factor(u_teamid)53","factor(u_teamid)54","factor(u_teamid)55","factor(u_teamid)56","factor(u_teamid)57","factor(u_teamid)58","factor(u_teamid)59","factor(u_teamid)6","factor(u_teamid)60","factor(u_teamid)61","factor(u_teamid)62","factor(u_teamid)63","factor(u_teamid)64","factor(u_teamid)65","factor(u_teamid)66","factor(u_teamid)67","factor(u_teamid)68","factor(u_teamid)69","factor(u_teamid)70","factor(u_teamid)71","factor(u_teamid)7","factor(u_teamid)72","factor(u_teamid)73","factor(u_teamid)75","factor(u_teamid)77","factor(u_teamid)8","factor(u_teamid)82","factor(u_teamid)83","factor(u_teamid)84","factor(u_teamid)86","factor(u_teamid)87","factor(u_teamid)93","factor(u_teamid)94","factor(u_teamid)95","factor(u_teamid)96","factor(u_teamid)97","factor(u_teamid)98"), show.ci = F, show.dev = T, show.loglik = T, transform = NULL, file = here::here("results/reg103.htm"))
+```
+
+## Colophon
+
+This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*Observing Many Researchers using the Same Data and Hypothesis Reveals a Hidden Universe of Uncertainty*](https://osf.io/preprints/metaarxiv/cd5j9/).
+
+```{r colophon, echo=FALSE}
+sessionInfo()
 ```

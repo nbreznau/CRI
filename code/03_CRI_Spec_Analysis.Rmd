@@ -215,11 +215,11 @@ g1a <- ggplot(crispectest) +
   #geom_errorbar(aes(ymin = lb, ymax = ub), color = "thistle1") +
   geom_point(aes(x = count, y = est_ns), color = "grey55", shape = "|", size = 3, show.legend =F) + 
   geom_point(aes(x = count, y = est_sig, color = sig_group), shape = "|", size = 4) +
-  scale_color_manual(values = c("#66A61E","grey55", "#7570B3"), labels = c("Negative","Not sig.","Positive"," ")) +
+  scale_color_manual(values = c("#E6AB02","grey55", "#7570B3"), labels = c("Negative","Not sig.","Positive"," ")) +
   ylim(-0.21, 0.21) +
   labs(color = "Effect at 95%CI", x = "by Standardized Effect Size", y = " \n \n \n ") +
   theme_classic() +
-  guides(color = guide_legend(override.aes = list(size=7, color=c("#66A61E","grey55", "#7570B3","NA")))) +
+  guides(color = guide_legend(override.aes = list(size=7, color=c("#E6AB02","grey55", "#7570B3","NA")))) +
   theme(
     legend.position = "none",
     axis.text.x = element_blank())
@@ -576,6 +576,7 @@ g04ci <- ggplot(crispectest) +
     axis.text.y = element_blank())
 ```
 
+#### FigS7
 
 ```{r figS7, warning = FALSE}
 agg_png(filename = here::here("results/FigS7.png"), height = 800, width = 800, res = 72)
@@ -806,4 +807,13 @@ We find that `r round(length(cri_team$pos_test_pct_p05[cri_team$pos_test_pct_p05
 
 ```{r saveout}
 write.csv(crispectest, file = here::here("results/crispectest.csv"))
+```
+
+
+## Colophon
+
+This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*Observing Many Researchers using the Same Data and Hypothesis Reveals a Hidden Universe of Uncertainty*](https://osf.io/preprints/metaarxiv/cd5j9/).
+
+```{r colophon, echo=FALSE}
+sessionInfo()
 ```
