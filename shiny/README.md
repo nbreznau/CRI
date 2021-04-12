@@ -1,12 +1,12 @@
 # Interactive Exploration of Data-Analytic Choices
 
-We created a shinyapp to allow users to investigate results of Phase 3 of the Crowdsourced Replication Initiative, "Testing the Hypothesis". Users can plot their own specification curves of average marginal effects, subjective team conclusions about their tests and p-values.
+We created a shinyapp to allow users to investigate the outcome variability we found in our project themselves. This can be done in one of two ways
 
-## Using our shinyapps.io server
+## 1. Using our shinyapps.io server
 
-Click here XXXX *Note that we currently have limited bandwidth, so you might have lags or waiting times until we upgrade this*
+Click here [`Launch Interactive App in Browser`](https://nate-breznau.shinyapps.io/shiny/) 
 
-## Run the app on your local machine
+## 2. Run the app on your local machine
 
 ### Step 1. Import the code and data
 

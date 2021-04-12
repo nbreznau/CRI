@@ -19,7 +19,10 @@ Muna Adem, Jule Adriaans, Amalia Alvarez-Benjumea, Henrik Andersen, Daniel Auer,
 
 ## Abstract
 
-This is the repository for preparation and analysis of data obtained from the *Crowdsourced Replication Initiative* ([Breznau, Rinke and Wuttke et al 2018](https://osf.io/preprints/socarxiv/6j9qb/)) used to investigate variability in research results across researchers and their model specifications. Results from 162 researchers in 73 teams testing the same hypothesis with the same data reveals a universe of unique possibilities in the process of data analysis. Contrary to our expectations, variance in results and subjective conclusions are little explained by model specifications and even less by characteristics of the researchers in each team. Although there were common specifications across many teams regarding sample selection, variance components, estimator and additional independent variables, each of the 1,261 test models submitted by the teams was ultimately a unique combination of specifications. As such, the extreme variation in substantive research outcomes and researcher conclusions suggests that researcher-specific if not model-specific idiosyncratic variation is an important source of unreliability in science. Moreover, variance in the decisions made during the data analytic process cannot be explained much by the characteristics of the researchers, such as their methodological and topical expertise, or prior beliefs. These findings highlight the often underappreciated complexity and ambiguity inherent in the process of data analysis in science. They also demonstrate that recent calls for running countless alternative model specifications may not bring scientists any closer to reliability because the noise of idiosyncratic research variability remains. This adds to ongoing debates about the replicability and credibility of social science research. It thus raises far-ranging questions about the conditions for, and indeed possibility of, reaching scientific or meta-scientific consensus about substantive social questions based on available data alone.
+This is the repository for preparation and analysis of data obtained from the *Crowdsourced Replication Initiative* ([Breznau, Rinke and Wuttke et al 2018](https://osf.io/preprints/socarxiv/6j9qb/)) and used as the basis for the paper [Observing Many Researchers Using the Same Data and Hypothesis 
+Reveals a Hidden Universe of Uncertainty](https://osf.io/preprints/metaarxiv/cd5j9/). 
+
+Recently, many researchers independently testing the same hypothesis using the same data, reported tremendous variation in results across scientific disciplines. This variability must derive from differences in each research process. Therefore, observation of these differences should reduce the implied uncertainty. Through a controlled study involving 73 researchers/teams we tested this assumption. Taking all research steps as predictors explains at most 2.6% of total effect size variance, and 10% of the deviance in subjective conclusions. Expertise, prior beliefs and attitudes of researchers explain even less. Ultimately, each model was unique, and as a whole this study provides evidence of a vast universe of research design variability normally hidden from view in the presentation, consumption, and perhaps even creation of scientific results. 
 
 ## Workflow
 
@@ -41,15 +44,11 @@ We collected the code from 73 teams and cleaned it for public sharing. This invo
 
 ### 2. Data Pre-Preparation
 
-Prior to our main analyses we import data from the Participant Survey including subjective voting on model quality, and the voting during the post-result deliberation. The code for these files are contained in the folder [`data_prep`](data_prep/). It is not necessary to run these scripts as their output is already saved in the [`data`](data/) folder. The folder [`data_prep`](code/data_prep/) contains three R Markdown documents:
-
-1. `001_CRI_Prep_Subj_Votes.Rmd` - prepares the subjective voting on the quality of models
-2. `002_CRI_Data_Prep.Rmd` - cleans up the variables into workable formats, prepares data for the interactive Shiny app, provides correlations, and runs a measurement model to estimate researcher characteristics
-3. `003_CRI_Multiverse_Simulation.Rmd` - sets up data to analyze how much variance we should expect to explain via model specifications
+Prior to our main analyses we import data from the Participant Survey including subjective voting on model quality, and the voting during the post-result deliberation. The code for these files (001-003) are contained in the folder [`data_prep`](code/data_prep/). It is not necessary to run these scripts as their output is already saved in the [`data`](data/) folder. 
 
 ### 3. Code
 
-Our primary analyses and results are in the [`code`](code/) folder. Many of the results in this folder depend on data preparation done in the [`data_prep`](code/data_prep/) folder.
+Our primary analyses and results are in the [`code`](code/) folder. Many of the results in this folder depend on data preparation done in the [`data_prep`](code/data_prep/) folder. 
 
 #### List of Command Code Files and their Functions
 
@@ -70,7 +69,7 @@ Our primary analyses and results are in the [`code`](code/) folder. Many of the 
 
 
 
-### Run All Code
+### 4. Users may Run All Code
 
 The following scripts run _all_ notebook files in order to check there are no code issues.
 
