@@ -302,8 +302,7 @@ reg11[36,2:12] <- ""
 
 kable_styling(kable(reg11))
 
-# Added AIC,LL later = separate file
-write.csv(aiclog, file = here::here("results/Tbl_S5.csv"))
+# Split table manually
 
 write.csv(reg11, file = here::here("results/Tbl_S5.csv"))
 ```
@@ -875,7 +874,7 @@ write.csv(cri_team, file = here::here("results/cri_team.csv"))
 
 Additional research question: Do researcher characteristics explain model specifications?
 
-Not used in our main results, but left here for future research/researchers.
+Not used in our main results, but left here for future research/researchers. The short answer is yes they do, and this is interesting!
 
 For this we use the data `crispectest`, worked up in `03_CRI_Spec_Analysis.Rmd`. For simplicity we use a multinomial model and calculate deviance reduction using dummies.
 
