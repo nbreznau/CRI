@@ -35,6 +35,6 @@ jobs:
         with:
           name: notebooks
           path: |
-            data_prep/*.html
+            code/data_prep/*.html
             code/*.html
             results/
