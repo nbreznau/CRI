@@ -56,7 +56,7 @@ Our primary analyses and results are in the [`code`](code/) folder. Many of the 
 
 |Filename|Location|Description|Output|
 |---------|------|------------------------|----------------|
-|[`001_CRI_Prep_Subj_Votes.Rmd`](../code/data_prep/001_CRI_Prep_Subj_Votes.Rmd)|[`data_prep`](..code/data_prep/)|Compile peer ranking of models|[`FigS4`](/../master/results/FigS4.png)|
+|[`001_CRI_Prep_Subj_Votes.Rmd`](../master/code/data_prep/001_CRI_Prep_Subj_Votes.Rmd)|[`data_prep`](..code/data_prep/)|Compile peer ranking of models|[`FigS4`](/../master/results/FigS4.png)|
 |[`002_CRI_Data_Prep.Rmd`](../master/code/data_prep/002_CRI_Data_Prep.Rmd)|[`data_prep`](..code/data_prep/)|Primary data cleaning and merging; measurement of researcher characteristics|[`TblS1`](../master/results/TblS1.xlsx);[`TblS3`](../master/results/TblS3.xlsx);[`FigS3`](..results/FigS3.png);[`FigS3_fit_stats`](../master/results/FigS3_fit.xlsx)|
 |[`003_CRI_Multiverse_Simulation.Rmd`](../master/code/data_prep/003_CRI_Multiverse_Simulation)|[`data_prep`](..code/data_prep/)|Sets up multiverse data| |
 |[`01_CRI_Descriptives.Rmd`](../master/code/01_CRI_Descriptives.Rmd)|[`code`](../master/code/)|Descriptive statistics; codebook of 107 model design steps|[`FigS5`](../master/results/FigS5.png);[`FigS10`](../master/results/FigS10.png)|
