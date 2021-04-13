@@ -58,7 +58,7 @@ Our primary analyses and results are in the [`code`](code/) folder. Many of the 
 |---------|------|------------------------|----------------|
 |[`001_CRI_Prep_Subj_Votes.Rmd`](../master/code/data_prep/001_CRI_Prep_Subj_Votes.Rmd)|[`data_prep`](..code/data_prep/)|Compile peer ranking of models|[`FigS4`](/../master/results/FigS4.png)|
 |[`002_CRI_Data_Prep.Rmd`](../master/code/data_prep/002_CRI_Data_Prep.Rmd)|[`data_prep`](..code/data_prep/)|Primary data cleaning and merging; measurement of researcher characteristics|[`TblS1`](../master/results/TblS1.xlsx);[`TblS3`](../master/results/TblS3.xlsx);[`FigS3`](..results/FigS3.png);[`FigS3_fit_stats`](../master/results/FigS3_fit.xlsx)|
-|[`003_CRI_Multiverse_Simulation.Rmd`](../master/code/data_prep/003_CRI_Multiverse_Simulation)|[`data_prep`](..code/data_prep/)|Sets up multiverse data| |
+|[`003_CRI_Multiverse_Simulation.Rmd`](../master/code/data_prep/003_CRI_Multiverse_Simulation.Rmd)|[`data_prep`](..code/data_prep/)|Sets up multiverse data| |
 |[`01_CRI_Descriptives.Rmd`](../master/code/01_CRI_Descriptives.Rmd)|[`code`](../master/code/)|Descriptive statistics; codebook of 107 model design steps|[`FigS5`](../master/results/FigS5.png);[`FigS10`](../master/results/FigS10.png)|
 |[`02_CRI_Common_Specifications.Rmd`](../master/code/02_CRI_Common_Specifications.Rmd)|[`code`](../master/code/)|identifying (dis)similarities across models|[`TblS4`](../master/results/TblS4.csv)|
 |[`03_CRI_Spec_Analysis.Rmd`](../master/code/03_CRI_Spec_Analysis.Rmd)|[`code`](../master/code/)|Plotting specification curves|[`Fig1`](../master/results/Fig1.png);[`FigS6`](../master/results/FigS6.png);[`FigS7`](../master/results/FigS7.png);[`FigS8`](../master/results/FigS8.png);[`FigS9`](../master/results/FigS9.png)|
