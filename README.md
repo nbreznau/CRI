@@ -65,7 +65,7 @@ Our primary analyses and results are in the [`code`](code/) folder. Many of the 
 |[`04_CRI_Main_Analyses.Rmd`](../master/code/04_CRI_Main_Analyses.Rmd)|[`code`](../master/code/)|Main regression models explaining outcome variance within and between teams|[`Fig3`](../master/results/Fig3.png);[`TblS5`](../master/results/TblS5.xlsx);[`TblS6(see bottom of S5)`](../master/results/TblS5.xlsx);[`TblS7`](../master/results/TblS7.xlsx)|
 |[`05_CRI_Main_Analyses_Variance_Function.Rmd`](..code/05_CRI_Main_Analyses_Variance_Function.Rmd)|[`code`](../master/code/)|Variance function regressions to explain variation in variance by team|[`Fig2`](../master/results/Fig2.png);[`FigS11`](../master/results/FigS11.png);[`FigS12`](../master/results/FigS12.png);[`FigS13`](../master/results/FigS12.png);[`TblS11`](../master/results/TblS11.csv)|
 |[`06_CRI_Multiverse.Rmd`](../master/code/06_CRI_Multiverse.Rmd)|[`code`](../master/code/)|Function to test all possible combinations of submitted model specifications to explain variance|[`TblS8`](../master/results/TblS8.csv);[`TblS10`](../master/results/TblS10.xlsx)|
-|[`07_CRI_DVspecific_Analyses.Rmd`](..code/07_CRI_DVspecific_Analyses.Rmd)|[`code`](../master/code/)|re-running main models separately by dependent variable (6 ISSP survey questions)|[`TblS9`](../master/results/TblS9.xlsx)|
+|[`07_CRI_DVspecific_Analyses.Rmd`](../master/code/07_CRI_DVspecific_Analyses.Rmd)|[`code`](../master/code/)|re-running main models separately by dependent variable (6 ISSP survey questions)|[`TblS9`](../master/results/TblS9.xlsx)|
 
 
 
