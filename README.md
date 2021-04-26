@@ -19,8 +19,8 @@ Muna Adem, Jule Adriaans, Amalia Alvarez-Benjumea, Henrik Andersen, Daniel Auer,
 
 ## Abstract
 
-This is the repository for preparation and analysis of data obtained from the *Crowdsourced Replication Initiative* ([Breznau, Rinke and Wuttke et al 2018](https://osf.io/preprints/socarxiv/6j9qb/)) and used as the basis for the paper [Observing Many Researchers Using the Same Data and Hypothesis 
-Reveals a Hidden Universe of Uncertainty](https://osf.io/preprints/metaarxiv/cd5j9/). 
+This is the repository for preparation and analysis of data obtained from the *Crowdsourced Replication Initiative* ([Breznau, Rinke and Wuttke et al 2018](https://doi.org/10.31235/osf.io/6j9qb)) and used as the basis for the paper [Observing Many Researchers Using the Same Data and Hypothesis 
+Reveals a Hidden Universe of Uncertainty](https://doi.org/10.31222/osf.io/cd5j9). 
 
 Recently, many researchers independently testing the same hypothesis using the same data, reported tremendous variation in results across scientific disciplines. This variability must derive from differences in each research process. Therefore, observation of these differences should reduce the implied uncertainty. Through a controlled study involving 73 researchers/teams we tested this assumption. Taking all research steps as predictors explains at most 2.6% of total effect size variance, and 10% of the deviance in subjective conclusions. Expertise, prior beliefs and attitudes of researchers explain even less. Ultimately, each model was unique, and as a whole this study provides evidence of a vast universe of research design variability normally hidden from view in the presentation, consumption, and perhaps even creation of scientific results. 
 
@@ -96,11 +96,11 @@ The data preparation code is in the sub-folder [`data_prep`](data_prep/). After 
 
 ### Important Documents
 
-[Current Working Paper Version](https://osf.io/preprints/metaarxiv/cd5j9/)
+[Current Working Paper Version](https://doi.org/10.31222/osf.io/cd5j9)
 
 [Current Supplementary Materials](https://osf.io/d4zqy/)
 
-[Executive Report - describing the full study](https://osf.io/preprints/socarxiv/6j9qb/)
+[Executive Report - describing the full study](https://doi.org/10.31235/osf.io/6j9qb)
 
 ### Start local Binder
 
