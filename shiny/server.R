@@ -23,7 +23,7 @@ wavelist <- c("w1985","w1990","w1996","w2006","w2016")
 
 server <- function(input, output, session) {
   output$exec4 <- renderUI({
-    url <- a("Paper and Supplementary Materials", href="https://osf.io/preprints/metaarxiv/cd5j9/")
+    url <- a("Paper and Supplementary Materials", href="https://doi.org/10.31222/osf.io/cd5j9")
     tagList(url)
   })
   
@@ -33,7 +33,7 @@ server <- function(input, output, session) {
   })
     
   output$exec <- renderUI({
-    url <- a("Original Study Description", href="https://osf.io/preprints/metaarxiv/cd5j9/")
+    url <- a("Original Study Description", href="https://doi.org/10.31222/osf.io/cd5j9")
     tagList(url)
   })
   
@@ -42,7 +42,7 @@ server <- function(input, output, session) {
     tagList(url)
   })
   output$exec2 <- renderUI({
-    url <- a("Original Study Description", href="https://osf.io/preprints/metaarxiv/cd5j9/")
+    url <- a("Original Study Description", href="https://doi.org/10.31222/osf.io/cd5j9")
     tagList(url)
   })
   
@@ -51,7 +51,7 @@ server <- function(input, output, session) {
     tagList(url)
   })
   output$exec3 <- renderUI({
-    url <- a("Original Study Description", href="https://osf.io/preprints/metaarxiv/cd5j9/")
+    url <- a("Original Study Description", href="https://doi.org/10.31222/osf.io/cd5j9")
     tagList(url)
   })
   
