@@ -828,7 +828,7 @@ ggplot(fig3, aes(x = level, y = percent, fill = type)) +
   geom_rect(aes(xmin = 2, xmax = 4.1, ymin = 0.76, ymax = 0.995), color = "#666666", size = 1.5, fill = "transparent") +
   annotate("text", x = 3.7, y = 0.124, label = "UNEXPLAINED\nVARIANCE", color = "black", size = 3) +
   annotate("text", x = 3.7, y = 0.375, label = "RESEARCHER\nCHARACTERISTICS", color = "black",  size = 3) +
-  annotate("text", x = 3.7, y = 0.624, label = "RESEARCH\nDESIGN", color = "black",  size = 3) +
+  annotate("text", x = 3.7, y = 0.624, label = "RESEARCHER\nDECISIONS", color = "black",  size = 3) +
   annotate("text", x = 3.7, y = 0.876, label = "ASSIGNED\nCONDITIONS", color = "black",  size = 3) +
   annotate("text", x = 2.3, y = 0.228, label = "Idiosyncratic remaining\nvariance associated\nwith each team's\nresearch design", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +
   annotate("text", x = 2.3, y = 0.48, label = "- Method expertise\n- Topic expertise\n- Prior attitudes\n- Prior beliefs", size = 2.5, color = "grey12", hjust = 0, vjust = 0) +

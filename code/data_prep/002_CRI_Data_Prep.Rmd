@@ -73,7 +73,7 @@ cri_str <- cri_str %>%
 cri_str <- dplyr::select(cri_str, -c(AMEssd,AMEfsd))
 ```
 
-Recalibrate some variables. Respondents sometimes reported two conclusions because they concluded that they were conducting independent hypothesis tests (seperate for 'flow' and 'stock' models). Adjust strings. 
+Recalibrate some variables. Respondents sometimes reported two conclusions because they concluded that they were conducting independent hypothesis tests (separate for 'flow' and 'stock' models). Adjust strings. 
 
 ```{r recodes, warning = FALSE, message = FALSE}
 cri_str <- cri_str %>%
