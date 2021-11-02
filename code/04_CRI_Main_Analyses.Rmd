@@ -909,7 +909,7 @@ tab_model(m103, digits = 3, p.style = "stars", rm.terms = c("factor(u_teamid)10"
 
 ## Colophon
 
-This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*Observing Many Researchers using the Same Data and Hypothesis Reveals a Hidden Universe of Uncertainty*](https://osf.io/preprints/metaarxiv/cd5j9/).
+This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*Observing Many Researchers using the Same Data and Hypothesis Reveals a Hidden Universe of Uncertainty*](https://doi.org/10.31222/osf.io/cd5j9).
 
 ```{r colophon, echo=FALSE}
 sessionInfo()

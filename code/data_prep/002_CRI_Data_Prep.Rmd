@@ -1022,7 +1022,7 @@ write.csv(cri_shiny_team, file = here::here("shiny/data/cri_shiny_team.csv"), ro
 
 ## Colophon
 
-This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*Observing Many Researchers using the Same Data and Hypothesis Reveals a Hidden Universe of Uncertainty*](https://osf.io/preprints/metaarxiv/cd5j9/).
+This file is part of [https://github.com/nbreznau/CRI](https://github.com/nbreznau/CRI), the reproduction materials for [*Observing Many Researchers using the Same Data and Hypothesis Reveals a Hidden Universe of Uncertainty*](https://doi.org/10.31222/osf.io/cd5j9).
 
 ```{r colophon, echo=FALSE}
 sessionInfo()

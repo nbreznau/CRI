@@ -19,8 +19,8 @@ Muna Adem, Jule Adriaans, Amalia Alvarez-Benjumea, Henrik Andersen, Daniel Auer,
 
 ## Abstract
 
-This is the repository for preparation and analysis of data obtained from the *Crowdsourced Replication Initiative* ([Breznau, Rinke and Wuttke et al 2018](https://osf.io/preprints/socarxiv/6j9qb/)) and used as the basis for the paper [Observing Many Researchers Using the Same Data and Hypothesis 
-Reveals a Hidden Universe of Uncertainty](https://osf.io/preprints/metaarxiv/cd5j9/). 
+This is the repository for preparation and analysis of data obtained from the *Crowdsourced Replication Initiative* ([Breznau, Rinke and Wuttke et al 2018](https://doi.org/10.31235/osf.io/6j9qb)) and used as the basis for the paper [Observing Many Researchers Using the Same Data and Hypothesis 
+Reveals a Hidden Universe of Uncertainty](https://doi.org/10.31222/osf.io/cd5j9). 
 
 Recently, many researchers independently testing the same hypothesis using the same data, reported tremendous variation in results across scientific disciplines. This variability must derive from differences in each research process. Therefore, observation of these differences should reduce the implied uncertainty. Through a controlled study involving 73 researchers/teams we tested this assumption. Taking all research steps as predictors explains at most 2.6% of total effect size variance, and 10% of the deviance in subjective conclusions. Expertise, prior beliefs and attitudes of researchers explain even less. Ultimately, each model was unique, and as a whole this study provides evidence of a vast universe of research design variability normally hidden from view in the presentation, consumption, and perhaps even creation of scientific results. 
 
@@ -56,16 +56,16 @@ Our primary analyses and results are in the [`code`](code/) folder. Many of the 
 
 |Filename|Location|Description|Output|
 |---------|------|------------------------|----------------|
-|[`001_CRI_Prep_Subj_Votes.Rmd`](../code/data_prep/001_CRI_Prep_Subj_Votes.Rmd)|[`data_prep`](..code/data_prep/)|Compile peer ranking of models|[`FigS4`](/../master/results/FigS4.png)|
-|[`002_CRI_Data_Prep.Rmd`](../master/code/data_prep/002_CRI_Data_Prep.Rmd)|[`data_prep`](..code/data_prep/)|Primary data cleaning and merging; measurement of researcher characteristics|[`TblS1`](../master/results/TblS1.xlsx);[`TblS3`](../master/results/TblS3.xlsx);[`FigS3`](..results/FigS3.png);[`FigS3_fit_stats`](../master/results/FigS3_fit.xlsx)|
-|[`003_CRI_Multiverse_Simulation.Rmd`](../master/code/data_prep/003_CRI_Multiverse_Simulation)|[`data_prep`](..code/data_prep/)|Sets up multiverse data| |
+|[`001_CRI_Prep_Subj_Votes.Rmd`](../master/code/data_prep/001_CRI_Prep_Subj_Votes.Rmd)|[`data_prep`](../master/code/data_prep/)|Compile peer ranking of models|[`FigS4`](/../master/results/FigS4.png)|
+|[`002_CRI_Data_Prep.Rmd`](../master/code/data_prep/002_CRI_Data_Prep.Rmd)|[`data_prep`](../master/code/data_prep/)|Primary data cleaning and merging; measurement of researcher characteristics|[`TblS1`](../master/results/TblS1.xlsx);[`TblS3`](../master/results/TblS3.xlsx);[`FigS3`](../master/results/FigS3.png);[`FigS3_fit_stats`](../master/results/FigS3_fit.xlsx)|
+|[`003_CRI_Multiverse_Simulation.Rmd`](../master/code/data_prep/003_CRI_Multiverse_Simulation.Rmd)|[`data_prep`](../master/code/data_prep/)|Sets up multiverse data| |
 |[`01_CRI_Descriptives.Rmd`](../master/code/01_CRI_Descriptives.Rmd)|[`code`](../master/code/)|Descriptive statistics; codebook of 107 model design steps|[`FigS5`](../master/results/FigS5.png);[`FigS10`](../master/results/FigS10.png)|
 |[`02_CRI_Common_Specifications.Rmd`](../master/code/02_CRI_Common_Specifications.Rmd)|[`code`](../master/code/)|identifying (dis)similarities across models|[`TblS4`](../master/results/TblS4.csv)|
 |[`03_CRI_Spec_Analysis.Rmd`](../master/code/03_CRI_Spec_Analysis.Rmd)|[`code`](../master/code/)|Plotting specification curves|[`Fig1`](../master/results/Fig1.png);[`FigS6`](../master/results/FigS6.png);[`FigS7`](../master/results/FigS7.png);[`FigS8`](../master/results/FigS8.png);[`FigS9`](../master/results/FigS9.png)|
-|[`04_CRI_Main_Analyses.Rmd`](../master/code/04_Main_Analyses.Rmd)|[`code`](../master/code/)|Main regression models explaining outcome variance within and between teams|[`Fig3`](../master/results/Fig3.png);[`TblS5`](../master/results/TblS5.xlsx);[`TblS6`](../master/results/TblS5.xlsx);[`TblS7`](../master/results/TblS7.xlsx)|
-|[`05_CRI_Main_Analyses_Variance_Function.Rmd`](..code/05_CRI_Main_Analyses_Variance_Function.Rmd)|[`code`](../master/code/)|Variance function regressions to explain variation in variance by team|[`Fig2`](../master/results/Fig2.png);[`FigS11`](../master/results/FigS11.png);[`FigS12`](../master/results/FigS12.png);[`FigS13`](../master/results/FigS12.png);[`TblS11`](../master/results/TblS11.csv)|
-|[`06_CRI_Multiverse.Rmd`](../master/code/06_CRI_Multiverse.Rmd)|[`code`](../master/code/)|Function to test all possible combinations of submitted model specifications to explain variance|[`TblS8`](../master/results/TblS8.xlsx);[`TblS10`](../master/results/TblS10.xlsx)|
-|[`07_CRI_DVspecific_Analyses.Rmd`](..code/07_CRI_DVspecific_Analyses.Rmd)|[`code`](../master/code/)|re-running main models separately by dependent variable (6 ISSP survey questions)|[`TblS9`](../master/results/TblS9.xlsx)|
+|[`04_CRI_Main_Analyses.Rmd`](../master/code/04_CRI_Main_Analyses.Rmd)|[`code`](../master/code/)|Main regression models explaining outcome variance within and between teams|[`Fig3`](../master/results/Fig3.png);[`TblS5`](../master/results/TblS5.xlsx);[`TblS6(see bottom of S5)`](../master/results/TblS5.xlsx);[`TblS7`](../master/results/TblS7.xlsx)|
+|[`05_CRI_Main_Analyses_Variance_Function.Rmd`](../master/code/05_CRI_Main_Analyses_Variance_Function.Rmd)|[`code`](../master/code/)|Variance function regressions to explain variation in variance by team|[`Fig2`](../master/results/Fig2.png);[`FigS11`](../master/results/FigS11.png);[`FigS12`](../master/results/FigS12.png);[`FigS13`](../master/results/FigS12.png);[`TblS11`](../master/results/TblS11.csv)|
+|[`06_CRI_Multiverse.Rmd`](../master/code/06_CRI_Multiverse.Rmd)|[`code`](../master/code/)|Function to test all possible combinations of submitted model specifications to explain variance|[`TblS8`](../master/results/TblS8.csv);[`TblS10`](../master/results/TblS10.xlsx)|
+|[`07_CRI_DVspecific_Analyses.Rmd`](../master/code/07_CRI_DVspecific_Analyses.Rmd)|[`code`](../master/code/)|re-running main models separately by dependent variable (6 ISSP survey questions)|[`TblS9`](../master/results/TblS9.xlsx)|
 
 
 
@@ -84,23 +84,23 @@ The data preparation code is in the sub-folder [`data_prep`](data_prep/). After 
 | Filename | Description | Source |
 | ----| -------|---|
 | **MAIN FILES** | Used in Main Analyses 01-07 | |
-| `cri.csv` | Main data analysis file, model & team-levels. All specifications coded by the PIs, team test results and researcher characteristics in numeric format | Worked up in [`CRI/data_prep`](CRI/data_prep) |
-| `cri_str.csv` | A string-format only version of `cri.csv` | Worked up in [`CRI/data_prep`](CRI/data_prep) |
-| `cri_team.csv` | A version of `cri_str.csv` aggregated team-level means (N = 89 because 16 teams conducted independent hypothesis tests by 'stock' and 'flow' immigration measures) | Worked up in [`CRI/data_prep`](CRI/data_prep) |
-| `popdf_out.Rdata` |The peer review/deliberation scoring of model specifications as ranked by all participants; excepting non-response | Generated in sub-folder [`CRI/data_prep`](CRI/data_prep) | Participant survey and Kialo deliberation (see section "Kialo deliberation" in file [`data_prep/001_CRI_Prep_Subj_Votes.Rmd`](data_prep/001_CRI_Prep_Subj_Votes.Rmd)) |
+| `cri.csv` | Main data analysis file, model & team-levels. All specifications coded by the PIs, team test results and researcher characteristics in numeric format | Worked up in [`CRI/data_prep`](CRI/code/data_prep) |
+| `cri_str.csv` | A string-format only version of `cri.csv` | Worked up in [`CRI/data_prep`](CRI/code/data_prep) |
+| `cri_team.csv` | A version of `cri_str.csv` aggregated team-level means (N = 89 because 16 teams conducted independent hypothesis tests by 'stock' and 'flow' immigration measures) | Worked up in [`CRI/data_prep`](CRI/code/data_prep) |
+| `popdf_out.Rdata` |The peer review/deliberation scoring of model specifications as ranked by all participants; excepting non-response | Generated in sub-folder [`CRI/data_prep`](CRI/code/data_prep) | Participant survey and Kialo deliberation (see section "Kialo deliberation" in file [`data_prep/001_CRI_Prep_Subj_Votes.Rmd`](code/data_prep/001_CRI_Prep_Subj_Votes.Rmd)) |
 |   |        |   |
 | **SUB-FILES** | Used in Preparation of Data or App| |
 | `Research Design Votes.xlsx` | Based on participant pre-registered designs, plus cursory review of all research designs. Not a fully accurate portrayal of final research designs because, (a) the broad range of specifications not reported in basic research designs and (b) the participant's often deviated from their proposed designs, if only slightly | This is a copy of the actual template (a Google Sheet) used to create the peer review voting system in the Participant Survey | 
-| `cri_shiny.csv` | The model-level data needed to run the shiny app | Generated in [`CRI/data_prep`](CRI/data_prep) |
-| `cri_shiny_team.csv` | The team-level data needed to run the shiny app | Generated in [`CRI/data_prep`](CRI/data_prep) |
+| `cri_shiny.csv` | The model-level data needed to run the shiny app | Generated in [`CRI/data_prep`](CRI/code/data_prep) |
+| `cri_shiny_team.csv` | The team-level data needed to run the shiny app | Generated in [`CRI/data_prep`](CRI/code/data_prep) |
 
 ### Important Documents
 
-[Current Working Paper Version](https://osf.io/preprints/metaarxiv/cd5j9/)
+[Current Working Paper Version](https://doi.org/10.31222/osf.io/cd5j9)
 
 [Current Supplementary Materials](https://osf.io/d4zqy/)
 
-[Executive Report - describing the full study](https://osf.io/preprints/socarxiv/6j9qb/)
+[Executive Report - describing the full study](https://doi.org/10.31235/osf.io/6j9qb)
 
 ### Start local Binder
 
