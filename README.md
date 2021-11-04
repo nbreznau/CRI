@@ -36,11 +36,11 @@ You can open an interactive environment to explore and execute the analysis your
 
 The runtime environment created for the Binder uses an [MRAN](https://mran.microsoft.com/) snapshot of 2020-03-29 (see file `.binder/runtime.txt`) and installs all required R packages in the file `.binder/install.R`.
 
-The main data files include team zero, which is the results and model specifications from the study of Brady and Finnigan [(2014)](https://doi.org/10.1177/0003122413513022) providing a launching point for the CRI; team zero is dropped from our main analyses but provides a point of comparison.
-
 ### 1. Source Code Cleaning
 
 We collected the code from 73 teams and cleaned it for public sharing. This involved qualitative identification of model specifications, ensuring replicability, extracting Average Marginal Effects (AMEs) and redacting any identifying features. The resulting codes are compiled by software type in the sub-folders of this project, ordered by team ID number (in folder [`team_code`](team_code/), and sub-folders: [`team_code_SPSS`](team_code/team_code_SPSS), [`team_code_Stata`](team_code/team_code_Stata), [`team_code_Mplus`](team_code/team_code_Mplus) and [`team_code_R`](team_code/team_code_R)). The code in the [`team_code_R`](team_code/team_code_R)) folder imports the results from all other codes to compile a final joined dataset of effect sizes and confidence interval measures.
+
+Users should be aware that the main data files include team zero, which is the results and model specifications from the study of Brady and Finnigan [(2014)](https://doi.org/10.1177/0003122413513022) providing a launching point for the CRI; team zero is dropped from our main analyses but provides a point of comparison.
 
 ### 2. Data Pre-Preparation
 
