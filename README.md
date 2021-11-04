@@ -2,13 +2,10 @@
 
 ## Research Design and Analysis:
 
-**Nate Breznau**
-
-**Eike Mark Rinke**
-
-**Alexander Wuttke**
-
-**Hung H.V. Nguyen**
+**Nate Breznau** </br>
+**Eike Mark Rinke** </br>
+**Alexander Wuttke** </br>
+**Hung H.V. Nguyen** </br>
 
 ## Participant Researchers:
 
