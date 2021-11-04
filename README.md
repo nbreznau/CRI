@@ -38,7 +38,7 @@ The runtime environment created for the Binder uses an [MRAN](https://mran.micro
 
 The workflow includes a [shinyapp](https://github.com/nbreznau/CRI/tree/master/shiny) that allows users to interact with results using specification curves. 
 
-![](https://github.com/nbreznau/CRI/tree/master/shiny/shiny.png)
+![](shiny/shiny.png)
 
 ### 1. Source Code Cleaning
 
