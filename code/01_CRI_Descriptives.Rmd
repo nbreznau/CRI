@@ -18,10 +18,15 @@ The datasets in here were worked up starting in the sub-folder [`team_code`](../
 2. `cri_team.csv` = team-level data
 3. `cri_str.csv` = model-level data, string values
 
+Note that Team 0 is actually the original study and hypothesis test on which these teams based their own work (Brady and Finnigan [2014](https://journals.sagepub.com/doi/full/10.1177/0003122413513022)). This is of potential interest for comparison, but removed in the final analyses.
+
 ```{r load, warning=FALSE,message=FALSE, include = FALSE}
-cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE)
-cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = TRUE)
-cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE)
+cri <- read.csv(file = here::here("data/cri.csv"), header = TRUE) %>%
+    subset(u_teamid != 0) # remove original study from results
+cri_team <- read.csv(file = here::here("data/cri_team.csv"), header = TRUE) %>%
+    subset(u_teamid != 0) # remove original study from results 
+cri_str <- read.csv(file = here::here("data/cri_str.csv"), header = TRUE) %>%
+    subset(u_teamid != 0)
 
 # team stats
 cri_count <- aggregate(cri_team, by = list(cri_team$u_teamid), FUN = "mean", na.rm = TRUE)
@@ -90,16 +95,20 @@ write.csv(codebook1, file = here::here("results/codebook1.csv"))
 
 ### Sample 
 
-Our final sample is `r length(unique(cri_str$u_teamid))` teams including `r sum(cri_count$team_size[cri_count$u_teamid != 0]) + 1` researchers that submitted `r length(cri_str$u_teamid[cri_str$u_teamid != 0]) + 1` models. Of those teams, one did not conduct the hypothesis test based on a failed measurement invariance test, another had all their `r length(cri_str$u_teamid[cri_str$u_teamid == 1])` models fail to converge and one other had one model out of several fail to converge. The result was `r length(unique(cri_str$u_teamid)) - 2` teams with numeric results of their hypothesis tests derived from `r length(cri_str$u_teamid[!is.na(cri_str$AME) & cri_str$u_teamid != 0])` models produced by `r sum(cri_count$team_size[cri_count$u_teamid != 0]) - 3` researchers in total with an average of `r round(sum(cri_str$team_size[cri_str$u_teamid != 0])/length(cri_str$id[cri_str$u_teamid != 0]),3)` researchers per team.
-There were `r sum(cri_count$team_size)-2` participants in `r length(unique(cri$u_teamid))` teams that produced `r length(cri$u_teamid[cri$u_teamid > 0])` models, average of `r round(length(cri$u_teamid[cri$u_teamid > 0])/length(unique(cri$u_teamid)),3)` models per team.
+Our sample is `r length(unique(cri_str$u_teamid))` teams including `r sum(cri_count$team_size)` researchers that submitted `r length(cri_str$u_teamid)` models. Of those teams, one never carried out the hypothesis test based on a failed measurement invariance test, another had all their `r length(cri_str$u_teamid[cri_str$u_teamid == 1])` models fail to converge and one other had one model out of several fail to converge. The result was `r length(unique(cri$u_teamid[!is.na(cri$AME)]))` teams with numeric results of their hypothesis tests derived from `r length(cri_str$u_teamid[!is.na(cri_str$AME)])` models produced by `r sum(cri_count$team_size)` researchers in total with an average of `r round(sum(cri_str$team_size)/length(cri_str$id),3)` researchers per team.
+There were `r sum(cri_count$team_size)` participants in `r length(unique(cri$u_teamid))` teams that produced `r length(cri$u_teamid)` models, average of `r round(length(cri$u_teamid)/length(unique(cri$u_teamid)),3)` models per team.
 
-There were `r sum(duplicated(cri_team$u_teamid))` teams that came to more than one conclusion. For example, finding support of the hypothesis for immigration stock models, but finding rejection of the hypothesis for immigration flow models. Therefore, we have `r length(cri_team$u_teamid)` observations ('results') in the team-level data that derive from `r length(unique(cri_team$u_teamid))-1` teams. We also have the conclusion from the study by Brady and Finnigan ([2014](https://doi.org/10.1177/000312240607100306)) that provides an example of a state of the art study for testing this hypothesis included as team number '0' for comparison purposes.
+There were `r sum(duplicated(cri_team$u_teamid))` teams that considered their two independent variables (stock and flow of immigration) as two independent hypothesis tests and therefore submitted two subjective conclusions. Therefore, we have `r length(cri_team$u_teamid)` observations ('results') among the team-level data that derive from `r length(unique(cri_team$u_teamid[!is.na(cri_team$AME)]))` teams. With an average of `r round(length(cri$u_teamid)/(length(unique(cri$u_teamid))+(sum(duplicated(cri_team$u_teamid))/2)),3)` models per team-conclusion unit of observation.
 
 ### Summary Stats
 
-We no longer use this approach but leave these tables here in case of interest. The codebook is now our main summary statistics location.
+We no longer use this approach but leave these tables here in case of interest. The [codebook](../results/Tbl_codebook_desc.xlsx) is now our main summary statistics location. Reproduced here.
 
-Note that the N of 89 reflects the number of conclusions provided in total from 73 teams, with one of those conclusions having no results attached to it because the team concluded through measurement testing that the data were inappropriate. Thus, 88 is our team-level-results N for comparison.
+```{r codebookimage, message = F, warning = F}
+knitr::include_graphics(here::here("results", "Tbl_codebook_desc.png"), dpi = 50)
+```
+
+
 
 ```{r descriptive, warning = FALSE, message = FALSE, include = FALSE}
 sum1 <- summarise_at(cri, vars(AME_Z, p, Hsup, Hrej, Hno, Jobs:ChangeFlow, w1985:w2016, countries, dichotomize,  main_IV_as_control, twowayfe, mlm_any, cluster_any, inv_weight, team_size, stata, r, spss, mplus, mlwin, belief, pro_immigrant, topic, stat, total_score), funs(mean), na.rm = TRUE)
@@ -167,13 +176,13 @@ t1 <- kable(cri_sum, row.names = FALSE)
 
 ### Table 1. Team-Results-Level Descriptive Statistics
 
-```{r desc_team1, warning=FALSE, message=FALSE, include=FALSE}
+```{r desc_team1, warning=FALSE,message=FALSE, include=FALSE}
 kable_styling(t1) %>%
   as_image(width = 4, file = here::here("results/Tbl_codebook.png"))
 ```
 
 ```{r table1, warning=FALSE, message=FALSE, echo=T}
-knitr::include_graphics(here::here("results/Tbl_codebook.png"))
+knitr::include_graphics(here::here("results/Tbl_codebook.png"), dpi = 50)
 ```
 
 ### Table 2. Model-Level Descriptive Statistics
@@ -184,7 +193,7 @@ kable_styling(t2) %>%
 ```
 
 ```{r table2, warning=FALSE, message=FALSE, echo=T}
-knitr::include_graphics(here::here("results/Tbl_codebook2.png"))
+knitr::include_graphics(here::here("results/Tbl_codebook2.png"), dpi = 50)
 ```
 
 ## Main Findings - Tables 1-3

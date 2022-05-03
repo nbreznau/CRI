@@ -313,6 +313,18 @@ cri_part <- dplyr::select(cri_part, u_teamid, belief1:pro_immigrant)
 # cri_indiv.csv
 ```
 
+### Describing the Sample
+
+```{r pubscount}
+# percent who have published in a related area or using a related method
+cri_part_desc <- cri_part %>%
+    mutate(pubperc = stat6 + topic1 + topic2 + topic3,
+           pubpercd = ifelse(pubperc < 5, 0, 1),
+           pubpercd = ifelse(is.na(pubperc), 0, pubpercd)) %>%
+    select(pubpercd) %>%
+    summarise_all(mean)
+```
+
 ### Team Measurement Method
 
 Note we take the MAX for topic & statistics, MEAN for belief and pro-immigrant.
