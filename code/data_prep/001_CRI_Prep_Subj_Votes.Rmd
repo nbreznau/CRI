@@ -8,7 +8,7 @@ The participants voted on model specifications for the other teams. Due to some 
 ```{r setup, include=FALSE}
 library("pacman")
 
-pacman::p_load("readstata13","xlsx","dplyr","tidyverse","ggplot2","kableExtra","fastDummies","ragg")
+pacman::p_load("readstata13","readxl","dplyr","tidyverse","ggplot2","kableExtra","fastDummies","ragg")
 ```
 
 ## Load Data
@@ -16,8 +16,8 @@ pacman::p_load("readstata13","xlsx","dplyr","tidyverse","ggplot2","kableExtra","
 See 'Data Guide' in Readme (front page of repository)
 
 ```{r load}
-model_desc <- read.xlsx(here::here("data","Research Design Votes.xlsx"), sheetName = "RD Paragraph Output", header = TRUE, stringsAsFactors = FALSE)
-crispec <- read.xlsx(here::here("data","CRI Model Specifications and Margins.xlsx"), sheetName = "Data")
+model_desc <- read_xlsx(here::here("data","Research Design Votes.xlsx"), sheet = "RD Paragraph Output")
+crispec <- read_xlsx(here::here("data","CRI Model Specifications and Margins.xlsx"), sheet = "Data")
 # sometimes this imports extra rows because of the xlsx format, remove if so
 crispec <- subset(crispec, !is.na(u_teamid))
 votes <- read.dta13(here::here("data","votes.dta"))
@@ -43,7 +43,7 @@ Here we collect all model specifications described in the survey. See Supplement
 
 model_desc <- model_desc %>%
   unite(model_form, c("model_form1","model_form2","model_form3"), na.rm=T, remove=F) %>%
-  unite(model_x, c("model_x1", "model_x2", "model_x3", "model_x4"), na.rm=T, remove=F) %>%
+  unite(model_x, c("model_x1", "model_x2", "model_x3", "model_x4", "model_x5"), na.rm=T, remove=F) %>%
   unite(level, c("level1","level2","level3"), na.rm=T, remove=F) %>%
   unite(mator, c("estimate1","estimate2","estimate3","estimate4"), na.rm=T, remove=F) %>%
   unite(model_spec, c("model_spec1","model_spec3"), na.rm=T, remove=F) %>%
@@ -96,10 +96,29 @@ cor <- dplyr::select(model_desc, model_x, level, mator, model_spec, year, dv_dic
 
 # make dummies
 cord <- fastDummies::dummy_cols(cor, remove_selected_columns=T)
-colnames(cord) <- c("model_BF","model_BFc","model_basic","MLM_fe","MLM_re", "MLM_hyb","level_c","level_cy","level_cy_c","level_cy_c_y","level_cy_y","level_c_y","level_none","level_y","mator_B","mator_M:cat","mator_MLlin","mator_MLcat_B","mator_MLlin","mator_MLlin_B","mator_ols","spec_none","spec_weights","spec_clust","spec_wgt_clus","y2016","y2006_2016","y1996_2006","y96_06_16","y90_96_06_16","yALL","dv_dichot","dv_dichotSEP","dv_lin","dv_linSEP","dv_linSCALE","dv_lin_NA","dv_extra","dv_DEreg","dv_cumlink","dv_catSEP","dv_dichLAT","dv_extraNA","dv_cat","dv_catSEP","dv_catCC","dv_catSEM","rich13NO","rich13YES","rich17NO","rich17YES","eeurope")
+
+colnames(cord) <- c("model_BF","model_BFc","model_basic","MLM_fe","MLM_re", "MLM_hyb","level_c","level_cy","level_cy_c","level_cy_c_y","level_cy_y","level_c_y","level_none","level_y","mator_B","mator_M:cat","mator_MLcat_B","mator_MLlin","mator_MLlin_B","mator_ols","spec_none","spec_weights","spec_clust","spec_wgt_clus","y2016","yALL","y90_96_06_16","y1996_2006","y96_06_16","y2006_2016",
+"dv_dichotSEP",
+"dv_dichot",
+"dv_linSEP",
+"dv_linSCALE",
+"dv_lin_NA",
+"dv_DEreg",
+"dv_cumlink",
+"dv_catSEP",
+"dv_dichLAT",
+"dv_extraNA",
+"dv_cat",
+"dv_catCC",
+"dv_catSEM",
+"dv_cat_NA",
+"rich13NO","rich13YES","rich17NO","rich17YES","eeurope") 
+
+# replace NAs with zeros
+cord[is.na(cord)] <- 0
 
 cord1 <- cord[,1:25]
-cord2 <- cord[,26:51]
+cord2 <- cord[,26:50]
 
 cor1 <- cor(cord1, use = "pairwise.complete.obs")
 corrplot::corrplot(cor1)
@@ -126,10 +145,10 @@ popdf <- popdf %>%
   mutate(Avg_Score = ifelse(Feature == "Linear", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_form=="Linear regression"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
          Avg_Score = ifelse(Feature == "Logistic", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_form=="Logistic regression"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
          Avg_Score = ifelse(Feature == "Categorical/Ordered", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_form=="Ordered logistic regression"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "Two-Way FE", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_x1!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "Two-Way FE, Clustered SE", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_x2!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "Multilevel Rnd_ints Fix_slope", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_x3!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "Multilevel Rnd_slopes", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_x4!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Two-Way FE", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$model_x1)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Two-Way FE, Clustered SE", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$model_x2)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Multilevel Rnd_ints Fix_slope", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$model_x3)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Multilevel Rnd_slopes", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$model_x4)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
          Avg_Score = ifelse(Feature == "No Hierarchical Model", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_x=="Basic"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
          Avg_Score = ifelse(Feature == "Country", round(aggregate(model_desc$vote_subj, by = list(model_desc$level=="country"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
          Avg_Score = ifelse(Feature == "Year", round(aggregate(model_desc$vote_subj, by = list(model_desc$level=="year"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
@@ -139,21 +158,21 @@ popdf <- popdf %>%
          Avg_Score = ifelse(Feature == "Country-Year & Country", round(aggregate(model_desc$vote_subj, by = list(model_desc$level=="country-yearcountry"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
          Avg_Score = ifelse(Feature == "Country-Year, Country & Year", round(aggregate(model_desc$vote_subj, by = list(model_desc$level=="country-yearcountryyear"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
                   Avg_Score = ifelse(Feature == "No Levels", round(aggregate(model_desc$vote_subj, by = list(model_desc$level=="None"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "OLS", round(aggregate(model_desc$vote_subj, by = list(model_desc$estimate1=="Ordinary least squares."), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "ML", round(aggregate(model_desc$vote_subj, by = list(model_desc$ml==1), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "Bayes", round(aggregate(model_desc$vote_subj, by = list(model_desc$estimate4=="Bayesian."), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "Sampling Weights", round(aggregate(model_desc$vote_subj, by = list(model_desc$model_spec3!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "1996 & 2006", round(aggregate(model_desc$vote_subj, by = list(model_desc$year=="  1996 2006 "), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "2006 & 2016", round(aggregate(model_desc$vote_subj, by = list(model_desc$year=="   2006  2016"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "1996, 2006 & 2016", round(aggregate(model_desc$vote_subj, by = list(model_desc$year=="  1996 2006  2016"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "OLS", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$estimate1)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "ML", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$ml)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Bayes", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$estimate4)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Sampling Weights", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$model_spec3)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "1996 & 2006", round(aggregate(model_desc$vote_subj, by = list(model_desc$year=="1996 2006"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "2006 & 2016", round(aggregate(model_desc$vote_subj, by = list(model_desc$year=="2006  2016"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "1996, 2006 & 2016", round(aggregate(model_desc$vote_subj, by = list(model_desc$year=="1996 2006  2016"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
          Avg_Score = ifelse(Feature == "All 5-Waves", round(aggregate(model_desc$vote_subj, by = list(model_desc$year=="1985 1990 1996 2006  2016"), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "Rich 13 Countries", round(aggregate(model_desc$vote_subj, by = list(model_desc$rich13!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "Rich 17 Countries", round(aggregate(model_desc$vote_subj, by = list(model_desc$rich17!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "Includes Eastern Europe", round(aggregate(model_desc$vote_subj, by = list(model_desc$eeurope!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "All Possible Countries", round(aggregate(model_desc$vote_subj, by = list(model_desc$allcountries!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "Employment Rate", round(aggregate(model_desc$vote_subj, by = list(model_desc$emplrate_ivC!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "Unemployment Rate", round(aggregate(model_desc$vote_subj, by = list(model_desc$unemprate_ivC!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
-         Avg_Score = ifelse(Feature == "Social Spending", round(aggregate(model_desc$vote_subj, by = list(model_desc$socx_ivC!=""), FUN=mean, na.rm=T)[2,2],3), Avg_Score))
+         Avg_Score = ifelse(Feature == "Rich 13 Countries", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$rich13)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Rich 17 Countries", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$rich17)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Includes Eastern Europe", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$eeurope)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "All Possible Countries", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$allcountries)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Employment Rate", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$emplrate_ivC)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Unemployment Rate", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$unemprate_ivC)), FUN=mean, na.rm=T)[2,2],3), Avg_Score),
+         Avg_Score = ifelse(Feature == "Social Spending", round(aggregate(model_desc$vote_subj, by = list(!is.na(model_desc$socx_ivC)), FUN=mean, na.rm=T)[2,2],3), Avg_Score))
 
 # create standardized score
 popdf$Avg_ScoreZ <- (popdf$Avg_Score - mean(popdf$Avg_Score))/sd(popdf$Avg_Score)
@@ -190,7 +209,7 @@ ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
   geom_text(aes(y = label_y, x = label_x, fill = group, hjust = hjust), size = 4) +
   labs(fill = "MODEL FEATURES", title = "") +
     geom_hline(yintercept=0) +
-  coord_flip() + labs(y = "Average Relative Support\n(centered at OLS = 0, negative values trimmed)", x = "") +
+  coord_flip() + labs(y = "Average Relative Support", x = "") +
      scale_x_discrete(breaks = NULL) +
   ylim(-0.4, 0.85)   +
       theme(panel.background = element_rect(fill = "white"),
@@ -198,8 +217,8 @@ ggplot(popdf, aes(x=xaxis, y=Avg_ScoreA, label = Feature)) +
         panel.grid.minor = element_blank(),
         legend.title = element_text(size = 14),
         legend.text = element_text(size = 14),
-        axis.ticks.x = element_blank(),
-        axis.text.x = element_blank(),
+        #axis.ticks.x = element_blank(),
+        #axis.text.x = element_blank(),
         axis.title.x = element_text(size = 14),
         legend.key.size = unit(1,"line"))
 dev.off()

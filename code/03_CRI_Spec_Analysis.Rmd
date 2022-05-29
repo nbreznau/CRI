@@ -775,7 +775,8 @@ g5a_new <-
   theme( 
     plot.margin=unit(c(0.2,0.2,0.2,1.05),"cm"),
     axis.title.y = element_text(size = 12),
-    axis.title.x = element_text(size = 12)
+    axis.title.x = element_text(size = 12),
+    axis.text.x = element_blank(),
   )
 
 g5b_new <- ggplot(cri_team) +
@@ -792,6 +793,7 @@ g5b_new <- ggplot(cri_team) +
     #legend.position = "none",
     axis.title.y = element_blank(),
     axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
     plot.margin=unit(c(0.2,0.3,0.2,0.5),"cm")
   )
 agg_png(filename = here::here("results/FigS9.png"), res = 144, height = 900, width = 1200)

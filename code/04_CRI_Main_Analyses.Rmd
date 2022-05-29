@@ -62,7 +62,7 @@ cri_ml$team <- cri_ml %>% group_indices(u_teamid, HresultF)
 
 cri_ml <- dplyr::select(cri_ml, u_teamid, id, team, AME_Z, upper_Z, lower_Z, everything())
 
-# remove team 0
+# remove team 0 (this was the original Brady and Finnigan study)
 cri_ml <- subset(cri_ml, u_teamid != 0)
 cri_team <- subset(cri_team, u_teamid != 0)
 
