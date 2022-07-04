@@ -9,11 +9,45 @@ cri_ml <- read.csv(file = here::here("results/cri_ml.csv"), header = TRUE)
 cri_ml <- cri_ml[!is.na(cri_ml$AME_Z),]
 
 # set global option
-options(na.action = "na.fail")
+options(na.action = "na.omit")
+
+### create a function that takes in a list of variables as input and all interaction combinations as output
+
+final_frame <- data.frame(Var1 = character(), Var2 = character())
+dredge_input <- function(input_vars){
+        for(i in seq_along(input_vars)){
+                main_var = input_vars[i]
+                remain_var = tail(input_vars, -i)
+                combo_frame = expand.grid(main_var, remain_var)
+                if(nrow(combo_frame) != 0){
+                        final_frame = rbind(final_frame, combo_frame)
+                }
+        }
+    output_string = paste(final_frame$Var1, final_frame$Var2, sep = "*")
+    return(output_string)
+}
+
+
+### load csv file containing all usable variables
+
+input_csv <- read.csv(here::here("data", "dredge_int.csv"))
+colnames(input_csv) <- c("var", "used")
+
+
+input_csv <- input_csv[which(input_csv$used == 1),]
+
+input <- input_csv$var
+
+output <- dredge_input(input)
+
+dredge_mod <- lm(as.formula(paste("AME_Z ~", paste(output, collapse = "+"))), data = cri_ml)
+
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
 
 
 ### DVs and Measurement
-
 
 dredge1 <- lm(AME_Z ~ Jobs + IncDiff + House + Unemp + Health + OldAge + Flow + Stock + ChangeFlow + Stock*Jobs + Stock*House + Stock*IncDiff , data = cri_ml)
 
