@@ -13,8 +13,8 @@ options(na.action = "na.omit")
 
 ### create a function that takes in a list of variables as input and all interaction combinations as output
 
-final_frame <- data.frame(Var1 = character(), Var2 = character())
-dredge_input <- function(input_vars){
+dredge_input <- function(input_vars, random_state = 1234, n_sample){
+    final_frame <- data.frame(Var1 = character(), Var2 = character())
         for(i in seq_along(input_vars)){
                 main_var = input_vars[i]
                 remain_var = tail(input_vars, -i)
@@ -23,8 +23,11 @@ dredge_input <- function(input_vars){
                         final_frame = rbind(final_frame, combo_frame)
                 }
         }
+    ## number of combinations = n(n-1)/2.
     output_string = paste(final_frame$Var1, final_frame$Var2, sep = "*")
-    return(output_string)
+    set.seed(random_state)
+    random_output = sample(output_string, n_sample)
+    return(random_output)
 }
 
 
@@ -38,9 +41,11 @@ input_csv <- input_csv[which(input_csv$used == 1),]
 
 input <- input_csv$var
 
-output <- dredge_input(input)
-
+output <- dredge_input(input, n_sample=10)
+options(na.action = "na.omit")
 dredge_mod <- lm(as.formula(paste("AME_Z ~", paste(output, collapse = "+"))), data = cri_ml)
+options(na.action = "na.fail")
+models <- dredge(dredge_mod)
 
 ########################################################################################################################
 ########################################################################################################################
