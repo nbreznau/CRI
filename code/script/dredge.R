@@ -1,7 +1,7 @@
 # Dredge function 
 # Run and save results to reduce reproducibility computing time.
 
-pacman::p_load("MuMIn")
+pacman::p_load("MuMIn", "tidyverse")
 
 cri_ml <- read.csv(file = here::here("results/cri_ml.csv"), header = TRUE)
 
@@ -36,10 +36,33 @@ dredge_input <- function(input_vars, random_state = 1234, n_sample){
 input_csv <- read.csv(here::here("data", "dredge_int.csv"))
 colnames(input_csv) <- c("var", "used")
 
-
+# Only those variables that are relevant
 input_csv <- input_csv[which(input_csv$used == 1),]
 
 input <- input_csv$var
+
+# trim interactions that are empty cells or over 95% in a dichotomous distribution
+all_interactions <- dredge_input(input)
+
+keep_matrix <- matrix(nrow = length(all_interactions), ncol = 2)
+keep_matrix[,1] <- all_interactions
+keep_matrix <- as.data.frame(keep_matrix)
+colnames(keep_matrix) <- c("int","sum")
+
+# create interactions and get summary stats
+x <- as.data.frame(matrix(ncol = length(all_interactions), nrow = length(cri_ml$X)))
+colnames(x) <- all_interactions
+cri_x <- cbind(cri_ml, x)
+
+# I want to fill in the actual value for the interaction in columns 245 through 5809 of the df cri_x but
+# I cannot make this loop work
+i = 1
+for (g in all_interactions) {
+    assign("f", all_interactions[i])
+    cri_x <- cri_x %>%
+        mutate(!!g = f)
+    i = i + 1
+}
 
 output <- dredge_input(input, n_sample=10)
 options(na.action = "na.omit")
