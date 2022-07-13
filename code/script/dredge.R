@@ -54,15 +54,15 @@ x <- as.data.frame(matrix(ncol = length(all_interactions), nrow = length(cri_ml$
 colnames(x) <- all_interactions
 cri_x <- cbind(cri_ml, x)
 
-# I want to fill in the actual value for the interaction in columns 245 through 5809 of the df cri_x but
-# I cannot make this loop work
-i = 1
-for (g in all_interactions) {
-    assign("f", all_interactions[i])
-    cri_x <- cri_x %>%
-        mutate(!!g = f)
-    i = i + 1
+# Fill in the actual value for the interaction in columns 245 through 5809 of the df cri_x 
+
+for (i in all_interactions) {
+    g <- str_split(i, "\\*")
+    cri_x[, i] <- ifelse(is.numeric(cri_x[, g[[1]][1]]) & is.numeric(cri_x[, g[[1]][2]]), cri_x[, g[[1]][1]] * cri_x[, g[[1]][2]], NA)
 }
+
+# Remove NAs and columns that have no variance.
+
 
 output <- dredge_input(input, n_sample=10)
 options(na.action = "na.omit")
