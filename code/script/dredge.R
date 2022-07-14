@@ -81,18 +81,18 @@ cri_x <- cri_x %>%
 
 #remove unused variables from input list
 input <- input[input %in% c(keep_vars)]
-# generate 50 variable random samples
+# generate random samples of 10 variables, that is all that the dredge can handle at once
 
 i = 1
-for (n in 1:50) {
+for (n in 1:1) {
     random_state = 1234 + i
-    output <- dredge_input(input, n_sample=50)
+    output <- dredge_input(input, n_sample=10)
     options(na.action = "na.omit")
     dredge_mod <- lm(as.formula(paste("AME_Z ~", paste(output, collapse = "+"))), data = cri_x)
-    assign(paste0("dredge_mod_", i), dredge_mod)
+    assign(paste0("dredge_mod_", n), dredge_mod)
     options(na.action = "na.fail")
     models <- dredge(dredge_mod)
-    assign(paste0("models_",i))
+    assign(paste0("models_", n), models)
     i = i + 1
 }
 
