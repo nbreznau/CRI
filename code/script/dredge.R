@@ -57,9 +57,12 @@ cri_x <- cbind(cri_ml, x)
 # Fill in the actual value for the interaction in columns 245 through 5809 of the df cri_x 
 
 for (i in all_interactions) {
-    g <- str_split(i, "\\*")
-    r <- paste0("\"", i, "\"")
-    cri_x[, r] <- ifelse(is.numeric(cri_x[, paste('\"', g[[1]][1], '\"', sep = "")]) & is.numeric(cri_x[, paste("\"", g[[1]][2], "\"", sep = "")]), cri_x[, paste0("\"", g[[1]][1], "\"")] * cri_x[, paste0("\"", g[[1]][2], "\"")], NA)
+    first_half = str_split(i, "\\*")[[1]][1]
+    second_half = str_split(i, "\\*")[[1]][2]
+    if(is.numeric(cri_x[,first_half]) & is.numeric(cri_x[,second_half])){
+            cri_x[,i] = cri_x[,first_half] *cri_x[,second_half]
+    }
+
 }
 
 # Remove NAs and columns that have no variance.
