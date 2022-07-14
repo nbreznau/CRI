@@ -58,11 +58,17 @@ cri_x <- cbind(cri_ml, x)
 
 for (i in all_interactions) {
     g <- str_split(i, "\\*")
-    cri_x[, i] <- ifelse(is.numeric(cri_x[, g[[1]][1]]) & is.numeric(cri_x[, g[[1]][2]]), cri_x[, g[[1]][1]] * cri_x[, g[[1]][2]], NA)
+    r <- paste0("\"", i, "\"")
+    cri_x[, r] <- ifelse(is.numeric(cri_x[, paste('\"', g[[1]][1], '\"', sep = "")]) & is.numeric(cri_x[, paste("\"", g[[1]][2], "\"", sep = "")]), cri_x[, paste0("\"", g[[1]][1], "\"")] * cri_x[, paste0("\"", g[[1]][2], "\"")], NA)
 }
 
 # Remove NAs and columns that have no variance.
 
+cri_var <- cri_x %>%
+    summarise_all(sd, na.rm = T)
+
+cri_var[cri_var==0] = NA
+cri_var <- cri_var[,!is.na(cri_var)]
 
 output <- dredge_input(input, n_sample=10)
 options(na.action = "na.omit")
