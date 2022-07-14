@@ -12,8 +12,8 @@ cri_ml <- cri_ml[!is.na(cri_ml$AME_Z),]
 options(na.action = "na.omit")
 
 ### create a function that takes in a list of variables as input and all interaction combinations as output
-
-dredge_input <- function(input_vars, random_state = 1234, n_sample){
+random_state = 1234
+dredge_input <- function(input_vars, n_sample){
     final_frame <- data.frame(Var1 = character(), Var2 = character())
         for(i in seq_along(input_vars)){
                 main_var = input_vars[i]
@@ -70,14 +70,31 @@ for (i in all_interactions) {
 cri_var <- cri_x %>%
     summarise_all(sd, na.rm = T)
 
-cri_var[cri_var==0] = NA
+# remove variables that have almost no variance as well (under 0.05 and between 0.95 and 1)
+cri_var[cri_var >= 0 & cri_var <= 0.05] = NA
+cri_var[cri_var >= 0.95 & cri_var <= 1] = NA
 cri_var <- cri_var[,!is.na(cri_var)]
 
-output <- dredge_input(input, n_sample=10)
-options(na.action = "na.omit")
-dredge_mod <- lm(as.formula(paste("AME_Z ~", paste(output, collapse = "+"))), data = cri_ml)
-options(na.action = "na.fail")
-models <- dredge(dredge_mod)
+keep_vars <- colnames(cri_var)
+cri_x <- cri_x %>%
+    select(c(keep_vars))
+
+#remove unused variables from input list
+input <- input[input %in% c(keep_vars)]
+# generate 50 variable random samples
+
+i = 1
+for (n in 1:50) {
+    random_state = 1234 + i
+    output <- dredge_input(input, n_sample=50)
+    options(na.action = "na.omit")
+    dredge_mod <- lm(as.formula(paste("AME_Z ~", paste(output, collapse = "+"))), data = cri_x)
+    assign(paste0("dredge_mod_", i), dredge_mod)
+    options(na.action = "na.fail")
+    models <- dredge(dredge_mod)
+    assign(paste0("models_",i))
+    i = i + 1
+}
 
 ########################################################################################################################
 ########################################################################################################################
