@@ -81,12 +81,28 @@ cri_x <- cri_x %>%
 
 #remove unused variables from input list
 input <- input[input %in% c(keep_vars)]
+
+#replace the * in variable names with the _ (otherwise dredge splits them)
+colnames(cri_x) <- gsub(x = colnames(cri_x), pattern = "\\*", replacement = "_")
+keep_vars <- gsub(keep_vars, pattern = "\\*", replacement = "_")
+
+#remove results from variable list
+keep_vars <- keep_vars[!(keep_vars %in% c("X", "u_teamid", "AME_Z", "upper_Z", "lower_Z",
+                                     "u_delibtreatmentgroup1", "AME", "lower", "upper",
+                                     "error", "z", "p", "team"))]
+
+
 # generate random samples of 10 variables, that is all that the dredge can handle at once
 
 i = 1
-for (n in 1:1) {
+# set number of variables
+s = 10
+# set number of runs
+r = 1000
+for (n in 1:1000) {
     random_state = 1234 + i
-    output <- dredge_input(input, n_sample=10)
+    output <- sample(keep_vars, s)
+    output <- gsub(x = output, pattern = "\\*", replacement = "_")
     options(na.action = "na.omit")
     dredge_mod <- lm(as.formula(paste("AME_Z ~", paste(output, collapse = "+"))), data = cri_x)
     assign(paste0("dredge_mod_", n), dredge_mod)
@@ -95,6 +111,32 @@ for (n in 1:1) {
     assign(paste0("models_", n), models)
     i = i + 1
 }
+
+rm(list=ls(pattern="^dredge_mod_"))
+#save.image(here::here("results","dredge_models_1000.Rdata"))
+
+# Extract top two models from each result
+dredge_results <- as.data.frame(matrix(ncol = 16, nrow = 2001))
+
+s = 1
+for (m in 1:1000) {
+    x <- get(paste("models_",m, sep = ""))
+    x <- x[1:2,]
+    
+    for (r in 1:2) {
+        x[r,] <- ifelse(!(colnames(x[r,]) %in% c("df","logLik","AICc","delta","weight")), 
+                             ifelse(!is.na(x[r,]), colnames(x[r,]), NA), x[r,])
+    }
+    
+    y <- x[,1:11]
+    z <- x[,12:16]
+    dredge_results[s:(s+1),1:11] <- y
+    dredge_results[s:(s+1),12:16] <- z
+    s = s+2
+
+}
+
+write.csv(dredge_results, here::here("results","dredge_results.csv"))
 
 ########################################################################################################################
 ########################################################################################################################
