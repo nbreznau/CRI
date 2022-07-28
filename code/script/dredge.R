@@ -84,6 +84,7 @@ input <- input[input %in% c(keep_vars)]
 
 #replace the * in variable names with the _ (otherwise dredge splits them)
 colnames(cri_x) <- gsub(x = colnames(cri_x), pattern = "\\*", replacement = "_")
+keep_vars_stars <- keep_vars
 keep_vars <- gsub(keep_vars, pattern = "\\*", replacement = "_")
 
 #remove results from variable list
@@ -136,12 +137,82 @@ for (m in 1:1000) {
 
 }
 
-write.csv(dredge_results, here::here("results","dredge_results.csv"))
+colnames(dredge_results)[12:16] <- c("df","logLik","AICc","delta","weight")
+write.csv(dredge_results, here::here("results","dredge_results.csv"), row.names = F)
+
+dredge_results <- read.csv(here::here("results","dredge_results.csv"))
+
+# Sort by AICc
+dredge_results <- dredge_results[order(dredge_results$AICc, decreasing = T),]
+
+# Identify variables in the first 20 best models and re-dredge them
+dredge_best <- dredge_results[1:20,]
+
+x <- as.vector(dredge_best$V2)[!is.na(dredge_best$V2)]
+x1 <- as.vector(dredge_best$V3)[!is.na(dredge_best$V3)]
+x2 <- as.vector(dredge_best$V4)[!is.na(dredge_best$V4)]
+x3 <- as.vector(dredge_best$V5)[!is.na(dredge_best$V5)]
+x4 <- as.vector(dredge_best$V6)[!is.na(dredge_best$V6)]
+x5 <- as.vector(dredge_best$V7)[!is.na(dredge_best$V7)]
+x6 <- as.vector(dredge_best$V8)[!is.na(dredge_best$V8)]
+x7 <- as.vector(dredge_best$V9)[!is.na(dredge_best$V9)]
+x8 <- as.vector(dredge_best$V10)[!is.na(dredge_best$V10)]
+x9 <- as.vector(dredge_best$V11)[!is.na(dredge_best$V11)]
+
+x <- c(x,x1,x2,x3,x4,x5,x6,x7,x8,x9)
+
+# remove duplicates
+dredge_best_vnames <- unique(x)
+
+# we have 19 variables
+
+# Again run dredge loop with 7 variables this time
+
+i = 1
+# set number of variables
+s = 7
+# set number of runs
+r = 100
+for (n in 1:100) {
+    random_state = 1234 + i
+    output <- sample(dredge_best_vnames, s)
+    output <- gsub(x = output, pattern = "\\*", replacement = "_")
+    options(na.action = "na.omit")
+    dredge_mod <- lm(as.formula(paste("AME_Z ~", paste(output, collapse = "+"))), data = cri_x)
+    assign(paste0("dredge_mod_", n), dredge_mod)
+    options(na.action = "na.fail")
+    models <- dredge(dredge_mod)
+    assign(paste0("models_", n), models)
+    i = i + 1
+}
+
+s = 1
+for (m in 1:100) {
+    x <- get(paste("models_",m, sep = ""))
+    x <- x[1:2,]
+    
+    for (r in 1:2) {
+        x[r,] <- ifelse(!(colnames(x[r,]) %in% c("df","logLik","AICc","delta","weight")), 
+                        ifelse(!is.na(x[r,]), colnames(x[r,]), NA), x[r,])
+    }
+    
+    y <- x[,1:11]
+    z <- x[,12:16]
+    dredge_results[s:(s+1),1:11] <- y
+    dredge_results[s:(s+1),12:16] <- z
+    s = s+2
+    
+}
+
+dredge_best_vars <- ifelse(keep_vars)
+
 
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
 
+
+# Old Version - Dredge 'By Hand'
 
 ### DVs and Measurement
 
