@@ -837,6 +837,8 @@ Given computing times, we start with smaller sets of variables and then eliminat
 
 We also import results from the dredge script to reduce reproduction computing times from [`dredge.R`](../code/script/). 
 
+And for the R&R suggestion of running all interactions from [`dredge_v2.R`](../code/script/)
+
 ```{r loaddredge}
 load(file = here::here("code/script/dredge.Rdata"))
 ```
@@ -844,10 +846,12 @@ load(file = here::here("code/script/dredge.Rdata"))
 
 ## Final Model
 
+### First Iteration
+
 Used to explain variance reduction - compare with Fig 3 in the main text and Table S6.
 
 ```{r final, warning = FALSE}
-m_dredged <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + (1 | u_teamid), data = cri_ml)
+m_dredged <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + (1 | team), data = cri_ml)
 
 sjPlot::tab_model(m_dredged, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = here::here("results/reg_dredge.htm"))
 
@@ -859,13 +863,84 @@ m_d_out <- as.data.frame(read_html(here::here("results/reg_dredge.htm")) %>% htm
 m_d_out <- m_d_out[-c(18:21),]
 m_d_out[c(15:17),1] <- c("Team-Level","Model-Level","Total")
 # values taken from main models, see Table S6
-m_d_out[c(15:17),2] <- c(round(((0.062 - (m_d_out_v[1,4]*100))/0.062)*100,3), 
-                         round(((0.488 - (m_d_out_v[2,4]*100))/0.488)*100,3), 
-                         round(((0.550 - (m_d_out_v[1,4]*100) - (m_d_out_v[2,4]*100))/0.550)*100,3))
+m_d_out[c(15:17),2] <- c(round((-1*(m_d_out_v[1,4]-0.000615)/0.000615)*100,3), 
+                         round((-1*(m_d_out_v[2,4]-0.004882)/0.004882)*100,3), 
+                         round((((-1*(m_d_out_v[1,4]-0.000615)) + (-1*(m_d_out_v[2,4]-0.004882)))/0.005497)*100,3))
 
 # Save table
 write.csv(m_d_out, file = here::here("results/TblS10.csv"))
 ```
+
+### Reviewer suggested - try all interactions
+
+Here we calculated every interaction pair leading to 5,565 interactions, this was reduced to 2,637 after removing those that had no variance, for example those who used a Bayes estimator did not use OLS so a Bayes\*OLS interaction produced all zeros. We see 10 variables as a maximum for testing the dredge function, again this function runs every combination possible of all ten variables and all subsets. The reader may think that more than 10 variables to explain the outcomes is warranted, but **none** of our models showed good fit statistics with more than two interaction variables in the model. Next we had a random seed select sets of 10 variables out of the 2,637 to test. We iterated this 1000 times leading to 1,028,000 models. We then selected the best two fitting models based on AIC from each of the 1000 iterations. From these we extracted all variables used in all those best fitting models. After removing duplicates this resulted in 19 variables. We then re-ran the same process using only these 19 variables and 100 iterations and the best fitting models from these iterations contained 8 variables. In the next code chunk we add these 8 variables to our existing 'best' models to see if they can explain more variance without reducing model fit. We should also point our here that most of these interactions produce unique identifications of team's models (i.e., used by only one team so not fit for putting in a regression although we do it anyway for thoroughness and to make the reviewer happy)
+
+It identified one interaction that could improve fit and explained variance slightly. As this interaction occurs in more than one team, we elect to keep it. 
+
+They are:
+"Flow*household_iv"
+"allavailable*upol_iv"
+"gdp_ivC*income_iv"
+"Health*age_iv"
+"level_country*ologit"
+"mlm_any*categorical"
+"mlm_fe*w2016"
+"year_dummies_only*ologit"
+
+
+```{r dredge_v2}
+dredge_v2 <- read_csv(here::here("code", "script", "dredge_best_auto.csv"))
+
+# 
+m_dredged1 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + Flow*household_iv + (1 | u_teamid), data = cri_ml)
+
+m_dredged2 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + allavailable*upol_iv + (1 | u_teamid), data = cri_ml)
+
+m_dredged3 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + gdp_ivC*income_iv + (1 | u_teamid), data = cri_ml)
+
+m_dredged4 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + Health*age_iv + (1 | u_teamid), data = cri_ml)
+
+m_dredged5 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + level_country*ologit + (1 | u_teamid), data = cri_ml)
+
+m_dredged6 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + mlm_any*categorical + (1 | u_teamid), data = cri_ml)
+
+m_dredged7 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + mlm_fe*w2016 + (1 | u_teamid), data = cri_ml)
+
+m_dredged8 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + year_dummies_only*ologit + (1 | u_teamid), data = cri_ml)
+
+
+sjPlot::tab_model(m13,m_dredged,m_dredged1,m_dredged2,m_dredged3,m_dredged4,m_dredged5,m_dredged6,m_dredged7, m_dredged8, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = here::here("results/reg_dredge_v2.htm"))
+
+# in fact one variable increases the fit and explained variance (although itself is not sig), we updated our models accordingly.
+
+
+sjPlot::tab_model(m_dredged,m_dredged3, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = here::here("results/reg_dredge_v2.htm"))
+
+m_d_out_v <- as.data.frame(VarCorr(m_dredged))
+m_d_out_v3 <- as.data.frame(VarCorr(m_dredged3))
+
+m_d_out <- as.data.frame(read_html(here::here("results/reg_dredge_v2.htm")) %>% html_table(fill=TRUE))
+
+m_d_out <- m_d_out[-c(21:24),]
+m_d_out[c(18:20),1] <- c("Team-Level","Model-Level","Total")
+# values taken from main models, see Table S6 (so total variance at each level in DV)
+m_d_out[c(18:20),2] <- c(round((-1*(m_d_out_v[1,4]-0.000615)/0.000615)*100,3), 
+                         round((-1*(m_d_out_v[2,4]-0.004882)/0.004882)*100,3), 
+                         round((((-1*(m_d_out_v[1,4]-0.000615)) + (-1*(m_d_out_v[2,4]-0.004882)))/0.005497)*100,3))
+
+
+m_d_out[c(18:20),3] <- c(round((-1*(m_d_out_v3[1,4]-0.000615)/0.000615)*100,3), 
+                         round((-1*(m_d_out_v3[2,4]-0.004882)/0.004882)*100,3), 
+                         round((((-1*(m_d_out_v3[1,4]-0.000615)) + (-1*(m_d_out_v3[2,4]-0.004882)))/0.005497)*100,3))
+
+
+
+
+# Save table
+write.csv(m_d_out, file = here::here("results/TblS10.csv"))
+
+```
+
 
 Computer selected model can explain `r m_d_out[18,2]` of the total variance.
 

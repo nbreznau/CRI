@@ -46,8 +46,10 @@ models7 <- dredge(dredge7)
 
 # Interestingly the 'best' models (via AICc) have only one variable. But this indicates the low explanatory power of each additional variable.
 
-dredge8 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock + (1 | u_teamid), data = cri_ml)
+dredge8 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock + (1 | team), data = cri_ml)
 
 models8 <- dredge(dredge8)
+
+rm(models1,models2,models3,models4,models5,models6,models7,models8)
 
 save.image(file = here::here("code/script/dredge.Rdata"))
