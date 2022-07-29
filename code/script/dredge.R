@@ -50,4 +50,6 @@ dredge8 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncD
 
 models8 <- dredge(dredge8)
 
+rm(models1,models2,models3,models4,models5,models6,models7,models8)
+
 save.image(file = here::here("code/script/dredge.Rdata"))
