@@ -93,11 +93,11 @@ keep_vars <- keep_vars[!(keep_vars %in% c("X", "u_teamid", "AME_Z", "upper_Z", "
                                      "error", "z", "p", "team"))]
 
 
-# generate random samples of 10 variables, that is all that the dredge can handle at once
+# generate random samples of 7 variables, that is all that the dredge can handle at once
 
 i = 1
-# set number of variables
-s = 10
+# set number of variables (10 was causing too much rank deficiency)
+s = 7
 # set number of runs
 r = 1000
 for (n in 1:1000) {
@@ -105,7 +105,7 @@ for (n in 1:1000) {
     output <- sample(keep_vars, s)
     output <- gsub(x = output, pattern = "\\*", replacement = "_")
     options(na.action = "na.omit")
-    dredge_mod <- lm(as.formula(paste("AME_Z ~", paste(output, collapse = "+"))), data = cri_x)
+    dredge_mod <- lmer(as.formula(paste("AME_Z ~", paste(output, collapse = "+"), "+ (1 | u_teamid)")), data = cri_x)
     assign(paste0("dredge_mod_", n), dredge_mod)
     options(na.action = "na.fail")
     models <- dredge(dredge_mod)
@@ -117,7 +117,7 @@ rm(list=ls(pattern="^dredge_mod_"))
 #save.image(here::here("results","dredge_models_1000.Rdata"))
 
 # Extract top two models from each result
-dredge_results <- as.data.frame(matrix(ncol = 16, nrow = 2001))
+dredge_results <- as.data.frame(matrix(ncol = 13, nrow = 2001))
 
 s = 1
 for (m in 1:1000) {
@@ -129,15 +129,15 @@ for (m in 1:1000) {
                              ifelse(!is.na(x[r,]), colnames(x[r,]), NA), x[r,])
     }
     
-    y <- x[,1:11]
-    z <- x[,12:16]
-    dredge_results[s:(s+1),1:11] <- y
-    dredge_results[s:(s+1),12:16] <- z
+    y <- x[,1:8]
+    z <- x[,9:13]
+    dredge_results[s:(s+1),1:8] <- y
+    dredge_results[s:(s+1),9:13] <- z
     s = s+2
 
 }
 
-colnames(dredge_results)[12:16] <- c("df","logLik","AICc","delta","weight")
+colnames(dredge_results)[9:13] <- c("df","logLik","AICc","delta","weight")
 write.csv(dredge_results, here::here("results","dredge_results.csv"), row.names = F)
 
 dredge_results <- read.csv(here::here("results","dredge_results.csv"))
@@ -164,6 +164,7 @@ x <- c(x,x1,x2,x3,x4,x5,x6,x7,x8,x9)
 # remove duplicates
 dredge_best_vnames <- unique(x)
 
+rm(list=ls(pattern="^models_"))
 # we have 19 variables
 
 # Again run dredge loop with 7 variables this time
@@ -178,7 +179,7 @@ for (n in 1:100) {
     output <- sample(dredge_best_vnames, s)
     output <- gsub(x = output, pattern = "\\*", replacement = "_")
     options(na.action = "na.omit")
-    dredge_mod <- lm(as.formula(paste("AME_Z ~", paste(output, collapse = "+"))), data = cri_x)
+    dredge_mod <- lmer(as.formula(paste("AME_Z ~", paste(output, collapse = "+"), "+ (1 | u_teamid)")), data = cri_x)
     assign(paste0("dredge_mod_", n), dredge_mod)
     options(na.action = "na.fail")
     models <- dredge(dredge_mod)
