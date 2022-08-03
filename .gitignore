@@ -2,15 +2,11 @@
 .Rhistory
 .RData
 .Ruserdata
+.Rprofile
 data/team104workspace.RData
 
 
-
-
 .local/
-
 .rstudio/
-
 .subversion/
-
 .jupyter-server-log.txt
