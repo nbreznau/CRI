@@ -2,7 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-.Rprofile
+.gitignore
 data/team104workspace.RData
 
 
