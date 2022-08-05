@@ -851,9 +851,7 @@ load(file = here::here("code/script/dredge.Rdata"))
 Used to explain variance reduction - compare with Fig 3 in the main text and Table S6. These variables were selected from iterating dredge.
 
 ```{r final, warning = FALSE}
-m_dredged <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + (1 | team), data = cri_ml)
-
-sjPlot::tab_model(m_dredged, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = here::here("results/reg_dredge.htm"))
+m_dredged <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock + Jobs*Stock + (1 | team), data = cri_ml)
 
 m_d_out_v <- as.data.frame(VarCorr(m_dredged))
 
@@ -878,6 +876,10 @@ Here we calculated every interaction pair leading to 5,565 interactions, this wa
 It identified one interaction that could improve fit and explained variance slightly. As this interaction occurs in more than one team, we elect to keep it. 
 
 They are:
+(first dredge)
+Stock*Jobs
+twowayfe*Stock
+(second dredge)
 cluster_any*gdp_ivC
 ols*unbalpanel
 Unemp*publice_iv
