@@ -875,7 +875,7 @@ Unemp*publice_iv
 w1996*conservatism_ivC
 
 
-```{r dredge_v2}
+```{r dredge_v2a}
 dredge_v2 <- read_csv(here::here("code", "script", "dredge_best_auto.csv"))
 
 # 
@@ -906,7 +906,7 @@ sjPlot::tab_model(m13,m_dredged,m_dredged1,m_dredged2,m_dredged3,m_dredged4, dig
 ```
 
 ### Table S10
-```{r dredge_v2}
+```{r dredge_v2b}
 
 m_d_out <- as.data.frame(read_html(here::here("results/reg_dredge_v2.htm")) %>% html_table(fill=TRUE))
 
