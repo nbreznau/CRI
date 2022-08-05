@@ -853,20 +853,9 @@ Used to explain variance reduction - compare with Fig 3 in the main text and Tab
 ```{r final, warning = FALSE}
 m_dredged <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock + Jobs*Stock + (1 | team), data = cri_ml)
 
-m_d_out_v <- as.data.frame(VarCorr(m_dredged))
+# this now becomes part of the new TblS10 along with the results of the all interactions dredge (v2, see below)
 
-m_d_out <- as.data.frame(read_html(here::here("results/reg_dredge.htm")) %>% html_table(fill=TRUE))
 
-# add var to data frame
-m_d_out <- m_d_out[-c(18:21),]
-m_d_out[c(15:17),1] <- c("Team-Level","Model-Level","Total")
-# values taken from main models, see Table S6
-m_d_out[c(15:17),2] <- c(round((-1*(m_d_out_v[1,4]-0.000615)/0.000615)*100,3), 
-                         round((-1*(m_d_out_v[2,4]-0.004882)/0.004882)*100,3), 
-                         round((((-1*(m_d_out_v[1,4]-0.000615)) + (-1*(m_d_out_v[2,4]-0.004882)))/0.005497)*100,3))
-
-# Save table
-write.csv(m_d_out, file = here::here("results/TblS10.csv"))
 ```
 
 ### Reviewer suggested - try all interactions
@@ -890,13 +879,21 @@ w1996*conservatism_ivC
 dredge_v2 <- read_csv(here::here("code", "script", "dredge_best_auto.csv"))
 
 # 
-m_dredged1 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + cluster_any*gdp_ivC + (1 | team), data = cri_ml)
+m_dredged1 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock + Jobs*Stock + cluster_any*gdp_ivC + (1 | team), data = cri_ml)
 
-m_dredged2 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + ols*unbalpanel + (1 | team), data = cri_ml)
+m_dredged2 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock + Jobs*Stock + ols*unbalpanel + (1 | team), data = cri_ml)
 
-m_dredged3 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + Unemp*publice_iv + (1 | team), data = cri_ml)
+m_dredged3 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock + Jobs*Stock + Unemp*publice_iv + (1 | team), data = cri_ml)
 
-m_dredged4 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + w1996*conservatism_ivC + (1 | team), data = cri_ml)
+m_dredged4 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock + Jobs*Stock + w1996*conservatism_ivC + (1 | team), data = cri_ml)
+
+md_1 <- as.data.frame(VarCorr(m13))
+md_2 <- as.data.frame(VarCorr(m_dredged))
+md_3 <- as.data.frame(VarCorr(m_dredged1))
+md_4 <- as.data.frame(VarCorr(m_dredged2))
+md_5 <- as.data.frame(VarCorr(m_dredged3))
+md_6 <- as.data.frame(VarCorr(m_dredged4))
+
 
 # from Main Analysis (for comparison)
 m13 <- lmer(AME_Z ~ Jobs + IncDiff + House+ logit + ols + Stock + ChangeFlow+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear+ total_score + (1 | team), data = cri_ml)
@@ -905,43 +902,63 @@ sjPlot::tab_model(m13,m_dredged,m_dredged1,m_dredged2,m_dredged3,m_dredged4, dig
 
 sjPlot::tab_model(m13,m_dredged,m_dredged1,m_dredged2,m_dredged3,m_dredged4, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T)
 
-knitr::include_graphics(here::here("results","reg_dredge_v2.htm"))
+#knitr::include_graphics(here::here("results","reg_dredge_v2.htm"))
 ```
 
-
+### Table S10
 ```{r dredge_v2}
-# in fact one variable increases the fit and explained variance (although itself is not sig), we updated our models accordingly.
-
-
-sjPlot::tab_model(m_dredged,m_dredged3, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = here::here("results/reg_dredge_v2.htm"))
-
-m_d_out_v <- as.data.frame(VarCorr(m_dredged))
-m_d_out_v3 <- as.data.frame(VarCorr(m_dredged3))
 
 m_d_out <- as.data.frame(read_html(here::here("results/reg_dredge_v2.htm")) %>% html_table(fill=TRUE))
 
-m_d_out <- m_d_out[-c(21:24),]
-m_d_out[c(18:20),1] <- c("Team-Level","Model-Level","Total")
-# values taken from main models, see Table S6 (so total variance at each level in DV)
-m_d_out[c(18:20),2] <- c(round((-1*(m_d_out_v[1,4]-0.000615)/0.000615)*100,3), 
-                         round((-1*(m_d_out_v[2,4]-0.004882)/0.004882)*100,3), 
-                         round((((-1*(m_d_out_v[1,4]-0.000615)) + (-1*(m_d_out_v[2,4]-0.004882)))/0.005497)*100,3))
+m_d_out[c(34:37),1] <- c("Residual Variance", "Team-Level","Model-Level","Total")
 
+m_d_out[c(34:37),2:length(m_d_out[1,])] <- ""
 
-m_d_out[c(18:20),3] <- c(round((-1*(m_d_out_v3[1,4]-0.000615)/0.000615)*100,3), 
-                         round((-1*(m_d_out_v3[2,4]-0.004882)/0.004882)*100,3), 
-                         round((((-1*(m_d_out_v3[1,4]-0.000615)) + (-1*(m_d_out_v3[2,4]-0.004882)))/0.005497)*100,3))
+m_d_out <- m_d_out[-40,]
 
+m_d_outz <- as.data.frame(matrix(nrow=4, ncol = length(m_d_out[1,])))
 
+m_d_out_f <- m_d_out
+m_d_out_f[c(38:41),1] <- c("Explained Variance", "Team-Level","Model-Level","Total")
+m_d_out_f[38:41,2:length(m_d_out[1,])] <- ""
+
+m_d_out_f[c(42:46),] <- m_d_out[c(38:43),]
+
+# calculate residual variances
+## Team Level
+m_d_out_f[35,2:length(m_d_out_f[1,])] <- round(as.numeric(c(md_1[1,4],md_2[1,4],md_3[1,4],md_4[1,4],
+                    md_5[1,4],md_6[1,4])),6)
+
+## Model Level
+m_d_out_f[36,2:length(m_d_out_f[1,])] <- round(as.numeric(c(md_1[2,4],md_2[2,4],md_3[2,4],
+                    md_4[2,4],md_5[2,4],md_6[2,4])),6)
+
+## Total
+m_d_out_f[37,2:length(m_d_out_f[1,])] <- as.numeric(m_d_out_f[35,2:length(m_d_out_f[1,])]) + as.numeric(m_d_out_f[36,2:length(m_d_out_f[1,])])
+
+# calculate explained variance from empty model
+m0 <- lmer(AME_Z ~ (1 | team), data = cri_ml)
+m0v<- as.data.frame(VarCorr(m0))
+
+totalv <- m0v[1,4] + m0v[2,4]
+
+## Team
+m_d_out_f[39,2:length(m_d_out_f[1,])] <- (rep(m0v[1,4],6) - as.numeric(m_d_out_f[35,2:length(m_d_out_f[1,])]))/rep(m0v[1,4],6)
+
+## Model
+m_d_out_f[40,2:length(m_d_out_f[1,])] <- (rep(m0v[2,4],6) - as.numeric(m_d_out_f[36,2:length(m_d_out_f[1,])]))/rep(m0v[2,4],6)
+
+## Total
+m_d_out_f[41,2:length(m_d_out_f[1,])] <- (rep(totalv,6) - as.numeric(m_d_out_f[37,2:length(m_d_out_f[1,])]))/rep(totalv,6)
 
 
 # Save table
-write.csv(m_d_out, file = here::here("results/TblS10.csv"))
+write.csv(m_d_out_f, file = here::here("results/TblS10.csv"))
 
 ```
 
 
-Computer selected model can explain `r m_d_out[18,2]` of the total variance.
+Best computer selected model (based on AICc and log-lik) can explain slightly more model-level variance but less team-level variance. Cannot explain for of the overall variance. 
 
 ## Colophon
 
