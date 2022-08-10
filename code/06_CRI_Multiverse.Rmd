@@ -851,7 +851,12 @@ load(file = here::here("code/script/dredge.Rdata"))
 Used to explain variance reduction - compare with Fig 3 in the main text and Table S6. These variables were selected from iterating dredge.
 
 ```{r final, warning = FALSE}
+
+# main results
 m_dredged <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock + Jobs*Stock + (1 | team), data = cri_ml)
+
+# combining main results with m13 results to test for a better model
+m_dredged_m13 <- lmer(AME_Z ~ Jobs + IncDiff + House + logit + ols + Stock + ChangeFlow + Stock*IncDiff + w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear+ total_score + twowayfe*Jobs + twowayfe*Stock + Jobs*Stock + (1 | team), data = cri_ml)
 
 # this now becomes part of the new TblS10 along with the results of the all interactions dredge (v2, see below)
 
@@ -887,26 +892,28 @@ m_dredged3 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*I
 
 m_dredged4 <- lmer(AME_Z ~ Jobs + IncDiff + House + Stock + ChangeFlow + Stock*IncDiff + w2016 + orig13 +  eeurope + twowayfe + level_cyear + twowayfe*Jobs + twowayfe*Stock + Jobs*Stock + w1996*conservatism_ivC + (1 | team), data = cri_ml)
 
-md_1 <- as.data.frame(VarCorr(m13))
+
+# from Main Analysis (for comparison)
+m13 <- lmer(AME_Z ~ Jobs + IncDiff + House+ logit + ols + Stock + ChangeFlow+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear+ total_score + (1 | team), data = cri_ml)
+
+# extract unexplained variance
+md_1 <- as.data.frame(VarCorr(m13)) 
+md_1_13 <- as.data.frame(VarCorr(m_dredged_m13))
 md_2 <- as.data.frame(VarCorr(m_dredged))
 md_3 <- as.data.frame(VarCorr(m_dredged1))
 md_4 <- as.data.frame(VarCorr(m_dredged2))
 md_5 <- as.data.frame(VarCorr(m_dredged3))
 md_6 <- as.data.frame(VarCorr(m_dredged4))
 
+sjPlot::tab_model(m13,m_dredged,m_dredged_m13,m_dredged1,m_dredged2,m_dredged3,m_dredged4, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = here::here("results/reg_dredge_v2.htm"))
 
-# from Main Analysis (for comparison)
-m13 <- lmer(AME_Z ~ Jobs + IncDiff + House+ logit + ols + Stock + ChangeFlow+ w1996 + w2006 + w2016 + w2006*w2016 + orig13  + eeurope + allavailable + twowayfe + level_cyear+ total_score + (1 | team), data = cri_ml)
-
-sjPlot::tab_model(m13,m_dredged,m_dredged1,m_dredged2,m_dredged3,m_dredged4, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T, file = here::here("results/reg_dredge_v2.htm"))
-
-sjPlot::tab_model(m13,m_dredged,m_dredged1,m_dredged2,m_dredged3,m_dredged4, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T)
+sjPlot::tab_model(m13,m_dredged,m_dredged_m13,m_dredged1,m_dredged2,m_dredged3,m_dredged4, digits = 3, p.style = "stars", show.ci = F, show.loglik = T, show.aic = T)
 
 #knitr::include_graphics(here::here("results","reg_dredge_v2.htm"))
 ```
 
 ### Table S10
-```{r dredge_v2b}
+```{r dredge_v2b, warning = F}
 
 m_d_out <- as.data.frame(read_html(here::here("results/reg_dredge_v2.htm")) %>% html_table(fill=TRUE))
 
@@ -926,11 +933,11 @@ m_d_out_f[c(42:46),] <- m_d_out[c(38:43),]
 
 # calculate residual variances
 ## Team Level
-m_d_out_f[35,2:length(m_d_out_f[1,])] <- round(as.numeric(c(md_1[1,4],md_2[1,4],md_3[1,4],md_4[1,4],
+m_d_out_f[35,2:length(m_d_out_f[1,])] <- round(as.numeric(c(md_1[1,4],md_2[1,4],md_1_13[1,4],md_3[1,4],md_4[1,4],
                     md_5[1,4],md_6[1,4])),6)
 
 ## Model Level
-m_d_out_f[36,2:length(m_d_out_f[1,])] <- round(as.numeric(c(md_1[2,4],md_2[2,4],md_3[2,4],
+m_d_out_f[36,2:length(m_d_out_f[1,])] <- round(as.numeric(c(md_1[2,4],md_2[2,4],md_1_13[2,4],md_3[2,4],
                     md_4[2,4],md_5[2,4],md_6[2,4])),6)
 
 ## Total
