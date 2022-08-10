@@ -1,5 +1,13 @@
 # The Hidden Universe of Data-Analysis
 
+### Important Documents
+
+[Current Working Paper Version](https://doi.org/10.31222/osf.io/cd5j9)
+
+[Current Supplementary Materials](https://osf.io/d4zqy/)
+
+[Executive Report - describing the full study](https://doi.org/10.31235/osf.io/6j9qb)
+
 ## Research Design and Analysis:
 
 **Nate Breznau** </br>
@@ -95,13 +103,7 @@ The data preparation code is in the sub-folder [`data_prep`](data_prep/). After 
 | `cri_shiny.csv` | The model-level data needed to run the shiny app | Generated in [`CRI/data_prep`](CRI/code/data_prep) |
 | `cri_shiny_team.csv` | The team-level data needed to run the shiny app | Generated in [`CRI/data_prep`](CRI/code/data_prep) |
 
-### Important Documents
 
-[Current Working Paper Version](https://doi.org/10.31222/osf.io/cd5j9)
-
-[Current Supplementary Materials](https://osf.io/d4zqy/)
-
-[Executive Report - describing the full study](https://doi.org/10.31235/osf.io/6j9qb)
 
 ### Start local Binder
 
