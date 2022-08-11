@@ -26,9 +26,9 @@ cri <- subset(cri, u_teamid != 0)
 
 ### Model Specification Count
 
-Many of these model specifications were dropped because they were not the team's preferred models, or because in the margins extraction phase the PIs decided that the models were not preferable (only when the team provided them as 'extra' models). Therefore, some columns of the database have zero variance. These columns need to be removed.
+Many of model specifications were dropped because they came from 'extra' models provided by the teams in their code and got qualitatively coded, but that were not part of their main submitted results. Therefore, some columns of the database have zero variance. 
 
-We also need variables to distinguish: 
+We generate models to distinguish: 
 
 A) 'net migration' based measures from 'stock' based measures, even when both are used to reflect a change over time, the variable definitions are slightly different.
 
