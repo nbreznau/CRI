@@ -7,7 +7,7 @@ This code has two purposes.
 
 The first is to determine how much variance we should reasonably expect to explain using a 'static' multiverse approach where we use a single worked up data set from one of the teams and then apply a range of possible model specifications to it. Then we predict the outcomes using the model specifications. 
 
-The second is to run a multiverse analysis of the real data and real model specifications to see if we 'missed' anything or combinations of things that could explain the outcomes.
+The second is to run an algorithmic analysis of the real data and real model specifications to see if we 'missed' anything or combinations of things that could explain the outcomes.
 
 ```{r setup, include=FALSE}
 library("pacman")
