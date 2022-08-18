@@ -7,7 +7,10 @@ output: html_document
 rm(list = ls())
 library("pacman")
 
-pacman::p_load("tidyverse","knitr","kableExtra","reshape","ggplot2","ragg","summarytools", "Hmisc")
+
+pacman::p_load("tidyverse","knitr","kableExtra","reshape","ggplot2","summarytools", "Hmisc", "ragg")
+
+
 ```
 
 ## Data
