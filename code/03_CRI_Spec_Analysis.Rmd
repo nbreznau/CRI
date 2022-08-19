@@ -591,10 +591,10 @@ samplabs <- c("1996 &\n2006","2006 &\n2016","1996, 2006\n& 2016","Other")
 
  g9 <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 4, fill = factor(W_96_06)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 2, fill = factor(W_06_16)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 1, fill = factor(W_Other)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 4, fill = factor(W_96_06)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 2, fill = factor(W_06_16)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 1, fill = factor(W_Other)), height = 0.5, width = 2) +
   scale_y_continuous(breaks = c(4,3,2,1), labels=samplabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
@@ -609,10 +609,10 @@ ggplot(crispectest) +
  
  g9ci <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 4, fill = factor(W_96_06)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 2, fill = factor(W_06_16)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 1, fill = factor(W_Other)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 4, fill = factor(W_96_06)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 2, fill = factor(W_06_16)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(W_Other)), height = 0.5, width = 2) +
   scale_y_continuous(breaks = c(4,3,2,1), labels=samplabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
@@ -633,10 +633,10 @@ clabs <- c("Rich 13"," CEE/East\nEurope","All\nAvailable","Other")
 
 g10 <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 4, fill = factor(C_13)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 3, fill = factor(C_CEE)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 2, fill = factor(C_All)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 1, fill = factor(C_Other)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 4, fill = factor(C_13)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 3, fill = factor(C_CEE)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 2, fill = factor(C_All)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 1, fill = factor(C_Other)), height = 0.5, width = 2) +
   scale_y_continuous(breaks = c(4,3,2,1), labels=clabs) +
   scale_fill_manual(values = c("NA","darkblue")) +
     theme_classic() +
@@ -651,10 +651,10 @@ ggplot(crispectest) +
 
 g10ci <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 4, fill = factor(C_13)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 3, fill = factor(C_CEE)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 2, fill = factor(C_All)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 1, fill = factor(C_Other)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 4, fill = factor(C_13)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 3, fill = factor(C_CEE)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 2, fill = factor(C_All)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(C_Other)), height = 0.5, width = 2) +
   scale_y_continuous(breaks = c(4,3,2,1), labels=clabs) +
   scale_fill_manual(values = c("NA","darkblue")) +
     theme_classic() +
@@ -675,11 +675,11 @@ estlabs <- c("OLS","Logit"," ML/GLM","Ordered\nlogit","Bayes")
 
 g11 <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 5, fill = factor(Est_ols)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 4, fill = factor(Est_logit)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 3, fill = factor(Est_mlglm)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 2, fill = factor(Est_ologit)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 1, fill = factor(Est_bayes)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 5, fill = factor(Est_ols)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 4, fill = factor(Est_logit)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 3, fill = factor(Est_mlglm)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 2, fill = factor(Est_ologit)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 1, fill = factor(Est_bayes)), height = 0.5, width = 2) +
   scale_y_continuous(breaks = c(5,4,3,2,1), labels=estlabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
@@ -695,11 +695,11 @@ ggplot(crispectest) +
 
 g11ci <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 5, fill = factor(Est_ols)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 4, fill = factor(Est_logit)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 3, fill = factor(Est_mlglm)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 2, fill = factor(Est_ologit)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 1, fill = factor(Est_bayes)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 5, fill = factor(Est_ols)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 4, fill = factor(Est_logit)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 3, fill = factor(Est_mlglm)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 2, fill = factor(Est_ologit)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(Est_bayes)), height = 0.5, width = 2) +
   scale_y_continuous(breaks = c(5,4,3,2,1), labels=estlabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
@@ -715,8 +715,10 @@ ggplot(crispectest) +
   )
 ```
 
+#### FigS8
+
 ```{r figS8, warning = FALSE}
-agg_png(filename = here::here("results/FigS8.png"), height = 600, width = 800, res = 72)
+agg_png(filename = here::here("results/FigS8.png"), height = 1200, width = 1600, res = 144)
 ggarrange(g1a, g2a, g9, g9ci, g10, g10ci, g11, g11ci, nrow = 4, ncol = 2, heights = c(0.6,1,1,1.2), widths = c(1,0.9))
 dev.off()
 
