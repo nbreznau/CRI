@@ -809,12 +809,18 @@ fig3[16:20,] <- fig2[11:15,]
 ```{r fig3_setup}
 fig3$level <- factor(fig3$level, levels = c(" ","  ","   ","    ","Subjective conclusion\nBetween-team deviance","Avg. Marginal Effects\nWithin-team variance","Avg. Marginal Effects\nBetween-team variance","Avg. Marginal Effects\nTotal variance","     "))
 
-fig3_labs <- c(" ","  ","   ","     ","<span style = \"font-size: 14px\">**Subjective Conclusions**</span><br>Between-team deviance","<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Within-team variance","<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Between-team variance","<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Total variance"," ")
+fig3_labs <- c(" ","  ","   ","     ",
+               "<span style = \"font-size: 14px; margin: 20px;\">**Subjective Conclusions**</span><br>
+               Between-team deviance
+               ",
+               "<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Within-team variance",
+               "<span style = \"font-size: 14px\">**Avg. Marginal Effects**</span><br>Between-team variance",
+               "<span style = \"font-size: 14px; margin: 20px;\">**Avg. Marginal Effects**</span><br>Total variance"," ")
 ```
 
 ```{r fig3_plot}
-agg_png(filename= here::here("results/Fig3.png"), res = 144, width = 1100, height = 800)
-ggplot(fig3, aes(x = level, y = percent, fill = type)) +
+
+fig3o <- ggplot(fig3, aes(x = level, y = percent, fill = type)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   labs(x = "", y = "", fill = "Percent\nexplained by") +
@@ -858,6 +864,15 @@ ggplot(fig3, aes(x = level, y = percent, fill = type)) +
         axis.text.x = element_blank(),
         axis.ticks = element_blank(),
         legend.position = "none")
+
+# Original Version
+agg_png(filename= here::here("results/Fig3.png"), res = 144, width = 1150, height = 800)
+fig3o
+dev.off()
+
+# PNAS Version
+agg_tiff(filename= here::here("results/Fig3.tiff"), res = 144, width = 1150, height = 800)
+fig3o
 dev.off()
 
 knitr::include_graphics(here::here("results/Fig3.png"))

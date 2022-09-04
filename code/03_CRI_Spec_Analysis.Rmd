@@ -136,7 +136,7 @@ sig_pos <- 100*round(sum(crispectest$inv_weight[crispectest$sig_group2 == 3])/su
 ns <- 100*round(sum(crispectest$inv_weight[crispectest$sig_group2 == 2])/sum(crispectest$inv_weight),3)
 ```
 
-Generate and save Fig 1
+#### Save Original PNG version
 
 ```{r fig1_main}
 # for plotting a circle
@@ -185,6 +185,54 @@ dev.off()
 knitr::include_graphics(here::here("results/Fig1.png"))
 ```
 
+#### Save PNAS TIF version
+
+```{r fig1_main_tif}
+# for plotting a circle
+dat = data.frame(x=runif(1), y=runif(1))
+
+agg_tiff(filename = here::here("results/Fig1.tiff"), width = 800, height = 500, res = 144)
+ggplot(crispectest) +
+  #geom_errorbar(aes(ymin = lb, ymax = ub), color = "thistle1") +
+  geom_point(aes(x = count, y = est_ns_scl), color = "grey55", shape = "|", size = 2, show.legend =F) + 
+  geom_point(aes(x = count, y = est_sig_scl, color = sig_group), shape = "|", size = 3) +
+  scale_color_manual(values = c("#E6AB02","NA", "#7570B3"), labels = c("Negative","Not sig.","Positive"," ")) +
+  #geom_vline(xintercept = 1214, color = "grey", linetype = "dashed") +
+  #geom_vline(xintercept = 52, color = "grey", linetype = "dashed") +
+  #ylim(-1.8, 1.8) +
+  annotate(geom = "text", x = 320, y = 1.44, label = " \nNEGATIVE\n ", color = "#E6AB02", fontface = "bold", size = 3.5) +
+  annotate(geom = "text", x = 960, y = 1.44, label = " \nPOSITIVE\n ", color = "#7570B3", fontface = "bold", size = 3.5) +
+  annotate(geom = "text", x = 640, y = 1.44, label = " \nINCLUDES\nZERO", fontface = "bold", color = "grey55", size = 3.5) +
+  geom_vline(xintercept = -30) +
+  annotate(geom = "segment", x = -35, xend = -25, y = -1.1, yend = -1.1, color = "white", size = 2) +
+  annotate(geom = "segment", x = -35, xend = -25, y = 1.1, yend = 1.1, color = "white", size = 2) +
+  annotate(geom = "segment", x = -38, xend = -22, y = 1.12, yend = 1.18, color = "black", size = 0.5) +
+  annotate(geom = "segment", x = -38, xend = -22, y = -1.18, yend = -1.12, color = "black", size = 0.5) +
+  labs(color = "Effect at 95% CI", x = "Models Ordered by AME", y = "           Average Marginal Effect (AME)") +
+  geom_point(aes(x=320, y=-2), data=dat, size=18, shape=1, color="#E6AB02") +
+  geom_point(aes(x=640, y=-2), data=dat, size=26, shape=1, color="grey55") +
+  geom_point(aes(x=960, y=-2), data=dat, size=14, shape=1, color="#7570B3") +
+  annotate("text", x=320, y=-2, label = paste(sig_neg), color="#E6AB02", fontface = "bold") +
+  annotate("text", x=640, y=-2, label = paste(ns), color="grey55", fontface = "bold") +
+  annotate("text", x=960, y=-2, label = paste(sig_pos), color="#7570B3", fontface = "bold") +
+  annotate("text", x=640, y=-1.1, label = "Weighted % of Distribution", color="grey20", size = 2.5, fontface = 3) +
+  annotate("text", x=640, y=0.42, label = "Point Estimates", color="grey20", size = 2.5, fontface = 3) +
+  annotate("text", x=640, y=1.8, label = "95% Confidence Interval", color="grey20", size = 2.5, fontface = 3) +
+  scale_y_continuous(labels = c("-0.50","-0.05","0.00","0.05","0.50"), breaks = c(-1.75, -1, 0, 1, 1.75), limits = c(-2.6,1.8)) +
+  coord_cartesian(xlim = c(-15,1255), clip = "off") +
+  scale_x_continuous(expand = c(0,15)) +
+  theme_classic() +
+  guides(color = guide_legend(override.aes = list(size=7, color=c("#E6AB02","grey55", "#7570B3","NA")))) +
+  theme(
+    legend.key.size = unit(2,"line"),
+    legend.position = "none",
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10),
+    axis.line.y = element_blank(),
+    )
+dev.off()
+
+```
 ### Supplementary Plots
 
 #### Fig 1_supplementary. 
