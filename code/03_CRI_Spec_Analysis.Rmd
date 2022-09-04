@@ -375,11 +375,11 @@ crispectest <- crispectest %>%
 labs_y <- c("Model Score","Stats-Skill","Topic\nKnowledge","Pro Immigrant","Belief Hyp. True")
 
 g3 <- ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 5, fill = belief_roll), height = 0.5, width = 0.25) +
-  geom_tile(aes(x = count, y = 4, fill = pro_roll), height = 0.5, width = 0.25) +
-  geom_tile(aes(x = count, y = 3, fill = topic_roll), height = 0.5, width = 0.25) +
-  geom_tile(aes(x = count, y = 2, fill = stats_roll), height = 0.5, width = 0.25) +
-  geom_tile(aes(x = count, y = 1, fill = total_roll), height = 0.5, width = 0.25) +
+  geom_tile(aes(x = count, y = 5, fill = belief_roll), height = 0.5, width = 2.00) +
+  geom_tile(aes(x = count, y = 4, fill = pro_roll), height = 0.5, width = 2.00) +
+  geom_tile(aes(x = count, y = 3, fill = topic_roll), height = 0.5, width = 2.00) +
+  geom_tile(aes(x = count, y = 2, fill = stats_roll), height = 0.5, width = 2.00) +
+  geom_tile(aes(x = count, y = 1, fill = total_roll), height = 0.5, width = 2.00) +
   scale_y_continuous(breaks = c(1,2,3,4,5), labels=labs_y) +
     theme_classic() +
   xlab("Models ordered by Effect Size") +
@@ -390,11 +390,11 @@ g3 <- ggplot(crispectest) +
 labs_y2 <- c("Model","l","e","t","e")
 
 g4 <- ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 5, fill = belief_roll2), height = 0.5, width = 0.25) +
-  geom_tile(aes(x = count2, y = 4, fill = pro_roll2), height = 0.5, width = 0.25) +
-  geom_tile(aes(x = count2, y = 3, fill = topic_roll2), height = 0.5, width = 0.25) +
-  geom_tile(aes(x = count2, y = 2, fill = stats_roll2), height = 0.5, width = 0.25) +
-  geom_tile(aes(x = count2, y = 1, fill = total_roll2), height = 0.5, width = 0.25) +
+  geom_tile(aes(x = count2, y = 5, fill = belief_roll2), height = 0.5, width = 2.00) +
+  geom_tile(aes(x = count2, y = 4, fill = pro_roll2), height = 0.5, width = 2.00) +
+  geom_tile(aes(x = count2, y = 3, fill = topic_roll2), height = 0.5, width = 2.00) +
+  geom_tile(aes(x = count2, y = 2, fill = stats_roll2), height = 0.5, width = 2.00) +
+  geom_tile(aes(x = count2, y = 1, fill = total_roll2), height = 0.5, width = 2.00) +
   labs(fill = "Score") +
   scale_y_continuous(breaks = c(1,2,3,4,5), labels=labs_y2) +
   xlab("Models ordered by Minimum Confidence Boundary (95%CI)") +
@@ -468,9 +468,9 @@ Test Format
 testlabs <- c("       Stock", "Flow", "Change\nFlow")
 g01 <- 
   ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 0.75, fill = factor(Test_Stock)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.5, fill = factor(Test_Flow)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.25, fill = factor(Test_ChangeFlow)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.75, fill = factor(Test_Stock)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count, y = 0.5, fill = factor(Test_Flow)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count, y = 0.25, fill = factor(Test_ChangeFlow)), height = 0.133, width = 2.00) +
   scale_y_continuous(breaks = c(0.75,0.5,0.25), labels=testlabs) +
   scale_fill_manual(values = c("white","blue")) +
   theme_classic() +
@@ -485,9 +485,9 @@ g01 <-
 
 g01ci <- 
   ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 0.75, fill = factor(Test_Stock)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count2, y = 0.5, fill = factor(Test_Flow)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count2, y = 0.25, fill = factor(Test_ChangeFlow)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 0.75, fill = factor(Test_Stock)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count2, y = 0.5, fill = factor(Test_Flow)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count2, y = 0.25, fill = factor(Test_ChangeFlow)), height = 0.133, width = 2.00) +
   scale_y_continuous(breaks = c(0.75,0.5,0.25), labels=testlabs) +
   scale_fill_manual(values = c("white","blue")) +
   theme_classic() +
@@ -508,8 +508,8 @@ Measurement of Immigration
 mlabs <- c("  Immigra-\nnts (%)", "Net\nMigration")
 g02 <- 
   ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 0.5, fill = factor(M_Gross)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.25, fill = factor(M_Net)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 0.5, fill = factor(M_Gross)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count, y = 0.25, fill = factor(M_Net)), height = 0.133, width = 2.00) +
   scale_y_continuous(breaks = c(0.5,0.25), labels=mlabs) +
   scale_fill_manual(values = c("white","darkblue")) +
   theme_classic() +
@@ -524,8 +524,8 @@ g02 <-
 
 g02ci <- 
   ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 0.5, fill = factor(M_Gross)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count2, y = 0.25, fill = factor(M_Net)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 0.5, fill = factor(M_Gross)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count2, y = 0.25, fill = factor(M_Net)), height = 0.133, width = 2.00) +
   scale_y_continuous(breaks = c(0.5,0.25), labels=mlabs) +
   scale_fill_manual(values = c("white","darkblue")) +
   theme_classic() +
@@ -548,13 +548,13 @@ dvlabs = c("             Jobs","Unemp","IncDiff","OldAge","House","Health","Scal
 
 g03 <- 
   ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 1.75, fill = factor(DV_Jobs)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 1.5, fill = factor(DV_Unemp)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 1.25, fill = factor(DV_IncDiff)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 1, fill = factor(DV_OldAge)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.75, fill = factor(DV_House)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.5, fill = factor(DV_Health)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.25, fill = factor(DV_Scale)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 1.75, fill = factor(DV_Jobs)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count, y = 1.5, fill = factor(DV_Unemp)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count, y = 1.25, fill = factor(DV_IncDiff)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count, y = 1, fill = factor(DV_OldAge)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count, y = 0.75, fill = factor(DV_House)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count, y = 0.5, fill = factor(DV_Health)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count, y = 0.25, fill = factor(DV_Scale)), height = 0.133, width = 2.00) +
   scale_y_continuous(breaks = c(1.75,1.5,1.25,1,0.75,0.5,0.25), labels=dvlabs) +
   scale_fill_manual(values = c("white","blue")) +
     theme_classic() +
@@ -569,13 +569,13 @@ g03 <-
   
 g03ci <- 
   ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 1.75, fill = factor(DV_Jobs)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count2, y = 1.5, fill = factor(DV_Unemp)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count2, y = 1.25, fill = factor(DV_IncDiff)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count2, y = 1, fill = factor(DV_OldAge)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count2, y = 0.75, fill = factor(DV_House)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count2, y = 0.5, fill = factor(DV_Health)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count2, y = 0.25, fill = factor(DV_Scale)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 1.75, fill = factor(DV_Jobs)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count2, y = 1.5, fill = factor(DV_Unemp)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count2, y = 1.25, fill = factor(DV_IncDiff)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(DV_OldAge)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count2, y = 0.75, fill = factor(DV_House)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count2, y = 0.5, fill = factor(DV_Health)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count2, y = 0.25, fill = factor(DV_Scale)), height = 0.133, width = 2.00) +
   scale_y_continuous(breaks = c(1.75,1.5,1.25,1,0.75,0.5,0.25), labels=dvlabs) +
   scale_fill_manual(values = c("white","blue")) +
     theme_classic() +
@@ -596,10 +596,10 @@ Independent Variables
 ivlabs <- c(" (Un)Emp\nRate","GDP\nper cap", "Social\nSpending","None\n/other")
 
 g04 <- ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 1, fill = factor(IV_Emp)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.75, fill = factor(IV_GDP)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.5, fill = factor(IV_Socx)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count, y = 0.25, fill = factor(IV_None)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count, y = 1, fill = factor(IV_Emp)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count, y = 0.75, fill = factor(IV_GDP)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count, y = 0.5, fill = factor(IV_Socx)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count, y = 0.25, fill = factor(IV_None)), height = 0.133, width = 2.00) +
   scale_y_continuous(breaks = c(1,0.75,0.5,0.25), labels=ivlabs) +
   scale_fill_manual(values = c("white","darkblue")) +
     theme_classic() +
@@ -610,10 +610,10 @@ g04 <- ggplot(crispectest) +
 
 # version for right-side column 
 g04ci <- ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 1, fill = factor(IV_Emp)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count2, y = 0.75, fill = factor(IV_GDP)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count2, y = 0.5, fill = factor(IV_Socx)), height = 0.133, width = 0.25) +
-  geom_tile(aes(x = count2, y = 0.25, fill = factor(IV_None)), height = 0.133, width = 0.25) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(IV_Emp)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count2, y = 0.75, fill = factor(IV_GDP)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count2, y = 0.5, fill = factor(IV_Socx)), height = 0.133, width = 2.00) +
+  geom_tile(aes(x = count2, y = 0.25, fill = factor(IV_None)), height = 0.133, width = 2.00) +
   scale_y_continuous(breaks = c(1,0.75,0.5,0.25), labels=ivlabs) +
   scale_fill_manual(values = c("white","darkblue")) +
     theme_classic() +
@@ -627,7 +627,7 @@ g04ci <- ggplot(crispectest) +
 #### FigS7
 
 ```{r figS7, warning = FALSE}
-agg_png(filename = here::here("results/FigS7.png"), height = 800, width = 800, res = 72)
+agg_png(filename = here::here("results/FigS7.png"), height = 1600, width = 1600, res = 144)
 ggarrange(g1a, g2a, g01, g01ci, g02, g02ci, g03, g03ci, g04, g04ci, nrow = 5, ncol = 2, heights = c(0.6,.75,0.5,1.75,1.2), widths = c(1,0.9))
 dev.off()
 
@@ -639,10 +639,10 @@ samplabs <- c("1996 &\n2006","2006 &\n2016","1996, 2006\n& 2016","Other")
 
  g9 <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 4, fill = factor(W_96_06)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 2, fill = factor(W_06_16)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 1, fill = factor(W_Other)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 4, fill = factor(W_96_06)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 2, fill = factor(W_06_16)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 1, fill = factor(W_Other)), height = 0.5, width = 2) +
   scale_y_continuous(breaks = c(4,3,2,1), labels=samplabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
@@ -657,10 +657,10 @@ ggplot(crispectest) +
  
  g9ci <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 4, fill = factor(W_96_06)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 2, fill = factor(W_06_16)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 1, fill = factor(W_Other)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 4, fill = factor(W_96_06)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 3, fill = factor(W_96_06_16)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 2, fill = factor(W_06_16)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(W_Other)), height = 0.5, width = 2) +
   scale_y_continuous(breaks = c(4,3,2,1), labels=samplabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
@@ -681,10 +681,10 @@ clabs <- c("Rich 13"," CEE/East\nEurope","All\nAvailable","Other")
 
 g10 <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 4, fill = factor(C_13)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 3, fill = factor(C_CEE)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 2, fill = factor(C_All)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 1, fill = factor(C_Other)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 4, fill = factor(C_13)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 3, fill = factor(C_CEE)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 2, fill = factor(C_All)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 1, fill = factor(C_Other)), height = 0.5, width = 2) +
   scale_y_continuous(breaks = c(4,3,2,1), labels=clabs) +
   scale_fill_manual(values = c("NA","darkblue")) +
     theme_classic() +
@@ -699,10 +699,10 @@ ggplot(crispectest) +
 
 g10ci <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 4, fill = factor(C_13)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 3, fill = factor(C_CEE)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 2, fill = factor(C_All)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 1, fill = factor(C_Other)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 4, fill = factor(C_13)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 3, fill = factor(C_CEE)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 2, fill = factor(C_All)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(C_Other)), height = 0.5, width = 2) +
   scale_y_continuous(breaks = c(4,3,2,1), labels=clabs) +
   scale_fill_manual(values = c("NA","darkblue")) +
     theme_classic() +
@@ -723,11 +723,11 @@ estlabs <- c("OLS","Logit"," ML/GLM","Ordered\nlogit","Bayes")
 
 g11 <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count, y = 5, fill = factor(Est_ols)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 4, fill = factor(Est_logit)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 3, fill = factor(Est_mlglm)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 2, fill = factor(Est_ologit)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count, y = 1, fill = factor(Est_bayes)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count, y = 5, fill = factor(Est_ols)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 4, fill = factor(Est_logit)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 3, fill = factor(Est_mlglm)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 2, fill = factor(Est_ologit)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count, y = 1, fill = factor(Est_bayes)), height = 0.5, width = 2) +
   scale_y_continuous(breaks = c(5,4,3,2,1), labels=estlabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
@@ -743,11 +743,11 @@ ggplot(crispectest) +
 
 g11ci <-
 ggplot(crispectest) +
-  geom_tile(aes(x = count2, y = 5, fill = factor(Est_ols)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 4, fill = factor(Est_logit)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 3, fill = factor(Est_mlglm)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 2, fill = factor(Est_ologit)), height = 0.5, width = 0.2) +
-  geom_tile(aes(x = count2, y = 1, fill = factor(Est_bayes)), height = 0.5, width = 0.2) +
+  geom_tile(aes(x = count2, y = 5, fill = factor(Est_ols)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 4, fill = factor(Est_logit)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 3, fill = factor(Est_mlglm)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 2, fill = factor(Est_ologit)), height = 0.5, width = 2) +
+  geom_tile(aes(x = count2, y = 1, fill = factor(Est_bayes)), height = 0.5, width = 2) +
   scale_y_continuous(breaks = c(5,4,3,2,1), labels=estlabs) +
   scale_fill_manual(values = c("NA","blue")) +
     theme_classic() +
@@ -763,8 +763,10 @@ ggplot(crispectest) +
   )
 ```
 
+#### FigS8
+
 ```{r figS8, warning = FALSE}
-agg_png(filename = here::here("results/FigS8.png"), height = 600, width = 800, res = 72)
+agg_png(filename = here::here("results/FigS8.png"), height = 1200, width = 1600, res = 144)
 ggarrange(g1a, g2a, g9, g9ci, g10, g10ci, g11, g11ci, nrow = 4, ncol = 2, heights = c(0.6,1,1,1.2), widths = c(1,0.9))
 dev.off()
 
