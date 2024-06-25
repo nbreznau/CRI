@@ -51,7 +51,7 @@ Standardization will produce some extreme outliers, so a 'better' strategy is to
 ```{r standardizeDV, warning = FALSE, message = FALSE}
 rm(teamsize)
 
-# Team 104 is massive outlier, trim estimates
+# Team 104 seems to have the scale wrong on by a factor of 10
 cri_str <- cri_str %>%
   mutate(AME = ifelse(id == "t104m2" | id == "t104m4", AME/10, AME),
          lower = ifelse(id == "t104m2" | id == "t104m4", lower/10, lower),
