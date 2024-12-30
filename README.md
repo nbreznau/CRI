@@ -80,8 +80,9 @@ Our primary analyses and results are in the [`code`](code/) folder. Many of the 
 
 In the file cri.csv, the different variables used to identify whether the teams concluded "support", "reject" or "not testable" for the hypothesis are potentially confusing. Here is the list of variables and their definitions. Please note that the data contain team "0" which is the original Brady and Finnigan study. Therefore, users will find that the number of cases is higher for models and teams, that that used in the study. We include these here for comparison. 
 
-|  |  |  |
+
 | **Var name** | **Definition** | **Unit of analysis** |
+|---------|------------------------------------------------------------|-------------|
 | `Hresult` | The team's conclusion separated by hypothesis tests for teams that insisted they tested two, not one hypothesis, the n is higher to account for the 14 teams that submitted two different results for each hypothesis | team-hypothesis-level, n = 89 |
 | `Hsupport` | If the team concluded overall support of the hypothesis, 1 = yes | team-level, n = 74 |
 | `Hreject` | If the team concluded overall rejection of the hypothesis, 1 = yes | team-level, n = 74 |
