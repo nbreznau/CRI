@@ -76,7 +76,24 @@ Our primary analyses and results are in the [`code`](code/) folder. Many of the 
 |[`06_CRI_Multiverse.Rmd`](../master/code/06_CRI_Multiverse.Rmd)|[`code`](../master/code/)|Function to test all possible combinations of submitted model specifications to explain variance|[`TblS8`](../master/results/TblS8.csv);[`TblS10`](../master/results/TblS10.xlsx)|
 |[`07_CRI_DVspecific_Analyses.Rmd`](../master/code/07_CRI_DVspecific_Analyses.Rmd)|[`code`](../master/code/)|re-running main models separately by dependent variable (6 ISSP survey questions)|[`TblS9`](../master/results/TblS9.xlsx)|
 
+#### Subjective Conclusion Variables Codebook
 
+In the file cri.csv, the different variables used to identify whether the teams concluded "support", "reject" or "not testable" for the hypothesis are potentially confusing. Here is the list of variables and their definitions. Please note that the data contain team "0" which is the original Brady and Finnigan study. Therefore, users will find that the number of cases is higher for models and teams, that that used in the study. We include these here for comparison. 
+
+|  |  |  |
+| **Var name** | **Definition** | **Unit of analysis** |
+| `Hresult` | The team's conclusion separated by hypothesis tests for teams that insisted they tested two, not one hypothesis, the n is higher to account for the 14 teams that submitted two different results for each hypothesis | team-hypothesis-level, n = 89 |
+| `Hsupport` | If the team concluded overall support of the hypothesis, 1 = yes | team-level, n = 74 |
+| `Hreject` | If the team concluded overall rejection of the hypothesis, 1 = yes | team-level, n = 74 |
+| `Hnotest` | If the team concluded that the hypothesis was not testable with these data, 1 = yes | team-level, n=74 |
+| `Hmixed` | If the team broke protocol and insisted that there were two different hypotheses being tested, and found different results for each of these hypotheses, 1 = yes | team-level, n = 74 |
+| `Hsupport_stock` | If the team concluded that their models testing for an effect of the stock of immigrants in a country led to support of the hypothesis, 1 = yes | team-level, n = 74 |
+| `Hsreject_stock` | If the team concluded that their models testing for an effect of the stock of immigrants in a country led to rejection of the hypothesis, 1 = yes | team-level, n = 74 |
+| `Hnotest_stock` | If the team concluded that their models testing for an effect of the stock of immigrants in a country were not sufficient to test the hypothesis, 1 = yes | team-level, n = 74 |
+| `Hsupport_net` | If the team concluded that their models testing for an effect of the net migration (flow) of immigrants in a country led to support of the hypothesis, 1 = yes | team-level, n = 74 |
+| `Hsreject_net` | If the team concluded that their models testing for an effect of the net migration (flow) of immigrants in a country led to rejection of the hypothesis, 1 = yes | team-level, n = 74 |
+| `Hnotest_net` | If the team concluded that their models testing for an effect of the net migration (flow) of immigrants in a country were not sufficient to test the hypothesis, 1 = yes | team-level, n = 74 |
+| `Hsup`, `Hrej`, `Hno` | The specific hypothesis test conclusion by the team for those models (it is the variable `Hresult` converted into three dummies), 1 = yes for each dummy | team-hypothesis-level, n = 89 |
 
 ### 4. Users may Run All Code
 
@@ -102,7 +119,6 @@ The data preparation code is in the sub-folder [`data_prep`](../master/code/data
 | `Research Design Votes.xlsx` | Based on participant pre-registered designs, plus cursory review of all research designs. Not a fully accurate portrayal of final research designs because, (a) the broad range of specifications not reported in basic research designs and (b) the participant's often deviated from their proposed designs, if only slightly | This is a copy of the actual template (a Google Sheet) used to create the peer review voting system in the Participant Survey | 
 | `cri_shiny.csv` | The model-level data needed to run the shiny app | Generated in [`code/data_prep`](../master/code/data_prep) |
 | `cri_shiny_team.csv` | The team-level data needed to run the shiny app | Generated in [`code/data_prep`](../master/code/data_prep) |
-
 
 
 ### Start local Binder
