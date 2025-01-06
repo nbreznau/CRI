@@ -2,7 +2,7 @@
 
 ### Important Documents
 
-[Current Working Paper Version](https://doi.org/10.31222/osf.io/cd5j9)
+[Published Paper PNAS](https://www.pnas.org/doi/10.1073/pnas.2203150119)
 
 [Current Supplementary Materials](https://osf.io/d4zqy/)
 
@@ -44,6 +44,12 @@ The runtime environment created for the Binder uses an [MRAN](https://mran.micro
 The workflow includes a [shinyapp](https://github.com/nbreznau/CRI/tree/master/shiny) that allows users to interact with results using specification curves. 
 
 [![](shiny/Shiny-shinyapps.svg)](https://nate-breznau.shinyapps.io/shiny/)
+
+### 0. User Notes
+
+Note that belief in the hypothesis is reverse coded in our analysis and in the shiny app. It has no effect on results, and thus no necessary interpretation. Users should be aware that it is correclty coded in the original survey data, but gets falsely recoded in our workflow. 
+
+We have not added a codebook for subjective conclusions (see below) and users can now access the text of each team's subjective conclusion in the folder '[`expansion_reports`](results/expansion_reports) (where available, as not all teams provided one). 
 
 ### 1. Source Code Cleaning
 
